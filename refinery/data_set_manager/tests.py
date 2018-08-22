@@ -351,22 +351,36 @@ class UtilitiesTests(TestCase):
         FileStoreItem.objects.all().delete()
 
     def test_create_facet_field_counts(self):
-        facet_field_array = {'WORKFLOW': ['1_test_04', 1,
-                                          'output_file', 60,
-                                          '1_test_02', 1],
-                             'ANALYSIS': ['5dd6d3c3', 5,
-                                          '08fc3964', 2,
-                                          '0907a312', 1,
-                                          '276adefd', 3],
-                             'Author': ['Vezza', 10,
-                                        'Harslem/Heafner', 4,
-                                        'McConnell', 5,
-                                        'Vezza + Crocker', 2,
-                                        'Crocker', 28],
-                             'Year': ['1971', 54],
-                             'SUBANALYSIS': ['1', 8, '2', 2, '-1', 9],
-                             'TYPE': ['Derived Data File', 105,
-                                      'Raw Data File', 9]}
+        facet_field_array = {
+            'WORKFLOW': {'buckets': [
+                {'val': '1_test_04', 'count': 1},
+                {'val': 'output_file', 'count': 60},
+                {'val': '1_test_02', 'count': 1}
+            ]},
+            'ANALYSIS': {'buckets': [
+                {'val': '5dd6d3c3', 'count': 5},
+                {'val': '08fc3964', 'count': 2},
+                {'val': '0907a312', 'count': 1},
+                {'val': '276adefd', 'count': 3}
+            ]},
+            'Author': {"buckets": [
+                {'val': 'Vezza', 'count': 10},
+                {'val': 'Harslem/Heafner', 'count': 4},
+                {'val': 'McConnell', 'count': 5},
+                {'val': 'Vezza + Crocker', 'count': 2},
+                {'val': 'Crocker', 'count': 28}
+            ]},
+            'Year': {"buckets": [{'val': '1971', 'count': 54}]},
+            'SUBANALYSIS': {"buckets": [
+                {'val': '1', 'count': 8},
+                {'val': '2', 'count': 2},
+                {'val': '-1', 'count': 9}
+            ]},
+            'TYPE': {"buckets": [
+                {'val': 'Derived Data File', 'count': 105},
+                {'val': 'Raw Data File', 'count': 9}
+            ]}
+        }
 
         facet_field_obj = create_facet_field_counts(facet_field_array)
         self.assertDictEqual(facet_field_obj,
