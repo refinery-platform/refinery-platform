@@ -490,8 +490,11 @@ class UtilitiesTests(TestCase):
                              ['Analysis',
                               'Cell Line',
                               'Cell Type',
+                              'Characeter_Title',
                               'Group Name',
                               'Organism',
+                              'REFINERY_DATAFILE_s',
+                              'Specimen',
                               'Type'])
 
     def test_generate_solr_params_no_params_returns_json_filter(self):

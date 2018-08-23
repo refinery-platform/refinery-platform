@@ -703,7 +703,7 @@ def generate_solr_params(
         )
         facet_field_obj = generate_filtered_facet_fields(culled_attributes)
         facet_fields = facet_field_obj.get('facet_field')
-        field_limit.extend(facet_fields)
+        field_limit.extend(facet_field_obj.get('field_limit'))
         for facet in facet_fields:
             facet_fields_obj[facet] = {
                 "type": "terms",
@@ -888,7 +888,7 @@ def format_solr_response(solr_response):
     # Reorganizes solr response into easier to digest objects.
     try:
         order_facet_fields = json.loads(solr_response_json['responseHeader']
-                                        ['params']['json']).get('facet').keys()
+                                        ['params']['json']).get('fields')
     except KeyError:
         order_facet_fields = []
 
