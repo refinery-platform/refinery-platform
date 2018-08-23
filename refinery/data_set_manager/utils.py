@@ -685,12 +685,6 @@ def generate_solr_params(
     if facet_field:
         facet_field_arr = facet_field.split(',')
         field_limit.extend(facet_field_arr)
-        for facet in facet_field_arr:
-            facet_fields_obj[facet] = {
-                "type": "terms",
-                "field": facet,
-                "mincount": 0
-            }
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(
@@ -702,14 +696,15 @@ def generate_solr_params(
             exclude_facets
         )
         facet_field_obj = generate_filtered_facet_fields(culled_attributes)
-        facet_fields = facet_field_obj.get('facet_field')
+        facet_field_arr = facet_field_obj.get('facet_field')
         field_limit.extend(facet_field_obj.get('field_limit'))
-        for facet in facet_fields:
-            facet_fields_obj[facet] = {
-                "type": "terms",
-                "field": facet,
-                "mincount": 0
-            }
+
+    for facet in facet_field_arr:
+        facet_fields_obj[facet] = {
+            "type": "terms",
+            "field": facet,
+            "mincount": 0
+        }
 
     if facet_filter:
         if isinstance(facet_filter, unicode):
