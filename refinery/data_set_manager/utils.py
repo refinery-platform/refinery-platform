@@ -657,22 +657,13 @@ def generate_solr_params(
     field_limit = []  # limit attributes to return
     facet_fields_obj = {}  # requested facets formatted for solr
     if facets_from_config:
-        facet_field = ''
         # Twice as many facets as necessary, but easier than the alternative.
         for facet in settings.USER_FILES_FACETS.split(","):
-            char_str = '{}_Characteristics{}'.format(
-                    facet,
-                    NodeIndex.GENERIC_SUFFIX
-                )
-            factor_str = '{}_Factor_Value{}'.format(
-                    facet,
-                    NodeIndex.GENERIC_SUFFIX
-                )
-
-            if not facet_field:
-                facet_field = ','.join([char_str, factor_str])
-            else:
-                facet_field = ','.join([facet_field, char_str, factor_str])
+            facet_template = '{0}_Characteristics{1},{0}_Factor_Value{1}'
+            facet_field = ','.join(
+                [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
+                 in settings.USER_FILES_FACETS.split(",")]
+            )
 
         field_limit.extend(["*{}".format(NodeIndex.GENERIC_SUFFIX),
                             "name",

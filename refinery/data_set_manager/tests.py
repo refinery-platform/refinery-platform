@@ -40,14 +40,14 @@ from .serializers import AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (_create_solr_params_from_node_uuids,
-                    create_facet_filter_query, cull_attributes_from_list,
-                    customize_attribute_response, escape_character_solr,
-                    format_solr_response, generate_filtered_facet_fields,
+                    create_facet_field_counts, create_facet_filter_query,
+                    cull_attributes_from_list, customize_attribute_response,
+                    escape_character_solr, format_solr_response,
+                    generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     is_field_in_hidden_list, update_annotated_nodes,
-                    create_facet_field_counts,
                     update_attribute_order_ranks)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
@@ -461,7 +461,7 @@ class UtilitiesTests(TestCase):
     def test_generate_solr_params_no_params_returns_obj(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query.keys(), ['json', 'params'])
+        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_no_params_returns_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -517,7 +517,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertItemsEqual(query.keys(), ['json', 'params'])
+        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_assay_with_params_returns_params(self):
         parameter_dict = {'limit': 7, 'offset': 2,
