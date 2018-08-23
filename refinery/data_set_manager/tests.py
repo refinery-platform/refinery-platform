@@ -1,6 +1,7 @@
 from StringIO import StringIO
 import contextlib
 import logging
+import json
 import os
 import re
 import shutil
@@ -420,8 +421,8 @@ class UtilitiesTests(TestCase):
                         'TYPE': ['Raw Data File']}
         facet_field_query = create_facet_filter_query(facet_filter)
         self.assertEqual(facet_field_query,
-                         u'&fq={!tag=TYPE}TYPE:(Raw\\ Data\\ File)'
-                         u'&fq={!tag=Author}Author:(Vezza OR McConnell)')
+                         [u'{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',
+                          u'{!tag=AUTHOR}Author:(Vezza OR McConnell)'])
 
     def test_hide_fields_from_list(self):
         weighted_list = [{'solr_field': 'uuid'},
@@ -457,65 +458,129 @@ class UtilitiesTests(TestCase):
         for field in list_not_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), False)
 
-    def test_generate_solr_params_no_params(self):
+    def test_generate_solr_params_no_params_returns_obj(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=Cell Type'
-                         '&facet.field=Analysis'
-                         '&facet.field=Organism'
-                         '&facet.field=Cell Line'
-                         '&facet.field=Type'
-                         '&facet.field=Group Name'
-                         '&fl=REFINERY_DATAFILE_s%2C'
-                         'Character_Title%2C'
-                         'Specimen%2C'
-                         'Cell Type%2C'
-                         'Analysis%2C'
-                         'Organism%2C'
-                         'Cell Line%2C'
-                         'Type%2C'
-                         'Group Name'
-                         '&fq=is_annotation%3Afalse'
-                         '&start=0'
-                         '&rows={}'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(
-                             self.valid_uuid, constants.REFINERY_SOLR_DOC_LIMIT
-                         ))
+        self.assertItemsEqual(query.keys(), ['json', 'params'])
 
-    def test_generate_solr_params_for_assay_with_params(self):
+    def test_generate_solr_params_no_params_returns_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertItemsEqual(query.get('params'),
+                              {
+                                  'facet.limit': '-1',
+                                  'fq': 'is_annotation:false',
+                                  'rows': constants.REFINERY_SOLR_DOC_LIMIT,
+                                  'start': '0',
+                                  'wt': 'json'
+                              })
+
+    def test_generate_solr_params_no_params_returns_json_facet(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertListEqual(sorted(query.get('json').get('facet').keys()),
+                             ['Analysis',
+                              'Cell Line',
+                              'Cell Type',
+                              'Group Name',
+                              'Organism',
+                              'Type'])
+
+    def test_generate_solr_params_no_params_returns_json_fields(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertListEqual(sorted(query.get('json').get('fields')),
+                             ['Analysis',
+                              'Cell Line',
+                              'Cell Type',
+                              'Group Name',
+                              'Organism',
+                              'Type'])
+
+    def test_generate_solr_params_no_params_returns_json_filter(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertListEqual(query.get('json').get('filter'),
+                             ['assay_uuid:({})'.format(self.valid_uuid)]
+                             )
+
+    def test_generate_solr_params_no_params_returns_json_query(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertEqual(query.get('json').get('query'),
+                         'django_ct:data_set_manager.node')
+
+    def test_generate_solr_params_for_assay_with_params_return_obj(self):
         parameter_dict = {'limit': 7, 'offset': 2,
-                          'include_facet_count': 'true',
-                          'attributes': 'cats,mouse,dog,horse',
                           'facets': 'cats,mouse,dog,horse',
-                          'pivots': 'cats,mouse',
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=cats'
-                         '&facet.field=mouse'
-                         '&facet.field=dog'
-                         '&facet.field=horse'
-                         '&fl=cats%2Cmouse%2Cdog%2Chorse'
-                         '&facet.pivot=cats%2Cmouse'
-                         '&fq=is_annotation%3Atrue'
-                         '&start=2'
-                         '&rows=7'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(
-                                 self.valid_uuid))
+        self.assertItemsEqual(query.keys(), ['json', 'params'])
+
+    def test_generate_solr_params_for_assay_with_params_returns_params(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertItemsEqual(query.get('params'),
+                              {
+                                  'facet.limit': '-1',
+                                  'fq': 'is_annotation:false',
+                                  'rows': constants.REFINERY_SOLR_DOC_LIMIT,
+                                  'start': '0',
+                                  'wt': 'json'
+                              })
+
+    def test_generate_solr_params_params_returns_json_facet(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertListEqual(sorted(query.get('json').get('facet').keys()),
+                             ['cats', 'dog', 'horse', 'mouse'])
+
+    def test_generate_solr_params_params_returns_json_fields(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertListEqual(query.get('json').get('fields'),
+                             ['cats', 'mouse', 'dog', 'horse'])
+
+    def test_generate_solr_params_params_returns_json_filter(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertListEqual(query.get('json').get('filter'),
+                             ['assay_uuid:({})'.format(self.valid_uuid)])
+
+    def test_generate_solr_params_params_returns_json_query(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertEqual(query.get('json').get('query'),
+                         'django_ct:data_set_manager.node')
 
     def test_cull_attributes_from_list(self):
         new_attribute_list = cull_attributes_from_list(
@@ -553,20 +618,15 @@ class UtilitiesTests(TestCase):
                                          'Organism', 'Cell Line',
                                          'Type', 'Group Name']})
 
-    def test_generate_facet_fields_query(self):
+    def generate_filtered_facet_fields(self):
         facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
                               'REFINERY_WORKFLOW_OUTPUT_6_3_s',
                               'REFINERY_ANALYSIS_UUID_6_3_s',
                               'Author_Characteristics_6_3_s',
                               'Year_Characteristics_6_3_s']
-
-        str_query = generate_filtered_facet_fields(facet_field_string)
-        self.assertEqual(str_query,
-                         '&facet.field=REFINERY_SUBANALYSIS_6_3_s'
-                         '&facet.field=REFINERY_WORKFLOW_OUTPUT_6_3_s'
-                         '&facet.field=REFINERY_ANALYSIS_UUID_6_3_s'
-                         '&facet.field=Author_Characteristics_6_3_s'
-                         '&facet.field=Year_Characteristics_6_3_s')
+        query_dict = generate_filtered_facet_fields(facet_field_string)
+        self.assertEqual(query_dict.get('facet_field'), facet_field_string)
+        self.assertEqual(query_dict.get('field_limit'), facet_field_string)
 
     def test_get_owner_from_valid_assay(self):
         owner = get_owner_from_assay(self.valid_uuid).username
@@ -580,92 +640,107 @@ class UtilitiesTests(TestCase):
 
     def test_format_solr_response_valid(self):
         # valid input, expected response from solr
-        solr_response = '{"responseHeader":{"status": 0, "params":' \
-                        '{"facet": "true", "facet.mincount": "1",' \
-                        '"start": "0",'\
-                        '"q": "django_ct:data_set_manager.node",'\
-                        '"facet.limit": "-1",'\
-                        '"facet.field":'\
-                        '["REFINERY_TYPE_6_3_s",'\
-                        '"REFINERY_SUBANALYSIS_6_3_s",'\
-                        '"REFINERY_WORKFLOW_OUTPUT_6_3_s",'\
-                        '"REFINERY_ANALYSIS_UUID_6_3_s",'\
-                        '"Author_Characteristics_6_3_s",'\
-                        '"Year_Characteristics_6_3_s"],'\
-                        '"fl":'\
-                        '"REFINERY_TYPE_6_3_s,'\
-                        'REFINERY_SUBANALYSIS_6_3_s,'\
-                        'REFINERY_WORKFLOW_OUTPUT_6_3_s,'\
-                        'REFINERY_ANALYSIS_UUID_6_3_s,'\
-                        'Author_Characteristics_6_3_s,'\
-                        'Year_Characteristics_6_3_s",'\
-                        '"wt": "json", "rows": "20"}},'\
-                        '"response": {'\
-                        '"numFound": 1, "offset": 0,'\
-                        '"docs": ['\
-                        '{"Author_Characteristics_6_3_s": "Crocker",'\
-                        '"REFINERY_ANALYSIS_UUID_6_3_s": "N/A",'\
-                        '"REFINERY_WORKFLOW_OUTPUT_6_3_s": "N/A",'\
-                        '"REFINERY_SUBANALYSIS_6_3_s": "-1",'\
-                        '"Year_Characteristics_6_3_s": "1971",'\
-                        '"REFINERY_TYPE_6_3_s": "Raw Data File"}]},'\
-                        '"facet_counts": {"facet_queries": {},'\
-                        '"facet_fields": {'\
-                        '"REFINERY_TYPE_6_3_s":'\
-                        '["Derived Data File", 105,'\
-                        '"Raw Data File", 9],'\
-                        '"REFINERY_SUBANALYSIS_6_3_s":'\
-                        '["-1", 9, "0", 95, "1", 8, "2", 2]},'\
-                        '"facet_dates": {}, "facet_ranges": {},'\
-                        '"facet_intervals": {}, "facet_heatmaps": {}}}'
+        solr_response = json.dumps({
+            "responseHeader": {
+                "status": 0,
+                "QTime": 137,
+                "params": {
+                    "json": '{"facet": '
+                            '{"REFINERY_SUBANALYSIS_16_82_s": {'
+                            '"field": "REFINERY_SUBANALYSIS_16_82_s", '
+                            '"type": "terms", "mincount": 0}, '
+                            '"REFINERY_WORKFLOW_OUTPUT_16_82_s": {'
+                            '"field": "REFINERY_WORKFLOW_OUTPUT_16_82_s", '
+                            '"type": "terms", "mincount": 0}, '
+                            '"organism_Characteristics_16_82_s": '
+                            '{"field": "organism_Characteristics_16_82_s", '
+                            '"type": "terms", "mincount": 0},'
+                            '"REFINERY_TYPE_16_82_s": {'
+                            '"field": "REFINERY_TYPE_16_82_s", '
+                            '"type": "terms", "mincount": 0}}, '
+                            '"query": "django_ct:data_set_manager.node", '
+                            '"filter": ["assay_uuid:('
+                            '16cfd7ab-4bf7-4951-baf3-de270a12b225)"],'
+                            '"fields": ['
+                            '"REFINERY_SUBANALYSIS_16_82_s", '
+                            '"REFINERY_WORKFLOW_OUTPUT_16_82_s", '
+                            '"organism_Characteristics_16_82_s", '
+                            '"REFINERY_TYPE_16_82_s"]}',
+                    "start": "0",
+                    "facet.limit": "-1",
+                    "wt": "json",
+                    "fq": "is_annotation:false",
+                    "rows": "100"
+                }
+            },
+            "response": {
+               "numFound": 1,
+               "start": 0,
+               "docs": [
+                   {"REFINERY_SUBANALYSIS_16_82_s": "-1",
+                    "organism_Characteristics_16_82_s": "Danio",
+                    "REFINERY_TYPE_16_82_s": "Array Data File",
+                    "REFINERY_WORKFLOW_OUTPUT_16_82_s": "N/A"
+                    }]
+            },
+            "facets": {
+               "count": 1,
+               "REFINERY_SUBANALYSIS_16_82_s": {
+                   "buckets": [{"val": "-1", "count": 16}]
+               },
+               "REFINERY_WORKFLOW_OUTPUT_16_82_s": {
+                   "buckets": [{"val": "N/A", "count": 16}]
+               },
+               "organism_Characteristics_16_82_s": {
+                   "buckets": [{"val": "Danio", "count": 16}]
+               },
+               "REFINERY_TYPE_16_82_s": {
+                   "buckets": [
+                       {"val": "Array Data File", "count": 14},
+                       {"val": "Derived Array Data File", "count": 2}]
+               }
+            }
+        })
 
         formatted_response = format_solr_response(solr_response)
         self.assertDictEqual(
                 formatted_response,
                 {
                     'facet_field_counts':
-                        {u'REFINERY_SUBANALYSIS_6_3_s':
-                            [{'name': u'0', 'count': 95},
-                             {'name': u'-1', 'count': 9},
-                             {'name': u'1', 'count': 8},
-                             {'name': u'2', 'count': 2}
-                             ],
-                         u'REFINERY_TYPE_6_3_s':
-                            [{'name': u'Derived Data File', 'count': 105},
-                             {'name': u'Raw Data File', 'count': 9}]},
-                    'attributes': [{
-                         'attribute_type': 'Internal',
+                        {u'REFINERY_SUBANALYSIS_16_82_s':
+                            [{'name': u'-1', 'count': 16}],
+                         u'REFINERY_TYPE_16_82_s':
+                            [{'name': u'Array Data File', 'count': 14},
+                             {'name': u'Derived Array Data File', 'count': 2}],
+                         u'REFINERY_WORKFLOW_OUTPUT_16_82_s':
+                            [{'name': u'N/A', 'count': 16}],
+                         u'organism_Characteristics_16_82_s':
+                            [{'name': u'Danio', 'count': 16}]
+                         },
+                    'attributes': [
+                        {'attribute_type': 'Internal',
+                         'display_name': 'Analysis Group',
+                         'file_ext': u's',
+                         'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'},
+                        {'attribute_type': 'Internal',
+                         'display_name': 'Output Type',
+                         'file_ext': u's',
+                         'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'},
+                        {'attribute_type': 'Characteristics',
+                         'display_name': u'Organism',
+                         'file_ext': u's',
+                         'internal_name': u'organism_Characteristics_16_82_s'},
+                        {'attribute_type': 'Internal',
                          'display_name': u'Type',
                          'file_ext': u's',
-                         'internal_name': u'REFINERY_TYPE_6_3_s'},
-                         {'attribute_type': 'Internal',
-                          'display_name': 'Analysis Group',
-                          'file_ext': u's',
-                          'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
-                         {'attribute_type': 'Internal',
-                          'display_name': 'Output Type',
-                          'file_ext': u's',
-                          'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
-                         {'attribute_type': 'Internal',
-                          'display_name': u'Analysis',
-                          'file_ext': u's',
-                          'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'},
-                         {'attribute_type': 'Characteristics',
-                          'display_name': u'Author',
-                          'file_ext': u's',
-                          'internal_name': u'Author_Characteristics_6_3_s'},
-                         {'attribute_type': 'Characteristics',
-                          'display_name': u'Year',
-                          'file_ext': u's',
-                          'internal_name': u'Year_Characteristics_6_3_s'}],
+                         'internal_name': u'REFINERY_TYPE_16_82_s'}
+                        ],
                     'nodes_count': 1,
                     'nodes': [{
-                         u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
-                         u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
-                         u'Author_Characteristics_6_3_s': u'Crocker',
-                         u'Year_Characteristics_6_3_s': u'1971',
-                         u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
-                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
+                         u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
+                         u'organism_Characteristics_16_82_s': u'Danio',
+                         u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
+                         u'REFINERY_TYPE_16_82_s': u'Array Data File'}]
                 }
         )
 
