@@ -652,7 +652,7 @@ def generate_solr_params(
 
     if len(assay_uuids) == 0:
         return None
-    facet_filter_arr = ['assay_uuid:({})'.format(' OR '.join(assay_uuids))]
+    filter_arr = ['assay_uuid:({})'.format(' OR '.join(assay_uuids))]
 
     field_limit = []  # limit attributes to return
     facet_fields_obj = {}  # requested facets formatted for solr
@@ -718,19 +718,19 @@ def generate_solr_params(
                 facet_filter = json.loads(facet_filter)
             except ValueError:
                 logger.error("Could not load facet_filter for assay %s",
-                             facet_filter_arr[0])
+                             filter_arr[0])
                 facet_filter = []
         # exclude filters, for multi-select
         for facet in facet_filter:
             facet_fields_obj[facet]['excludeTags'] = facet.upper()
         facet_filter = create_facet_filter_query(facet_filter)
-        facet_filter_arr.extend(facet_filter)
+        filter_arr.extend(facet_filter)
 
     solr_params = {
         "json": {
             "query": 'django_ct:data_set_manager.node',
             "facet": facet_fields_obj,
-            "filter": facet_filter_arr,
+            "filter": filter_arr,
             "fields": field_limit
         },
         "params": fixed_solr_params
