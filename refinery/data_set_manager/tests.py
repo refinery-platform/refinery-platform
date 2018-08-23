@@ -490,7 +490,7 @@ class UtilitiesTests(TestCase):
                              ['Analysis',
                               'Cell Line',
                               'Cell Type',
-                              'Characeter_Title',
+                              'Character_Title',
                               'Group Name',
                               'Organism',
                               'REFINERY_DATAFILE_s',

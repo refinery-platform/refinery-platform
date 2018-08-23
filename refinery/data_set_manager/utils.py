@@ -714,7 +714,12 @@ def generate_solr_params(
     if facet_filter:
         if isinstance(facet_filter, unicode):
             facet_filter = urlunquote(facet_filter)
-            facet_filter = json.loads(facet_filter)
+            try:
+                facet_filter = json.loads(facet_filter)
+            except ValueError:
+                logger.error("Could not load facet_filter for assay %s",
+                             facet_filter_arr[0])
+                facet_filter = []
         # exclude filters, for multi-select
         for facet in facet_filter:
             facet_fields_obj[facet]['excludeTags'] = facet.upper()
