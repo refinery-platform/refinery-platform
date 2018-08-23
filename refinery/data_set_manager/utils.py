@@ -718,8 +718,7 @@ def generate_solr_params(
         # exclude filters, for multi-select
         for facet in facet_filter:
             facet_fields_obj[facet]['excludeTags'] = facet.upper()
-        facet_filter = create_facet_filter_query(facet_filter)
-        filter_arr.extend(facet_filter)
+        filter_arr.extend(create_facet_filter_query(facet_filter))
 
     solr_params = {
         "json": {
