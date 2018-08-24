@@ -913,17 +913,14 @@ def create_facet_field_counts(facet_fields):
         if field_name == 'count':
             continue
         count_array = count_obj.get('buckets')
-        count_obj_array = []
         for field_obj in count_array:
-            count_obj_array.append(
-                    {'name': field_obj.get('val'),
-                     'count': field_obj.get('count')}
-                    )
+            field_obj['name'] = field_obj.get('val')
+            del field_obj['val']
 
-        if count_obj_array:
+        if count_array:
             # sort fields depending on count
-            count_obj_array.sort(key=lambda x: x['count'], reverse=True)
-            facet_field_counts[field_name] = count_obj_array
+            count_array.sort(key=lambda x: x['count'], reverse=True)
+            facet_field_counts[field_name] = count_array
 
     return facet_field_counts
 
