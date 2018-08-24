@@ -1,4 +1,5 @@
 import os
+import shutil
 import stat
 from tempfile import NamedTemporaryFile
 import threading
@@ -10,14 +11,11 @@ import boto3
 import botocore
 import celery
 import requests
-from requests.exceptions import (ConnectionError, ContentDecodingError,
-                                 HTTPError)
 
 from data_set_manager.models import Node
 
 from .models import FileStoreItem, make_dir, get_temp_dir, parse_s3_url
-from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, delete_file,
-                    symlink_file)
+from .utils import S3MediaStorage, SymlinkedFileSystemStorage
 
 logger = celery.utils.log.get_task_logger(__name__)
 logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
@@ -27,56 +25,131 @@ class FileImportTask(celery.Task):
     track_started = True
 
     def run(self, item_source):
-        if settings.REFINERY_S3_USER_DATA:
-            if os.path.isabs(item_source):
-                pass
-            elif item_source.startswith('s3://'):
-                pass
+        logger.info("Importing file")
+        try:
+            if settings.REFINERY_S3_USER_DATA:
+                if os.path.isabs(item_source):
+                    self.import_path_to_s3(item_source)
+                elif item_source.startswith('s3://'):
+                    self.import_s3_to_s3(item_source)
+                else:
+                    self.import_url_to_s3(item_source)
             else:
-                pass
-        else:  # POSIX file store
-            if os.path.isabs(item_source):
-                self.import_path_to_path(item_source)
-            elif item_source.startswith('s3://'):
-                self.import_s3_to_path(item_source)
-            else:
-                pass
+                if os.path.isabs(item_source):
+                    self.import_path_to_path(item_source)
+                elif item_source.startswith('s3://'):
+                    self.import_s3_to_path(item_source)
+                else:
+                    self.import_url_to_path(item_source)
+        except RuntimeError as exc:
+            logger.error("File import failed: %s", exc)
+            self.update_state(state=celery.states.FAILURE,
+                              meta='Failed to import file')
+            # http://stackoverflow.com/a/33143545
+            raise celery.exceptions.Ignore()
+        logger.info("File imported successfully")
 
-    def copy_file(self, source_path, destination_path, delete_source=False):
-        """Copy file from one absolute file system path to another"""
+    def copy_file(self, source_path, destination_path):
+        """Copy a file from one absolute file system path to another"""
         make_dir(os.path.dirname(destination_path))
-
         try:
             with open(source_path, 'rb') as source, \
                     open(destination_path, 'wb') as destination:
-                self.copy_file_obj(source, destination)
-        except (IOError, OSError) as exc:
-            delete_file(destination_path)
-            raise RuntimeError("Failed to copy '{}' to '{}': {}".format(
-                source_path, destination_path, exc
-            ))
+                try:
+                    self.copy_file_obj(source, destination)
+                except RuntimeError:
+                    self.delete_file(destination_path)
+                    raise
+        except EnvironmentError as exc:
+            raise RuntimeError("Error copying '{}' to '{}': {}".format(
+                source_path, destination_path, exc))
 
-        if delete_source:
-            delete_file(source_path)
-
-    def copy_file_obj(self, source, destination):
-        """Copy file object in chunks and report progress"""
+    def copy_file_obj(self, source_obj, destination_obj):
+        """Copy a file object and update progress"""
         chunk_size = 10 * 1024 * 1024  # 10MB
-        source_size = os.path.getsize(source.name)
-        source.seek(0)
-        destination.seek(0)
-        for chunk in iter(lambda: source.read(chunk_size), ''):
-            destination.write(chunk)
-            destination_size = os.path.getsize(destination.name)
-            percentage = destination_size * 100. / source_size
-            self.update_state(
-                state='PROGRESS',
-                meta={
-                    'percent_done': '{:.0f}'.format(percentage),
-                    'current': destination_size,
-                    'total': source_size
-                }
-            )
+        source_size = os.path.getsize(source_obj.name)
+        try:
+            for chunk in iter(lambda: source_obj.read(chunk_size), ''):
+                destination_obj.write(chunk)
+                destination_size = destination_obj.tell()
+                percentage = destination_size * 100. / source_size
+                self.update_state(
+                    state='PROGRESS',
+                    meta={
+                        'percent_done': '{:.0f}'.format(percentage),
+                        'current': destination_size,
+                        'total': source_size
+                    }
+                )
+        except EnvironmentError as exc:
+            raise RuntimeError("Error copying '{}' to '{}': {}".format(
+                source_obj.name, destination_obj.name, exc
+            ))
+        # ensure that all internal buffers are written to disk
+        destination_obj.flush()
+        os.fsync(destination_obj.fileno())
+
+    @staticmethod
+    def delete_file(absolute_path):
+        if os.path.exists(absolute_path):
+            try:
+                os.unlink(absolute_path)
+            except EnvironmentError as exc:
+                logger.error("Error deleting '%s': %s", absolute_path, exc)
+            logger.debug("Deleted '%s'", absolute_path)
+
+    def download_file(self, source_url):
+        """Download file from URL to a temporary file"""
+        try:
+            response = requests.get(source_url, stream=True)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            raise RuntimeError("Could not open URL '{}': '{}'".format(
+                               source_url, exc))
+        try:
+            with NamedTemporaryFile(dir=get_temp_dir(),
+                                    delete=False) as download_object:
+                try:
+                    self.download_file_obj(response, download_object)
+                except RuntimeError:
+                    self.delete_file(download_object.name)
+                    raise
+        except EnvironmentError as exc:
+            raise RuntimeError("Error downloading from '{}': {}".format(
+                source_url, exc))
+
+        return download_object.name
+
+    def download_file_obj(self, request_response, download_object):
+        """Stream download from request response object and update progress"""
+        # Content-Length header is optional, so provide a default value
+        chunk_size = 10 * 1024 * 1024  # 10MB
+        remote_file_size = int(
+            request_response.headers.get('Content-Length', 0)
+        )
+        percent_done = 0
+        try:
+            for chunk in request_response.iter_content(chunk_size):
+                download_object.write(chunk)
+                local_file_size = download_object.tell()
+                # check if we have a sane value for file size
+                if remote_file_size > 0:
+                    percent_done = \
+                        local_file_size * 100. / remote_file_size
+                self.update_state(
+                    state="PROGRESS",
+                    meta={
+                        "percent_done": "{:.0f}".format(percent_done),
+                        "current": local_file_size,
+                        "total": remote_file_size
+                    }
+                )
+        except EnvironmentError as exc:
+            raise RuntimeError("Error downloading from '{}': {}".format(
+                request_response.url, exc))
+        # ensure that all internal buffers are written to disk
+        download_object.flush()
+        os.fsync(download_object.fileno())
 
     def import_path_to_path(self, source_path, symlink=True):
         """Import file from an absolute file system path into
@@ -88,24 +161,55 @@ class FileImportTask(celery.Task):
 
         if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
                                    get_temp_dir())):
-            # move uploaded or temporary file
-            logger.debug("Moving file '%s' into file store", source_path)
-            self.copy_file(source_path, file_store_path, delete_source=True)
-            logger.info("Moved file '%s' into file store", source_path)
+            self.move_file(source_path, file_store_path)
+            logger.info("Moved '%s' to '%s'", source_path, file_store_path)
         else:
             if symlink:
-                symlink_file(source_path, file_store_path)
+                self.symlink_file(source_path, file_store_path)
                 logger.info("Created symlink '%s' to '%s'",
                             file_store_path, source_path)
             else:
-                logger.debug("Copying file '%s' into file store", source_path)
+                logger.debug("Copying '%s' to '%s'",
+                             source_path, file_store_path)
                 self.copy_file(source_path, file_store_path)
-                logger.info("Copied file '%s' into file store", source_path)
+                logger.info("Copied '%s' to '%s'",
+                            source_path, file_store_path)
+
+        return file_store_name
+
+    def import_path_to_s3(self, source_path):
+        """Import file from an absolute file system path into MEDIA_BUCKET"""
+        s3 = boto3.client('s3')
+        storage = S3MediaStorage()
+        file_store_name = storage.get_name(os.path.basename(source_path))
+
+        try:
+            source_size = os.path.getsize(source_path)
+        except (IOError, OSError) as exc:
+            s3_url = 's3://' + settings.MEDIA_BUCKET + '/' + file_store_name
+            raise RuntimeError(
+                "Error transferring file '{}' to '{}': {}".format(
+                    source_path, s3_url, exc))
+
+        try:
+            s3.upload_file(source_path, settings.MEDIA_BUCKET, file_store_name,
+                           ExtraArgs={'ACL': 'public-read'},
+                           Callback=ProgressPercentage(source_size,
+                                                       self.request.id))
+        except botocore.exceptions.ClientError as exc:
+            s3_url = 's3://' + settings.MEDIA_BUCKET + '/' + file_store_name
+            raise RuntimeError(
+                "Error transferring file '{}' to '{}': {}".format(
+                    source_path, s3_url, exc))
+
+        if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
+                                   get_temp_dir())):
+            self.delete_file(source_path)
 
         return file_store_name
 
     def import_s3_to_path(self, source_url):
-        """Import S3 object from s3:// source URL into FILE_STORE_BASE_DIR"""
+        """Import S3 object from s3:// URL into FILE_STORE_BASE_DIR"""
         s3 = boto3.client('s3')
         bucket, key = parse_s3_url(source_url)
 
@@ -118,7 +222,8 @@ class FileImportTask(celery.Task):
             raise RuntimeError("Failed to download from '{}': {}".format(
                 source_url, exc))
 
-        with NamedTemporaryFile(dir=get_temp_dir()) as download_object:
+        with NamedTemporaryFile(dir=get_temp_dir(),
+                                delete=False) as download_object:
             try:
                 s3.download_fileobj(bucket, key, download_object,
                                     Callback=ProgressPercentage(
@@ -129,26 +234,14 @@ class FileImportTask(celery.Task):
                 raise RuntimeError(
                     "Failed to download from '{}': {}".format(source_url, exc)
                 )
-            logger.info("Downloaded from '%s'", source_url)
+            logger.info("Finished downloading from '%s'", source_url)
 
-            download_object.flush()
-            storage = SymlinkedFileSystemStorage()
-            file_store_name = storage.get_name(os.path.basename(source_url))
-            file_store_path = storage.path(file_store_name)
-
-            logger.debug("Copying downloaded file '%s' to '%s'",
-                         download_object.name, file_store_path)
-            try:
-                with open(file_store_path, 'wb') as file_store_obj:
-                    self.copy_file_obj(download_object, file_store_obj)
-            except (IOError, OSError) as exc:
-                delete_file(file_store_path)
-                raise RuntimeError(
-                    "Failed to copy '{}' to '{}': {}".format(
-                        download_object.name, file_store_path, exc
-                    )
-                )
-            logger.info("Copied downloaded file to '%s'", file_store_path)
+        storage = SymlinkedFileSystemStorage()
+        file_store_name = storage.get_name(os.path.basename(source_url))
+        file_store_path = storage.path(file_store_name)
+        self.move_file(download_object.name, file_store_path)
+        logger.info("Moved '%s' to '%s'",
+                    download_object.name, file_store_path)
 
         if source_url.startswith('s3://' + settings.UPLOAD_BUCKET):
             logger.debug("Deleting '%s'", source_url)
@@ -159,6 +252,60 @@ class FileImportTask(celery.Task):
             logger.info("Deleted '%s'", source_url)
 
         return file_store_name
+
+    def import_s3_to_s3(self, source_url):
+        """Transfer S3 object from UPLOAD_BUCKET to MEDIA_BUCKET"""
+        pass
+
+    def import_url_to_path(self, source_url):
+        """Import file from URL into FILE_STORE_BASE_DIR"""
+        logger.debug("Started downloading from '%s'", source_url)
+        temp_file_path = self.download_file(source_url)
+        logger.info("Finished downloading from '%s' to '%s'",
+                    source_url, temp_file_path)
+
+        storage = SymlinkedFileSystemStorage()
+        # remove query string from URL before extracting file name
+        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        file_store_name = storage.get_name(source_file_name)
+        file_store_path = storage.path(file_store_name)
+        self.move_file(temp_file_path, file_store_path)
+        logger.info("Moved '%s' to '%s'", temp_file_path, file_store_path)
+
+        return file_store_name
+
+    def import_url_to_s3(self, source_url):
+        """Download file from URL and upload to MEDIA_BUCKET"""
+        pass
+
+    @staticmethod
+    def move_file(source_path, destination_path):
+        """Move file from one absolute file system path to another"""
+        make_dir(os.path.dirname(destination_path))
+        try:
+            shutil.move(source_path, destination_path)
+        except EnvironmentError as exc:
+            raise RuntimeError("Error moving '{}' to '{}': {}".format(
+                               source_path, destination_path, exc))
+        # temp files are only accessible by the owner by default which prevents
+        # access by the web server if it is running as its own user
+        try:
+            mode = os.stat(destination_path).st_mode
+            os.chmod(destination_path,
+                     mode | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+        except EnvironmentError as exc:
+            logger.error("Failed changing permissions on '%s': %s",
+                         destination_path, exc)
+
+    @staticmethod
+    def symlink_file(source_path, link_path):
+        """Create a symlink link_path to source_path"""
+        make_dir(os.path.dirname(link_path))
+        try:
+            os.symlink(source_path, link_path)
+        except OSError as exc:
+            raise RuntimeError("Error creating symlink '{}': {}".format(
+                link_path, exc))
 
 
 class ProgressPercentage(object):
@@ -184,41 +331,6 @@ class ProgressPercentage(object):
                     'total': self._file_size
                 }
             )
-
-
-def _import_path_to_s3(source_path):
-    """Import file from an absolute file system path into MEDIA_BUCKET"""
-    s3 = boto3.client('s3')
-    storage = S3MediaStorage()
-    file_store_name = storage.get_name(os.path.basename(source_path))
-
-    try:
-        source_size = os.path.getsize(source_path)
-    except (IOError, OSError) as exc:
-        s3_url = 's3://' + settings.MEDIA_BUCKET + '/' + file_store_name
-        raise RuntimeError("Error transferring file '{}' to '{}': {}".format(
-            source_path, s3_url, exc))
-
-    try:
-        s3.upload_file(source_path, settings.MEDIA_BUCKET, file_store_name,
-                       ExtraArgs={'ACL': 'public-read'},
-                       Callback=ProgressPercentage(source_size,
-                                                   import_file.request.id))
-    except botocore.exceptions.ClientError as exc:
-        s3_url = 's3://' + settings.MEDIA_BUCKET + '/' + file_store_name
-        raise RuntimeError("Error transferring file '{}' to '{}': {}".format(
-            source_path, s3_url, exc))
-
-    if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
-                               get_temp_dir())):
-        delete_file(source_path)
-
-    return file_store_name
-
-
-def _import_s3_to_s3(source_url):
-    """Import S3 object from UPLOAD_BUCKET to MEDIA_BUCKET"""
-    pass
 
 
 @celery.task.task(track_started=True)
@@ -270,19 +382,7 @@ def import_file(uuid, refresh=False, file_size=0):
     # start the transfer
     if os.path.isabs(item.source):
         # file is in a temp dir or a locally mounted external file system
-        try:
-            if settings.REFINERY_S3_USER_DATA:
-                item.datafile.name = _import_path_to_s3(item.source)
-            else:
-                pass
-        except RuntimeError as exc:
-            logger.error("Error importing file from '%s': %s",
-                         item.source, exc)
-            import_file.update_state(state=celery.states.FAILURE,
-                                     meta=str(exc))
-            # http://stackoverflow.com/a/33143545
-            raise celery.exceptions.Ignore()
-
+        pass
     elif item.source.startswith('s3://'):
         # file is in a S3 bucket (for example: UPLOAD_BUCKET)
         pass
@@ -291,7 +391,7 @@ def import_file(uuid, refresh=False, file_size=0):
         try:
             response = requests.get(item.source, stream=True)
             response.raise_for_status()
-        except HTTPError as exc:
+        except requests.exceptions.HTTPError as exc:
             logger.error("Could not open URL '%s': '%s'", item.source, exc)
             import_file.update_state(state=celery.states.FAILURE,
                                      meta='Failed to import file from URL')
@@ -299,7 +399,7 @@ def import_file(uuid, refresh=False, file_size=0):
             raise celery.exceptions.Ignore()
         # FIXME: When importing a tabular file into Refinery, there is a
         # dependence on this ConnectionError below returning `None`!!!!
-        except (ConnectionError, ValueError) as exc:
+        except (requests.exceptions.ConnectionError, ValueError) as exc:
             logger.error("Could not open URL '%s': '%s'", item.source, exc)
             return None
 
@@ -341,7 +441,7 @@ def import_file(uuid, refresh=False, file_size=0):
                             "total": remote_file_size
                         }
                     )
-            except ContentDecodingError as e:
+            except requests.exceptions.ContentDecodingError as e:
                 logger.error("Error while decoding response content:%s" % e)
                 import_failure = True
 
@@ -447,7 +547,7 @@ def download_file(url, target_path, file_size=1):
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-    except (HTTPError, requests.exceptions.ConnectionError) as exc:
+    except requests.exceptions.RequestException as exc:
         logger.error(exc)
         raise RuntimeError("Could not open URL '{}': {}".format(url, exc))
     except ValueError as exc:

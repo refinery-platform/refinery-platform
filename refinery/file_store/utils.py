@@ -12,6 +12,18 @@ from storages.backends.s3boto3 import S3Boto3Storage
 logger = logging.getLogger(__name__)
 
 
+def make_dir(path):
+    """Create directory given absolute file system path"""
+    # https://stackoverflow.com/a/14364249
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if not os.path.isdir(path):
+            raise RuntimeError(str(exc))
+    else:
+        logger.info("Created directory '%s'", path)
+
+
 class S3MediaStorage(S3Boto3Storage):
     """Django media (user data) files storage"""
     bucket_name = settings.MEDIA_BUCKET
@@ -70,33 +82,3 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
 
     def get_name(self, name):
         return self.get_available_name(get_valid_filename(name))
-
-
-def delete_file(absolute_path):
-    if os.path.exists(absolute_path):
-        try:
-            os.unlink(absolute_path)
-        except OSError as exc:
-            logger.error("Failed to delete '%s': %s", absolute_path, exc)
-
-
-def make_dir(path):
-    """Create directory given absolute file system path"""
-    # https://stackoverflow.com/a/14364249
-    try:
-        os.makedirs(path)
-    except OSError as exc:
-        if not os.path.isdir(path):
-            raise RuntimeError(str(exc))
-    else:
-        logger.info("Created directory '%s'", path)
-
-
-def symlink_file(source_path, link_path):
-    """Create a symlink link_path to source_path"""
-    make_dir(os.path.dirname(link_path))
-    try:
-        os.symlink(source_path, link_path)
-    except OSError as exc:
-        raise RuntimeError("Error creating symlink '{}': {}".format(
-            link_path, exc))
