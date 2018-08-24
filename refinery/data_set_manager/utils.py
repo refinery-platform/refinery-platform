@@ -694,7 +694,7 @@ def generate_solr_params(
         facet_fields_obj[facet] = {
             "type": "terms",
             "field": facet,
-            "mincount": 0
+            "mincount": 1 if facets_from_config else 0
         }
 
     if facet_filter:
