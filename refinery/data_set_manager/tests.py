@@ -465,7 +465,7 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query.get('params'),
+        self.assertItemsEqual(query['params'],
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -476,7 +476,7 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_facet(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertListEqual(sorted(query.get('json').get('facet').keys()),
+        self.assertListEqual(sorted(query['json']['facet'].keys()),
                              ['Analysis',
                               'Cell Line',
                               'Cell Type',
@@ -486,7 +486,7 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_fields(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertListEqual(sorted(query.get('json').get('fields')),
+        self.assertListEqual(sorted(query['json']['fields']),
                              ['Analysis',
                               'Cell Line',
                               'Cell Type',
@@ -499,13 +499,13 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_filter(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertListEqual(query.get('json').get('filter'),
+        self.assertListEqual(query['json']['filter'],
                              ['assay_uuid:({})'.format(self.valid_uuid)]
                              )
 
     def test_generate_solr_params_no_params_returns_json_query(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertEqual(query.get('json').get('query'),
+        self.assertEqual(query['json']['query'],
                          'django_ct:data_set_manager.node')
 
     def test_generate_solr_params_for_assay_with_params_return_obj(self):
@@ -528,7 +528,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertItemsEqual(query.get('params'),
+        self.assertItemsEqual(query['params'],
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -546,7 +546,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertListEqual(sorted(query.get('json').get('facet').keys()),
+        self.assertListEqual(sorted(query['json']['facet'].keys()),
                              ['cats', 'dog', 'horse', 'mouse'])
 
     def test_generate_solr_params_params_returns_json_fields(self):
@@ -558,7 +558,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertListEqual(query.get('json').get('fields'),
+        self.assertListEqual(query['json']['fields'],
                              ['cats', 'mouse', 'dog', 'horse'])
 
     def test_generate_solr_params_params_returns_json_filter(self):
@@ -570,7 +570,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertListEqual(query.get('json').get('filter'),
+        self.assertListEqual(query['json']['filter'],
                              ['assay_uuid:({})'.format(self.valid_uuid)])
 
     def test_generate_solr_params_params_returns_json_query(self):
@@ -582,7 +582,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertEqual(query.get('json').get('query'),
+        self.assertEqual(query['json']['query'],
                          'django_ct:data_set_manager.node')
 
     def test_cull_attributes_from_list(self):
