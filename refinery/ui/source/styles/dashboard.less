@@ -1960,9 +1960,13 @@ body.repo-mode .refinery-dashboard {
   #dashboard-collaboration-card {
     height: @card-bottom-half-view;
 
-    .group-name-header {
+    .group-name-header.row {
       font-size: 1.15em;
     }
+
+    .row:hover{
+        background-color: @gray-lighter-rgba;
+      }
 
     .name-subheader {
       font-weight: bold;
@@ -1981,7 +1985,10 @@ body.repo-mode .refinery-dashboard {
     }
 
     .dashboard-member-list {
-      padding-top: 25px;
+      .row:hover {
+        background-color: transparent;
+      }
+      padding-top: 10px;
       .border-line {
         margin: 0.3em 2em 0.8em 2em;
         border-top: 1px solid @gray-lighter-rgba;
@@ -2023,11 +2030,14 @@ body.repo-mode .refinery-dashboard {
     }
 
     .font-awesome-toggle-panel {
-      padding-bottom: 1.5em;
-      margin-bottom: 1em;
+      .row {
+        margin: 0px !important;
+      }
+      margin-top: .3em;
       a.toggle-group {
         display: inline-block;
         position: relative;
+        height: 30px;
       }
 
       a.toggle-group:after {
