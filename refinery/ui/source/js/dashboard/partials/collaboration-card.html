@@ -23,7 +23,7 @@
       <li
          ng-repeat="group in $ctrl.userGroups"
          class="font-awesome-toggle-panel">
-         <div class="group-name-header">
+         <div class="group-name-header row">
            <a
              type="button"
              data-toggle="collapse"
@@ -38,11 +38,11 @@
                 &nbsp;{{ group.name }}
              </span>
            </a>
-            <div class="col-md-4 col-xs-4">
+           <div class="col-md-4 col-xs-4">
                <span ng-if="group.can_edit">Manager</span>
                <span ng-if="!group.can_edit"> &nbsp;</span>
-            </div>
-            <div class="col-md-2 col-xs-3">
+           </div>
+           <div class="col-md-2 col-xs-3">
               <span ng-if="group.name !== 'Public'">
                 <a
                   ng-click="$ctrl.openGroupEditor(group)"
@@ -71,7 +71,8 @@
            aria-labelledby="headingOne"
            data-parent="#accordion">
             <ul class="list-unstyled dashboard-member-list">
-              <li ng-repeat="member in group.member_list | orderBy: 'last_name'">
+              <li class='row' ng-repeat="member in group.member_list | orderBy:
+              'last_name'">
                 <a
                   ng-href="/users/{{ member.uuid }}"
                   class="member-info"
@@ -99,7 +100,7 @@
                 <span class="col-md-11 col-xs-offset-1 col-xs-11
                 col-md-offset-1 p-l-1 border-line"></span>
               </li>
-              <li ng-repeat="invite in $ctrl.invitations[group.id]"
+              <li class='row' ng-repeat="invite in $ctrl.invitations[group.id]"
                 class="p-t-1">
                 <span class="col-md-9 col-xs-8 member-info">
                   {{ invite.recipient_email }}
