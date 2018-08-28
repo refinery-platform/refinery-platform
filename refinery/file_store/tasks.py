@@ -251,7 +251,9 @@ class FileImportTask(celery.Task):
         logger.info("Finished downloading from '%s'", source_url)
 
         storage = SymlinkedFileSystemStorage()
-        file_store_name = storage.get_name(os.path.basename(source_url))
+        # remove query string from URL before extracting file name
+        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        file_store_name = storage.get_name(source_file_name)
         file_store_path = storage.path(file_store_name)
         self.move_file(temp_file_path, file_store_path)
         logger.info("Moved '%s' to '%s'", temp_file_path, file_store_path)
@@ -295,7 +297,26 @@ class FileImportTask(celery.Task):
 
     def import_url_to_s3(self, source_url):
         """Download file from URL and upload to MEDIA_BUCKET"""
-        pass
+        logger.debug("Started downloading from '%s'", source_url)
+        temp_file_path = self.download_file(source_url)
+        logger.info("Finished downloading from '%s' to '%s'",
+                    source_url, temp_file_path)
+
+        storage = S3MediaStorage()
+        # remove query string from URL before extracting file name
+        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        file_store_name = storage.get_name(source_file_name)
+
+        logger.debug("Started uploading from '%s' to 's3://%s/%s'",
+                     temp_file_path, settings.MEDIA_BUCKET, file_store_name)
+        self.upload_s3_object(temp_file_path, settings.MEDIA_BUCKET,
+                              file_store_name)
+        logger.info("Finished uploading from '%s' to 's3://%s/%s'",
+                    temp_file_path, settings.MEDIA_BUCKET, file_store_name)
+
+        self.delete_file(temp_file_path)
+
+        return file_store_name
 
     @staticmethod
     def move_file(source_path, destination_path):
@@ -331,13 +352,6 @@ class FileImportTask(celery.Task):
         s3 = boto3.client('s3')
         try:
             source_size = os.path.getsize(source_path)
-        except EnvironmentError as exc:
-            raise RuntimeError(
-                "Error uploading from '{}' to 's3://{}/{}': {}".format(
-                    source_path, bucket, key, exc
-                )
-            )
-        try:
             s3.upload_file(source_path, bucket, key,
                            ExtraArgs={'ACL': 'public-read'},
                            Callback=ProgressPercentage(source_size,
@@ -346,7 +360,9 @@ class FileImportTask(celery.Task):
                 botocore.exceptions.ParamValidationError) as exc:
             raise RuntimeError(
                 "Error uploading from '{}' to 's3://{}/{}': {}".format(
-                    source_path, bucket, key, exc))
+                    source_path, bucket, key, exc
+                )
+            )
 
 
 class ProgressPercentage(object):
