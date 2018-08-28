@@ -10,6 +10,7 @@ import re
 from django.conf import settings
 
 import celery
+from djcelery.models import TaskMeta
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
@@ -190,6 +191,25 @@ def _get_download_url_or_import_state(file_store_item):
                 # download url
                 import_state = constants.NOT_AVAILABLE
             else:
-                import_state = celery.states.PENDING
+                # The underlying Celery code in
+                # FileStoreItem.get_import_status() makes an assumption
+                # that a result is "probably" PENDING even if it can't
+                # find an associated Task. See:
+                # https://github.com/celery/celery/blob/v3.1.20/celery/
+                # backends/amqp.py#L192-L193 So we double check here to
+                # make sure said assumption holds up
+                try:
+                    TaskMeta.objects.get(
+                        task_id=file_store_item.import_task_id
+                    )
+                except TaskMeta.DoesNotExist:
+                    logger.debug(
+                        "No file_import task for FileStoreItem with "
+                        "UUID: %s",
+                        file_store_item.uuid
+                    )
+                    import_state = constants.NOT_AVAILABLE
+                else:
+                    import_state = celery.states.PENDING
             return import_state
     return download_url
