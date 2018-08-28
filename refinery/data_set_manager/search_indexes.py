@@ -181,6 +181,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
 
 def _get_download_url_or_import_state(file_store_item):
+    """
+    Discerns the download url or file import state for a given FileStoreItem
+    :param file_store_item: A FileStoreItem instance
+    :returns <String>:
+        - a valid url pointing to the FileStoreItem's datafile
+        - constants.NOT_AVAILABLE if the FileStoreItem's import_state is in
+        celery.READY_STATES w/o a valid url available or if there is no
+        available task information for said FileStoreItem's import_file task
+        - celery.states.PENDING if a FileStoreItem's import_file task hasn't
+        started yet
+    """
     download_url = constants.NOT_AVAILABLE
     if file_store_item is not None:
         download_url = file_store_item.get_datafile_url()
