@@ -290,12 +290,15 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def create_solr_mock_response(self, nodes):
         node_uuids = [n.uuid for n in nodes]
+        solr_params = _create_solr_params_from_node_uuids(node_uuids)
+        solr_params['json']['fields'] = solr_params['json']['filter']
+        solr_params['json'] = json.dumps(solr_params['json'])
         return json.dumps(
             {
                 "responseHeader": {
                     "status": 0,
                     "QTime": 36,
-                    "params": _create_solr_params_from_node_uuids(node_uuids)
+                    "params": solr_params
                 },
                 "response": {
                     "numFound": len(node_uuids),
