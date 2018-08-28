@@ -202,6 +202,8 @@ def _get_download_url_or_import_state(file_store_item):
                 # download url
                 import_state = constants.NOT_AVAILABLE
             else:
+                if not file_store_item.import_task_id:
+                    return celery.states.PENDING
                 # The underlying Celery code in
                 # FileStoreItem.get_import_status() makes an assumption
                 # that a result is "probably" PENDING even if it can't
