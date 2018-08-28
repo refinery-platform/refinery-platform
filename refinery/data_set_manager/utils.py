@@ -1156,11 +1156,15 @@ def _create_solr_params_from_node_uuids(node_uuids):
     for the information of many Nodes
     """
     return {
-        "q": "django_ct:data_set_manager.node",
-        "wt": "json",
-        "fq": "uuid:({})".format(" OR ".join(node_uuids)),
-        "rows": constants.REFINERY_SOLR_DOC_LIMIT
-    }
+        'json': {
+            "query": "django_ct:data_set_manager.node",
+            "filter": "uuid:({})".format(" OR ".join(node_uuids)),
+            },
+        'params': {
+            "wt": "json",
+            "rows": constants.REFINERY_SOLR_DOC_LIMIT
+            }
+        }
 
 
 def get_solr_response_json(node_uuids):

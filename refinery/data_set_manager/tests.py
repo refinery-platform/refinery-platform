@@ -1187,10 +1187,14 @@ class UtilitiesTests(TestCase):
         self.assertEqual(
             node_solr_params,
             {
-                "q": "django_ct:data_set_manager.node",
-                "wt": "json",
-                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
-                "rows": constants.REFINERY_SOLR_DOC_LIMIT
+                "json": {
+                    "query": "django_ct:data_set_manager.node",
+                    "filter": "uuid:({})".format(" OR ".join(fake_node_uuids))
+                },
+                "params": {
+                    "wt": "json",
+                    "rows": constants.REFINERY_SOLR_DOC_LIMIT
+                }
             }
         )
 
