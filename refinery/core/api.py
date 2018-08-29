@@ -165,7 +165,7 @@ class SharableResourceAPIInterface(object):
             owned_res_set = Set(
                 get_objects_for_user(
                     user,
-                    'core.add_%s' %
+                    'core.share_%s' %
                     self.res_type._meta.verbose_name,
                     use_groups=False
                 ).values_list("id", flat=True))
@@ -698,8 +698,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
-        # get_owner in core models uses add to distinguish owner
-        is_owner = request.user.has_perm('core.add_dataset', ds)
+        is_owner = request.user.has_perm('core.share_dataset', ds)
 
         try:
             user_uuid = request.user.profile.uuid

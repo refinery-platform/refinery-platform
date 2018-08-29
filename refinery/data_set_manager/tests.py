@@ -1187,10 +1187,14 @@ class UtilitiesTests(TestCase):
         self.assertEqual(
             node_solr_params,
             {
-                "q": "django_ct:data_set_manager.node",
-                "wt": "json",
-                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
-                "rows": constants.REFINERY_SOLR_DOC_LIMIT
+                "json": {
+                    "query": "django_ct:data_set_manager.node",
+                    "filter": "uuid:({})".format(" OR ".join(fake_node_uuids))
+                },
+                "params": {
+                    "wt": "json",
+                    "rows": constants.REFINERY_SOLR_DOC_LIMIT
+                }
             }
         )
 
@@ -1518,7 +1522,7 @@ class NodeIndexTests(APITestCase):
                                return_value=PENDING):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=PENDING
+                expected_download_url=constants.NOT_AVAILABLE
             )
 
     def test_prepare_node_pending_non_existent_file_import_task(self):
