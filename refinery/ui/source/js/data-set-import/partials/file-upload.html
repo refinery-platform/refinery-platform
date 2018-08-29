@@ -12,22 +12,22 @@
     <div class="row fileupload-buttonbar v-centered-row">
       <div class="col-lg-4">
         <!-- The fileinput-button span is used to style the file input field as button -->
-        <span
+        <button
           class="refinery-base btn btn-default btn-sm fileinput-button"
-          ng-class="{ 'disabled': disabled }"
           ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1">
           <i class="fa fa-plus"></i>
           <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip;</span>
           <span ng-if="FileCtrl.isNodeUpdate">Add file</span>
           <input
-            type="file"
             class="refinery-base"
+            ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1"
+            type="file"
             name="files[]"
-            multiple
-            ng-disabled="disabled">
-        </span>
+            multiple>
+        </button>
         <button
           class="active-group refinery-base btn btn-default btn-sm start"
+          ng-class="{'banned': FileCtrl.isNodeUpdate && queue[0].name !== FileCtrl.fileName}"
           ng-click="submit()"
           ng-disabled="FileCtrl.numUnfinishedUploads() === 0 || processing() ||
                       FileCtrl.overallFileStatus != 'queuing' ||
@@ -37,6 +37,7 @@
         </button>
         <button
           class="refinery-base btn btn-default btn-sm cancel"
+          ng-class="{'banned': FileCtrl.numUnfinishedUploads() === 0}"
           ng-click="cancel()"
           ng-disabled="FileCtrl.numUnfinishedUploads() === 0">
           <i class="fa fa-ban"></i>
