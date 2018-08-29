@@ -197,11 +197,11 @@ def _get_download_url_or_import_state(file_store_item):
 
     # "PENDING" if an import_task_id doesn't exist and
     # there is no valid download_url
-    import_state = file_store_item.get_import_status()
     if not file_store_item.import_task_id:
         return celery.states.PENDING
 
     # "N/A" if the import_state is in a "READY_STATE" or "PENDING" with an
     # import_task_id and without a valid download_url
+    import_state = file_store_item.get_import_status()
     if import_state in {celery.states.PENDING} | celery.states.READY_STATES:
         return constants.NOT_AVAILABLE
