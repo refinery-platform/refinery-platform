@@ -698,7 +698,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
-        # get_owner in core models uses add to distinguish owner
         is_owner = request.user.has_perm('core.share_dataset', ds)
 
         try:
