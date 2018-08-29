@@ -94,6 +94,24 @@ class DataSetApiV2Tests(APIV2TestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
+        self.user_2 = User.objects.create_user('jane_lab',
+                                               'jane@fake.com',
+                                               'coffeecoffee')
+        self.user_2_data_set = create_dataset_with_necessary_models(
+            user=self.user_2
+        )
+        self.user_3 = User.objects.create_user('john_lab',
+                                               'john@fake.com',
+                                               'coffeecoffee')
+        self.user_3_data_set = create_dataset_with_necessary_models(
+            user=self.user_3
+        )
+        self.user_2_data_set.share(ExtendedGroup.objects.public_group())
+        self.user_3_data_set.share(ExtendedGroup.objects.public_group())
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.user_2_data_set.share(self.group)
+        self.group.user_set.add(self.user_2)
+        self.group.user_set.add(self.user_3)
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -116,9 +134,9 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
         get_response = self.view(get_request)
-        self.assertEqual(len(get_response.data.get('data_sets')), 2)
+        self.assertEqual(get_response.data.get('total_data_sets'), 5)
         self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
-                         self.data_set_2.uuid)
+                         self.user_3_data_set.uuid)
 
     def test_get_data_set_pagination_limit(self):
         data_set_3 = create_dataset_with_necessary_models(user=self.user)
@@ -130,15 +148,80 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
                          data_set_3.uuid)
 
+    def test_get_returns_only_owned(self):
+        get_request = self.factory.get(self.url_root, {'is_owner': True})
+        get_request.user = self.user_2
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0]['uuid'],
+                         self.user_2_data_set.uuid)
+
+    def test_get_returns_only_public(self):
+        get_request = self.factory.get(self.url_root, {'is_public': True})
+        get_request.user = self.user_2
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 2)
+
+    def test_get_returns_public_owned(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'is_public': True,
+                                        'is_owner': True})
+        get_request.user = self.user_2
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0]['uuid'],
+                         self.user_2_data_set.uuid)
+
+    def test_get_returns_public_group(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'is_public': True,
+                                        'group': self.group.id})
+        get_request.user = self.user_3
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0]['uuid'],
+                         self.user_2_data_set.uuid)
+
+    def test_get_returns_owned_group(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'is_owner': True,
+                                        'group': self.group.id})
+        create_dataset_with_necessary_models(user=self.user_2)  # not shared
+        get_request.user = self.user_2
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0]['uuid'],
+                         self.user_2_data_set.uuid)
+
+    def test_get_returns_owned_group_public(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'is_public': True,
+                                        'is_owner': True,
+                                        'group': self.group.id})
+        get_request.user = self.user_2
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0]['uuid'],
+                         self.user_2_data_set.uuid)
+        get_request.user = self.user_3  # user_3 does not share data_set
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 0)
+
+    def test_get_returns_only_grouped(self):
+        get_request = self.factory.get(self.url_root, {'group': self.group.id})
+        get_request.user = self.user_2
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('total_data_sets'), 1)
+
     def test_get_data_set_pagination_limit_and_offset(self):
         create_dataset_with_necessary_models(user=self.user)
         params = {'limit': 1, 'offset': 2}
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
         get_response = self.view(get_request)
-        self.assertEqual(len(get_response.data.get('data_sets')), 1)
+        self.assertEqual(get_response.data.get('total_data_sets'), 5)
         self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
-                         self.data_set.uuid)
+                         self.user_2_data_set.uuid)
 
     def test_total_data_sets_returned_correctly(self):
         create_dataset_with_necessary_models(user=self.user)
@@ -150,7 +233,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     def test_dataset_delete_successful(self):
 
-        self.assertEqual(DataSet.objects.all().count(), 2)
+        self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request1 = self.factory.delete(
            urljoin(self.url_root, self.data_set.uuid)
@@ -163,7 +246,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         self.assertEqual(self.delete_response.status_code, 200)
 
-        self.assertEqual(DataSet.objects.all().count(), 1)
+        self.assertEqual(DataSet.objects.all().count(), 3)
 
         self.delete_request2 = self.factory.delete(
           urljoin(self.url_root, self.data_set_2.uuid)
@@ -175,10 +258,10 @@ class DataSetApiV2Tests(APIV2TestCase):
                                          self.data_set_2.uuid)
         self.assertEqual(self.delete_response.status_code, 200)
 
-        self.assertEqual(DataSet.objects.all().count(), 0)
+        self.assertEqual(DataSet.objects.all().count(), 2)
 
     def test_dataset_delete_no_auth(self):
-        self.assertEqual(DataSet.objects.all().count(), 2)
+        self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request = self.factory.delete(
            urljoin(self.url_root, self.data_set.uuid)
@@ -189,16 +272,16 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         self.assertEqual(self.delete_response.status_code, 403)
 
-        self.assertEqual(DataSet.objects.all().count(), 2)
+        self.assertEqual(DataSet.objects.all().count(), 4)
 
     def test_dataset_delete_not_found(self):
-        self.assertEqual(DataSet.objects.all().count(), 2)
+        self.assertEqual(DataSet.objects.all().count(), 4)
 
         uuid = self.data_set.uuid
 
         self.data_set.delete()
 
-        self.assertEqual(DataSet.objects.all().count(), 1)
+        self.assertEqual(DataSet.objects.all().count(), 3)
 
         self.delete_request = self.factory.delete(
            urljoin(self.url_root, uuid)
@@ -210,7 +293,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         self.assertEqual(self.delete_response.status_code, 404)
 
-        self.assertEqual(DataSet.objects.all().count(), 1)
+        self.assertEqual(DataSet.objects.all().count(), 3)
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
     @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')

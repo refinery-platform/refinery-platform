@@ -690,7 +690,7 @@ class DataSetsViewSet(APIView):
         for data_set in user_data_sets:
             is_public = all_public_perms.has_perm('read_meta_dataset',
                                                   data_set)
-            is_owner = all_owner_perms.has_perm('add_dataset', data_set)
+            is_owner = all_owner_perms.has_perm('share_dataset', data_set)
             setattr(data_set, 'public', is_public)
             setattr(data_set, 'is_owner', is_owner)
 
