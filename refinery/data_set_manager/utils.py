@@ -711,6 +711,9 @@ def generate_solr_params(
             facet_fields_obj[facet]['excludeTags'] = facet.upper()
         filter_arr.extend(create_facet_filter_query(facet_filter))
 
+    if sort:
+        fixed_solr_params['sort'] = sort
+
     solr_params = {
         "json": {
             "query": 'django_ct:data_set_manager.node',
@@ -720,8 +723,6 @@ def generate_solr_params(
         },
         "params": fixed_solr_params
     }
-    if sort:
-        solr_params['sort'] = sort
 
     return solr_params
 
