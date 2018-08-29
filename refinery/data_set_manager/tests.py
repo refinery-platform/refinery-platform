@@ -1522,7 +1522,7 @@ class NodeIndexTests(APITestCase):
                                return_value=PENDING):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=PENDING
+                expected_download_url=constants.NOT_AVAILABLE
             )
 
     def test_prepare_node_pending_non_existent_file_import_task(self):
