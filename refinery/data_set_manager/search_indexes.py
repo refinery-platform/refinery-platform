@@ -10,7 +10,6 @@ import re
 from django.conf import settings
 
 import celery
-from djcelery.models import TaskMeta
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
@@ -186,40 +185,23 @@ def _get_download_url_or_import_state(file_store_item):
     :param file_store_item: A FileStoreItem instance
     :returns <String>:
         - a valid url pointing to the FileStoreItem's datafile
-        - constants.NOT_AVAILABLE if the FileStoreItem's import_state is in
-        celery.READY_STATES w/o a valid url available or if there is no
-        available task information for said FileStoreItem's import_file task
-        - celery.states.PENDING if a FileStoreItem's import_file task hasn't
-        started yet
+        - constants.NOT_AVAILABLE
+        - celery.states.PENDING
     """
-    download_url = constants.NOT_AVAILABLE
-    if file_store_item is not None:
-        download_url = file_store_item.get_datafile_url()
-        if download_url is None:
-            import_state = file_store_item.get_import_status()
-            if import_state in celery.states.READY_STATES:
-                # Here we've reached a celery "READY STATE" without a valid
-                # download url
-                import_state = constants.NOT_AVAILABLE
-            else:
-                if not file_store_item.import_task_id:
-                    return celery.states.PENDING
-                # The underlying Celery code in
-                # FileStoreItem.get_import_status() makes an assumption
-                # that a result is "probably" PENDING even if it can't
-                # find an associated Task. See:
-                # https://github.com/celery/celery/blob/v3.1.20/celery/
-                # backends/amqp.py#L192-L193 So we double check here to
-                # make sure said assumption holds up
-                try:
-                    TaskMeta.objects.get(
-                        task_id=file_store_item.import_task_id
-                    )
-                except TaskMeta.DoesNotExist:
-                    logger.debug("No file_import task for FileStoreItem "
-                                 "with UUID: %s", file_store_item.uuid)
-                    import_state = constants.NOT_AVAILABLE
-                else:
-                    import_state = celery.states.PENDING
-            return import_state
-    return download_url
+    if file_store_item is None:
+        return constants.NOT_AVAILABLE
+
+    download_url = file_store_item.get_datafile_url()
+    if download_url:
+        return download_url
+
+    # "PENDING" if an import_task_id doesn't exist and
+    # there is no valid download_url
+    import_state = file_store_item.get_import_status()
+    if not file_store_item.import_task_id:
+        return celery.states.PENDING
+
+    # "N/A" if the import_state is in a "READY_STATE" or "PENDING" with an
+    # import_task_id and without a valid download_url
+    if import_state in {celery.states.PENDING} | celery.states.READY_STATES:
+        return constants.NOT_AVAILABLE
