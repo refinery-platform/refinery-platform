@@ -266,12 +266,13 @@ def _refinery_file_import(analysis_uuid):
                 logger.error(error_msg)
                 analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
             else:
-                if file_store_item.is_local():
+                if not file_store_item.is_local():
                     # Avoid adding UUIDs of already imported
                     # FileStoreItem's to this refinery_import_taskset
-                    continue
-            refinery_import_task = import_file.subtask((input_file_uuid,))
-            refinery_import_tasks.append(refinery_import_task)
+                    refinery_import_task = import_file.subtask(
+                        (input_file_uuid,)
+                    )
+                    refinery_import_tasks.append(refinery_import_task)
         refinery_import_taskset = TaskSet(
             tasks=refinery_import_tasks).apply_async()
         refinery_import_taskset.save()
