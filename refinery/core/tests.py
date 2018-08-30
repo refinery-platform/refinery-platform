@@ -765,6 +765,16 @@ class AnalysisTests(TestCase):
             [self.node2.get_file_store_item()]
         )
 
+    def test_has_all_local_input_files_non_local_inputs(self):
+        analysis = self.analysis_with_node_analyzed_further
+        node = analysis._get_input_nodes()[0]
+        node.get_file_store_item().delete_datafile()
+        self.assertFalse(analysis.has_all_local_input_files())
+
+    def test_has_all_local_input_files(self):
+        self.assertTrue(self.analysis.has_all_local_input_files())
+
+
 class UtilitiesTest(TestCase):
     def setUp(self):
         investigation = Investigation.objects.create()

@@ -1522,6 +1522,10 @@ class Analysis(OwnableResource):
             workflow_output=analysis_node_connection.name
         )
 
+    def has_all_local_input_files(self):
+        return all(file_store_item.is_local() for file_store_item in
+                   self._get_input_file_store_items())
+
     def _get_input_nodes(self):
         return [analysis_node_connection.node for analysis_node_connection in
                 AnalysisNodeConnection.objects.filter(
