@@ -22,6 +22,15 @@ class DataSetSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
     public = serializers.SerializerMethodField()
     is_clean = serializers.SerializerMethodField()
+    file_count = serializers.SerializerMethodField()
+    analyses = serializers.SerializerMethodField()
+
+    def get_analyses(self, data_set):
+        return [dict(uuid=analysis.uuid,
+                     name=analysis.name,
+                     status=analysis.status,
+                     owner=analysis.get_owner().profile.uuid)
+                for analysis in data_set.get_analyses()]
 
     def get_is_owner(self, data_set):
         try:
@@ -45,11 +54,14 @@ class DataSetSerializer(serializers.ModelSerializer):
     def get_is_clean(self, data_set):
         return data_set.is_clean()
 
+    def get_file_count(self, data_set):
+        return data_set.get_file_count()
+
     class Meta:
         model = DataSet
-        fields = ('title', 'accession', 'summary', 'description', 'slug',
-                  'uuid', 'modification_date', 'id', 'is_owner', 'public',
-                  'is_clean')
+        fields = ('title', 'accession', 'analyses', 'summary', 'description',
+                  'slug', 'uuid', 'modification_date', 'id', 'is_owner',
+                  'public', 'is_clean', 'file_count')
 
     def partial_update(self, instance, validated_data):
         """
