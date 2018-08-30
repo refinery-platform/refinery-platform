@@ -758,6 +758,12 @@ class AnalysisTests(TestCase):
         analysis = self.analysis_with_node_analyzed_further
         self.assertEqual(analysis._get_input_nodes(), [self.node2])
 
+    def test__get_input_file_store_items(self):
+        analysis = self.analysis_with_node_analyzed_further
+        self.assertEqual(
+            analysis._get_input_file_store_items(),
+            [self.node2.get_file_store_item()]
+        )
 
 class UtilitiesTest(TestCase):
     def setUp(self):

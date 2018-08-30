@@ -1528,6 +1528,9 @@ class Analysis(OwnableResource):
                     analysis=self, direction=INPUT_CONNECTION
                 )]
 
+    def _get_input_file_store_items(self):
+        return [node.get_file_store_item()
+                for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
         return self._get_input_nodes()[0].study
