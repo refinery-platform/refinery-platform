@@ -10,17 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 
-from .models import Project, UserProfile, Workflow
-
-
-class ProjectForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(ProjectForm, self).__init__(*args, **kwargs)
-        self.fields['slug'].label = "Shortcut Name"
-
-    class Meta:
-        model = Project
-        fields = ["name", "slug", "summary", "description"]
+from .models import UserProfile, Workflow
 
 
 class RegistrationFormCustomFields(RegistrationForm):

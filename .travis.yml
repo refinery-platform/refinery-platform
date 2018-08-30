@@ -31,21 +31,6 @@ install:
 
   - pip install -r requirements.txt --quiet
 
-  # Firefox could be downloaded more simply as a Travis addon...
-  # but the progress meter adds 1000 lines to the log.
-  - FIREFOX_SOURCE_URL='https://download.mozilla.org/?product=firefox-53.0.3&lang=en-US&os=linux64'
-  - wget --no-verbose -O /tmp/firefox-53.0.3.tar.bz2 $FIREFOX_SOURCE_URL
-  - export PATH=$HOME/firefox-53.0.3/firefox:$PATH
-  - firefox --version
-
-  # Install geckodriver required for selenium testing
-  - GECKODRIVER_VERSION=v0.17.0
-  - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
-  - wget --no-verbose https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
-  - gunzip $TAR.gz
-  - tar -xvf $TAR
-  - chmod a+x geckodriver
-  - export PATH=$PATH:`pwd`
 env:
   global:
     # These env vars are available to every build

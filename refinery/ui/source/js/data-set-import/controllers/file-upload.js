@@ -17,7 +17,7 @@ function RefineryFileUploadCtrl (
   getCookie
 ) {
   var vm = this;
-  vm.overallFileStatus = fileUploadStatusService.fileUploadStatus;
+  vm.overallFileStatus = fileUploadStatusService.fileUploadStatus.status;
   // Caches file names to avoid uploading multiple times the same file and
   // ui for statuses.
   vm.fileCache = {};

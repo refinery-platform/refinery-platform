@@ -32,14 +32,6 @@ urlpatterns = patterns(
     url(r'^groups/(?P<query>' + UUID_RE + r')/$',
         'group', name="group"),
 
-    url(r'^projects/(?P<uuid>' + UUID_RE + r')/$',
-        'project', name="project"),
-    url(r'^projects/new/$', 'project_new', name="project_new"),
-    url(r'^projects/(?P<slug>[a-zA-Z0-9\_]+)/$',
-        'project_slug', name="project_slug"),
-    url(r'^projects/(?P<uuid>' + UUID_RE + r')/edit/$',
-        'project_edit', name="project_edit"),
-
     url(r'^data_sets/(?P<data_set_uuid>' + UUID_RE + r')/$',
         'data_set', name="data_set"),
     url(r'^data_sets/(?P<slug>[a-zA-Z0-9\_]+)/$',
@@ -74,9 +66,9 @@ urlpatterns = patterns(
 # DRF url routing
 core_router = DefaultRouter()
 core_router.register(r'workflows', WorkflowViewSet)
-core_router.register(r'events', EventViewSet)
 core_router.urls.extend([
     url(r'^data_sets/$', DataSetsViewSet.as_view()),
+    url(r'^events/$', EventViewSet.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         UserProfileViewSet.as_view()),
     url(r'^data_sets/(?P<uuid>' + UUID_RE + r')/$',

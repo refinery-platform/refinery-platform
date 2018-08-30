@@ -22,9 +22,10 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_groups_with_perms, get_objects_for_user, \
-    get_perms
+from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
+                                get_perms)
 
+from guardian.core import ObjectPermissionChecker
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -40,14 +41,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
-from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
+from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, Project,
+                     ExtendedGroup, Invitation, Ontology,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations,
-                    get_resources_for_user)
+from .utils import (api_error_response, get_data_sets_annotations)
 
 logger = logging.getLogger(__name__)
 
@@ -224,76 +224,6 @@ def group(request, query):
                                   {'user': request.user,
                                    'msg': "view group %s" % group.name}))
     return render_to_response('core/group.html', {'group': group},
-                              context_instance=RequestContext(request))
-
-
-def project_slug(request, slug):
-    p = get_object_or_404(Project, slug=slug)
-    return project(request, p.uuid)
-
-
-def project(request, uuid):
-    project = get_object_or_404(Project, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_project', project):
-        if 'read_project' not in get_perms(public_group, project):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(
-                        request, '403.html', {
-                            user: request.user,
-                            'msg': "view this project"
-                        }))
-            else:
-                return HttpResponse(
-                    custom_error_page(
-                        request, '401.html', {'msg': "view this project"}),
-                    status='401')
-    analyses = project.analyses.all()
-    return render_to_response('core/project.html',
-                              {'project': project, "analyses": analyses},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def project_new(request):
-    if request.method == "POST":  # If the form has been submitted
-        form = ProjectForm(request.POST)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-            project = form.save()
-            project.set_owner(request.user)
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('project', args=(project.uuid,))
-            )  # Redirect after POST
-    else:
-        form = ProjectForm()  # An unbound form
-    return render_to_response("core/project_new.html", {'form': form},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def project_edit(request, uuid):
-    project = get_object_or_404(Project, uuid=uuid)
-
-    if not request.user.has_perm('core.change_project', project):
-        return HttpResponseForbidden(
-            custom_error_page(request, '403.html',
-                              {user: request.user, 'msg': "edit this project"})
-        )
-    if request.method == "POST":  # If the form has been submitted
-        # A form bound to the POST data
-        form = ProjectForm(data=request.POST, instance=project)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('core.views.project', args=(uuid,)))
-    else:
-        form = ProjectForm(instance=project)  # An unbound form
-    return render_to_response("core/project_edit.html",
-                              {'form': form, 'project': project},
                               context_instance=RequestContext(request))
 
 
@@ -696,63 +626,28 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(APIView):
     """API endpoint that allows Events to be viewed"""
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    http_method_names = ['get']
-
-    def list(self, request, *args, **kwargs):
-        """Overrides ModelViewSet.list to create an updated queryset based
-        on DataSets that the requesting User has permission to access
-        """
+    def get(self, request):
+        """Queryset based on DataSets that the requesting User has permission
+         to access"""
         data_sets_for_user = get_objects_for_user(
-            request.user, 'core.read_meta_dataset'
+            request.user,
+            'core.read_meta_dataset',
+            accept_global_perms=False
         )
-        self.queryset = self.queryset.filter(data_set__in=data_sets_for_user)
-        return super(EventViewSet, self).list(request, *args, **kwargs)
+
+        user_events = Event.objects.filter(
+            data_set__in=data_sets_for_user
+        ).order_by('-date_time')[0:50]
+        serializer = EventSerializer(user_events, many=True,
+                                     context={'request': request})
+        return Response(serializer.data)
 
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
-
-    def is_filtered_data_set(self, data_set, filter):
-        """
-        Helper method which states whether data set is filtered
-        :param data_set: data set obj
-        :param filter: obj with param info
-        :return: boolean
-        """
-        user = self.request.user
-        check_own = filter.get('is_owner')
-        owner = data_set.get_owner()
-        check_public = filter.get('is_public')
-        is_public = data_set.is_public()
-        group = filter.get('group')
-        group_perms = None
-        if group:
-            group_perms = get_perms(group, data_set)
-
-        if check_own and check_public and group:
-            if owner == user and is_public and group_perms:
-                return True
-        elif check_own and check_public:
-            if owner == user and is_public:
-                return True
-        elif check_own and group:
-            if owner == user and group_perms:
-                return True
-        elif check_public and group:
-            if is_public and group_perms:
-                return True
-        elif check_own and owner == user:
-            return True
-        elif check_public and is_public:
-            return True
-        elif group and group_perms:
-            return True
-        return False
 
     def get(self, request):
         params = request.query_params
@@ -770,29 +665,68 @@ class DataSetsViewSet(APIView):
         except Exception:
             filters['group'] = None
 
-        user_data_sets = get_resources_for_user(
-            request.user, 'dataset'
+        user_data_sets = get_objects_for_user(
+            request.user,
+            "core.read_meta_dataset",
+            accept_global_perms=False
         ).order_by('-modification_date')
 
-        total_data_sets = len(user_data_sets)
-        if filters.get('is_owner') or filters.get('is_public') or \
-                filters.get('group'):
-            filtered_data_set = []
-            for data_set in user_data_sets:
-                if not data_set.is_valid:
-                    logger.warning(
-                        "DataSet with UUID: {} is invalid, and most likely is "
-                        "still being created".format(data_set.uuid)
-                    )
-                if self.is_filtered_data_set(data_set, filters):
-                    filtered_data_set.append(data_set)
+        filtered_data_sets = []
+        check_own = filters.get('is_owner')
+        all_owner_perms = ObjectPermissionChecker(request.user)
+        all_owner_perms.prefetch_perms(user_data_sets)
 
-            total_data_sets = len(filtered_data_set)
-            data_sets = paginator.paginate_queryset(filtered_data_set, request)
-        else:
-            data_sets = paginator.paginate_queryset(user_data_sets, request)
+        check_public = filters.get('is_public')
+        all_public_perms = ObjectPermissionChecker(
+            ExtendedGroup.objects.public_group()
+        )
+        all_public_perms.prefetch_perms(user_data_sets)
 
-        serializer = DataSetSerializer(data_sets, many=True,
+        group = filters.get('group')
+        if group:
+            all_group_perms = ObjectPermissionChecker(filters.get('group'))
+            all_group_perms.prefetch_perms(user_data_sets)
+
+        for data_set in user_data_sets:
+            is_public = all_public_perms.has_perm('read_meta_dataset',
+                                                  data_set)
+            is_owner = all_owner_perms.has_perm('share_dataset', data_set)
+            setattr(data_set, 'public', is_public)
+            setattr(data_set, 'is_owner', is_owner)
+
+            if not data_set.is_valid:
+                logger.warning(
+                    "DataSet with UUID: {} is invalid, and most likely is "
+                    "still being created".format(data_set.uuid)
+                )
+                continue
+            elif check_own or check_public or group:
+                if group:
+                    group_perms = all_group_perms.has_perm('read_meta_dataset',
+                                                           data_set)
+                # need to check for filter and then check data set perms
+                if check_own and check_public and group:
+                    if is_owner and is_public and group_perms:
+                        filtered_data_sets.append(data_set)
+                elif check_own and group:
+                    if is_owner and group_perms:
+                        filtered_data_sets.append(data_set)
+                elif check_own and check_public:
+                    if is_owner and is_public:
+                        filtered_data_sets.append(data_set)
+                elif check_public and group:
+                    if is_public and group_perms:
+                        filtered_data_sets.append(data_set)
+                elif check_own and is_owner or check_public and is_public\
+                        or group and group_perms:
+                    filtered_data_sets.append(data_set)
+            else:
+                filtered_data_sets.append(data_set)
+
+        total_data_sets = len(filtered_data_sets)
+        paged_data_sets = paginator.paginate_queryset(filtered_data_sets,
+                                                      request)
+        serializer = DataSetSerializer(paged_data_sets, many=True,
                                        context={'request': request})
 
         return Response({'data_sets': serializer.data,

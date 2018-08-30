@@ -26,7 +26,7 @@ function metadataTableDirective (
 
       // Helper method to disable data file upload if files are uploading
       ctrl.areFilesUploading = function () {
-        if (fileUploadStatusService.fileUploadStatus === 'running') {
+        if (fileUploadStatusService.fileUploadStatus.status === 'running') {
           return true;
         }
         return false;
@@ -34,7 +34,7 @@ function metadataTableDirective (
 
       // Helper method to show warning text when data files are queued
       ctrl.areFilesInQueue = function () {
-        if (fileUploadStatusService.fileUploadStatus === 'queuing') {
+        if (fileUploadStatusService.fileUploadStatus.status === 'queuing') {
           return true;
         }
         return false;

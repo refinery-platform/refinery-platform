@@ -20,19 +20,33 @@ class Command(BaseCommand):
            "or generates workflow tool definitions"
 
     def add_arguments(self, parser):
-        parser.add_argument(
+        mutually_exclusive_group = parser.add_mutually_exclusive_group(
+            required=True
+        )
+        visualization_group = parser.add_argument_group(
+            'Refinery VisualizationTools'
+        )
+        mutually_exclusive_group.add_argument(
             '--visualizations',
             nargs='+',
             dest='visualizations',
             help='Generate ToolDefinitions for visualizations, '
-                 'either by filename, or from the registry'
+                 'either by filename, or from the registry',
+            metavar='<local path to annotation json or name from registry>'
         )
-        parser.add_argument(
+        mutually_exclusive_group.add_argument(
             '--workflows',
             action='store_true',
             dest='workflows',
             help='Generate ToolDefinitions for properly annotated '
                  'Galaxy-based Workflows'
+        )
+        visualization_group.add_argument(
+            '--branch',
+            action='store',
+            default='master',
+            dest='branch',
+            help='Branch from the registry to target for Vis tool installation'
         )
         parser.add_argument(
             '--force',
@@ -45,7 +59,6 @@ class Command(BaseCommand):
     def __init__(self):
         super(Command, self).__init__()
         self.force = False
-        self.visualization_registry_branch = "master"
         self.raw_registry_url = \
             settings.REFINERY_VISUALIZATION_REGISTRY.replace(
                 "github",
@@ -68,11 +81,6 @@ class Command(BaseCommand):
             )
         visualizations = options["visualizations"]
         is_workflow_mode = options["workflows"]
-        if not (visualizations or is_workflow_mode):
-            raise CommandError(
-                'Either --workflows or --visualizations is required'
-            )
-
         self.force = options["force"]
 
         if self.force:
@@ -80,6 +88,7 @@ class Command(BaseCommand):
         if is_workflow_mode:
             self._generate_workflows()
         if visualizations:
+            self.visualization_registry_branch = options["branch"]
             self._load_visualization_definitions(visualizations)
 
     @staticmethod

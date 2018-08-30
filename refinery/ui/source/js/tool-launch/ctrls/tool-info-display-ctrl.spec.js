@@ -23,7 +23,7 @@
 
     it('Data & UI displays variables should exist for views', function () {
       expect(ctrl.tool).toEqual({});
-      expect(ctrl.isToolInfoCollapsed).toEqual(true);
+      expect(ctrl.isToolInfoCollapsed).toEqual(false);
     });
   });
 })();
