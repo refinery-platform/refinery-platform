@@ -754,6 +754,10 @@ class AnalysisTests(TestCase):
         self.assertEqual(derived_data_file_node.workflow_output,
                          self.analysis_node_connection_a.name)
 
+    def test__get_input_nodes(self):
+        analysis = self.analysis_with_node_analyzed_further
+        self.assertEqual(analysis._get_input_nodes(), [self.node2])
+
 
 class UtilitiesTest(TestCase):
     def setUp(self):
