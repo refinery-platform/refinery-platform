@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Assay, AttributeOrder
+from .models import Assay, AttributeOrder, Node
 
 
 class AssaySerializer(serializers.ModelSerializer):
@@ -35,3 +35,13 @@ class AttributeOrderSerializer(serializers.ModelSerializer):
                                                 instance.is_active)
         instance.save()
         return instance
+
+
+class NodeSerializer(serializers.ModelSerializer):
+    file_uuid = serializers.CharField(max_length=36,
+                                      required=False,
+                                      allow_null=True)
+
+    class Meta:
+        model = Node
+        fields = ('uuid', 'file_uuid')

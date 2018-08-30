@@ -21,7 +21,6 @@ function DashboardCtrl (
   dataSet,
   authService,
   groupService,
-  projectService,
   analysisService,
   workflowService,
   UiScrollSource,
@@ -59,7 +58,6 @@ function DashboardCtrl (
   this.dataSet = dataSet;
   this.authService = authService;
   this.groupService = groupService;
-  this.projectService = projectService;
   this.analysisService = analysisService;
   this.workflowService = workflowService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
@@ -134,18 +132,6 @@ function DashboardCtrl (
 
   this._dataSetsFilterGroup = null;
   this.membership = [];
-
-  // Set up projects for `uiScroll`
-  // this.projects = new UiScrollSource(
-  //   'dashboard/projects',
-  //   1,
-  //   function (limit, offset) {
-  //     return this.projectService.query({
-  //       limit: limit,
-  //       offset: offset
-  //     }).$promise;
-  //   }.bind(this)
-  // );
 
   // Set up workflows for `uiScroll`
   this.workflows = new UiScrollSource(
@@ -1784,7 +1770,6 @@ angular
     'dataSet',
     'authService',
     'groupService',
-    'projectService',
     'analysisService',
     'workflowService',
     'UiScrollSource',

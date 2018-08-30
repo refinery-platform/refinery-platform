@@ -768,10 +768,16 @@ class DataSet(SharableResource):
     def is_clean(self):
         """
         Check whether or not any Analyses or Visualizations have been run on
-        a DataSet
+        a DataSet. Failed analyses won't yield any derived results so they
+        are not counted against a DataSet's "cleanliness"
         :return: boolean
         """
-        return not (self.get_analyses() or self.has_visualizations())
+        has_non_failed_analyses = any(
+            [not analysis.failed() for analysis in self.get_analyses()]
+        )
+        return not (
+            has_non_failed_analyses or self.has_visualizations()
+        )
 
     def set_title(self, title):
         self.title = title
@@ -1516,17 +1522,25 @@ class Analysis(OwnableResource):
             workflow_output=analysis_node_connection.name
         )
 
-    def _get_input_node(self):
-        return AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=INPUT_CONNECTION
-        ).first().node
+    def has_all_local_input_files(self):
+        return all(file_store_item.is_local() for file_store_item in
+                   self._get_input_file_store_items())
+
+    def _get_input_nodes(self):
+        return [analysis_node_connection.node for analysis_node_connection in
+                AnalysisNodeConnection.objects.filter(
+                    analysis=self, direction=INPUT_CONNECTION
+                )]
+
+    def _get_input_file_store_items(self):
+        return [node.get_file_store_item()
+                for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
-        return self._get_input_node().study
+        return self._get_input_nodes()[0].study
 
     def get_input_node_assay(self):
-        return self._get_input_node().assay
+        return self._get_input_nodes()[0].assay
 
     def _create_data_transformation_nodes(self, graph):
         """create data transformation nodes for all Tool nodes"""

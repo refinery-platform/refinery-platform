@@ -4,8 +4,6 @@ from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from data_set_manager.models import Node
-
 from .models import DataSet, Event, User, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
@@ -24,28 +22,46 @@ class DataSetSerializer(serializers.ModelSerializer):
     is_owner = serializers.SerializerMethodField()
     public = serializers.SerializerMethodField()
     is_clean = serializers.SerializerMethodField()
+    file_count = serializers.SerializerMethodField()
+    analyses = serializers.SerializerMethodField()
+
+    def get_analyses(self, data_set):
+        return [dict(uuid=analysis.uuid,
+                     name=analysis.name,
+                     status=analysis.status,
+                     owner=analysis.get_owner().profile.uuid)
+                for analysis in data_set.get_analyses()]
 
     def get_is_owner(self, data_set):
-        owner = data_set.get_owner()
         try:
-            user_request = self.context.get('request').user
-        except AttributeError as e:
-            logger.error("Request is missing a user: %s", e)
-            return False
-        return user_request == owner
+            return data_set.is_owner
+        except:
+            owner = data_set.get_owner()
+            try:
+                user_request = self.context.get('request').user
+            except AttributeError as e:
+                logger.error("Request is missing a user: %s", e)
+                return False
+            return user_request == owner
 
     def get_public(self, data_set):
-        is_public = data_set.is_public()
-        return is_public
+        try:
+            return data_set.public
+        except:
+            is_public = data_set.is_public()
+            return is_public
 
     def get_is_clean(self, data_set):
         return data_set.is_clean()
 
+    def get_file_count(self, data_set):
+        return data_set.get_file_count()
+
     class Meta:
         model = DataSet
-        fields = ('title', 'accession', 'summary', 'description', 'slug',
-                  'uuid', 'modification_date', 'id', 'is_owner', 'public',
-                  'is_clean')
+        fields = ('title', 'accession', 'analyses', 'summary', 'description',
+                  'slug', 'uuid', 'modification_date', 'id', 'is_owner',
+                  'public', 'is_clean', 'file_count')
 
     def partial_update(self, instance, validated_data):
         """
@@ -113,16 +129,6 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Workflow
-
-
-class NodeSerializer(serializers.ModelSerializer):
-    file_uuid = serializers.CharField(max_length=36,
-                                      required=False,
-                                      allow_null=True)
-
-    class Meta:
-        model = Node
-        fields = ('uuid', 'file_uuid')
 
 
 class EventSerializer(serializers.ModelSerializer):

@@ -1,528 +1,58 @@
 from StringIO import StringIO
 import contextlib
-import json
 import logging
+import json
 import os
 import re
 import shutil
 import tempfile
-from urlparse import urljoin
 import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.core.management import call_command, CommandError
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import LiveServerTestCase, TestCase, override_settings
+from django.test import TestCase, override_settings
 
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
-from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
-from mock import ANY
 from override_storage import override_storage
-from rest_framework.test import APIClient, APIRequestFactory, APITestCase
+from rest_framework.test import APITestCase
 
 import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, InvestigationLink)
 from core.tests import TestMigrations
-import data_set_manager
-from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
-from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
+
+from .isa_tab_parser import IsaTabParser, ParserException
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
                      Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
+from .single_file_column_parser import process_metadata_table
+from .tasks import parse_isatab
 from .utils import (_create_solr_params_from_node_uuids,
-                    create_facet_filter_query, cull_attributes_from_list,
-                    customize_attribute_response, escape_character_solr,
-                    format_solr_response, generate_facet_fields_query,
+                    create_facet_field_counts, create_facet_filter_query,
+                    cull_attributes_from_list, customize_attribute_response,
+                    escape_character_solr, format_solr_response,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
-                    insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_attribute_order_ranks)
-from .views import Assays, AssaysAttributes
+                    is_field_in_hidden_list, update_annotated_nodes,
+                    update_attribute_order_ranks)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
 logger = logging.getLogger(__name__)
-
-
-class AssaysAPITests(APITestCase):
-
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        self.assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
-        }
-        assay = Assay.objects.create(**self.assay)
-        self.assay['uuid'] = assay.uuid
-        self.assay['study'] = self.study.id
-        self.valid_uuid = assay.uuid
-        self.url_root = '/api/v2/assays/'
-        self.view = Assays.as_view()
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
-
-    def test_get_valid_uuid(self):
-        # valid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (
-            self.url_root, self.valid_uuid))
-        response = self.view(request, self.valid_uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data.keys(), self.assay.keys())
-        self.assertItemsEqual(response.data.values(), self.assay.values())
-
-    def test_get_valid_study(self):
-        # valid_study_uuid
-        request = self.factory.get('%s/?study=%s' % (
-            self.url_root, self.study.uuid))
-        response = self.view(request, self.valid_uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
-        self.assertItemsEqual(response.data[0].values(), self.assay.values())
-
-    def test_get_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-                                                    self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_study_uuid(self):
-        # invalid_study_uuid
-        request = self.factory.get('%s/?study=%s' % (self.url_root,
-                                                     self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/?uuid=%s'
-                                   % (self.url_root, self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
-
-
-class AssaysAttributesAPITests(APITestCase):
-
-    def setUp(self):
-        self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
-        self.user2 = User.objects.create_user("guestName", '', 'test1234')
-        self.factory = APIRequestFactory()
-        investigation = Investigation.objects.create()
-        self.data_set = DataSet.objects.create(
-                title="Test DataSet")
-        InvestigationLink.objects.create(data_set=self.data_set,
-                                         investigation=investigation)
-        self.data_set.set_owner(self.user1)
-        study = Study.objects.create(file_name='test_filename123.txt',
-                                     title='Study Title Test',
-                                     investigation=investigation)
-
-        assay = Assay.objects.create(
-                study=study,
-                measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
-                measurement_source='OBI',
-                technology='nucleotide sequencing',
-                technology_accession='test info',
-                technology_source='test source',
-                platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt')
-
-        self.attribute_order_array = [
-            {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Character_Title_6_3_s',
-                'rank': 1,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False
-            }, {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Specimen_6_3_s',
-                'rank': 2,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False
-            }, {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Cell_Type_6_3_s',
-                'rank': 3,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False
-            }, {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Analysis_6_3_s',
-                'rank': 4,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False
-            }]
-
-        self.attribute_order_response = [
-            {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Character_Title_6_3_s',
-                'rank': 1,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False,
-                'display_name': 'Character Title'
-            }, {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Specimen_6_3_s',
-                'rank': 2,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False,
-                'display_name': 'Specimen'
-            }, {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Cell_Type_6_3_s',
-                'rank': 3,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False,
-                'display_name': 'Cell Type'
-            }, {
-                'study': study,
-                'assay': assay,
-                'solr_field': 'Analysis_6_3_s',
-                'rank': 4,
-                'is_exposed': True,
-                'is_facet': True,
-                'is_active': True,
-                'is_internal': False,
-                'display_name': 'Analysis'
-            }]
-
-        index = 0
-        for attribute in self.attribute_order_array:
-            response = AttributeOrder.objects.create(**attribute)
-            attribute['id'] = response.id
-            attribute['assay'] = response.assay.id
-            attribute['study'] = response.study.id
-            self.attribute_order_response[index]['id'] = response.id
-            self.attribute_order_response[index]['assay'] = response.assay.id
-            self.attribute_order_response[index]['study'] = response.study.id
-            index = index + 1
-
-        list.sort(self.attribute_order_response)
-        self.valid_uuid = assay.uuid
-        self.url_root = '/api/v2/assays'
-        self.view = AssaysAttributes.as_view()
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
-
-    def test_get_valid_uuid(self):
-        # valid_uuid
-        uuid = self.valid_uuid
-        request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
-        response = self.view(request, uuid)
-        self.assertEqual(response.status_code, 200)
-
-        list.sort(response.data)
-
-        ind = 0
-        for attributes in response.data:
-            self.assertItemsEqual(
-                    self.attribute_order_response[ind].keys(),
-                    attributes.keys())
-            self.assertItemsEqual(
-                    self.attribute_order_response[ind].values(),
-                    attributes.values())
-            ind = ind + 1
-
-    def test_get_invalid_uuid(self):
-        # invalid uuid
-        request = self.factory.get('%s/%s/attributes/' % (
-            self.url_root, self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
-
-    def test_get_invalid_form_uuid(self):
-        # invalid form uuid
-        request = self.factory.get('%s/%s/attributes/' % (
-            self.url_root, self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
-
-    def test_put_valid_uuid(self):
-        # valid_uuid
-        self.client.login(username='ownerJane', password='test1234')
-        updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
-                               'rank': 3,
-                               'is_exposed': False,
-                               'is_facet': False,
-                               'is_active': False}
-        id = self.attribute_order_array[2].get('id')
-        updated_attribute_2 = {'id': id,
-                               'rank': 1,
-                               'is_exposed': False,
-                               'is_facet': False,
-                               'is_active': False}
-        # Api client needs url to end / or it will redirect
-        # update with solr_title
-        response = self.client.put(
-                '{0}/{1}/attributes/'.format(
-                        self.url_root, self.valid_uuid), updated_attribute_1)
-        self.assertEqual(response.status_code, 202)
-        self.assertEqual(response.data.get('rank'), updated_attribute_1.get(
-                'rank'))
-        self.assertEqual(
-                response.data.get('is_exposed'),
-                updated_attribute_1.get('is_exposed'))
-        self.assertEqual(
-                response.data.get('is_facet'),
-                updated_attribute_1.get('is_facet'))
-
-        # Update with attribute_order id
-        response = self.client.put(
-                '{0}/{1}/attributes/'.format(
-                        self.url_root, self.valid_uuid), updated_attribute_2)
-        self.assertEqual(response.status_code, 202)
-        self.assertEqual(response.data.get('rank'),
-                         updated_attribute_2.get('rank'))
-        self.assertEqual(
-                response.data.get('is_exposed'),
-                updated_attribute_2.get('is_exposed'))
-        self.assertEqual(
-                response.data.get('is_facet'),
-                updated_attribute_2.get('is_facet'))
-        self.client.logout()
-
-    def test_put_invalid_object(self):
-        # Invalid objects
-        updated_attribute_3 = {'rank': '4',
-                               'is_exposed': 'False',
-                               'is_facet': 'False',
-                               'is_active': 'False'}
-
-        self.client.login(username='ownerJane', password='test1234')
-        response = self.client.put('{0}/{1}/attributes/'
-                                   .format(self.url_root, self.valid_uuid),
-                                   updated_attribute_3)
-        response.render()
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-                response.content, '"Requires attribute id or solr_field name."'
-                )
-        self.client.logout()
-
-    def test_put_invalid_login(self):
-        # Invalid Login
-        updated_attribute_4 = {'solr_field': 'Cell Type',
-                               'rank': '4',
-                               'is_exposed': 'False',
-                               'is_facet': 'False',
-                               'is_active': 'False'}
-
-        self.client.login(username='guestName', password='test1234')
-        response = self.client.put('{0}/{1}/attributes/'
-                                   .format(self.url_root, self.valid_uuid),
-                                   updated_attribute_4)
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(
-                response.content, '"Only owner may edit attribute order."'
-                )
-        self.client.logout()
-
-
-class AssaysFilesAPITests(APITestCase):
-
-    def setUp(self):
-        self.user_owner = 'owner'
-        self.user_guest = 'guest'
-        self.fake_password = 'test1234'
-        self.data_set = create_dataset_with_necessary_models()
-        self.user1 = User.objects.create_user(self.user_owner,
-                                              '',
-                                              self.fake_password)
-        self.user2 = User.objects.create_user(self.user_guest,
-                                              '',
-                                              self.fake_password)
-        self.data_set.set_owner(self.user1)
-        investigation = Investigation.objects.create()
-        self.investigation_link = \
-            InvestigationLink.objects.create(investigation=investigation,
-                                             data_set=self.data_set,
-                                             version=1)
-
-        study = Study.objects.create(file_name='test_filename123.txt',
-                                     title='Study Title Test',
-                                     investigation=investigation)
-
-        assay = Assay.objects.create(
-                study=study,
-                measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
-                measurement_source='OBI',
-                technology='nucleotide sequencing',
-                technology_accession='test info',
-                technology_source='test source',
-                platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt',
-                )
-        self.valid_uuid = assay.uuid
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.url = "/api/v2/assays/%s/files/"
-        self.non_meta_attributes = ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
-        self.client = APIClient()
-
-    def tearDown(self):
-        self.client.logout()
-        super(AssaysFilesAPITests, self).tearDown()
-
-    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
-    @mock.patch('data_set_manager.views.search_solr')
-    @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_owner_with_valid_params(self,
-                                              mock_format,
-                                              mock_search,
-                                              mock_generate):
-        self.client.login(username=self.user_owner,
-                          password=self.fake_password)
-        mock_format.return_value = {'status': 200}
-        uuid = self.valid_uuid
-        params = {
-            'limit': '0',
-            'data_set_uuid': self.data_set.uuid
-        }
-        response = self.client.get(self.url % uuid, params)
-        self.assertTrue(mock_format.called)
-        self.assertTrue(mock_search.called)
-        qdict = QueryDict('', mutable=True)
-        qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
-        self.assertEqual(response.status_code, 200)
-
-    def test_get_from_owner_invalid_params(self):
-        self.client.login(username=self.user_owner,
-                          password=self.fake_password)
-
-        uuid = self.valid_uuid
-        params = {'limit': 0,
-                  'data_set_uuid': self.invalid_uuid}
-        response = self.client.get(self.url % uuid, params)
-        self.assertEqual(response.status_code, 404)
-
-    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
-    @mock.patch('data_set_manager.views.search_solr')
-    @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_no_perms(self,
-                                    mock_format,
-                                    mock_search,
-                                    mock_generate):
-        self.client.login(username=self.user_guest,
-                          password=self.fake_password)
-
-        uuid = self.valid_uuid
-        params = {
-            'limit': 0,
-            'data_set_uuid': self.data_set.uuid
-        }
-        response = self.client.get(self.url % uuid, params)
-        self.assertFalse(mock_format.called)
-        self.assertFalse(mock_search.called)
-        self.assertFalse(mock_generate.called)
-        self.assertEqual(response.status_code, 401)
-
-    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
-    @mock.patch('data_set_manager.views.search_solr')
-    @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_with_read_perms(self,
-                                           mock_format,
-                                           mock_search,
-                                           mock_generate):
-        mock_format.return_value = {'status': 200}
-        self.client.login(username=self.user_guest,
-                          password=self.fake_password)
-        assign_perm('read_%s' % DataSet._meta.model_name,
-                    self.user2,
-                    self.data_set)
-        uuid = self.valid_uuid
-        params = {'limit': '0',
-                  'data_set_uuid': self.data_set.uuid}
-        response = self.client.get(self.url % uuid, params)
-        self.assertTrue(mock_format.called)
-        self.assertTrue(mock_search.called)
-        qdict = QueryDict('', mutable=True)
-        qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
-        self.assertEqual(response.status_code, 200)
-
-    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
-    @mock.patch('data_set_manager.views.search_solr')
-    @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_with_read_meta_perms(self,
-                                                mock_format,
-                                                mock_search,
-                                                mock_generate):
-        mock_format.return_value = {'status': 200}
-        self.client.login(username=self.user_guest,
-                          password=self.fake_password)
-        assign_perm('read_meta_%s' % DataSet._meta.model_name,
-                    self.user2,
-                    self.data_set)
-
-        uuid = self.valid_uuid
-        params = {'limit': '0',
-                  'data_set_uuid': self.data_set.uuid}
-        response = self.client.get(self.url % uuid, params)
-        self.assertTrue(mock_format.called)
-        self.assertTrue(mock_search.called)
-        qdict = QueryDict('', mutable=True)
-        qdict.update(params)
-        mock_generate.assert_called_once_with(qdict,
-                                              uuid,
-                                              self.non_meta_attributes)
-        self.assertEqual(response.status_code, 200)
 
 
 class UtilitiesTests(TestCase):
@@ -821,25 +351,39 @@ class UtilitiesTests(TestCase):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
 
-    def test_objectify_facet_field_counts(self):
-        facet_field_array = {'WORKFLOW': ['1_test_04', 1,
-                                          'output_file', 60,
-                                          '1_test_02', 1],
-                             'ANALYSIS': ['5dd6d3c3', 5,
-                                          '08fc3964', 2,
-                                          '0907a312', 1,
-                                          '276adefd', 3],
-                             'Author': ['Vezza', 10,
-                                        'Harslem/Heafner', 4,
-                                        'McConnell', 5,
-                                        'Vezza + Crocker', 2,
-                                        'Crocker', 28],
-                             'Year': ['1971', 54],
-                             'SUBANALYSIS': ['1', 8, '2', 2, '-1', 9],
-                             'TYPE': ['Derived Data File', 105,
-                                      'Raw Data File', 9]}
+    def test_create_facet_field_counts(self):
+        facet_field_array = {
+            'WORKFLOW': {'buckets': [
+                {'val': '1_test_04', 'count': 1},
+                {'val': 'output_file', 'count': 60},
+                {'val': '1_test_02', 'count': 1}
+            ]},
+            'ANALYSIS': {'buckets': [
+                {'val': '5dd6d3c3', 'count': 5},
+                {'val': '08fc3964', 'count': 2},
+                {'val': '0907a312', 'count': 1},
+                {'val': '276adefd', 'count': 3}
+            ]},
+            'Author': {"buckets": [
+                {'val': 'Vezza', 'count': 10},
+                {'val': 'Harslem/Heafner', 'count': 4},
+                {'val': 'McConnell', 'count': 5},
+                {'val': 'Vezza + Crocker', 'count': 2},
+                {'val': 'Crocker', 'count': 28}
+            ]},
+            'Year': {"buckets": [{'val': '1971', 'count': 54}]},
+            'SUBANALYSIS': {"buckets": [
+                {'val': '1', 'count': 8},
+                {'val': '2', 'count': 2},
+                {'val': '-1', 'count': 9}
+            ]},
+            'TYPE': {"buckets": [
+                {'val': 'Derived Data File', 'count': 105},
+                {'val': 'Raw Data File', 'count': 9}
+            ]}
+        }
 
-        facet_field_obj = objectify_facet_field_counts(facet_field_array)
+        facet_field_obj = create_facet_field_counts(facet_field_array)
         self.assertDictEqual(facet_field_obj,
                              {'WORKFLOW': [
                                       {'name': 'output_file', 'count': 60},
@@ -872,24 +416,13 @@ class UtilitiesTests(TestCase):
         response = escape_character_solr("")
         self.assertEqual(response, "")
 
-    def test_insert_facet_field_filter(self):
-        facet_filter = u'{"Author": ["Vezza", "McConnell"]}'
-        facet_field_array = ['WORKFLOW', 'ANALYSIS', 'Author', 'Year']
-        response = ['WORKFLOW', 'ANALYSIS', u'{!ex=Author}Author', 'Year']
-        edited_facet_field_list = insert_facet_field_filter(
-                facet_filter, facet_field_array)
-        self.assertListEqual(edited_facet_field_list, response)
-        edited_facet_field_list = insert_facet_field_filter(
-                None, facet_field_array)
-        self.assertListEqual(edited_facet_field_list, response)
-
     def test_create_facet_filter_query(self):
         facet_filter = {'Author': ['Vezza', 'McConnell'],
                         'TYPE': ['Raw Data File']}
         facet_field_query = create_facet_filter_query(facet_filter)
         self.assertEqual(facet_field_query,
-                         u'&fq={!tag=TYPE}TYPE:(Raw\\ Data\\ File)'
-                         u'&fq={!tag=Author}Author:(Vezza OR McConnell)')
+                         [u'{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',
+                          u'{!tag=AUTHOR}Author:(Vezza OR McConnell)'])
 
     def test_hide_fields_from_list(self):
         weighted_list = [{'solr_field': 'uuid'},
@@ -925,65 +458,132 @@ class UtilitiesTests(TestCase):
         for field in list_not_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), False)
 
-    def test_generate_solr_params_no_params(self):
+    def test_generate_solr_params_no_params_returns_obj(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=Cell Type'
-                         '&facet.field=Analysis'
-                         '&facet.field=Organism'
-                         '&facet.field=Cell Line'
-                         '&facet.field=Type'
-                         '&facet.field=Group Name'
-                         '&fl=REFINERY_DATAFILE_s%2C'
-                         'Character_Title%2C'
-                         'Specimen%2C'
-                         'Cell Type%2C'
-                         'Analysis%2C'
-                         'Organism%2C'
-                         'Cell Line%2C'
-                         'Type%2C'
-                         'Group Name'
-                         '&fq=is_annotation%3Afalse'
-                         '&start=0'
-                         '&rows={}'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(
-                             self.valid_uuid, constants.REFINERY_SOLR_DOC_LIMIT
-                         ))
+        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
 
-    def test_generate_solr_params_for_assay_with_params(self):
+    def test_generate_solr_params_no_params_returns_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertItemsEqual(query['params'],
+                              {
+                                  'facet.limit': '-1',
+                                  'fq': 'is_annotation:false',
+                                  'rows': constants.REFINERY_SOLR_DOC_LIMIT,
+                                  'start': '0',
+                                  'wt': 'json'
+                              })
+
+    def test_generate_solr_params_no_params_returns_json_facet(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertListEqual(sorted(query['json']['facet'].keys()),
+                             ['Analysis',
+                              'Cell Line',
+                              'Cell Type',
+                              'Group Name',
+                              'Organism',
+                              'Type'])
+
+    def test_generate_solr_params_no_params_returns_json_fields(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertListEqual(sorted(query['json']['fields']),
+                             ['Analysis',
+                              'Cell Line',
+                              'Cell Type',
+                              'Character_Title',
+                              'Group Name',
+                              'Organism',
+                              'REFINERY_DATAFILE_s',
+                              'Specimen',
+                              'Type'])
+
+    def test_generate_solr_params_no_params_returns_json_filter(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertListEqual(query['json']['filter'],
+                             ['assay_uuid:({})'.format(self.valid_uuid)]
+                             )
+
+    def test_generate_solr_params_no_params_returns_json_query(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
+        self.assertEqual(query['json']['query'],
+                         'django_ct:data_set_manager.node')
+
+    def test_generate_solr_params_for_assay_with_params_return_obj(self):
         parameter_dict = {'limit': 7, 'offset': 2,
-                          'include_facet_count': 'true',
-                          'attributes': 'cats,mouse,dog,horse',
                           'facets': 'cats,mouse,dog,horse',
-                          'pivots': 'cats,mouse',
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(
             parameter_qdict, self.valid_uuid
         )
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=cats'
-                         '&facet.field=mouse'
-                         '&facet.field=dog'
-                         '&facet.field=horse'
-                         '&fl=cats%2Cmouse%2Cdog%2Chorse'
-                         '&facet.pivot=cats%2Cmouse'
-                         '&fq=is_annotation%3Atrue'
-                         '&start=2'
-                         '&rows=7'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(
-                                 self.valid_uuid))
+        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
+
+    def test_generate_solr_params_for_assay_with_params_returns_params(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertItemsEqual(query['params'],
+                              {
+                                  'facet.limit': '-1',
+                                  'fq': 'is_annotation:false',
+                                  'rows': constants.REFINERY_SOLR_DOC_LIMIT,
+                                  'start': '0',
+                                  'wt': 'json'
+                              })
+
+    def test_generate_solr_params_params_returns_json_facet(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertListEqual(sorted(query['json']['facet'].keys()),
+                             ['cats', 'dog', 'horse', 'mouse'])
+
+    def test_generate_solr_params_params_returns_json_fields(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertListEqual(query['json']['fields'],
+                             ['cats', 'mouse', 'dog', 'horse'])
+
+    def test_generate_solr_params_params_returns_json_filter(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertListEqual(query['json']['filter'],
+                             ['assay_uuid:({})'.format(self.valid_uuid)])
+
+    def test_generate_solr_params_params_returns_json_query(self):
+        parameter_dict = {'limit': 7, 'offset': 2,
+                          'facets': 'cats,mouse,dog,horse',
+                          'is_annotation': 'true'}
+        parameter_qdict = QueryDict('', mutable=True)
+        parameter_qdict.update(parameter_dict)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
+        self.assertEqual(query['json']['query'],
+                         'django_ct:data_set_manager.node')
 
     def test_cull_attributes_from_list(self):
         new_attribute_list = cull_attributes_from_list(
@@ -1021,20 +621,15 @@ class UtilitiesTests(TestCase):
                                          'Organism', 'Cell Line',
                                          'Type', 'Group Name']})
 
-    def test_generate_facet_fields_query(self):
+    def generate_filtered_facet_fields(self):
         facet_field_string = ['REFINERY_SUBANALYSIS_6_3_s',
                               'REFINERY_WORKFLOW_OUTPUT_6_3_s',
                               'REFINERY_ANALYSIS_UUID_6_3_s',
                               'Author_Characteristics_6_3_s',
                               'Year_Characteristics_6_3_s']
-
-        str_query = generate_facet_fields_query(facet_field_string)
-        self.assertEqual(str_query,
-                         '&facet.field=REFINERY_SUBANALYSIS_6_3_s'
-                         '&facet.field=REFINERY_WORKFLOW_OUTPUT_6_3_s'
-                         '&facet.field=REFINERY_ANALYSIS_UUID_6_3_s'
-                         '&facet.field=Author_Characteristics_6_3_s'
-                         '&facet.field=Year_Characteristics_6_3_s')
+        query_dict = generate_filtered_facet_fields(facet_field_string)
+        self.assertEqual(query_dict.get('facet_field'), facet_field_string)
+        self.assertEqual(query_dict.get('field_limit'), facet_field_string)
 
     def test_get_owner_from_valid_assay(self):
         owner = get_owner_from_assay(self.valid_uuid).username
@@ -1048,92 +643,107 @@ class UtilitiesTests(TestCase):
 
     def test_format_solr_response_valid(self):
         # valid input, expected response from solr
-        solr_response = '{"responseHeader":{"status": 0, "params":' \
-                        '{"facet": "true", "facet.mincount": "1",' \
-                        '"start": "0",'\
-                        '"q": "django_ct:data_set_manager.node",'\
-                        '"facet.limit": "-1",'\
-                        '"facet.field":'\
-                        '["REFINERY_TYPE_6_3_s",'\
-                        '"REFINERY_SUBANALYSIS_6_3_s",'\
-                        '"REFINERY_WORKFLOW_OUTPUT_6_3_s",'\
-                        '"REFINERY_ANALYSIS_UUID_6_3_s",'\
-                        '"Author_Characteristics_6_3_s",'\
-                        '"Year_Characteristics_6_3_s"],'\
-                        '"fl":'\
-                        '"REFINERY_TYPE_6_3_s,'\
-                        'REFINERY_SUBANALYSIS_6_3_s,'\
-                        'REFINERY_WORKFLOW_OUTPUT_6_3_s,'\
-                        'REFINERY_ANALYSIS_UUID_6_3_s,'\
-                        'Author_Characteristics_6_3_s,'\
-                        'Year_Characteristics_6_3_s",'\
-                        '"wt": "json", "rows": "20"}},'\
-                        '"response": {'\
-                        '"numFound": 1, "offset": 0,'\
-                        '"docs": ['\
-                        '{"Author_Characteristics_6_3_s": "Crocker",'\
-                        '"REFINERY_ANALYSIS_UUID_6_3_s": "N/A",'\
-                        '"REFINERY_WORKFLOW_OUTPUT_6_3_s": "N/A",'\
-                        '"REFINERY_SUBANALYSIS_6_3_s": "-1",'\
-                        '"Year_Characteristics_6_3_s": "1971",'\
-                        '"REFINERY_TYPE_6_3_s": "Raw Data File"}]},'\
-                        '"facet_counts": {"facet_queries": {},'\
-                        '"facet_fields": {'\
-                        '"REFINERY_TYPE_6_3_s":'\
-                        '["Derived Data File", 105,'\
-                        '"Raw Data File", 9],'\
-                        '"REFINERY_SUBANALYSIS_6_3_s":'\
-                        '["-1", 9, "0", 95, "1", 8, "2", 2]},'\
-                        '"facet_dates": {}, "facet_ranges": {},'\
-                        '"facet_intervals": {}, "facet_heatmaps": {}}}'
+        solr_response = json.dumps({
+            "responseHeader": {
+                "status": 0,
+                "QTime": 137,
+                "params": {
+                    "json": '{"facet": '
+                            '{"REFINERY_SUBANALYSIS_16_82_s": {'
+                            '"field": "REFINERY_SUBANALYSIS_16_82_s", '
+                            '"type": "terms", "mincount": 0}, '
+                            '"REFINERY_WORKFLOW_OUTPUT_16_82_s": {'
+                            '"field": "REFINERY_WORKFLOW_OUTPUT_16_82_s", '
+                            '"type": "terms", "mincount": 0}, '
+                            '"organism_Characteristics_16_82_s": '
+                            '{"field": "organism_Characteristics_16_82_s", '
+                            '"type": "terms", "mincount": 0},'
+                            '"REFINERY_TYPE_16_82_s": {'
+                            '"field": "REFINERY_TYPE_16_82_s", '
+                            '"type": "terms", "mincount": 0}}, '
+                            '"query": "django_ct:data_set_manager.node", '
+                            '"filter": ["assay_uuid:('
+                            '16cfd7ab-4bf7-4951-baf3-de270a12b225)"],'
+                            '"fields": ['
+                            '"REFINERY_SUBANALYSIS_16_82_s", '
+                            '"REFINERY_WORKFLOW_OUTPUT_16_82_s", '
+                            '"organism_Characteristics_16_82_s", '
+                            '"REFINERY_TYPE_16_82_s"]}',
+                    "start": "0",
+                    "facet.limit": "-1",
+                    "wt": "json",
+                    "fq": "is_annotation:false",
+                    "rows": "100"
+                }
+            },
+            "response": {
+               "numFound": 1,
+               "start": 0,
+               "docs": [
+                   {"REFINERY_SUBANALYSIS_16_82_s": "-1",
+                    "organism_Characteristics_16_82_s": "Danio",
+                    "REFINERY_TYPE_16_82_s": "Array Data File",
+                    "REFINERY_WORKFLOW_OUTPUT_16_82_s": "N/A"
+                    }]
+            },
+            "facets": {
+               "count": 1,
+               "REFINERY_SUBANALYSIS_16_82_s": {
+                   "buckets": [{"val": "-1", "count": 16}]
+               },
+               "REFINERY_WORKFLOW_OUTPUT_16_82_s": {
+                   "buckets": [{"val": "N/A", "count": 16}]
+               },
+               "organism_Characteristics_16_82_s": {
+                   "buckets": [{"val": "Danio", "count": 16}]
+               },
+               "REFINERY_TYPE_16_82_s": {
+                   "buckets": [
+                       {"val": "Array Data File", "count": 14},
+                       {"val": "Derived Array Data File", "count": 2}]
+               }
+            }
+        })
 
         formatted_response = format_solr_response(solr_response)
         self.assertDictEqual(
                 formatted_response,
                 {
                     'facet_field_counts':
-                        {u'REFINERY_SUBANALYSIS_6_3_s':
-                            [{'name': u'0', 'count': 95},
-                             {'name': u'-1', 'count': 9},
-                             {'name': u'1', 'count': 8},
-                             {'name': u'2', 'count': 2}
-                             ],
-                         u'REFINERY_TYPE_6_3_s':
-                            [{'name': u'Derived Data File', 'count': 105},
-                             {'name': u'Raw Data File', 'count': 9}]},
-                    'attributes': [{
-                         'attribute_type': 'Internal',
+                        {u'REFINERY_SUBANALYSIS_16_82_s':
+                            [{'name': u'-1', 'count': 16}],
+                         u'REFINERY_TYPE_16_82_s':
+                            [{'name': u'Array Data File', 'count': 14},
+                             {'name': u'Derived Array Data File', 'count': 2}],
+                         u'REFINERY_WORKFLOW_OUTPUT_16_82_s':
+                            [{'name': u'N/A', 'count': 16}],
+                         u'organism_Characteristics_16_82_s':
+                            [{'name': u'Danio', 'count': 16}]
+                         },
+                    'attributes': [
+                        {'attribute_type': 'Internal',
+                         'display_name': 'Analysis Group',
+                         'file_ext': u's',
+                         'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'},
+                        {'attribute_type': 'Internal',
+                         'display_name': 'Output Type',
+                         'file_ext': u's',
+                         'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'},
+                        {'attribute_type': 'Characteristics',
+                         'display_name': u'Organism',
+                         'file_ext': u's',
+                         'internal_name': u'organism_Characteristics_16_82_s'},
+                        {'attribute_type': 'Internal',
                          'display_name': u'Type',
                          'file_ext': u's',
-                         'internal_name': u'REFINERY_TYPE_6_3_s'},
-                         {'attribute_type': 'Internal',
-                          'display_name': 'Analysis Group',
-                          'file_ext': u's',
-                          'internal_name': u'REFINERY_SUBANALYSIS_6_3_s'},
-                         {'attribute_type': 'Internal',
-                          'display_name': 'Output Type',
-                          'file_ext': u's',
-                          'internal_name': u'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
-                         {'attribute_type': 'Internal',
-                          'display_name': u'Analysis',
-                          'file_ext': u's',
-                          'internal_name': u'REFINERY_ANALYSIS_UUID_6_3_s'},
-                         {'attribute_type': 'Characteristics',
-                          'display_name': u'Author',
-                          'file_ext': u's',
-                          'internal_name': u'Author_Characteristics_6_3_s'},
-                         {'attribute_type': 'Characteristics',
-                          'display_name': u'Year',
-                          'file_ext': u's',
-                          'internal_name': u'Year_Characteristics_6_3_s'}],
+                         'internal_name': u'REFINERY_TYPE_16_82_s'}
+                        ],
                     'nodes_count': 1,
                     'nodes': [{
-                         u'REFINERY_WORKFLOW_OUTPUT_6_3_s': u'N/A',
-                         u'REFINERY_ANALYSIS_UUID_6_3_s': u'N/A',
-                         u'Author_Characteristics_6_3_s': u'Crocker',
-                         u'Year_Characteristics_6_3_s': u'1971',
-                         u'REFINERY_SUBANALYSIS_6_3_s': u'-1',
-                         u'REFINERY_TYPE_6_3_s': u'Raw Data File'}]
+                         u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
+                         u'organism_Characteristics_16_82_s': u'Danio',
+                         u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
+                         u'REFINERY_TYPE_16_82_s': u'Array Data File'}]
                 }
         )
 
@@ -1577,10 +1187,14 @@ class UtilitiesTests(TestCase):
         self.assertEqual(
             node_solr_params,
             {
-                "q": "django_ct:data_set_manager.node",
-                "wt": "json",
-                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
-                "rows": constants.REFINERY_SOLR_DOC_LIMIT
+                "json": {
+                    "query": "django_ct:data_set_manager.node",
+                    "filter": "uuid:({})".format(" OR ".join(fake_node_uuids))
+                },
+                "params": {
+                    "wt": "json",
+                    "rows": constants.REFINERY_SOLR_DOC_LIMIT
+                }
             }
         )
 
@@ -1594,7 +1208,7 @@ class UtilitiesTests(TestCase):
         ))
         self.assertEqual(len(nodes_before), 0)
 
-        data_set_manager.utils.update_annotated_nodes(
+        update_annotated_nodes(
             type,
             study_uuid=self.study.uuid,
             assay_uuid=self.assay.uuid,
@@ -1908,7 +1522,7 @@ class NodeIndexTests(APITestCase):
                                return_value=PENDING):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=PENDING
+                expected_download_url=constants.NOT_AVAILABLE
             )
 
     def test_prepare_node_pending_non_existent_file_import_task(self):
@@ -2190,486 +1804,33 @@ class MetadataImportTestBase(IsaTabTestBase):
         return os.path.join(TEST_DATA_BASE_PATH, file_name)
 
     def post_tabular_meta_data_file(self,
-                                    meta_data_file=None,
+                                    meta_data_file_path=None,
                                     data_set_uuid=None,
                                     title="Test Tabular File",
                                     data_file_column=2,
                                     species_column=1,
                                     source_column_index=0,
                                     delimiter="comma"):
-        post_data = {
-            "file": meta_data_file,
-            "title": title,
-            "data_file_column": data_file_column,
-            "species_column": species_column,
-            "source_column_index": source_column_index,
-            "delimiter": delimiter
-        }
-        url = "/data_set_manager/import/metadata-table-form/"
-        if data_set_uuid is not None:
-            url += "?data_set_uuid={}".format(data_set_uuid)
+        with open(meta_data_file_path) as f:
+            post_data = {
+                "file": f,
+                "file_name": os.path.basename(meta_data_file_path),
+                "title": title,
+                "data_file_column": data_file_column,
+                "species_column": species_column,
+                "source_column_index": source_column_index,
+                "delimiter": delimiter
+            }
+            url = "/data_set_manager/import/metadata-table-form/"
+            if data_set_uuid is not None:
+                url += "?data_set_uuid={}".format(data_set_uuid)
 
-        response = self.client.post(
-            url,
-            data=post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
+            response = self.client.post(
+                url,
+                data=post_data,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
         return response
-
-
-class ProcessISATabViewTests(MetadataImportTestBase):
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_post_good_isa_tab_file(self, delay_mock):
-        with open(self.get_test_file_path('rfc-test.zip')) as good_isa:
-            self.post_isa_tab(isa_tab_file=good_isa)
-        self.successful_import_assertions()
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_post_good_isa_tab_file_with_datafiles(self):
-        for name in ["rfc94.txt", "rfc134.txt"]:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-
-        investigation = DataSet.objects.last().get_investigation()
-        self.assertEqual(DataSet.objects.count(), 1)
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_node_index_update_object_called_with_proper_args(self,
-                                                              delay_mock):
-        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        self.update_node_index_mock.assert_called_with(
-            ANY,
-            using="data_set_manager"
-        )
-
-    def test_post_bad_isa_tab_file(self):
-        with open(self.get_test_file_path('HideLabBrokenA.zip')) as bad_isa:
-            self.post_isa_tab(isa_tab_file=bad_isa)
-        self.unsuccessful_import_assertions()
-
-    def test_post_bad_isa_tab_url(self):
-        self.post_isa_tab(isa_tab_url="non-existant-file")
-        self.unsuccessful_import_assertions()
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        self.assertFalse(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-        self.assertTrue(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_existing_datafiles_persisted(self):
-        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that previously uploaded data file remain accessible
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-            exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(os.path.basename(file_store_item.source),
-                          local_data_file_names)
-        # Assert that the prior Investigation is no longer pointing to local
-        #  datafiles
-        self.assertFalse(
-            data_set.get_investigation(version=1).get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-            )
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_datafiles_added_during_revision(self):
-        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        local_data_file_names_for_revision = ["rfc111.txt"]
-        for name in local_data_file_names_for_revision:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that previously uploaded data file remain accessible
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 4
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(
-                os.path.basename(file_store_item.source),
-                local_data_file_names + local_data_file_names_for_revision
-            )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_datafiles_removed_during_revision(
-        self, terminate_file_import_task_mock
-    ):
-        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        with open(self.get_test_file_path('rfc-test.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-
-        revised_data_set = DataSet.objects.last()
-
-        # Assert that previously uploaded data files are removed
-        first_investigation = revised_data_set.get_investigation(version=1)
-        self.assertEqual(
-            len(first_investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-            )), 0
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_updates_dataset_title(self):
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-
-        revised_data_set = DataSet.objects.last()
-        self.assertEqual(revised_data_set.title,
-                         'Request for Comments (RFC) Test Edited')
-
-    def test_metadata_revision_fails_with_unclean_dataset(self):
-        analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab_file:
-            response = self.post_isa_tab(
-                isa_tab_file=isa_tab_file, data_set_uuid=data_set.uuid
-            )
-            self.assertEqual(response.status_code, 400)
-            self.assertEqual(
-                response.content,
-                "ISA-Tab import Failure:  DataSet with UUID: {} is not clean "
-                "(There have been Analyses or Visualizations performed on it) "
-                "Remove these objects and try again"
-                .format(data_set.uuid)
-            )
-
-    def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
-        data_set = create_dataset_with_necessary_models()
-        metadata_file_name = 'rfc-test-local.zip'
-        with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
-            response = self.post_isa_tab(isa_tab_file=isa_tab,
-                                         data_set_uuid=data_set.uuid)
-            self.assertEqual(response.status_code, 403)
-            self.assertIn(
-                "Metadata revision is only allowed for Data Set owners",
-                response.content
-            )
-
-
-class ProcessISATabViewLiveServerTests(MetadataImportTestBase,
-                                       LiveServerTestCase):
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_post_good_isa_tab_url(self, delay_mock):
-        media_root_path = os.path.join(
-            settings.BASE_DIR,
-            "refinery",
-            TEST_DATA_BASE_PATH
-        )
-        with self.settings(MEDIA_ROOT=media_root_path):
-            media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
-            good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
-            self.post_isa_tab(isa_tab_url=good_isa_tab_url)
-        self.successful_import_assertions()
-
-
-class ProcessMetadataTableViewTests(MetadataImportTestBase):
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_post_good_tabular_file(self, delay_mock):
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
-            )
-        self.successful_import_assertions()
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_post_good_tabular_file_with_datafiles(self):
-        for name in ["test1.txt", "test2.txt"]:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
-            )
-
-        investigation = DataSet.objects.last().get_investigation()
-        self.assertEqual(DataSet.objects.count(), 1)
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 2
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
-            )
-        data_set = DataSet.objects.last()
-        self.assertFalse(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-        # Assert no new DataSet created
-        self.assertEqual(DataSet.objects.count(), 1)
-        self.assertTrue(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_existing_datafiles_persisted(self):
-        local_data_file_names = ["test1.txt", "test2.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
-            )
-        data_set = DataSet.objects.last()
-
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that previously uploaded data file remain accessible
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 2
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(os.path.basename(file_store_item.source),
-                          local_data_file_names)
-        # Assert that the prior Investigation is no longer pointing to local
-        #  datafiles
-        self.assertFalse(
-            data_set.get_investigation(version=1).get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-            )
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_datafiles_added_during_revision(self):
-        local_data_file_names = ["test1.txt", "test2.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
-            )
-        data_set = DataSet.objects.last()
-
-        local_data_file_names_for_revision = ["test3.txt"]
-        for name in local_data_file_names_for_revision:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that all datafiles have been uploaded and associated
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(
-                os.path.basename(file_store_item.source),
-                local_data_file_names + local_data_file_names_for_revision
-            )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_datafiles_removed_during_revision(
-        self, terminate_file_import_task_mock
-    ):
-        local_data_file_names = ["test1.txt", "test2.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
-            )
-        data_set = DataSet.objects.last()
-        with open(
-            self.get_test_file_path('single-file/one-line.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-        revised_data_set = DataSet.objects.last()
-
-        # Assert that previously uploaded data files are removed
-        first_investigation = revised_data_set.get_investigation(version=1)
-        self.assertEqual(
-            len(first_investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True)), 0
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_updates_dataset_title(self):
-        with open(
-                self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-            )
-        data_set = DataSet.objects.last()
-        with open(
-                self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                title="New Title"
-            )
-
-        revised_data_set = DataSet.objects.last()
-        self.assertEqual(revised_data_set.title, "New Title")
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_fails_with_unclean_dataset(self):
-        analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            response = self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-            self.assertEqual(
-                json.loads(response.content),
-                {
-                    "error": (
-                        "DataSet with UUID: {} is not clean (There have been "
-                        "Analyses or Visualizations performed on it) Remove "
-                        "these objects and try again".format(data_set.uuid)
-                    )
-                }
-            )
-
-    def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
-        data_set = create_dataset_with_necessary_models()
-        with open(
-            self.get_test_file_path('single-file/two-line-s3.csv')
-        ) as good_meta_data_file:
-            response = self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-            self.assertEqual(response.status_code, 403)
-            self.assertIn(
-                "Metadata revision is only allowed for Data Set owners",
-                response.content
-            )
 
 
 class SingleFileColumnParserTests(TestCase):
@@ -2685,7 +1846,7 @@ class SingleFileColumnParserTests(TestCase):
             'single-file',
             filename
         )
-        with open(path, 'r') as f:
+        with open(path) as f:
             dataset_uuid = process_metadata_table(
                 username='guest',
                 title='fake',
@@ -2946,136 +2107,3 @@ class TestManagementCommands(TestCase):
         self.assertIn("custom_delimiter_string was not specified",
                       context.exception.message)
         self.assertEqual(DataSet.objects.count(), 0)
-
-
-class CheckDataFilesViewTests(MetadataImportTestBase):
-    def setUp(self):
-        super(CheckDataFilesViewTests, self).setUp()
-        self.check_files_url = "/data_set_manager/import/check_files/"
-
-    def test_check_datafiles_non_ajax_request(self):
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"hello": "world"})
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_check_datafiles_empty_body(self):
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_check_datafiles_wrong_content_type(self):
-        response = self.client.post(
-            self.check_files_url,
-            data={"list": ["a", "b", "c"]},
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_check_datafiles_no_files_uploaded(self):
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"list": ["a.txt", "b.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": ["a.txt", "b.txt"]
-            }
-        )
-
-    def test_check_datafiles_subset_of_files_uploaded(self):
-        open(os.path.join(self.test_user_directory, "a.txt"), "a").close()
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"list": ["a.txt", "b.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": ["b.txt"]
-            }
-        )
-
-    def test_check_datafiles_all_files_uploaded(self):
-        for name in ["a.txt", "b.txt"]:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"list": ["a.txt", "b.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": []
-            }
-        )
-
-    def test_check_datafiles_non_existing_data_set_uuid(self):
-        response = self.client.post(
-            "{}?data_set_uuid={}".format(self.check_files_url, uuid.uuid4()),
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(response.status_code, 404)
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_check_datafiles_metadata_revision_subset_uploaded(self):
-        open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
-
-        with open(
-            self.get_test_file_path("single-file/two-line-local.csv")
-        ) as meta_data_file:
-            self.post_tabular_meta_data_file(meta_data_file=meta_data_file)
-
-        data_set = DataSet.objects.last()
-        response = self.client.post(
-            "{}?data_set_uuid={}".format(self.check_files_url, data_set.uuid),
-            content_type="application/json",
-            data=json.dumps({"list": ["test1.txt", "test2.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": ["test2.txt"]
-            }
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_check_datafiles_metadata_revision_files_will_be_deleted(self):
-        open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
-        with open(
-            self.get_test_file_path("single-file/two-line-local.csv")
-        ) as meta_data_file:
-            self.post_tabular_meta_data_file(meta_data_file=meta_data_file)
-
-        data_set = DataSet.objects.last()
-        response = self.client.post(
-            "{}?data_set_uuid={}".format(self.check_files_url, data_set.uuid),
-            content_type="application/json",
-            data=json.dumps({"list": ["fake.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": ["test1.txt"],
-                "data_files_not_uploaded": ["fake.txt"]
-            }
-        )

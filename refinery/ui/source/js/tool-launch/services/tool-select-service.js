@@ -16,7 +16,7 @@
   function toolSelectService ($window, toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
-    var isToolInfoCollapsed = true;
+    var isToolInfoCollapsed = false;
     var isToolPanelCollapsed = true;
     var dataSetUuid = $window.dataSetUuid;
 
@@ -42,7 +42,11 @@
      * @param {obj} tool - api response tool
     **/
     function setSelectedTool (tool) {
-      angular.copy(tool, selectedTool);
+      if (tool) {
+        angular.copy(tool, selectedTool);
+      } else {
+        angular.copy({}, selectedTool);
+      }
     }
 
     /**

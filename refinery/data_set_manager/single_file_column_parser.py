@@ -181,12 +181,11 @@ class SingleFileColumnParser:
         # import in file as "pre-isa" file
         logger.info("trying to add pre-isa archive file %s",
                     self.metadata_file.name)
-        # FIXME: this will not create a FileStoreItem if self.metadata_file
-        # does not exist on disk (e.g., a file object like TemporaryFile)
-        file_store_item = \
-            FileStoreItem.objects.create(source=self.metadata_file.name)
+        file_source = self.metadata_file.file.name if \
+            hasattr(self.metadata_file, "file") else self.metadata_file.name
+        file_store_item = FileStoreItem.objects.create(source=file_source)
         investigation.pre_isarchive_file = file_store_item.uuid
-        import_file(investigation.pre_isarchive_file, refresh=True)
+        import_file.delay(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
 
         # TODO: test if there are fewer columns than required

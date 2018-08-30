@@ -292,6 +292,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   var formData = new FormData();
   if (self.file) {
     formData.append('file', self.strippedFile);
+    formData.append('file_name', self.file.name);
   }
   if (self.title) {
     formData.append('title', self.title);

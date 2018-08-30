@@ -4,17 +4,11 @@
 <div class="modal-body">
   <span>
     <h5>
-       <i class="fa fa-user"
-          title="You own this data set"
-          refinery-tooltip
-          refinery-tooltip-placement="top">
-
-       </i>
       <a
           class="preview"
           title="View content in File Browser"
           ng-if="modal.deletionMessage == null"
-          ng-href="data_sets/{{ modal.dataSet.uuid }}"
+          ng-href="/data_sets/{{ modal.dataSet.uuid }}"
           ng-bind-html="modal.dataSet.title"
           refinery-tooltip
           refinery-tooltip-placement="top"
@@ -27,7 +21,6 @@
         ng-bind-html="modal.dataSet.title">
       </span>
     </h5>
-
   </span>
    <h5>
      <b>Total files: </b>{{ modal.dataSet.file_count }}

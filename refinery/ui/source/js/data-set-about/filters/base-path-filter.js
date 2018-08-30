@@ -1,6 +1,6 @@
 'use strict';
 
-function isaArchiveName () {
+function basePathFilter () {
   return function (param) {
     if (param !== undefined) {
       // split on backslash
@@ -13,4 +13,4 @@ function isaArchiveName () {
 }
 
 angular.module('refineryDataSetAbout')
-  .filter('isaArchiveName', [isaArchiveName]);
+  .filter('basePathFilter', [basePathFilter]);

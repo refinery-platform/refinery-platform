@@ -2,7 +2,7 @@
 
 function fileUploadStatusService () {
   var vm = this;
-  vm.fileUploadStatus = 'none';
+  vm.fileUploadStatus = { status: 'none' };
 
   /**
    * * Used by UI to deactive Upload Data Set Button depending on the file
@@ -13,9 +13,9 @@ function fileUploadStatusService () {
   vm.setFileUploadStatus = function (status) {
     var statusOptions = ['none', 'queuing', 'running'];
     if (statusOptions.indexOf(status) > -1) {
-      vm.fileUploadStatus = status;
+      vm.fileUploadStatus.status = status;
     }
-    return vm.fileUploadStatus;
+    return vm.fileUploadStatus.status;
   };
 }
 

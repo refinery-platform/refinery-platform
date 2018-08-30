@@ -27,18 +27,21 @@ from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from guardian.shortcuts import get_perms
 from rest_framework import status
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import DataSet, ExtendedGroup, get_user_import_dir
+from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (generate_file_source_translator, get_temp_dir,
-                               parse_s3_url)
+from file_store.models import (FileStoreItem, generate_file_source_translator,
+                               get_temp_dir, parse_s3_url)
+
 from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Node, Study
-from .serializers import AssaySerializer, AttributeOrderSerializer
+from .serializers import (AssaySerializer, AttributeOrderSerializer,
+                          NodeSerializer)
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (
@@ -166,6 +169,59 @@ class ImportISATabFileForm(forms.Form):
                 "Please provide either a file or a URL")
 
 
+def import_by_file(file_obj):
+    temp_file_path = os.path.join(get_temp_dir(), file_obj.name)
+    try:
+        _handle_uploaded_file(file_obj, temp_file_path)
+    except IOError as exc:
+        error_msg = "Error writing file to disk"
+        logger.error("%s. IOError: %s, file name: %s, error: %s.",
+                     error_msg, exc.errno, exc.filename, exc.strerror)
+        return _error_message(error_msg)
+    return _success_message(temp_file_path)
+
+
+def import_by_url(url):
+    # TODO: replace with chain
+    # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
+    parsed_url = urlparse.urlparse(url)
+    file_name = parsed_url.path.split('/')[-1]
+    temp_file_path = os.path.join(get_temp_dir(), file_name)
+    try:
+        # TODO: refactor download_file to take file handle instead
+        # of path
+        download_file(url, temp_file_path)
+    except RuntimeError as exc:
+        error_msg = "Problem downloading ISA-Tab file from: " + url
+        logger.error("%s. %s", error_msg, exc)
+        return _error_message(error_msg)
+    return _success_message(temp_file_path)
+
+
+def _handle_uploaded_file(source_file, target_path):
+    """Write contents of an uploaded file object to a file on disk
+    Raises IOError
+    :param source_file: uploaded file object
+    :type source_file: file object
+    :param target_path: absolute file system path to a temp file
+    :type target_path: str
+    """
+    with open(target_path, 'wb+') as destination:
+        for chunk in source_file.chunks():
+            destination.write(chunk)
+
+
+def _success_message(temp_file_path):
+    return {
+        "success": True, "message": "File imported.",
+        "data": {"temp_file_path": temp_file_path}
+    }
+
+
+def _error_message(error_msg):
+    return {"success": False, "message": error_msg}
+
+
 class ProcessISATabView(View):
     """Process ISA archive"""
     template_name = 'data_set_manager/isa-tab-import.html'
@@ -275,10 +331,10 @@ class ProcessISATabView(View):
                 url = None
 
             if url:
-                response = self.import_by_url(url)
+                response = import_by_url(url)
             else:
                 try:
-                    response = self.import_by_file(f)
+                    response = import_by_file(f)
                 except Exception as e:
                     logger.error(traceback.format_exc(e))
                     return HttpResponseBadRequest(
@@ -389,71 +445,6 @@ class ProcessISATabView(View):
             return render_to_response(self.template_name,
                                       context_instance=context)
 
-    def import_by_file(self, file):
-        temp_file_path = os.path.join(get_temp_dir(), file.name)
-        try:
-            handle_uploaded_file(file, temp_file_path)
-        except IOError as e:
-            error_msg = "Error writing ISA-Tab file to disk"
-            logger.error(
-                "%s. IOError: %s, file name: %s, error: %s.",
-                error_msg,
-                e.errno,
-                e.filename,
-                e.strerror
-            )
-            return {
-                "success": False,
-                "message": error_msg
-            }
-
-        return {
-            "success": True,
-            "message": "File imported.",
-            "data": {
-                "temp_file_path": temp_file_path
-            }
-        }
-
-    def import_by_url(self, url):
-        # TODO: replace with chain
-        # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-        parsed_url = urlparse.urlparse(url)
-        file_name = parsed_url.path.split('/')[-1]
-        temp_file_path = os.path.join(get_temp_dir(), file_name)
-        try:
-            # TODO: refactor download_file to take file handle instead
-            # of path
-            download_file(url, temp_file_path)
-        except RuntimeError as exc:
-            error_msg = "Problem downloading ISA-Tab file from: " + url
-            logger.error("%s. %s", error_msg, exc)
-            return {
-                "success": False,
-                "message": error_msg
-            }
-
-        return {
-            "success": True,
-            "message": "File imported.",
-            "data": {
-                "temp_file_path": temp_file_path
-            }
-        }
-
-
-def handle_uploaded_file(source_file, target_path):
-    """Write contents of an uploaded file object to a file on disk
-    Raises IOError
-    :param source_file: uploaded file object
-    :type source_file: file object
-    :param target_path: absolute file system path to a temp file
-    :type target_path: str
-    """
-    with open(target_path, 'wb+') as destination:
-        for chunk in source_file.chunks():
-            destination.write(chunk)
-
 
 class ProcessMetadataTableView(View):
     """Create a new dataset from uploaded metadata table"""
@@ -475,8 +466,9 @@ class ProcessMetadataTableView(View):
             if data_set_ownership_response is not None:
                 return data_set_ownership_response
         try:
-            metadata_file = request.FILES['file']
             title = request.POST.get('title')
+            metadata_file = request.FILES['file']
+            metadata_file.name = request.POST.get('file_name')
             data_file_column = request.POST.get('data_file_column')
         except (KeyError, ValueError):
             error_msg = 'Required parameters are missing'
@@ -487,7 +479,13 @@ class ProcessMetadataTableView(View):
                 )
             else:
                 return render(request, self.template_name, error)
-
+        else:
+            response = import_by_file(metadata_file)
+            if not response["success"]:
+                error_message = response["message"]
+                logger.error(error_message)
+                raise RuntimeError(error_message)
+            metadata_file.file.name = response["data"]["temp_file_path"]
         try:
             source_column_index = request.POST.getlist('source_column_index')
         except TypeError as error_msg:
@@ -642,9 +640,11 @@ class CheckDataFilesView(View):
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
                         bad_file_list.append(os.path.basename(input_file_path))
-                        logger.debug("File '%s' does not exist")
+                        logger.debug(
+                            "File '%s' does not exist", input_file_path
+                        )
                     else:
-                        logger.debug("File '%s' exists")
+                        logger.debug("File '%s' exists", input_file_path)
 
         response_data = {
             "data_files_not_uploaded": [
@@ -1100,6 +1100,80 @@ class AddFileToNodeView(APIView):
             import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
+
+
+class NodeViewSet(APIView):
+    """API endpoint that allows Nodes to be viewed".
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: file_uuid
+              description: uuid for file store item
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ['patch']
+
+    def get_object(self, uuid):
+        try:
+            return Node.objects.get(uuid=uuid)
+        except Node.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Node.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple objects returned.")
+
+    def patch(self, request, uuid):
+        node = self.get_object(uuid)
+        new_file_uuid = request.data.get('file_uuid')
+        data_set = node.study.get_dataset()
+
+        if not data_set.is_clean():
+            return Response(
+                'Files cannot be removed once an analysis or visualization '
+                'has ran on a data set ',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if data_set.get_owner() == request.user:
+            # to remove the data file, we need to delete it and update index,
+            #  the file store item uuid should remain
+            if new_file_uuid == '':
+
+                try:
+                    file_store_item = FileStoreItem.objects.get(
+                        uuid=node.file_uuid
+                    )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(e)
+                    return Response('Missing file store item.',
+                                    status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    file_store_item.delete_datafile()
+
+                node.update_solr_index()
+                return Response(
+                    NodeSerializer(node).data, status=status.HTTP_200_OK
+                )
+            return Response('Currently, you can only remove node files.',
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
 
 def _check_data_set_ownership(user, data_set_uuid):

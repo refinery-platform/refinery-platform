@@ -40,7 +40,7 @@ from tastypie.utils import trailing_slash
 
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
-from data_set_manager.models import Attribute, Node, Study
+from data_set_manager.models import Study
 from file_store.models import FileStoreItem
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, ResourceStatistics, Tutorials,
@@ -165,7 +165,7 @@ class SharableResourceAPIInterface(object):
             owned_res_set = Set(
                 get_objects_for_user(
                     user,
-                    'core.add_%s' %
+                    'core.share_%s' %
                     self.res_type._meta.verbose_name,
                     use_groups=False
                 ).values_list("id", flat=True))
@@ -381,53 +381,6 @@ class SharableResourceAPIInterface(object):
             res_list = self._build_res_list(request.user)
             return self.process_get_list(request, res_list, **kwargs)
         return HttpMethodNotAllowed()
-
-
-class ProjectResource(ModelResource, SharableResourceAPIInterface):
-    share_list = fields.ListField(attribute='share_list', null=True)
-    public = fields.BooleanField(attribute='public', null=True)
-    is_owner = fields.BooleanField(attribute='is_owner', null=True)
-
-    def __init__(self):
-        SharableResourceAPIInterface.__init__(self, Project)
-        ModelResource.__init__(self)
-
-    class Meta:
-        # authentication = ApiKeyAuthentication()
-        queryset = Project.objects.filter(is_catch_all=False)
-        resource_name = 'projects'
-        detail_uri_name = 'uuid'
-        fields = ['name', 'id', 'uuid', 'summary']
-        # authentication = SessionAuthentication()
-        # authorization = GuardianAuthorization()
-        authorization = Authorization()
-
-    def prepend_urls(self):
-        return SharableResourceAPIInterface.prepend_urls(self)
-
-    def res_sharing_list(self, request, **kwargs):
-        if request.method == 'GET':
-            kwargs['sharing'] = True
-            res_list = filter(
-                lambda r: not r.is_catch_all,
-                self._build_res_list(request.user)
-            )
-            return self.process_get_list(request, res_list, **kwargs)
-        return HttpMethodNotAllowed()
-
-    def obj_create(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
-
-    def obj_get(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
-
-    def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(
-            self, bundle, **kwargs)
-
-    def get_object_list(self, request):
-        obj_list = SharableResourceAPIInterface.get_object_list(self, request)
-        return filter(lambda o: not o.is_catch_all, obj_list)
 
 
 class UserResource(ModelResource):
@@ -745,8 +698,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
-        # get_owner in core models uses add to distinguish owner
-        is_owner = request.user.has_perm('core.add_dataset', ds)
+        is_owner = request.user.has_perm('core.share_dataset', ds)
 
         try:
             user_uuid = request.user.profile.uuid
@@ -1054,71 +1006,6 @@ class AnalysisResource(ModelResource):
         if request.GET.get('meta_only'):
             return {'meta': data['meta']}
         return data
-
-
-class NodeResource(ModelResource):
-    parents = fields.ToManyField('core.api.NodeResource', 'parents')
-    children = fields.ToManyField('core.api.NodeResource', 'children')
-    study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
-    assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
-                              null=True)
-    attributes = fields.ToManyField(
-        'data_set_manager.api.AttributeResource',
-        attribute=lambda bundle: (
-            Attribute.objects
-            .exclude(value__isnull=True)
-            .exclude(value__exact='')
-            .filter(node=bundle.obj, subtype='organism')
-        ), use_in='all', full=True, null=True
-    )
-
-    class Meta:
-        queryset = Node.objects.all()
-        resource_name = 'node'
-        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
-        # required for public data set access by anonymous users
-        authentication = Authentication()
-        authorization = Authorization()
-        allowed_methods = ['get']
-        fields = ['analysis_uuid', 'assay', 'attributes', 'children',
-                  'file_url', 'file_uuid', 'name', 'parents', 'study',
-                  'subanalysis', 'type', 'uuid']
-        filtering = {
-            'uuid': ALL,
-            'study': ALL_WITH_RELATIONS,
-            'assay': ALL_WITH_RELATIONS,
-            'file_uuid': ALL,
-            'type': ALL
-        }
-        limit = 0
-        max_limit = 0
-
-    def prepend_urls(self):
-        return [
-            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
-                self._meta.resource_name,
-                self.wrap_view('dispatch_detail'),
-                name="api_dispatch_detail"),
-        ]
-
-    def dehydrate(self, bundle):
-        # return download URL of file if a file is associated with the node
-        try:
-            file_item = FileStoreItem.objects.get(uuid=bundle.obj.file_uuid)
-        except AttributeError:
-            logger.warning("No UUID provided")
-            bundle.data['file_url'] = None
-            bundle.data['file_import_status'] = None
-        except FileStoreItem.DoesNotExist:
-            logger.warning(
-                "Unable to find file store item with UUID '%s'",
-                bundle.obj.file_uuid)
-            bundle.data['file_url'] = None
-            bundle.data['file_import_status'] = None
-        else:
-            bundle.data['file_url'] = file_item.get_datafile_url()
-            bundle.data['file_import_status'] = file_item.get_import_status()
-        return bundle
 
 
 class StatisticsResource(Resource):
@@ -1854,7 +1741,7 @@ class ExtendedGroupResource(ModelResource):
                 'is_manager': self.user_authorized(u, ext_group)
             },
             ext_group.user_set.all().filter(is_active=True).exclude(
-                id=settings.ANONYMOUS_USER_ID
+                username=settings.ANONYMOUS_USER_NAME
             )
         )
 

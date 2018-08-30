@@ -11,15 +11,14 @@ from tastypie.api import Api
 from config.utils import RouterCombiner
 from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       GroupManagementResource, InvitationResource,
-                      NodeResource, ProjectResource, StatisticsResource,
-                      UserAuthenticationResource, UserProfileResource,
-                      WorkflowResource)
+                      StatisticsResource, UserAuthenticationResource,
+                      UserProfileResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeResource,
-                                  InvestigationResource,
+                                  InvestigationResource, NodeResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolReferenceResource, ProtocolResource,
                                   PublicationResource, StudyResource)
@@ -35,7 +34,6 @@ logger = logging.getLogger(__name__)
 v1_api = Api(api_name='v1')
 
 v1_api.register(AnalysisResource())
-v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
 v1_api.register(AssayResource())
 v1_api.register(DataSetResource())

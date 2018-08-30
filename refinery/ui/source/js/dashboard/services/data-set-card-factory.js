@@ -1,8 +1,7 @@
 /**
- * Data Set Factory
- * @namespace dataSetFactory
- * @desc Service tracks the selected tool, grabs the tool definition
- * list from service, and tracks if the panels are collapsed
+ * Data Set Card Factory
+ * @namespace dataSetCardFactory
+ * @desc Service pings api for data sets list and tracks the latests params
  * @memberOf refineryApp.refineryDashboard
  */
 (function () {
@@ -13,23 +12,23 @@
 
   dataSetCardFactory.$inject = [
     '$log',
-    '$q',
-    'settings',
     '_',
     'dataSetV2Service'
   ];
 
   function dataSetCardFactory (
     $log,
-    settings,
-    $q,
     _,
-    dataSetV2Service) {
+    dataSetV2Service
+  ) {
     var dataSets = [];
     var currentParams = {};
+    var dataSetStats = { totalCount: 0 };
+
     var service = {
       dataSets: dataSets,
-      getDataSets: getDataSets
+      getDataSets: getDataSets,
+      dataSetStats: dataSetStats
     };
     return service;
 
@@ -39,10 +38,10 @@
     * ----------------------
     */
     /**
-     * @name setPrimaryGroup
-     * @desc  Sets the primary group though api service and updates primaryGroup
-     * @memberOf refineryDashboard.primaryGroupService
-     * @param {obj} group - contains group name and id
+     * @name getDataSets
+     * @desc  Uses service to refresh data sets list and update latest params
+     * @memberOf refineryDashboard.dataSetCardFactory
+     * @param {obj} params: tracks filters for public, owner, & group
     **/
     function getDataSets (params) {
       // grabs the latest params
@@ -51,7 +50,8 @@
       dataSetsRequest.$promise.then(function (response) {
         // only update the state if it's the correct params (avoid raceconditions)
         if (_.isEqual(currentParams, response.config.params)) {
-          angular.copy(response.data, dataSets);
+          angular.copy(response.data.data_sets, dataSets);
+          dataSetStats.totalCount = response.data.total_data_sets;
         }
       });
       return dataSetsRequest.$promise;

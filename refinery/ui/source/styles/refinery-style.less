@@ -67,6 +67,11 @@ body {
   line-height: 20px;
 }
 
+// override bootstrap default popover font
+.popover {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 .refinery-base.btn.btn-default {
   border: none;
   margin-bottom: 0;
@@ -1156,7 +1161,6 @@ button.icon-only {
 .icon-only:focus,
 .no-underline:focus {
   outline: none;
-  text-decoration: none;
 }
 
 .text-align-center {
@@ -2020,5 +2024,9 @@ a.modal-close {
 }
 
 .banned {
-  cursor: not-allowed;
+  cursor: not-allowed !important;
+}
+
+.no-decoration-link {
+  text-decoration: none !important;
 }

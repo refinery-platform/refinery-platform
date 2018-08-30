@@ -213,14 +213,13 @@ INSTALLED_APPS = (
     'analysis_manager',
     'file_store',
     'annotation_server',
-    'selenium_testing',
     'tool_manager',
     'flatblocks',
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
     'django_docker_engine',
-    'httpproxy',
+    'revproxy',
     'cuser',
 )
 
@@ -284,7 +283,7 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
-        'httpproxy': {
+        'revproxy': {
             'level': 'ERROR',
         },
         'httpstream': {  # dependency of py2neo
@@ -294,9 +293,6 @@ LOGGING = {
             'level': 'INFO',
         },
         'requests': {
-            'level': 'ERROR',
-        },
-        'selenium': {
             'level': 'ERROR',
         },
     },
@@ -600,7 +596,7 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
-ANONYMOUS_USER_ID = -1
+ANONYMOUS_USER_NAME = "AnonymousUser"
 
 SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
 

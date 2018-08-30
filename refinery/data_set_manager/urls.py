@@ -14,8 +14,9 @@ from rest_framework.routers import DefaultRouter
 from .views import (AddFileToNodeView, Assays, AssaysAttributes,
                     AssaysFiles, CheckDataFilesView,
                     ChunkedFileUploadCompleteView, ChunkedFileUploadView,
-                    DataSetImportView, ImportISATabView, ProcessISATabView,
-                    ProcessMetadataTableView, TakeOwnershipOfPublicDatasetView)
+                    DataSetImportView, ImportISATabView, NodeViewSet,
+                    ProcessISATabView, ProcessMetadataTableView,
+                    TakeOwnershipOfPublicDatasetView)
 
 urlpatterns = patterns(
     'data_set_manager.views',
@@ -56,4 +57,6 @@ data_set_manager_router.urls.extend([
         AssaysAttributes.as_view()),
     url(r'^data_set_manager/add-file/$',
         AddFileToNodeView.as_view()),
+    url(r'^nodes/(?P<uuid>' + UUID_RE + r')/$',
+        NodeViewSet.as_view()),
 ])

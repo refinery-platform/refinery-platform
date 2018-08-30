@@ -356,7 +356,7 @@
       Measurement: {{ assay.measurement }},
     </span>
     <span ng-if="assay.measurement_accession">
-      Measurement Accession: {{ assay.measurement_accession }}
+      Measurement Accession: {{ assay.measurement_accession }},
     </span>
     <span ng-if="assay.measurement_source">
       Measurement Source: {{ assay.measurement_source }},
@@ -374,7 +374,7 @@
       Platform: {{ assay.platform }},
     </span>
     <span ng-if="assay.file_name">
-      File name: {{ assay.file_name }}
+      File name: {{ assay.file_name | basePathFilter }}
     </span>
   </ul>
 </div>
@@ -393,7 +393,7 @@
 <div ng-if="ADCtrl.dataSet.isa_archive">
   <p>
      <a href="{{ADCtrl.fileStoreItem.datafile}}">
-      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+      {{ADCtrl.fileStoreItem.datafile | basePathFilter}}
     </a>
       - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
@@ -424,7 +424,7 @@
 <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
   <p>
     <a href="{{ADCtrl.fileStoreItem.datafile}}">
-    {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+    {{ADCtrl.fileStoreItem.datafile | basePathFilter}}
     </a>
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>

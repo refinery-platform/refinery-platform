@@ -9,6 +9,9 @@
   </div>
   <div class="modal-body">
     <div class="row">
+      <p class="p-l-1-2">
+        <strong>{{ $ctrl.groupName }}</strong>
+      </p>
       <form
         ng-submit="$ctrl.sendInvite()"
         name="inviteNewMemberForm"
@@ -61,7 +64,7 @@
       type="submit"
       class="btn btn-primary"
       ng-click="$ctrl.sendInvite(email)"
-      ng-disabled="!inviteNewMemberForm.$valid || $ctrl.isLoading">
+      ng-disabled="!inviteNewMemberForm.$valid || $ctrl.isLoading || $ctrl.alertType == 'success'">
       Send Invite
     </button>
   </div>

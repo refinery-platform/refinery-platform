@@ -17,7 +17,7 @@
       </h4>
     </div>
      <ul class="list-unstyled scrollable-list main-content-list">
-       <li ng-repeat="event in $ctrl.events | orderBy: '-date_time'" class="event-item">
+       <li ng-repeat="event in $ctrl.events" class="event-item">
         <span class="history-col-date">
           {{ event.date_time | date:"MM/dd/yyyy" }}
         </span>

@@ -270,12 +270,14 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.django_docker_cleanup_wait_time
         )
 
+    @mock.patch("django_docker_engine.docker_utils.DockerClientWrapper.pull")
     def load_visualizations(
         self,
+        docker_pull_mock,
         visualizations=["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
     ):
-        # TODO: More mocking, so Docker image is not downloaded
-        call_command("load_tools", visualizations=visualizations)
+        call_command("load_tools", "--visualizations",
+                     " ".join(visualizations))
         return visualizations
 
     def tearDown(self):
@@ -288,12 +290,15 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def create_solr_mock_response(self, nodes):
         node_uuids = [n.uuid for n in nodes]
+        solr_params = _create_solr_params_from_node_uuids(node_uuids)
+        solr_params['json']['fields'] = solr_params['json']['filter']
+        solr_params['json'] = json.dumps(solr_params['json'])
         return json.dumps(
             {
                 "responseHeader": {
                     "status": 0,
                     "QTime": 36,
-                    "params": _create_solr_params_from_node_uuids(node_uuids)
+                    "params": solr_params
                 },
                 "response": {
                     "numFound": len(node_uuids),
@@ -1151,7 +1156,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 CommandError,
                 call_command,
                 "load_tools",
-                workflows=True
+                "--workflows"
             )
 
             self.assertEqual(ToolDefinition.objects.count(), 0)
@@ -1172,11 +1177,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         original_ids = [t.id for t in ToolDefinition.objects.all()]
 
         # Create new VisualizationToolDefinition with --force
-        call_command(
-            "load_tools",
-            visualizations=visualizations,
-            force=True
-        )
+        call_command("load_tools", "--visualizations",
+                     " ".join(visualizations), "--force")
         new_ids = [t.id for t in ToolDefinition.objects.all()]
 
         # Assert that the new visualization tool definitions id's were
@@ -1192,15 +1194,11 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ) as get_wf_mock:
             # Create WorkflowToolDefinition
-            call_command("load_tools", workflows=True)
+            call_command("load_tools", "--workflows")
             original_ids = [t.id for t in ToolDefinition.objects.all()]
 
             # Create new WorkflowToolDefinition with --force
-            call_command(
-                "load_tools",
-                workflows=True,
-                force=True
-            )
+            call_command("load_tools", "--workflows", "--force")
             new_ids = [t.id for t in ToolDefinition.objects.all()]
 
             # Assert that the new workflow tool definitions id's were
@@ -1219,11 +1217,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         ):
             with self.assertRaises(SystemExit):
                 # Create WorkflowToolDefinition
-                call_command(
-                    "load_tools",
-                    workflows=True,
-                    force=True
-                )
+                call_command("load_tools", "--workflows", "--force")
 
         self.assertEqual(ToolDefinition.objects.count(), 0)
 
@@ -1235,7 +1229,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             side_effect=RuntimeError
         ):
             with self.assertRaises(CommandError):
-                call_command("load_tools", workflows=True)
+                call_command("load_tools", "--workflows")
 
     def test_load_tools_multiple_times_skips_without_deletion(
             self
@@ -1244,10 +1238,10 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self.mock_get_workflows_reference,
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ):
-            call_command("load_tools", workflows=True)
+            call_command("load_tools", "--workflows")
             tool_definitions_a = [t for t in ToolDefinition.objects.all()]
 
-            call_command("load_tools", workflows=True)
+            call_command("load_tools", "--workflows")
             tool_definitions_b = [t for t in ToolDefinition.objects.all()]
 
         self.assertEqual(tool_definitions_a, tool_definitions_b)
@@ -1280,6 +1274,27 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 ),
                 context.exception.message
             )
+
+    def test_load_tools_command_error_if_branch_and_workflows_specified(self):
+        with self.assertRaises(CommandError):
+            call_command("load_tools", "--workflows",
+                         branch="fake-branch-name")
+
+    @mock.patch.object(LoadToolsCommand, "_load_visualization_definitions")
+    def test_load_tools_command_registry_branch_specified(
+            self, load_vis_mock
+    ):
+        visualization_tool_registry_branch = "fake-branch-name"
+        command = LoadToolsCommand()
+        command.handle(
+            workflows=False,
+            visualizations=["test-vis-tool-name"],
+            branch=visualization_tool_registry_branch,
+            force=False
+        )
+        self.assertEqual(command.visualization_registry_branch,
+                         visualization_tool_registry_branch)
+        self.assertTrue(load_vis_mock.called)
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
@@ -1364,7 +1379,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
         ]
         with self.assertRaises(exception) as context:
-            call_command("load_tools", visualizations=visualizations)
+            call_command("load_tools", "--visualizations",
+                         " ".join(visualizations))
         [self.assertIn(message, context.exception.message)
          for message in messages]
 
@@ -3649,7 +3665,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             "https://s3.amazonaws.com/pkerp/public/"
             "dixon2012-h1hesc-hindiii-allreps-filtered."
             "1000kb.multires.cool"
-            # TODO: Add selenium-based test once higlass relative paths fixed
         )
 
     def test_docker_cleanup(self):

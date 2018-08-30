@@ -180,16 +180,28 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
 
 def _get_download_url_or_import_state(file_store_item):
-    download_url = constants.NOT_AVAILABLE
-    if file_store_item is not None:
-        download_url = file_store_item.get_datafile_url()
-        if download_url is None:
-            import_state = file_store_item.get_import_status()
-            if import_state in celery.states.READY_STATES:
-                # Here we've reached a celery "READY STATE" without a valid
-                # download url
-                import_state = constants.NOT_AVAILABLE
-            else:
-                import_state = celery.states.PENDING
-            return import_state
-    return download_url
+    """
+    Discerns the download url or file import state for a given FileStoreItem
+    :param file_store_item: A FileStoreItem instance
+    :returns <String>:
+        - a valid url pointing to the FileStoreItem's datafile
+        - constants.NOT_AVAILABLE
+        - celery.states.PENDING
+    """
+    if file_store_item is None:
+        return constants.NOT_AVAILABLE
+
+    download_url = file_store_item.get_datafile_url()
+    if download_url:
+        return download_url
+
+    # "PENDING" if an import_task_id doesn't exist and
+    # there is no valid download_url
+    if not file_store_item.import_task_id:
+        return celery.states.PENDING
+
+    # "N/A" if the import_state is in a "READY_STATE" or "PENDING" with an
+    # import_task_id and without a valid download_url
+    import_state = file_store_item.get_import_status()
+    if import_state in {celery.states.PENDING} | celery.states.READY_STATES:
+        return constants.NOT_AVAILABLE
