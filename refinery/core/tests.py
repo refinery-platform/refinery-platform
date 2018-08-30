@@ -754,6 +754,26 @@ class AnalysisTests(TestCase):
         self.assertEqual(derived_data_file_node.workflow_output,
                          self.analysis_node_connection_a.name)
 
+    def test__get_input_nodes(self):
+        analysis = self.analysis_with_node_analyzed_further
+        self.assertEqual(analysis._get_input_nodes(), [self.node2])
+
+    def test__get_input_file_store_items(self):
+        analysis = self.analysis_with_node_analyzed_further
+        self.assertEqual(
+            analysis._get_input_file_store_items(),
+            [self.node2.get_file_store_item()]
+        )
+
+    def test_has_all_local_input_files_non_local_inputs(self):
+        analysis = self.analysis_with_node_analyzed_further
+        node = analysis._get_input_nodes()[0]
+        node.get_file_store_item().delete_datafile()
+        self.assertFalse(analysis.has_all_local_input_files())
+
+    def test_has_all_local_input_files(self):
+        self.assertTrue(self.analysis.has_all_local_input_files())
+
 
 class UtilitiesTest(TestCase):
     def setUp(self):
