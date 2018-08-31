@@ -1438,7 +1438,7 @@ class Analysis(OwnableResource):
     def terminate_file_import_tasks(self):
         """
         Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
-        and trys to terminate their import_file tasks if possible
+        and trys to terminate their file import tasks if possible
         """
         workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
         if workflow_tool is not None:

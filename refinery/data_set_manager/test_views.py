@@ -19,11 +19,11 @@ from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
 from core.models import DataSet, InvestigationLink
 from core.test_views import APIV2TestCase
 from file_store.models import FileStoreItem
+from file_store.tasks import FileImportTask
 
 from .models import AnnotatedNode, Assay, AttributeOrder, Investigation, Study
 from .tests import MetadataImportTestBase
-from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
-                    import_file)
+from .views import AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -848,7 +848,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):
-    @mock.patch.object(import_file, "delay")
+    @mock.patch.object(FileImportTask, 'delay')
     def test_post_good_isa_tab_file(self, delay_mock):
         with open(self.get_test_file_path('rfc-test.zip')) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
@@ -868,14 +868,13 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             len(investigation.get_file_store_items(local_only=True)), 3
         )
 
-    @mock.patch.object(import_file, "delay")
+    @mock.patch.object(FileImportTask, 'delay')
     def test_node_index_update_object_called_with_proper_args(self,
                                                               delay_mock):
         with open(self.get_test_file_path('rfc-test.zip')) as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         self.update_node_index_mock.assert_called_with(
-            ANY,
-            using="data_set_manager"
+            ANY, using="data_set_manager"
         )
 
     def test_post_bad_isa_tab_file(self):
@@ -1050,12 +1049,10 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
 class ProcessISATabViewLiveServerTests(MetadataImportTestBase,
                                        LiveServerTestCase):
-    @mock.patch.object(import_file, "delay")
+    @mock.patch.object(FileImportTask, 'delay')
     def test_post_good_isa_tab_url(self, delay_mock):
         media_root_path = os.path.join(
-            settings.BASE_DIR,
-            "refinery",
-            TEST_DATA_BASE_PATH
+            settings.BASE_DIR, 'refinery', TEST_DATA_BASE_PATH
         )
         with self.settings(MEDIA_ROOT=media_root_path):
             media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
@@ -1065,7 +1062,7 @@ class ProcessISATabViewLiveServerTests(MetadataImportTestBase,
 
 
 class ProcessMetadataTableViewTests(MetadataImportTestBase):
-    @mock.patch.object(import_file, "delay")
+    @mock.patch.object(FileImportTask, 'delay')
     def test_post_good_tabular_file(self, delay_mock):
         self.post_tabular_meta_data_file(
             meta_data_file_path=self.get_test_file_path(
@@ -1090,7 +1087,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    @mock.patch.object(FileStoreItem, 'terminate_file_import_task')
     def test_metadata_revision_works_grammatical_changes_only(
         self, terminate_file_import_task_mock
     ):
@@ -1111,9 +1108,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
         # Assert no new DataSet created
         self.assertEqual(DataSet.objects.count(), 1)
-        self.assertTrue(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
+        self.assertTrue(AnnotatedNode.objects.filter(attribute_value='EDITED'))
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")

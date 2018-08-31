@@ -15,7 +15,7 @@ from celery.task.sets import TaskSet
 import core
 from core.models import Analysis, AnalysisResult, Workflow
 from file_store.models import FileStoreItem, FileExtension
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 import tool_manager
 
 from .models import AnalysisStatus
@@ -255,7 +255,7 @@ def _refinery_file_import(analysis_uuid):
         tool = _get_workflow_tool(analysis_uuid)
 
         for input_file_uuid in tool.get_input_file_uuid_list():
-            refinery_import_task = import_file.subtask((input_file_uuid,))
+            refinery_import_task = FileImportTask().subtask((input_file_uuid,))
             refinery_import_tasks.append(refinery_import_task)
         refinery_import_taskset = TaskSet(
             tasks=refinery_import_tasks).apply_async()
@@ -527,9 +527,7 @@ def _get_galaxy_download_task_ids(analysis):
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
-                task_id = import_file.subtask(
-                        (file_store_item.uuid, False, file_size)
-                )
+                task_id = FileImportTask().subtask((file_store_item.uuid,))
                 task_id_list.append(task_id)
 
     return task_id_list

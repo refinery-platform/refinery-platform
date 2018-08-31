@@ -223,11 +223,11 @@ class FileImportTask(celery.Task):
         return file_store_name
 
     def on_success(self, retval, task_id, args, kwargs):
+        # allow for the use of uuid as a keyword or positional argument
         try:
             file_store_item_uuid = kwargs['uuid']
-        except KeyError as exc:
-            logger.error("Error postprocessing file UUID '%s': %s",
-                         file_store_item_uuid, exc)
+        except KeyError:
+            file_store_item_uuid = args[0]
         try:
             node = Node.objects.get(file_uuid=file_store_item_uuid)
         except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
