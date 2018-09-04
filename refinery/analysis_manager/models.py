@@ -70,7 +70,10 @@ class AnalysisStatus(models.Model):
             raise ValueError("Invalid Galaxy history state given")
 
     def refinery_import_state(self):
-        return get_task_group_state(self.refinery_import_task_group_id)
+        if self.analysis.has_all_local_input_files():
+            return [{'state': celery.states.SUCCESS, 'percent_done': 100}]
+        else:
+            return get_task_group_state(self.refinery_import_task_group_id)
 
     def galaxy_file_import_state(self):
         if self.galaxy_import_state and self.galaxy_import_progress != 0:

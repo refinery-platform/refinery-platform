@@ -255,8 +255,24 @@ def _refinery_file_import(analysis_uuid):
         tool = _get_workflow_tool(analysis_uuid)
 
         for input_file_uuid in tool.get_input_file_uuid_list():
-            refinery_import_task = FileImportTask().subtask((input_file_uuid,))
-            refinery_import_tasks.append(refinery_import_task)
+            try:
+                file_store_item = FileStoreItem.objects.get(
+                    uuid=input_file_uuid
+                )
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                error_msg = "Error retrieving FileStoreItem with UUID '{}': " \
+                            "{}".format(input_file_uuid, exc)
+                logger.error(error_msg)
+                analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+            else:
+                if not file_store_item.is_local():
+                    # Avoid adding UUIDs of already imported
+                    # FileStoreItem's to this refinery_import_taskset
+                    refinery_import_task = FileImportTask().subtask(
+                        (input_file_uuid,)
+                    )
+                    refinery_import_tasks.append(refinery_import_task)
         refinery_import_taskset = TaskSet(
             tasks=refinery_import_tasks).apply_async()
         refinery_import_taskset.save()

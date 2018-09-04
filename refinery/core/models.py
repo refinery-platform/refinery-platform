@@ -1522,17 +1522,25 @@ class Analysis(OwnableResource):
             workflow_output=analysis_node_connection.name
         )
 
-    def _get_input_node(self):
-        return AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=INPUT_CONNECTION
-        ).first().node
+    def has_all_local_input_files(self):
+        return all(file_store_item.is_local() for file_store_item in
+                   self._get_input_file_store_items())
+
+    def _get_input_nodes(self):
+        return [analysis_node_connection.node for analysis_node_connection in
+                AnalysisNodeConnection.objects.filter(
+                    analysis=self, direction=INPUT_CONNECTION
+                )]
+
+    def _get_input_file_store_items(self):
+        return [node.get_file_store_item()
+                for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
-        return self._get_input_node().study
+        return self._get_input_nodes()[0].study
 
     def get_input_node_assay(self):
-        return self._get_input_node().assay
+        return self._get_input_nodes()[0].assay
 
     def _create_data_transformation_nodes(self, graph):
         """create data transformation nodes for all Tool nodes"""
