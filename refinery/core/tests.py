@@ -761,7 +761,7 @@ class AnalysisTests(TestCase):
     def test__get_input_file_store_items(self):
         analysis = self.analysis_with_node_analyzed_further
         self.assertEqual(
-            analysis._get_input_file_store_items(),
+            analysis.get_input_file_store_items(),
             [self.node2.get_file_store_item()]
         )
 

@@ -25,7 +25,7 @@ from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
-                                    run_analysis)
+                                    import_file, run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
 import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
@@ -1151,6 +1151,20 @@ class WorkflowTool(Tool):
                     self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
+        ]
+
+    def get_refinery_import_tasks(self):
+        """Create and return a list of import_file() tasks for the
+        user-selected inputs of a WorkflowTool.launch()
+
+        NOTE: We avoid adding UUIDs of already imported FileStoreItem's as
+        to not re-import them without need.
+        """
+        return [
+            import_file.subtask((file_store_item.uuid,))
+            for file_store_item in
+            self.analysis.get_input_file_store_items()
+            if not file_store_item.is_local()
         ]
 
     @handle_bioblend_exceptions
