@@ -2694,9 +2694,8 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_get_refinery_import_tasks(self):
         self.create_tool(ToolDefinition.WORKFLOW)
-        refinery_import_tasks = self.tool.get_refinery_import_tasks()
         self.assertEqual(
-            refinery_import_tasks,
+            self.tool.get_refinery_import_tasks(),
             [import_file.subtask((self.tool.get_input_file_uuid_list()[0],))]
         )
 
