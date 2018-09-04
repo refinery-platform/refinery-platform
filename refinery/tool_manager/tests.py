@@ -1653,7 +1653,7 @@ class ToolTests(ToolManagerTestBase):
         self.create_tool(tool_type=ToolDefinition.VISUALIZATION)
         self.assertEqual(self.tool.display_name, "{} {} {}".format(
             self.tool.name,
-            self.tool.creation_date,
+            self.tool.creation_date.strftime('%m/%d/%Y %H:%M:%S'),
             self.tool.get_owner().username
         ))
 

@@ -222,8 +222,10 @@ def create_tool(tool_launch_configuration, user_instance):
 
     display_name = tool_launch_configuration.get("display_name")
     if not display_name:
-        display_name = "{} {} {}".format(tool.name, tool.creation_date,
-                                         tool.get_owner().username)
+        display_name = "{} {} {}".format(
+            tool.name, tool.creation_date.strftime('%m/%d/%Y %H:%M:%S'),
+            tool.get_owner().username
+        )
     tool.display_name = display_name
     try:
         tool.save()
