@@ -63,6 +63,7 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
 from factory_boy.utils import create_dataset_with_necessary_models, \
     create_tool_with_necessary_models
 from file_store.models import FileStoreItem, FileType
+from file_store.tasks import import_file
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.serializers import ToolDefinitionSerializer
@@ -2690,6 +2691,19 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.tool.get_owner(),
             self.tool.analysis.get_owner()
         )
+
+    def test_get_refinery_import_tasks(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        refinery_import_tasks = self.tool.get_refinery_import_tasks()
+        self.assertEqual(
+            refinery_import_tasks,
+            [import_file.subtask((self.tool.get_input_file_uuid_list()[0],))]
+        )
+
+    def test_get_refinery_import_tasks_inputs_all_local(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        with mock.patch.object(FileStoreItem, "is_local", return_value=True):
+            self.assertEqual(self.tool.get_refinery_import_tasks(), [])
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
