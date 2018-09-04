@@ -3690,19 +3690,11 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             assertions
         )
 
+    @override_settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=0)
     def test_max_containers(self):
-        with self.settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1):
-            self._start_visualization(
-                'hello_world.json',
-                "https://www.example.com/file.txt",
-                count=settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-            )
-            with self.assertRaises(VisualizationToolError) as context:
-                self._start_visualization(
-                    'hello_world.json',
-                    "https://www.example.com/file.txt",
-                )
-        self.assertIn("Max containers", context.exception.message)
+        with self.assertRaises(VisualizationTool.DoesNotExist):
+            self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertIn("Max containers", self.post_response.content)
 
     def test__get_launch_parameters(self):
         def assertions(tool):
