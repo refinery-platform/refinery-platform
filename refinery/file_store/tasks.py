@@ -235,10 +235,33 @@ class FileImportTask(celery.Task):
                          file_store_item_uuid, exc)
         else:
             node.run_generate_auxiliary_node_task()
-            node.update_solr_index()
-            logger.info(
-                "Updated Solr index with file import state for Node '%s'",
-                node.uuid)
+
+
+def update_solr_index(**kwargs):
+    """Updates Solr with state of file import"""
+    # allow for the use of uuid as a keyword or positional argument
+    try:
+        file_store_item_uuid = kwargs['kwargs']['uuid']
+    except KeyError:
+        file_store_item_uuid = kwargs['args'][0]
+    try:
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+        logger.error("Could not retrieve Node with file UUID '%s': %s",
+                     file_store_item_uuid, exc)
+    else:
+        node.update_solr_index()
+        logger.info("Updated Solr index with file import state for Node '%s'",
+                    node.uuid)
+
+
+@celery.signals.worker_init.connect
+def on_worker_init(sender, **kwargs):
+    # required to connect update_solr_index handler to task_postrun signal
+    # https://github.com/celery/celery/issues/1873#issuecomment-35288899
+    celery.signals.task_postrun.connect(
+        update_solr_index, sender=sender.app.tasks[FileImportTask.name]
+    )
 
 
 class ProgressPercentage(object):
