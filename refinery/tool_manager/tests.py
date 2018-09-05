@@ -3151,16 +3151,16 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=True)
     @mock.patch.object(run_analysis, "retry", side_effect=None)
-    def test_get_refinery_import_tasks_gets_called_in_refinery_import(
+    def test_get_refinery_import_task_signatures_gets_called_during_import(
             self, retry_mock, ready_mock, successful_mock
     ):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         with mock.patch(
-            "tool_manager.models.WorkflowTool.get_refinery_import_tasks"
-        ) as get_refinery_import_tasks_mock:
+            "core.models.Analysis.get_refinery_import_task_signatures"
+        ) as get_refinery_import_task_signatures_mock:
             _refinery_file_import(self.tool.analysis.uuid)
-            self.assertTrue(get_refinery_import_tasks_mock.called)
+            self.assertTrue(get_refinery_import_task_signatures_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertTrue(ready_mock.called)
         self.assertTrue(successful_mock.called)
