@@ -21,11 +21,13 @@ from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import (AnnotatedNode, Assay, Contact,
                                      Investigation, Node, NodeCollection,
                                      Study)
-from factory_boy.django_model_factories import GalaxyInstanceFactory
+from factory_boy.django_model_factories import AnalysisNodeConnectionFactory, \
+    FileStoreItemFactory, GalaxyInstanceFactory, NodeFactory
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models,
                                make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
+from file_store.tasks import import_file
 
 from .management.commands.create_user import init_user
 from .management.commands.import_annotations import \
@@ -773,6 +775,42 @@ class AnalysisTests(TestCase):
 
     def test_has_all_local_input_files(self):
         self.assertTrue(self.analysis.has_all_local_input_files())
+
+    def test_get_refinery_import_task_signatures(self):
+        # Create and associate an AnalysisNodeConnection with a remote file
+        file_store_item = FileStoreItemFactory(
+            source="http://www.example.com/analysis_input.txt"
+        )
+        node = NodeFactory(assay=self.assay, study=self.study,
+                           name="Input Node", analysis_uuid=self.analysis.uuid,
+                           file_uuid=file_store_item.uuid)
+        AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
+                                      step=0, filename=self.node_filename,
+                                      direction=INPUT_CONNECTION,
+                                      is_refinery_file=False)
+        self.assertEqual(
+            self.analysis.get_refinery_import_task_signatures(),
+            [import_file.subtask(
+                (self.analysis.get_input_file_store_items()[0].uuid,)
+            )]
+        )
+
+    def test_get_refinery_import_task_signatures_inputs_all_local(self):
+        # Create and associate an AnalysisNodeConnection with a "local" file
+        file_store_item = FileStoreItemFactory(
+            source="local_analysis_input.txt"
+        )
+        node = NodeFactory(assay=self.assay, study=self.study,
+                           name="Input Node", analysis_uuid=self.analysis.uuid,
+                           file_uuid=file_store_item.uuid)
+        AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
+                                      step=0, filename=self.node_filename,
+                                      direction=INPUT_CONNECTION,
+                                      is_refinery_file=False)
+        with mock.patch.object(FileStoreItem, "is_local", return_value=True):
+            self.assertEqual(
+                self.analysis.get_refinery_import_task_signatures(), []
+            )
 
 
 class UtilitiesTest(TestCase):
