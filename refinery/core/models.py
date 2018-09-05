@@ -48,6 +48,7 @@ import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
+import analysis_manager
 import data_set_manager
 from data_set_manager.models import (
     Assay, Investigation, Node, NodeCollection, Study
@@ -1681,6 +1682,20 @@ class Analysis(OwnableResource):
             self.get_input_node_assay().uuid
         )
         self._prepare_annotated_nodes(node_uuids)
+
+    def get_refinery_import_task_signatures(self):
+        """Create and return a list of import_file() tasks for the
+        user-selected inputs of a WorkflowTool.launch()
+
+        NOTE: We avoid adding UUIDs of already imported FileStoreItem's as
+        to not re-import them without need.
+        """
+        return [
+            analysis_manager.tasks.import_file.subtask((file_store_item.uuid,))
+            for file_store_item in
+            self.get_input_file_store_items()
+            if not file_store_item.is_local()
+        ]
 
 
 @receiver(pre_delete, sender=Analysis)

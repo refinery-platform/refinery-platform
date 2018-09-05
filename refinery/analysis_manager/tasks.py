@@ -251,9 +251,8 @@ def _refinery_file_import(analysis_uuid):
         analysis.set_status(Analysis.RUNNING_STATUS)
         logger.info("Starting input file import tasks for analysis '%s'",
                     analysis)
-        tool = _get_workflow_tool(analysis_uuid)
         refinery_import_taskset = TaskSet(
-            tasks=tool.get_refinery_import_tasks()
+            tasks=analysis.get_refinery_import_task_signatures()
         ).apply_async()
         refinery_import_taskset.save()
         analysis_status.refinery_import_task_group_id = \
