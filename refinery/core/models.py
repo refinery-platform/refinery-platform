@@ -48,7 +48,6 @@ import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
-import analysis_manager
 import data_set_manager
 from data_set_manager.models import (
     Assay, Investigation, Node, NodeCollection, Study
@@ -58,6 +57,7 @@ from data_set_manager.utils import (
     add_annotated_nodes_selection, index_annotated_nodes_selection
 )
 from file_store.models import FileStoreItem, FileType
+from file_store.tasks import import_file
 from galaxy_connector.models import Instance
 import tool_manager
 
@@ -1691,9 +1691,8 @@ class Analysis(OwnableResource):
         to not re-import them without need.
         """
         return [
-            analysis_manager.tasks.import_file.subtask((file_store_item.uuid,))
-            for file_store_item in
-            self.get_input_file_store_items()
+            import_file.subtask((file_store_item.uuid,))
+            for file_store_item in self.get_input_file_store_items()
             if not file_store_item.is_local()
         ]
 
