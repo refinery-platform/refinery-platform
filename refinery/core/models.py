@@ -1684,7 +1684,7 @@ class Analysis(OwnableResource):
         self._prepare_annotated_nodes(node_uuids)
 
     def get_refinery_import_task_signatures(self):
-        """Create and return a list of import_file() tasks for the
+        """Create and return a list of import_file() task signatures for the
         user-selected inputs of a WorkflowTool.launch()
 
         NOTE: We avoid adding UUIDs of already imported FileStoreItem's as
