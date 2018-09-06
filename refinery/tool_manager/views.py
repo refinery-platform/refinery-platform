@@ -92,40 +92,16 @@ class ToolsViewSet(ToolManagerViewSetBase):
         This view returns a list of all the Tools that the currently user has
         at least read_meta permissions on.
         """
-        # returns user's owned tools
-        if not self.data_set:
-            vis_tools = [v for v in VisualizationTool.objects.all()
-                         if v.get_owner() == self.request.user]
+        tool_type = self.request.query_params.get("tool_type")
+        if not tool_type:
+            return self.user_tools
 
-            workflow_tools = [w for w in WorkflowTool.objects.all()
-                              if w.get_owner() == self.request.user]
-
-            tool_type = self.request.query_params.get("tool_type")
-            if tool_type == ToolDefinition.VISUALIZATION.lower():
-                return vis_tools
-            elif tool_type == ToolDefinition.WORKFLOW.lower():
-                return workflow_tools
-            else:
-                user_tools = vis_tools
-                user_tools.extend(workflow_tools)
-                return user_tools
-
-        elif self.request.user.has_perm('core.read_meta_dataset',
-                                        self.data_set):
-            tool_type = self.request.query_params.get("tool_type")
-
-            if not tool_type:
-                return self.user_tools
-
-            tool_types_to_tools = {
-                ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
-                ToolDefinition.WORKFLOW.lower(): self.workflow_tools
-            }
-            # get_queryset should return an iterable
-            return tool_types_to_tools.get(tool_type.lower()) or []
-
-        return Response("User is not authorized to view visualizations.",
-                        status=status.HTTP_401_UNAUTHORIZED)
+        tool_types_to_tools = {
+            ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
+            ToolDefinition.WORKFLOW.lower(): self.workflow_tools
+        }
+        # get_queryset should return an iterable
+        return tool_types_to_tools.get(tool_type.lower()) or []
 
     def create(self, request, *args, **kwargs):
         """
