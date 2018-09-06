@@ -59,7 +59,7 @@ class ToolManagerViewSetBase(ModelViewSet):
             return Response(
                 "User is not authorized to access DataSet with UUID: {}"
                 .format(self.data_set.uuid),
-                status.HTTP_401_UNAUTHORIZED
+                status.HTTP_403_FORBIDDEN
             )
         return super(ToolManagerViewSetBase, self).list(request)
 

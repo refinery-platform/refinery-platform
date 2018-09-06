@@ -2714,7 +2714,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
         self._make_tools_get_request(user=self.user2)
-        self.assertEqual(self.get_response.status_code, 401)
+        self.assertEqual(self.get_response.status_code, 403)
 
     def test_unallowed_http_verbs(self):
         self.create_tool(ToolDefinition.WORKFLOW)
