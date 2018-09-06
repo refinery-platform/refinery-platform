@@ -27,7 +27,7 @@ S3_WRITE_ARGS = {'ACL': 'public-read'}
 
 class FileImportTask(celery.Task):
 
-    def run(self, item_uuid, symlink=True):
+    def run(self, item_uuid):
         """Download or copy data file for FileStoreItem specified by UUID
         Fail the task in case of errors (http://stackoverflow.com/a/33143545)
         """
@@ -68,8 +68,7 @@ class FileImportTask(celery.Task):
                     file_store_name = self.import_url_to_s3(item.source)
             else:
                 if os.path.isabs(item.source):
-                    file_store_name = self.import_path_to_path(item.source,
-                                                               symlink)
+                    file_store_name = self.import_path_to_path(item.source)
                 elif item.source.startswith('s3://'):
                     file_store_name = self.import_s3_to_path(item.source)
                 else:
@@ -84,7 +83,7 @@ class FileImportTask(celery.Task):
         item.save()
         logger.info("Imported FileStoreItem with UUID '%s'", item_uuid)
 
-    def import_path_to_path(self, source_path, symlink):
+    def import_path_to_path(self, source_path, symlink=True):
         """Import file from an absolute file system path into
         FILE_STORE_BASE_DIR
         """
