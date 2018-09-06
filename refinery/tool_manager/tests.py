@@ -628,7 +628,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 self.dataset.uuid
             )
@@ -709,7 +709,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
     def test_request_from_public_dataset_shows_vis_tools_only(self):
         get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 self.public_dataset.uuid
             )
@@ -750,7 +750,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 dataset_uuid
             )
