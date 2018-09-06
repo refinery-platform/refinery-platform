@@ -21,6 +21,9 @@ from .utils import S3MediaStorage, SymlinkedFileSystemStorage
 logger = celery.utils.log.get_task_logger(__name__)
 logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
 
+# permissions for objects uploaded to MEDIA_BUCKET
+S3_WRITE_ARGS = {'ACL': 'public-read'}
+
 
 class FileImportTask(celery.Task):
 
@@ -348,7 +351,7 @@ def copy_s3_object(source_bucket, source_key, destination_bucket,
     try:
         s3.copy(CopySource={'Bucket': source_bucket, 'Key': source_key},
                 Bucket=destination_bucket, Key=destination_key,
-                Callback=progress_report)
+                ExtraArgs=S3_WRITE_ARGS, Callback=progress_report)
     except (botocore.exceptions.ClientError,
             botocore.exceptions.ParamValidationError) as exc:
         raise RuntimeError(
@@ -464,8 +467,7 @@ def upload_file_object(source, bucket, key, progress_report):
     logger.debug("Started uploading from '%s' to 's3://%s/%s'",
                  source.name, bucket, key)
     try:
-        s3.upload_fileobj(source, bucket, key,
-                          ExtraArgs={'ACL': 'public-read'},
+        s3.upload_fileobj(source, bucket, key, ExtraArgs=S3_WRITE_ARGS,
                           Callback=progress_report)
     except (EnvironmentError, botocore.exceptions.ClientError,
             botocore.exceptions.ParamValidationError) as exc:
