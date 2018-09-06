@@ -385,12 +385,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             with mock.patch("tool_manager.models.get_solr_response_json"):
                 if not start_vis_container:
                     run_container_mock.start()
-
                 self.post_response = self.tools_view(self.post_request)
-                logger.debug(
-                    "Visualization tool launch response: %s",
-                    self.post_response.content
-                )
+                if self.post_response.status_code != 200:
+                    return  # No Tool was created
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -404,7 +401,6 @@ class ToolManagerTestBase(ToolManagerMocks):
                 self.post_response = self.tools_view(self.post_request)
                 assert self.post_response.status_code == 200, \
                     self.post_response.content
-                logger.debug(self.post_response.content)
 
             self.tool = WorkflowTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -1649,13 +1645,13 @@ class ToolTests(ToolManagerTestBase):
             self.tool.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 1)
 
-    def test_tool_launch_has_resonable_default_display_name(self):
+    def test_tool_launch_has_reasonable_default_display_name(self):
         self.create_tool(tool_type=ToolDefinition.VISUALIZATION)
-        self.assertEqual(self.tool.display_name, "{} {} {}".format(
-            self.tool.name,
-            self.tool.creation_date.strftime('%m/%d/%Y %H:%M:%S'),
-            self.tool.get_owner().username
-        ))
+        self.assertEqual(
+            self.tool.display_name,
+            " ".join([self.tool.name, self.tool.formatted_creation_date,
+                      self.user.username])
+        )
 
 
 class VisualizationToolTests(ToolManagerTestBase):
@@ -3690,10 +3686,13 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             assertions
         )
 
-    @override_settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=0)
+    @override_settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1)
     def test_max_containers(self):
-        with self.assertRaises(VisualizationTool.DoesNotExist):
-            self.create_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        self.assertNotIn("Max containers", self.post_response.content)
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
         self.assertIn("Max containers", self.post_response.content)
 
     def test__get_launch_parameters(self):
