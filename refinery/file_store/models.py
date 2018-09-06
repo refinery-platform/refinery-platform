@@ -12,7 +12,6 @@ FILE_STORE_DIR setting - main file store directory
 import logging
 import os
 import re
-import urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -339,11 +338,3 @@ def _get_extension_from_string(path):
     if len(file_name_parts) > 2:  # two or more periods in file name
         return '.'.join(file_name_parts[-2:])
     return file_name_parts[-1]  # one period in file name
-
-
-def parse_s3_url(url):
-    """Return a tuple containing S3 bucket name and object key given S3
-    protocol URL (s3://bucket-name/key)
-    """
-    result = urlparse.urlparse(url)
-    return result.netloc, result.path[1:]  # strip leading slash

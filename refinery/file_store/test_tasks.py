@@ -4,25 +4,10 @@ from django.test import SimpleTestCase
 
 import mock
 
-from .tasks import UNKNOWN_FILE_SIZE, ProgressPercentage, get_file_size
+from .tasks import ProgressPercentage
 
 
-class TestGetFileSize(SimpleTestCase):
-    def setUp(self):
-        self.test_size = 1234
-
-    @mock.patch('os.path.getsize')
-    def test_absolute_path_file_size(self, getsize_mock):
-        getsize_mock.return_value = self.test_size
-        self.assertEqual(get_file_size('/absolute/path'), self.test_size)
-
-    @mock.patch('os.path.getsize')
-    def test_absolute_path_unknown_file_size(self, getsize_mock):
-        getsize_mock.side_effect = EnvironmentError()
-        self.assertEqual(get_file_size('/absolute/path'), UNKNOWN_FILE_SIZE)
-
-
-class TestProgressPercentage(SimpleTestCase):
+class ProgressPercentageTest(SimpleTestCase):
     def setUp(self):
         self.test_size = 1000
         self.task_id = str(uuid.uuid4())
@@ -38,8 +23,9 @@ class TestProgressPercentage(SimpleTestCase):
     def test_file_size_update(self, get_file_size_mock, update_state_mock):
         get_file_size_mock.return_value = self.test_size
         progress_monitor = ProgressPercentage('/absolute/path', self.task_id)
-        progress_monitor(100)
+        bytes_amount = 100
+        progress_monitor(bytes_amount)
         update_state_mock.assert_called_with(self.task_id, state='PROGRESS',
                                              meta={'percent_done': '10',
-                                                   'current': 100,
+                                                   'current': bytes_amount,
                                                    'total': self.test_size})

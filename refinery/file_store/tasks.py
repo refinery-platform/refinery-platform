@@ -1,30 +1,25 @@
 from __future__ import division
 import os
-import shutil
-import stat
 from tempfile import NamedTemporaryFile
 import threading
 import urlparse
 
 from django.conf import settings
 
-import boto3
-import botocore
 import celery
 import requests
 
 from data_set_manager.models import Node
 
-from .models import FileStoreItem, make_dir, get_temp_dir, parse_s3_url
-from .utils import S3MediaStorage, SymlinkedFileSystemStorage
+from .models import FileStoreItem, get_temp_dir
+from .utils import (S3MediaStorage, SymlinkedFileSystemStorage,
+                    copy_file_object, copy_s3_object, delete_file,
+                    delete_s3_object, download_file_object, download_s3_object,
+                    get_file_size, make_dir, move_file, parse_s3_url,
+                    symlink_file, upload_file_object)
 
 logger = celery.utils.log.get_task_logger(__name__)
 logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
-
-# permissions for objects uploaded to MEDIA_BUCKET
-S3_WRITE_ARGS = {'ACL': 'public-read'}
-# placeholder value for when file size is unknown
-UNKNOWN_FILE_SIZE = 0
 
 
 class FileImportTask(celery.Task):
@@ -296,190 +291,6 @@ class ProgressPercentage(object):
                     'total': self._file_size
                 }
             )
-
-
-def get_file_size(file_location):
-    """Return return file size given location as an integer number of bytes"""
-    if os.path.isabs(file_location):
-        try:
-            return os.path.getsize(file_location)
-        except EnvironmentError:
-            return UNKNOWN_FILE_SIZE
-    elif file_location.startswith('s3://'):
-        s3 = boto3.client('s3')
-        bucket, key = parse_s3_url(file_location)
-        try:
-            return s3.head_object(Bucket=bucket, Key=key)['ContentLength']
-        except (botocore.exceptions.ClientError,
-                botocore.exceptions.ParamValidationError):
-            return UNKNOWN_FILE_SIZE
-    else:
-        try:
-            response = requests.head(file_location)
-            response.raise_for_status()
-        except requests.exceptions.RequestException:
-            return UNKNOWN_FILE_SIZE
-        else:
-            # Content-Length header is optional, so provide a default value
-            return int(response.headers.get('Content-Length',
-                                            UNKNOWN_FILE_SIZE))
-
-
-def copy_file_object(source, destination, progress_report):
-    """Copy a file object and update progress"""
-    chunk_size = 10 * 1024 * 1024  # 10MB
-    logger.debug("Copying '%s' to '%s'", source.name, destination.name)
-    try:
-        for chunk in iter(lambda: source.read(chunk_size), ''):
-            destination.write(chunk)
-            progress_report(len(chunk))
-        # ensure that all internal buffers are written to disk
-        destination.flush()
-        os.fsync(destination.fileno())
-    except EnvironmentError as exc:
-        raise RuntimeError("Error copying '{}' to '{}': {}".format(
-            source.name, destination.name, exc
-        ))
-    logger.info("Copied '%s' to '%s'", source.name, destination.name)
-
-
-def copy_s3_object(source_bucket, source_key, destination_bucket,
-                   destination_key, progress_report):
-    """Copy S3 object and update task progress"""
-    s3 = boto3.client('s3')
-    logger.debug("Started copying from 's3://%s/%s' to 's3://%s/%s'",
-                 source_bucket, source_key, destination_bucket,
-                 destination_key)
-    try:
-        s3.copy(CopySource={'Bucket': source_bucket, 'Key': source_key},
-                Bucket=destination_bucket, Key=destination_key,
-                ExtraArgs=S3_WRITE_ARGS, Callback=progress_report)
-    except (botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        raise RuntimeError(
-            "Error copying from 's3://{}/{}' to 's3://{}/{}': {}".format(
-                source_bucket, source_key, destination_bucket,
-                destination_key, exc
-            )
-        )
-    logger.info("Finished copying from 's3://%s/%s' to 's3://%s/%s'",
-                source_bucket, source_key, destination_bucket,
-                destination_key)
-
-
-def delete_file(absolute_path):
-    if os.path.exists(absolute_path):
-        try:
-            os.unlink(absolute_path)
-        except EnvironmentError as exc:
-            logger.error("Error deleting '%s': %s", absolute_path, exc)
-        logger.debug("Deleted '%s'", absolute_path)
-
-
-def delete_s3_object(bucket, key):
-    s3 = boto3.client('s3')
-    logger.debug("Deleting 's3://%s/%s'",  bucket, key)
-    try:
-        s3.delete_object(Bucket=bucket, Key=key)
-    except (botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        logger.error("Error deleting 's3://%s/%s': %s", bucket, key, exc)
-    logger.info("Deleted 's3://%s/%s'", bucket, key)
-
-
-def download_file_object(request_response, download_object, progress_report):
-    """Download file from request response object to a temporary file and
-    report progress"""
-    chunk_size = 10 * 1024 * 1024  # 10MB
-    logger.debug("Started downloading from '%s'", request_response.url)
-    try:
-        for chunk in request_response.iter_content(chunk_size):
-            download_object.write(chunk)
-            progress_report(len(chunk))
-        # ensure that all internal buffers are written to disk
-        download_object.flush()
-        os.fsync(download_object.fileno())
-    except EnvironmentError as exc:
-        raise RuntimeError("Error downloading from '{}' to '{}': {}".format(
-            request_response.url, download_object.name, exc))
-    logger.info("Finished downloading from '%s' to '%s'",
-                request_response.url, download_object.name)
-
-
-def download_s3_object(bucket, key, download_object, progress_report):
-    """Download object from S3 to a temp file and update task progress"""
-    s3 = boto3.client('s3')
-    logger.debug("Started downloading from 's3://%s/%s' to '%s'",
-                 bucket, key, download_object.name)
-    try:
-        s3.download_fileobj(bucket, key, download_object,
-                            Callback=progress_report)
-        # ensure that all internal buffers are written to disk
-        download_object.flush()
-        os.fsync(download_object.fileno())
-    except (EnvironmentError, botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        raise RuntimeError(
-            "Error downloading from 's3://{}/{}' to '{}': {}".format(
-                bucket, key, download_object.name, exc
-            )
-        )
-    logger.info("Finished downloading from 's3://%s/%s' to '%s'",
-                bucket, key, download_object.name)
-
-
-def move_file(source_path, destination_path):
-    """Move file from one absolute file system path to another"""
-    make_dir(os.path.dirname(destination_path))
-    try:
-        shutil.move(source_path, destination_path)
-    except EnvironmentError as exc:
-        raise RuntimeError("Error moving '{}' to '{}': {}".format(
-                           source_path, destination_path, exc))
-    # temp files are only accessible by the owner by default which prevents
-    # access by the web server if it is running as its own user
-    try:
-        mode = os.stat(destination_path).st_mode
-        os.chmod(destination_path,
-                 mode | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
-    except EnvironmentError as exc:
-        logger.error("Error changing permissions on '%s': %s",
-                     destination_path, exc)
-    logger.info("Moved '%s' to '%s'", source_path, destination_path)
-
-
-def symlink_file(source_path, link_path):
-    """Create a symlink link_path to source_path"""
-    if not os.path.isfile(source_path):
-        raise RuntimeError(
-            "Error creating symlink to '{}': not a file".format(source_path)
-        )
-    make_dir(os.path.dirname(link_path))
-    try:
-        os.symlink(source_path, link_path)
-    except EnvironmentError as exc:
-        raise RuntimeError("Error creating symlink '{}': {}".format(
-            link_path, exc))
-    logger.info("Created symlink '%s' to '%s'", link_path, source_path)
-
-
-def upload_file_object(source, bucket, key, progress_report):
-    """Upload file from source path to S3 bucket and report progress"""
-    s3 = boto3.client('s3')
-    logger.debug("Started uploading from '%s' to 's3://%s/%s'",
-                 source.name, bucket, key)
-    try:
-        s3.upload_fileobj(source, bucket, key, ExtraArgs=S3_WRITE_ARGS,
-                          Callback=progress_report)
-    except (EnvironmentError, botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        raise RuntimeError(
-            "Error uploading from '{}' to 's3://{}/{}': {}".format(
-                source.name, bucket, key, exc
-            )
-        )
-    logger.info("Finished uploading from '%s' to 's3://%s/%s'",
-                source.name, bucket, key)
 
 
 @celery.task.task()

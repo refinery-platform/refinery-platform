@@ -12,8 +12,7 @@ from override_storage import override_storage
 
 from .models import (FileExtension, FileStoreItem, FileType,
                      _get_extension_from_string, _map_source,
-                     generate_file_source_translator, get_temp_dir,
-                     parse_s3_url)
+                     generate_file_source_translator, get_temp_dir)
 
 
 class FileStoreModuleTest(TestCase):
@@ -46,11 +45,6 @@ class FileStoreModuleTest(TestCase):
     def test_get_blank_extension_from_url(self):
         self.assertEqual(_get_extension_from_string('http://example.org/test'),
                          '')
-
-    def test_parse_s3_url(self):
-        bucket_name, key = parse_s3_url('s3://bucket-name/key')
-        self.assertEqual(bucket_name, 'bucket-name')
-        self.assertEqual(key, 'key')
 
     @override_settings(REFINERY_FILE_SOURCE_MAP={})
     def test_mapping_with_empty_file_source_map(self):

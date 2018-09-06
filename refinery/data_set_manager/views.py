@@ -35,9 +35,9 @@ from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (FileStoreItem, generate_file_source_translator,
-                               get_temp_dir, parse_s3_url)
-
+                               get_temp_dir)
 from file_store.tasks import FileImportTask, download_file
+from file_store.utils import parse_s3_url
 
 from .models import Assay, AttributeOrder, Node, Study
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
