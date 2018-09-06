@@ -3692,7 +3692,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
                          start_vis_container=True)
         self.assertNotIn("Max containers", self.post_response.content)
         self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
+                         start_vis_container=True, create_unique_name=True)
         self.assertIn("Max containers", self.post_response.content)
 
     def test__get_launch_parameters(self):
