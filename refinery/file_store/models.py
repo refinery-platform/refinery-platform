@@ -64,9 +64,7 @@ def generate_file_source_translator(username=None, base_path=None,
             return source
 
         # process relative path
-        # if REFINERY_DEPLOYMENT_PLATFORM = 'aws' and REFINERY_S3_USER_DATA
-        # use settings.COGNITO_IDENTITY_POOL_ID
-        if identity_id:
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
             source = "s3://{}/{}/{}".format(
                 settings.UPLOAD_BUCKET, identity_id, source
             )
