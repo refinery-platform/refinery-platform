@@ -23,6 +23,8 @@ logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
 
 # permissions for objects uploaded to MEDIA_BUCKET
 S3_WRITE_ARGS = {'ACL': 'public-read'}
+# placeholder value for when file size is unknown
+UNKNOWN_FILE_SIZE = 0
 
 
 class FileImportTask(celery.Task):
@@ -297,12 +299,12 @@ class ProgressPercentage(object):
 
 
 def get_file_size(file_location):
-    UNKNOWN_SIZE = 0
+    """Return return file size given location as an integer number of bytes"""
     if os.path.isabs(file_location):
         try:
             return os.path.getsize(file_location)
         except EnvironmentError:
-            return UNKNOWN_SIZE
+            return UNKNOWN_FILE_SIZE
     elif file_location.startswith('s3://'):
         s3 = boto3.client('s3')
         bucket, key = parse_s3_url(file_location)
@@ -310,16 +312,17 @@ def get_file_size(file_location):
             return s3.head_object(Bucket=bucket, Key=key)['ContentLength']
         except (botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError):
-            return UNKNOWN_SIZE
+            return UNKNOWN_FILE_SIZE
     else:
         try:
             response = requests.head(file_location)
             response.raise_for_status()
         except requests.exceptions.RequestException:
-            return UNKNOWN_SIZE
+            return UNKNOWN_FILE_SIZE
         else:
             # Content-Length header is optional, so provide a default value
-            return int(response.headers.get('Content-Length', UNKNOWN_SIZE))
+            return int(response.headers.get('Content-Length',
+                                            UNKNOWN_FILE_SIZE))
 
 
 def copy_file_object(source, destination, progress_report):
