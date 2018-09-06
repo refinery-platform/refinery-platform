@@ -38,7 +38,6 @@ class ToolManagerViewSetBase(ModelViewSet):
         except (AttributeError, KeyError) as e:
             return HttpResponseBadRequest("Must specify a DataSet "
                                           "UUID: {}".format(e))
-
         try:
             self.data_set = DataSet.objects.get(uuid=data_set_uuid)
         except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
@@ -88,10 +87,6 @@ class ToolsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        """
-        This view returns a list of all the Tools that the currently user has
-        at least read_meta permissions on.
-        """
         tool_type = self.request.query_params.get("tool_type")
         if not tool_type:
             return self.user_tools
