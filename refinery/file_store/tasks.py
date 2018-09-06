@@ -23,7 +23,6 @@ logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
 
 
 class FileImportTask(celery.Task):
-    track_started = True
 
     def run(self, item_uuid, symlink=True):
         """Download or copy data file for FileStoreItem specified by UUID
