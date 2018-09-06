@@ -34,9 +34,7 @@ class ToolManagerViewSetBase(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            data_set_uuid = self.request.query_params[
-                kwargs["data_set_uuid_lookup_name"]
-            ]
+            data_set_uuid = self.request.query_params["data_set_uuid"]
         except (AttributeError, KeyError) as e:
             return HttpResponseBadRequest("Must specify a DataSet "
                                           "UUID: {}".format(e))
@@ -81,12 +79,6 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
                 tool_type=ToolDefinition.VISUALIZATION
             )
 
-    def list(self, request, *args, **kwargs):
-        return super(ToolDefinitionsViewSet, self).list(
-            request,
-            data_set_uuid_lookup_name="dataSetUuid"
-        )
-
 
 class ToolsViewSet(ToolManagerViewSetBase):
     """API endpoint that allows for Tools to be fetched and launched"""
@@ -95,22 +87,13 @@ class ToolsViewSet(ToolManagerViewSetBase):
     lookup_field = 'uuid'
     http_method_names = ['get', 'post']
 
-    def list(self, request, *args, **kwargs):
-        self.data_set_uuid = request.query_params.get('data_set_uuid')
-        if self.data_set_uuid:
-            return super(ToolsViewSet, self).list(
-                request,
-                data_set_uuid_lookup_name="data_set_uuid"
-            )
-        return super(ToolManagerViewSetBase, self).list(request)
-
     def get_queryset(self):
         """
         This view returns a list of all the Tools that the currently user has
         at least read_meta permissions on.
         """
         # returns user's owned tools
-        if not self.data_set_uuid:
+        if not self.data_set:
             vis_tools = [v for v in VisualizationTool.objects.all()
                          if v.get_owner() == self.request.user]
 
