@@ -63,6 +63,8 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
             return ToolDefinition.objects.filter(
                 tool_type=ToolDefinition.VISUALIZATION
             )
+        else:
+            return []  # get_queryset should return an iterable
 
 
 class ToolsViewSet(ToolManagerViewSetBase):
