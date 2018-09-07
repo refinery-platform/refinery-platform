@@ -50,7 +50,7 @@ class ToolManagerViewSetBase(ModelViewSet):
 
 
 class ToolDefinitionsViewSet(ToolManagerViewSetBase):
-    """API endpoint that allows for ToolDefinitions to be fetched"""
+    """ViewSet that allows for ToolDefinitions to be fetched"""
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
@@ -68,7 +68,7 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
 
 
 class ToolsViewSet(ToolManagerViewSetBase):
-    """API endpoint that allows for Tools to be fetched and launched"""
+    """ViewSet that allows for Tools to be fetched, launched and relaunched"""
     serializer_class = ToolSerializer
     lookup_field = 'uuid'
     http_method_names = ['get', 'post']
