@@ -324,6 +324,10 @@ class Tool(OwnableResource):
         )
 
     @property
+    def detail_url(self):
+        return self._create_detail_url()
+
+    @property
     def relaunch_url(self):
         return self._create_detail_url("relaunch")
 
@@ -343,7 +347,9 @@ class Tool(OwnableResource):
     def formatted_creation_date(self):
         return self.creation_date.strftime('%m/%d/%Y %H:%M:%S')
 
-    def _create_detail_url(self, detail_name):
+    def _create_detail_url(self, detail_name=None):
+        if detail_name is None:
+            return urljoin(self.TOOL_API_ROOT, "{}/".format(self.uuid))
         return urljoin(self.TOOL_API_ROOT,
                        "{}/{}/".format(self.uuid, detail_name))
 
