@@ -240,7 +240,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.tools_view = ToolsViewSet.as_view(
             {
                 'get': 'list',
-                'post': 'create'
+                'post': 'create',
+                'delete': 'destroy'
             }
         )
         self.tool_defs_view = ToolDefinitionsViewSet.as_view(
@@ -249,6 +250,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 'post': 'create'
             }
         )
+        self.tool_pause_view = ToolsViewSet.as_view({"post": "pause"})
         self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
         self.tool_container_input_data_view = ToolsViewSet.as_view(
             {"get": "container_input_data"}
@@ -2722,10 +2724,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             self.options_response.data['detail'],
             'Method "OPTIONS" not allowed.'
         )
-        self.assertEqual(
-            self.delete_response.data['detail'],
-            'Method "DELETE" not allowed.'
-        )
 
     def test_invalid_TLC_against_schema(self):
         self.create_vis_tool_definition()
@@ -3097,6 +3095,106 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             ),
             self.post_response.content
         )
+
+    def test_vis_tool_deletion(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 200)
+        with self.assertRaises(VisualizationTool.DoesNotExist):
+            VisualizationTool.objects.get(uuid=self.tool.uuid)
+
+    def test_vis_tool_deletion_no_tool_uuid(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request)
+        self.assertEqual(delete_response.status_code, 400)
+
+    def test_vis_tool_deletion_unauthorized_user(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 403)
+
+    def test_vis_tool_deletion_no_tool_exists(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        self.tool.delete()
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 404)
+
+    @mock.patch.object(VisualizationTool, "delete", side_effect=RuntimeError)
+    def test_vis_tool_deletion_rollback_on_failure(self, vis_delete_mock):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 400)
+        self.assertIsNotNone(
+            VisualizationTool.objects.get(uuid=self.tool.uuid)
+        )
+        self.assertTrue(vis_delete_mock.called)
+
+    def test_vis_tool_pause(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        pause_request = self.factory.post(self.tool.pause_url)
+        pause_request.user = self.user
+        pause_response = self.tool_pause_view(pause_request,
+                                              uuid=self.tool.uuid)
+        self.assertEqual(pause_response.status_code, 200)
+        self.assertFalse(self.tool.is_running())
+
+    def test_vis_tool_pause_no_tool_uuid(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        pause_request = self.factory.post(self.tool.pause_url)
+        pause_request.user = self.user
+        pause_response = self.tool_pause_view(pause_request)
+        self.assertEqual(pause_response.status_code, 400)
+
+    def test_vis_tool_pause_unauthorized_user(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        pause_request = self.factory.post(self.tool.pause_url)
+        pause_response = self.tool_pause_view(pause_request,
+                                              uuid=self.tool.uuid)
+        self.assertEqual(pause_response.status_code, 403)
+        self.assertTrue(self.tool.is_running())
+
+    def test_vis_tool_pause_no_tool_exists(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        pause_request = self.factory.post(self.tool.pause_url)
+        self.tool.delete()
+        pause_response = self.tool_pause_view(pause_request,
+                                              uuid=self.tool.uuid)
+        self.assertEqual(pause_response.status_code, 404)
+
+    def test_vis_tool_pause_tool_not_running(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        pause_request = self.factory.post(self.tool.pause_url)
+        pause_request.user = self.user
+        pause_response = self.tool_pause_view(pause_request,
+                                              uuid=self.tool.uuid)
+        self.assertEqual(pause_response.status_code, 400)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
