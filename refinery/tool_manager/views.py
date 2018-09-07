@@ -223,5 +223,5 @@ def render_vis_tool_user_not_allowed_template(
         {
             "message": message,
             "visualization_tool_name": visualization_tool_name
-        }
+        }, status=403
     )

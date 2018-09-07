@@ -2912,7 +2912,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.status_code, 403)
         self.assertIn(
             "User: {} does not have permission to view {}: {}".format(
                 self.user.username, self.tool.name, self.tool.uuid
@@ -3043,7 +3043,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         if user_has_permission:
             self.assertTrue(launch_mock.called)
         else:
-            self.assertEqual(get_response.status_code, 200)
+            self.assertEqual(get_response.status_code, 403)
             self.assertTemplateUsed(
                 get_response,
                 'tool_manager/vis-tool-user-not-allowed.html'
