@@ -338,6 +338,10 @@ class Tool(OwnableResource):
             "{}/container_input_data/".format(self.uuid)
         )
 
+    @property
+    def formatted_creation_date(self):
+        return self.creation_date.strftime('%m/%d/%Y %H:%M:%S')
+
     def _get_owner_info_as_dict(self):
         user = self.get_owner()
         return {
