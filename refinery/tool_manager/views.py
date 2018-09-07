@@ -115,7 +115,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 return JsonResponse(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        """Detail route that allows for the deletion of a VisualizationTool"""
+        """Allows for the deletion of a VisualizationTool"""
         tool_uuid = kwargs.get("uuid")
         if not tool_uuid:
             return HttpResponseBadRequest(
