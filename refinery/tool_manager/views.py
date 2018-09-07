@@ -14,7 +14,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
 
-from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
+from .models import ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import (
     create_tool, user_has_access_to_tool, validate_tool_launch_configuration
@@ -69,7 +69,6 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
 
 class ToolsViewSet(ToolManagerViewSetBase):
     """API endpoint that allows for Tools to be fetched and launched"""
-    queryset = Tool.objects.all()
     serializer_class = ToolSerializer
     lookup_field = 'uuid'
     http_method_names = ['get', 'post']
