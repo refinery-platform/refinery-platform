@@ -3,14 +3,13 @@ import urllib2
 
 from django.conf import settings
 from django.db import transaction
-from django.http import (HttpResponseBadRequest, JsonResponse)
+from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
+                         JsonResponse)
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
-from rest_framework import status
 from rest_framework.decorators import detail_route
 from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
@@ -28,9 +27,6 @@ class ToolManagerViewSetBase(ModelViewSet):
     def __init__(self, **kwargs):
         super(ToolManagerViewSetBase, self).__init__(**kwargs)
         self.data_set = None
-        self.user_tools = []
-        self.visualization_tools = None
-        self.workflow_tools = None
 
     def list(self, request, *args, **kwargs):
         try:
@@ -46,21 +42,11 @@ class ToolManagerViewSetBase(ModelViewSet):
                 .format(data_set_uuid, e)
             )
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
-            self.visualization_tools = \
-                VisualizationTool.objects.filter(dataset=self.data_set)
-            self.user_tools.extend(self.visualization_tools)
-
-            self.workflow_tools = WorkflowTool.objects.filter(
-                dataset=self.data_set
-            )
-            self.user_tools.extend(self.workflow_tools)
-        else:
-            return Response(
-                "User is not authorized to access DataSet with UUID: {}"
-                .format(self.data_set.uuid),
-                status.HTTP_403_FORBIDDEN
-            )
-        return super(ToolManagerViewSetBase, self).list(request)
+            return super(ToolManagerViewSetBase, self).list(request)
+        return HttpResponseForbidden(
+            "User is not authorized to access DataSet with UUID: {}"
+            .format(self.data_set.uuid)
+        )
 
 
 class ToolDefinitionsViewSet(ToolManagerViewSetBase):
@@ -87,16 +73,21 @@ class ToolsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
+        visualization_tools = list(
+            VisualizationTool.objects.filter(dataset=self.data_set)
+        )
+        workflow_tools = list(
+            WorkflowTool.objects.filter(dataset=self.data_set)
+        )
         tool_type = self.request.query_params.get("tool_type")
-        if not tool_type:
-            return self.user_tools
-
-        tool_types_to_tools = {
-            ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
-            ToolDefinition.WORKFLOW.lower(): self.workflow_tools
-        }
-        # get_queryset should return an iterable
-        return tool_types_to_tools.get(tool_type.lower()) or []
+        if tool_type is None:
+            return workflow_tools + visualization_tools
+        elif tool_type.upper() == ToolDefinition.WORKFLOW:
+            return workflow_tools
+        elif tool_type.upper() == ToolDefinition.VISUALIZATION:
+            return visualization_tools
+        else:
+            return []  # get_queryset should return an iterable
 
     def create(self, request, *args, **kwargs):
         """
