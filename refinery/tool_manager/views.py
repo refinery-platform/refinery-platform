@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import transaction
 from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
                          JsonResponse)
+from django.http.response import HttpResponse
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
@@ -71,7 +72,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
     """ViewSet that allows for Tools to be fetched, launched and relaunched"""
     serializer_class = ToolSerializer
     lookup_field = 'uuid'
-    http_method_names = ['get', 'post']
+    http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
         visualization_tools = list(
@@ -113,6 +114,39 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 logger.debug("Successfully created Tool: %s", tool.name)
                 return JsonResponse(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        """Detail route that allows for the deletion of a VisualizationTool"""
+        tool_uuid = kwargs.get("uuid")
+        if not tool_uuid:
+            return HttpResponseBadRequest(
+                "Deleting a Tool requires a Tool UUID"
+            )
+        visualization_tool = get_object_or_404(VisualizationTool,
+                                               uuid=tool_uuid)
+
+        if not user_has_access_to_tool(request.user, visualization_tool):
+            return render_vis_tool_error_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to delete {}: {}".format(
+                    request.user.username,
+                    visualization_tool.name,
+                    visualization_tool.uuid
+                ), status=403
+            )
+        try:
+            with transaction.atomic():
+                visualization_tool.delete()
+        except Exception as exc:
+            logger.error(exc)
+            return HttpResponseBadRequest("{} could not be deleted: {}".format(
+                visualization_tool.display_name, exc
+            ))
+        else:
+            return HttpResponse("{} deleted successfully".format(
+                visualization_tool.display_name
+            ))
+
     @detail_route(methods=['get'])
     def relaunch(self, request, *args, **kwargs):
         tool_uuid = kwargs.get("uuid")
@@ -123,14 +157,14 @@ class ToolsViewSet(ToolManagerViewSetBase):
                                                uuid=tool_uuid)
 
         if not user_has_access_to_tool(request.user, visualization_tool):
-            return render_vis_tool_user_not_allowed_template(
+            return render_vis_tool_error_template(
                 request,
                 visualization_tool.name,
                 "User: {} does not have permission to view {}: {}".format(
                     request.user.username,
                     visualization_tool.name,
                     visualization_tool.uuid
-                )
+                ), status=403
             )
 
         if visualization_tool.is_running():
@@ -149,6 +183,47 @@ class ToolsViewSet(ToolManagerViewSetBase):
         tool_uuid = kwargs.get("uuid")
         tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
         return JsonResponse(tool.get_container_input_dict())
+
+    @detail_route(methods=['post'])
+    def pause(self, request, *args, **kwargs):
+        """
+        Detail route that allows for the removal of a running
+        VisualizationTool's container.
+        """
+        tool_uuid = kwargs.get("uuid")
+        if not tool_uuid:
+            return HttpResponseBadRequest(
+                "Pausing a Tool requires a Tool UUID"
+            )
+        visualization_tool = get_object_or_404(VisualizationTool,
+                                               uuid=tool_uuid)
+
+        if not user_has_access_to_tool(request.user, visualization_tool):
+            return render_vis_tool_error_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to pause {}: {}".format(
+                    request.user.username,
+                    visualization_tool.name,
+                    visualization_tool.uuid
+                ), status=403
+            )
+        if not visualization_tool.is_running():
+            return HttpResponseBadRequest("Can't pause a Tool that is not "
+                                          "currently running")
+        try:
+            visualization_tool.django_docker_client.purge_by_label(
+                visualization_tool.uuid
+            )
+        except Exception as exc:
+            logger.error(exc)
+            return HttpResponseBadRequest("{} could not be paused: {}".format(
+                visualization_tool.display_name, exc
+            ))
+        else:
+            return HttpResponse("{} paused successfully".format(
+                visualization_tool.display_name
+            ))
 
 
 class AutoRelaunchProxy(Proxy, object):
@@ -191,14 +266,14 @@ class AutoRelaunchProxy(Proxy, object):
             container_name=container_name
         )
         if not user_has_access_to_tool(request.user, visualization_tool):
-            return render_vis_tool_user_not_allowed_template(
+            return render_vis_tool_error_template(
                 request,
                 visualization_tool.name,
                 "User: {} does not have permission to view {}: {}".format(
                     request.user.username,
                     visualization_tool.name,
                     visualization_tool.uuid
-                )
+                ), status=403
             )
 
         if not visualization_tool.is_running():
@@ -214,14 +289,14 @@ class AutoRelaunchProxy(Proxy, object):
             return view(request)
 
 
-def render_vis_tool_user_not_allowed_template(
+def render_vis_tool_error_template(
     request, visualization_tool_name, message,
-    template="tool_manager/vis-tool-user-not-allowed.html"
+    template="tool_manager/vis-tool-error.html", status=400
 ):
     return render(
         request, template,
         {
             "message": message,
             "visualization_tool_name": visualization_tool_name
-        }, status=403
+        }, status=status
     )

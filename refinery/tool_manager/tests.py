@@ -3042,7 +3042,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             self.assertEqual(get_response.status_code, 403)
             self.assertTemplateUsed(
                 get_response,
-                'tool_manager/vis-tool-user-not-allowed.html'
+                'tool_manager/vis-tool-error.html'
             )
             self.assertFalse(launch_mock.called)
 
