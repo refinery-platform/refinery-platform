@@ -30,6 +30,8 @@
     var vm = this;
     vm.isOwner = isOwner;
     vm.relaunchTool = relaunchTool;
+    vm.pauseTool = pauseTool;
+    vm.deleteTool = deleteTool;
     vm.visRelaunchList = {};
     vm.visualizations = visService.visualizations;
     activate();
@@ -54,6 +56,26 @@
         }, function (error) {
           $log.error(error);
           vm.visRelaunchList[vis.uuid] = false;
+        });
+    }
+
+    function pauseTool (vis) {
+      vm.visRelaunchList[vis.uuid] = false;
+      $http.post(vis.pause_url)
+        .then(function (response) {
+          refreshVisualizations();
+          vm.visRelaunchList[response.uuid] = true;
+        }, function (error) {
+          $log.error(error);
+          vm.visRelaunchList[vis.uuid] = true;
+        });
+    }
+    function deleteTool (vis) {
+      $http.delete(vis.detail_url)
+        .then(function () {
+          refreshVisualizations();
+        }, function (error) {
+          $log.error(error);
         });
     }
 
