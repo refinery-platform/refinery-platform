@@ -624,7 +624,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 self.dataset.uuid
             )
@@ -705,7 +705,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
     def test_request_from_public_dataset_shows_vis_tools_only(self):
         get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 self.public_dataset.uuid
             )
@@ -746,7 +746,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 dataset_uuid
             )
@@ -2710,7 +2710,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
         self._make_tools_get_request(user=self.user2)
-        self.assertEqual(self.get_response.status_code, 401)
+        self.assertEqual(self.get_response.status_code, 403)
 
     def test_unallowed_http_verbs(self):
         self.create_tool(ToolDefinition.WORKFLOW)

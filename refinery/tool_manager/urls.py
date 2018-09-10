@@ -7,11 +7,11 @@ from .views import AutoRelaunchProxy, ToolDefinitionsViewSet, ToolsViewSet
 
 # DRF url routing
 tool_manager_router = DefaultRouter()
-tool_manager_router.register(r'tools', ToolsViewSet)
+tool_manager_router.register(r'tools', ToolsViewSet, base_name="tools")
 tool_manager_router.register(
     r'tool_definitions',
     ToolDefinitionsViewSet,
-    base_name="tooldefinition"
+    base_name="tooldefinitions"
 )
 
 django_docker_engine_url = url(
