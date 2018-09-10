@@ -244,7 +244,8 @@
         enableColumnResizing: true,
         pinnedLeft: true,
         cellTemplate: _cellTemplate,
-        visible: isToolSelected
+        visible: isToolSelected,
+        enableCellEdit: false
       };
     }
      /**
@@ -274,7 +275,8 @@
         enableColumnResizing: true,
         pinnedLeft: true,
         cellTemplate: cellTemplate,
-        visible: isToolSelected
+        visible: isToolSelected,
+        enableCellEdit: false
       };
     }
 
@@ -296,7 +298,8 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
-        cellTemplate: _cellTemplate
+        cellTemplate: _cellTemplate,
+        enableCellEdit: false
       };
     }
 
