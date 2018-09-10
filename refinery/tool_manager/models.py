@@ -348,10 +348,10 @@ class Tool(OwnableResource):
         return self.creation_date.strftime('%m/%d/%Y %H:%M:%S')
 
     def _create_detail_url(self, detail_name=None):
+        detail_url = urljoin(self.TOOL_API_ROOT, "{}/".format(self.uuid))
         if detail_name is None:
-            return urljoin(self.TOOL_API_ROOT, "{}/".format(self.uuid))
-        return urljoin(self.TOOL_API_ROOT,
-                       "{}/{}/".format(self.uuid, detail_name))
+            return detail_url
+        return urljoin(detail_url, "{}/".format(detail_name))
 
     def _get_owner_info_as_dict(self):
         user = self.get_owner()
