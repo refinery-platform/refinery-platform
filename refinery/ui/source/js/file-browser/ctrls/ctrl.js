@@ -160,8 +160,6 @@
     function refreshDataSetProps () {
       dataSetPropsService.refreshDataSet().then(function () {
         vm.dataSet = dataSetPropsService.dataSet;
-        console.log('refresh Data Set Props');
-        console.log(vm.dataSet);
         // initialize the dataset and updates ui-grid selection, filters, and url
         initializeDataOnPageLoad();
       });
@@ -243,7 +241,7 @@
             nodesV2Service.partial_update(params).$promise.then(function () {
               $log.info('is successful');
             }, function () {
-              rowEntity[colDef.name] = oldValue;
+              rowEntity[colDef.field] = oldValue;
             });
           }
         });
