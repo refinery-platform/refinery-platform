@@ -1977,17 +1977,18 @@ class Invitation(models.Model):
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
-    add_or_update_user_to_neo4j(user.id, user.username)
-    add_read_access_in_neo4j(
-        map(
-            lambda ds: ds.uuid, get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                'core.read_dataset'
-            )
-        ),
-        [user.id]
-    )
-    sync_update_annotation_sets_neo4j(user.username)
+    if kwargs['created']:
+        add_or_update_user_to_neo4j(user.id, user.username)
+        add_read_access_in_neo4j(
+            map(
+                lambda ds: ds.uuid, get_objects_for_group(
+                    ExtendedGroup.objects.public_group(),
+                    'core.read_dataset'
+                )
+            ),
+            [user.id]
+        )
+        sync_update_annotation_sets_neo4j(user.username)
 
 
 @receiver(pre_delete, sender=User)
