@@ -1978,6 +1978,10 @@ class Invitation(models.Model):
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
+    if not user.is_active:
+        logger.debug("User: %s has not been activated. Not adding them to "
+                     "Neo4J.", user.username)
+        return
     add_or_update_user_to_neo4j(user.id, user.username)
     add_read_access_in_neo4j(
         map(
