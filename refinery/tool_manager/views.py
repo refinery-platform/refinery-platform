@@ -158,13 +158,14 @@ class ToolsViewSet(ToolManagerViewSetBase):
             try:
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
-                    logger.debug("Successfully created Tool: %s", tool.name)
                     tool.launch()
                     serializer = ToolSerializer(tool)
-                    return JsonResponse(serializer.data)
             except Exception as e:
                 logger.error(e)
                 return HttpResponseBadRequest(e)
+            else:
+                logger.debug("Successfully created Tool: %s", tool.name)
+                return JsonResponse(serializer.data)
 
     @detail_route(methods=['get'])
     def relaunch(self, request, *args, **kwargs):
@@ -276,5 +277,5 @@ def render_vis_tool_user_not_allowed_template(
         {
             "message": message,
             "visualization_tool_name": visualization_tool_name
-        }
+        }, status=403
     )

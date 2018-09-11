@@ -385,12 +385,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             with mock.patch("tool_manager.models.get_solr_response_json"):
                 if not start_vis_container:
                     run_container_mock.start()
-
                 self.post_response = self.tools_view(self.post_request)
-                logger.debug(
-                    "Visualization tool launch response: %s",
-                    self.post_response.content
-                )
+                if self.post_response.status_code != 200:
+                    return  # No Tool was created
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -404,7 +401,6 @@ class ToolManagerTestBase(ToolManagerMocks):
                 self.post_response = self.tools_view(self.post_request)
                 assert self.post_response.status_code == 200, \
                     self.post_response.content
-                logger.debug(self.post_response.content)
 
             self.tool = WorkflowTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -1649,13 +1645,13 @@ class ToolTests(ToolManagerTestBase):
             self.tool.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 1)
 
-    def test_tool_launch_has_resonable_default_display_name(self):
+    def test_tool_launch_has_reasonable_default_display_name(self):
         self.create_tool(tool_type=ToolDefinition.VISUALIZATION)
-        self.assertEqual(self.tool.display_name, "{} {} {}".format(
-            self.tool.name,
-            self.tool.creation_date,
-            self.tool.get_owner().username
-        ))
+        self.assertEqual(
+            self.tool.display_name,
+            " ".join([self.tool.name, self.tool.formatted_creation_date,
+                      self.user.username])
+        )
 
 
 class VisualizationToolTests(ToolManagerTestBase):
@@ -2912,7 +2908,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.status_code, 403)
         self.assertIn(
             "User: {} does not have permission to view {}: {}".format(
                 self.user.username, self.tool.name, self.tool.uuid
@@ -3043,7 +3039,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         if user_has_permission:
             self.assertTrue(launch_mock.called)
         else:
-            self.assertEqual(get_response.status_code, 200)
+            self.assertEqual(get_response.status_code, 403)
             self.assertTemplateUsed(
                 get_response,
                 'tool_manager/vis-tool-user-not-allowed.html'
@@ -3151,16 +3147,16 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=True)
     @mock.patch.object(run_analysis, "retry", side_effect=None)
-    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+    def test_get_refinery_import_task_signatures_gets_called_during_import(
             self, retry_mock, ready_mock, successful_mock
     ):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         with mock.patch(
-            "tool_manager.models.Tool.get_input_file_uuid_list"
-        ) as get_uuid_list_mock:
+            "core.models.Analysis.get_refinery_import_task_signatures"
+        ) as get_refinery_import_task_signatures_mock:
             _refinery_file_import(self.tool.analysis.uuid)
-            self.assertTrue(get_uuid_list_mock.called)
+            self.assertTrue(get_refinery_import_task_signatures_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertTrue(ready_mock.called)
         self.assertTrue(successful_mock.called)
@@ -3690,19 +3686,14 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             assertions
         )
 
+    @override_settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1)
     def test_max_containers(self):
-        with self.settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1):
-            self._start_visualization(
-                'hello_world.json',
-                "https://www.example.com/file.txt",
-                count=settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-            )
-            with self.assertRaises(VisualizationToolError) as context:
-                self._start_visualization(
-                    'hello_world.json',
-                    "https://www.example.com/file.txt",
-                )
-        self.assertIn("Max containers", context.exception.message)
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        self.assertNotIn("Max containers", self.post_response.content)
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True, create_unique_name=True)
+        self.assertIn("Max containers", self.post_response.content)
 
     def test__get_launch_parameters(self):
         def assertions(tool):
