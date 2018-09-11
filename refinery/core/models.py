@@ -1978,7 +1978,7 @@ class Invitation(models.Model):
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
-    if kwargs['created']:
+    if user.is_active:
         add_or_update_user_to_neo4j(user.id, user.username)
         add_read_access_in_neo4j(
             map(
