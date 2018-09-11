@@ -67,7 +67,6 @@
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
-      // need is owner info
       assayAttributes.forEach(function (attribute) {
         var columnName = attribute.display_name;
         var columnWidth = columnName.length * 6 + 100;
