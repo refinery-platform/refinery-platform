@@ -1978,18 +1978,21 @@ class Invitation(models.Model):
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
-    if user.is_active:
-        add_or_update_user_to_neo4j(user.id, user.username)
-        add_read_access_in_neo4j(
-            map(
-                lambda ds: ds.uuid, get_objects_for_group(
-                    ExtendedGroup.objects.public_group(),
-                    'core.read_dataset'
-                )
-            ),
-            [user.id]
-        )
-        sync_update_annotation_sets_neo4j(user.username)
+    if not user.is_active:
+        logger.debug("User: %s has not been activated. Not adding them to "
+                     "Neo4J.", user.username)
+        return
+    add_or_update_user_to_neo4j(user.id, user.username)
+    add_read_access_in_neo4j(
+        map(
+            lambda ds: ds.uuid, get_objects_for_group(
+                ExtendedGroup.objects.public_group(),
+                'core.read_dataset'
+            )
+        ),
+        [user.id]
+    )
+    sync_update_annotation_sets_neo4j(user.username)
 
 
 @receiver(pre_delete, sender=User)
