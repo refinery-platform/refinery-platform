@@ -57,7 +57,7 @@ from data_set_manager.utils import (
     add_annotated_nodes_selection, index_annotated_nodes_selection
 )
 from file_store.models import FileStoreItem, FileType
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
 import tool_manager
 
@@ -1684,14 +1684,14 @@ class Analysis(OwnableResource):
         self._prepare_annotated_nodes(node_uuids)
 
     def get_refinery_import_task_signatures(self):
-        """Create and return a list of import_file() task signatures for the
+        """Create and return a list of file import task signatures for the
         user-selected inputs of a WorkflowTool.launch()
 
         NOTE: We avoid adding UUIDs of already imported FileStoreItem's as
         to not re-import them without need.
         """
         return [
-            import_file.subtask((file_store_item.uuid,))
+            FileImportTask().subtask((file_store_item.uuid,))
             for file_store_item in self.get_input_file_store_items()
             if not file_store_item.is_local()
         ]

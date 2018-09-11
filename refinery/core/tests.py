@@ -27,7 +27,7 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models,
                                make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 
 from .management.commands.create_user import init_user
 from .management.commands.import_annotations import \
@@ -790,7 +790,7 @@ class AnalysisTests(TestCase):
                                       is_refinery_file=False)
         self.assertEqual(
             self.analysis.get_refinery_import_task_signatures(),
-            [import_file.subtask(
+            [FileImportTask().subtask(
                 (self.analysis.get_input_file_store_items()[0].uuid,)
             )]
         )
