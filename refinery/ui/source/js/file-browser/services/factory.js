@@ -12,6 +12,7 @@
     'assayAttributeService',
     'assayFileService',
     'assayFiltersService',
+    'dataSetPropsService',
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
@@ -25,6 +26,7 @@
     assayAttributeService,
     assayFileService,
     assayFiltersService,
+    dataSetPropsService,
     fileBrowserSettings,
     nodeService,
     selectedFilterService,
@@ -65,7 +67,7 @@
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
-
+      // need is owner info
       assayAttributes.forEach(function (attribute) {
         var columnName = attribute.display_name;
         var columnWidth = columnName.length * 6 + 100;
@@ -75,8 +77,10 @@
           width: columnWidth,
           field: attribute.internal_name,
           cellTooltip: true,
-          enableHiding: false
+          enableHiding: false,
+          cellEditableCondition: dataSetPropsService.dataSet.is_owner
         };
+
         if (columnName === 'Download') {
           // Url requires a custom template for downloading links
           tempCustomColumnNames.push(setCustomUrlColumn(attribute));
