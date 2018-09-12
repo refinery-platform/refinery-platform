@@ -514,9 +514,9 @@ class DataSet(SharableResource):
 
     def __unicode__(self):
         return (
-            unicode(self.name) + u' - ' +
-            unicode(self.get_owner_username()) + u' - ' +
-            unicode(self.summary)
+            self.name + ' - ' +
+            self.get_owner_username() + ' - ' +
+            self.summary
         )
 
     def save(self, *args, **kwargs):
@@ -2326,9 +2326,8 @@ class Event(models.Model):
         )
 
     def render_data_set_create(self):
-        return '{:%x %X}: {} created data set {}'.format(
-            self.date_time, self.user, self.data_set.name
-        )
+        return u'{:%x %X}: {} created data set'.format(
+            self.date_time, self.user) + self.data_set.name
 
     # Sub-types for data sets:
     PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
