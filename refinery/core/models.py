@@ -514,9 +514,9 @@ class DataSet(SharableResource):
 
     def __unicode__(self):
         return (
-            self.name + ' - ' +
-            self.get_owner_username() + ' - ' +
-            self.summary
+            unicode(self.name) + u' - ' +
+            unicode(self.get_owner_username()) + u' - ' +
+            unicode(self.summary)
         )
 
     def save(self, *args, **kwargs):
