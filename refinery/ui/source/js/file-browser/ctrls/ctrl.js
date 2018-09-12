@@ -29,6 +29,7 @@
     'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
+    'nodesV2Service',
     'resetGridService',
     'selectedFilterService',
     'activeNodeService',
@@ -52,6 +53,7 @@
     fileParamService,
     filesLoadingService,
     fileRelationshipService,
+    nodesV2Service,
     resetGridService,
     selectedFilterService,
     activeNodeService,
@@ -87,6 +89,7 @@
       appScopeProvider: vm,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
+      edit: false,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
@@ -121,8 +124,6 @@
     function activate () {
       // Ensure data owner or group permission to modify (run tools)
       refreshDataSetProps();
-      // initialize the dataset and updates ui-grid selection, filters, and url
-      initializeDataOnPageLoad();
     }
 
     // Helper method to keep track when data should be discard or added
@@ -159,6 +160,8 @@
     function refreshDataSetProps () {
       dataSetPropsService.refreshDataSet().then(function () {
         vm.dataSet = dataSetPropsService.dataSet;
+        // initialize the dataset and updates ui-grid selection, filters, and url
+        initializeDataOnPageLoad();
       });
     }
 
@@ -230,6 +233,18 @@
         // Sort events
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
+
+        vm.gridApi.edit.on.afterCellEdit(null, function (rowEntity, colDef, newValue, oldValue) {
+          var params = { uuid: rowEntity.uuid };
+          params[colDef.field] = newValue;
+          if (newValue !== oldValue) {
+            nodesV2Service.partial_update(params).$promise.then(function () {
+              $log.info('is successful');
+            }, function () {
+              rowEntity[colDef.field] = oldValue;
+            });
+          }
+        });
       }
     }
 
