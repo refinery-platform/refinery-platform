@@ -142,7 +142,8 @@ def delete_s3_object(bucket, key):
     except (botocore.exceptions.ClientError,
             botocore.exceptions.ParamValidationError) as exc:
         logger.error("Error deleting 's3://%s/%s': %s", bucket, key, exc)
-    logger.info("Deleted 's3://%s/%s'", bucket, key)
+    else:
+        logger.info("Deleted 's3://%s/%s'", bucket, key)
 
 
 def download_file_object(request_response, download_object, progress_report):

@@ -283,6 +283,11 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
+        # to enable log output with levels less than WARNING from external
+        # functions called in Celery tasks that use Celery task logger
+        'file_store': {
+            'level': get_setting("REFINERY_LOG_LEVEL"),
+        },
         'revproxy': {
             'level': 'ERROR',
         },
