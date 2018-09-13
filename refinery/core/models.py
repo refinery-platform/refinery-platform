@@ -2326,7 +2326,7 @@ class Event(models.Model):
         )
 
     def render_data_set_create(self):
-        return u'{:%x %X}: {} created data set '.format(
+        return '{:%x %X}: {} created data set '.format(
             self.date_time, self.user) + self.data_set.name
 
     # Sub-types for data sets:
