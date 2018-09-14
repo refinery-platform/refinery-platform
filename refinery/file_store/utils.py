@@ -131,7 +131,8 @@ def delete_file(absolute_path):
             os.unlink(absolute_path)
         except EnvironmentError as exc:
             logger.error("Error deleting '%s': %s", absolute_path, exc)
-        logger.debug("Deleted '%s'", absolute_path)
+        else:
+            logger.debug("Deleted '%s'", absolute_path)
 
 
 def delete_s3_object(bucket, key):
