@@ -488,7 +488,7 @@ def post_process_file_import(**kwargs):
     """
     # allow for the use of uuid as a keyword or positional argument
     try:
-        file_store_item_uuid = kwargs['kwargs']['uuid']
+        file_store_item_uuid = kwargs['kwargs']['item_uuid']
     except KeyError:
         file_store_item_uuid = kwargs['args'][0]
     try:
