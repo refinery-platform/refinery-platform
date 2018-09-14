@@ -27,7 +27,7 @@
         .expectGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/tool_definitions/?dataSetUuid=' + window.dataSetUuid
+          '/tool_definitions/?data_set_uuid=' + window.dataSetUuid
         ).respond(200, []);
 
       var scope = $rootScope.$new();

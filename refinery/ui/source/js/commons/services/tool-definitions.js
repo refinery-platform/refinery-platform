@@ -14,7 +14,7 @@
         query: {
           method: 'GET',
           isArray: true,
-          params: { dataSetUuid: '' }
+          params: { data_set_uuid: '' }
         }
       }
     );

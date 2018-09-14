@@ -56,7 +56,7 @@
     **/
     function getTools () {
       var params = {
-        dataSetUuid: dataSetUuid
+        data_set_uuid: dataSetUuid
       };
 
       var toolDefs = toolDefinitionsService.query(params);
