@@ -9,8 +9,6 @@ from django.conf import settings
 import celery
 import requests
 
-from data_set_manager.models import Node
-
 from .models import FileStoreItem, get_temp_dir
 from .utils import (S3MediaStorage, SymlinkedFileSystemStorage,
                     copy_file_object, copy_s3_object, delete_file,
@@ -19,7 +17,7 @@ from .utils import (S3MediaStorage, SymlinkedFileSystemStorage,
                     symlink_file, upload_file_object)
 
 logger = celery.utils.log.get_task_logger(__name__)
-logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
+logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 
 class FileImportTask(celery.Task):
@@ -219,47 +217,6 @@ class FileImportTask(celery.Task):
                 ProgressPercentage(temp_file.name, self.request.id, 50, 100)
             )
         return file_store_name
-
-    def on_success(self, retval, task_id, args, kwargs):
-        # allow for the use of uuid as a keyword or positional argument
-        try:
-            file_store_item_uuid = kwargs['uuid']
-        except KeyError:
-            file_store_item_uuid = args[0]
-        try:
-            node = Node.objects.get(file_uuid=file_store_item_uuid)
-        except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-            logger.error("Could not retrieve Node with file UUID '%s': %s",
-                         file_store_item_uuid, exc)
-        else:
-            node.run_generate_auxiliary_node_task()
-
-
-def update_solr_index(**kwargs):
-    """Updates Solr with state of file import"""
-    # allow for the use of uuid as a keyword or positional argument
-    try:
-        file_store_item_uuid = kwargs['kwargs']['uuid']
-    except KeyError:
-        file_store_item_uuid = kwargs['args'][0]
-    try:
-        node = Node.objects.get(file_uuid=file_store_item_uuid)
-    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Could not retrieve Node with file UUID '%s': %s",
-                     file_store_item_uuid, exc)
-    else:
-        node.update_solr_index()
-        logger.info("Updated Solr index with file import state for Node '%s'",
-                    node.uuid)
-
-
-@celery.signals.worker_init.connect
-def on_worker_init(sender, **kwargs):
-    # required to connect update_solr_index handler to task_postrun signal
-    # https://github.com/celery/celery/issues/1873#issuecomment-35288899
-    celery.signals.task_postrun.connect(
-        update_solr_index, sender=sender.app.tasks[FileImportTask.name]
-    )
 
 
 class ProgressPercentage(object):

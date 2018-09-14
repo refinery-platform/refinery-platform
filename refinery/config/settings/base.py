@@ -232,6 +232,8 @@ AUTHENTICATION_BACKENDS = (
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
+REFINERY_LOG_LEVEL = get_setting('REFINERY_LOG_LEVEL')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -258,7 +260,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level': get_setting("REFINERY_LOG_LEVEL"),
+            'level': REFINERY_LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
@@ -283,14 +285,6 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
-        # to enable log output with levels less than WARNING from external
-        # functions called in Celery tasks that use Celery task logger
-        'file_store': {
-            'level': get_setting("REFINERY_LOG_LEVEL"),
-        },
-        'revproxy': {
-            'level': 'ERROR',
-        },
         'httpstream': {  # dependency of py2neo
             'level': 'INFO',
         },
@@ -300,8 +294,21 @@ LOGGING = {
         'requests': {
             'level': 'ERROR',
         },
+        'revproxy': {
+            'level': 'ERROR',
+        },
     },
 }
+# enable log output for levels less than WARNING from external Refinery
+# functions called in Celery tasks that use Celery task logger
+REFINERY_APP_NAMES = [
+    'analysis_manager', 'annotation_server', 'core', 'data_set_manager',
+    'file_store', 'galaxy_connector', 'tool_manager', 'user_files_manager',
+    'workflow_manager'
+]
+LOGGING['loggers'].update({
+    app_name: {'level': REFINERY_LOG_LEVEL} for app_name in REFINERY_APP_NAMES
+})
 
 # Expiration time of a token API that was originally designed to handle group
 # invitations using uuid-based tokens.
