@@ -40,7 +40,7 @@ class Command(BaseCommand):
             '--public',
             action='store_true',
             default=False
-        ),
+        )
         parser.add_argument(
             '--overwrite',
             action='store_true',
