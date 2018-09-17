@@ -17,6 +17,7 @@
     "first_name": "givenName",
     "last_name": "sn"
   },
+  "AUTO_LOGIN": [],
   "BROKER_URL": "amqp://guest:guest@localhost:5672//",
   "CELERYD_MAX_TASKS_PER_CHILD": 100,
   "DATABASES": {
@@ -30,22 +31,17 @@
     }
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
+  "DJANGO_DOCKER_ENGINE_DATA_DIR": "<%= @django_docker_engine_data_dir || "/data" %>",
   "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",
   "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",
   "EMAIL_USE_TLS": <%= @email_use_tls || "false" %>,
   "EMAIL_SUBJECT_PREFIX": "[Refinery] ",
-  "INTERVAL_BETWEEN_CHECKS": {
-    "CELERY": 10.0,
-    "GALAXY": 10.0,
-    "SOLR": 10.0
-  },
   "ISA_TAB_DIR": "<%= @isa_tab_dir %>",
   "JAVA_ENTITY_EXPANSION_LIMIT": 1000000,
   "LANGUAGE_CODE": "en-us",
   "LIBS_DIR": "/opt",
-  "LOG_LEVEL": "DEBUG",
   "MEDIA_ROOT": "<%= @media_root %>",
   "MEDIA_URL": "/media/",
   "NEO4J": {
@@ -99,7 +95,8 @@
   },
   "REFINERY_BANNER": "",
   "REFINERY_BANNER_ANONYMOUS_ONLY": false,
-  "REFINERY_DATA_IMPORT_DIR": "<%= @import_dir %>",
+  "REFINERY_CUSTOM_NAVBAR_ITEM": "",
+  "REFINERY_DATA_IMPORT_DIR": "<%= @import_dir || "/import" %>",
   "REFINERY_EXTERNAL_AUTH": false,
   "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
   "REFINERY_FILE_SOURCE_MAP": {},
@@ -107,6 +104,7 @@
   "REFINERY_GOOGLE_ANALYTICS_ID": "",
   "REFINERY_INNER_NAVBAR_HEIGHT": 20,
   "REFINERY_AUXILIARY_FILE_GENERATION": "on_file_import",
+  "REFINERY_LOG_LEVEL": "DEBUG",
   "REFINERY_MAIN_LOGO": "",
   "REFINERY_REGISTRATION_CLOSED_MESSAGE": "",
   "REFINERY_REPOSITORY_MODE": false,
@@ -131,5 +129,7 @@
   },
   "TOKEN_DURATION": 3,
   "USE_I18N": true,
-  "USE_L10N": true
+  "USE_L10N": true,
+  "USER_FILES_COLUMNS": "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted",
+  "USER_FILES_FACETS": "filetype,organism,technology,genotype,cell_type,antibody,experimenter"
 }

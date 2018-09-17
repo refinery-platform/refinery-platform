@@ -4,17 +4,11 @@
 <div class="modal-body">
   <span>
     <h5>
-       <i class="fa fa-user"
-          title="You own this data set"
-          refinery-tooltip
-          refinery-tooltip-placement="top">
-
-       </i>
       <a
           class="preview"
           title="View content in File Browser"
           ng-if="modal.deletionMessage == null"
-          ng-href="data_sets/{{ modal.dataSet.uuid }}"
+          ng-href="/data_sets/{{ modal.dataSet.uuid }}"
           ng-bind-html="modal.dataSet.title"
           refinery-tooltip
           refinery-tooltip-placement="top"
@@ -27,7 +21,6 @@
         ng-bind-html="modal.dataSet.title">
       </span>
     </h5>
-
   </span>
    <h5>
      <b>Total files: </b>{{ modal.dataSet.file_count }}
@@ -63,32 +56,22 @@
             <i
               class="fa fa-user"
               title="You ran this analysis"
-              ng-if="analysis.is_owner"
+              ng-if="analysis.owner == modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
-
             </i>
             <i
               class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
-              ng-if="!analysis.is_owner"
+              ng-if="analysis.owner != modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
-
             </i>
-          <span ng-switch on="analysis.status">
-              <span ng-if="SUCCESS">
-                <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-                {{ analysis.name }}
+            <span>
+              <a
+              ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses/">
+              {{ analysis.name }}
               </a>
-              </span>
-              <span ng-if="!SUCCESS">
-                <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
-                {{ analysis.name }}
-              </a>
-              </span>
             </span>
 
         </li>
@@ -105,7 +88,7 @@
             <i
               class="fa fa-user"
               title="You ran this analysis"
-              ng-if="analysis.is_owner"
+              ng-if="analysis.owner == modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
 
@@ -113,7 +96,7 @@
             <i
               class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
-              ng-if="!analysis.is_owner"
+              ng-if="!analysis.owner == modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
 
@@ -141,7 +124,7 @@
     <button id="dataset-delete-close-button"
       class="refinery-base btn btn-default"
       ng-if="modal.deletionMessage != null"
-      ng-click="modal.cancel()">
+      ng-click="modal.close()">
       Close
     </button>
     <button id="dataset-delete-cancel-button"

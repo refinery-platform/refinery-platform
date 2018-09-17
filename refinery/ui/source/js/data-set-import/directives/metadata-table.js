@@ -1,8 +1,9 @@
 'use strict';
 
 function metadataTableDirective (
-  fileUploadStatusService,
   $,
+  $window,
+  fileUploadStatusService,
   metadataStatusService
 ) {
   return {
@@ -13,14 +14,19 @@ function metadataTableDirective (
     controllerAs: 'metadataTable',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/data-set-import/partials/metadata-table.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/data-set-import/partials/metadata-table.html');
+    },
     link: function (scope, element, attrs, ctrl) {
+      scope.isAdvancedCollapsed = true;
       // use to check pattern of public shortcut name
       scope.urlShortcutRegex = /^[a-zA-Z0-9_]*$/;
 
+      scope.sampleMetadataUrl = $window.getStaticUrl('sample-files/refinery-sample-metadata.tsv');
+
       // Helper method to disable data file upload if files are uploading
       ctrl.areFilesUploading = function () {
-        if (fileUploadStatusService.fileUploadStatus === 'running') {
+        if (fileUploadStatusService.fileUploadStatus.status === 'running') {
           return true;
         }
         return false;
@@ -28,7 +34,7 @@ function metadataTableDirective (
 
       // Helper method to show warning text when data files are queued
       ctrl.areFilesInQueue = function () {
-        if (fileUploadStatusService.fileUploadStatus === 'queuing') {
+        if (fileUploadStatusService.fileUploadStatus.status === 'queuing') {
           return true;
         }
         return false;
@@ -37,8 +43,8 @@ function metadataTableDirective (
       // Watches for tab navigation
       scope.$on('$stateChangeStart', function (event) {
         if (metadataStatusService.metadataPreviewStatus) {
-          var answer = confirm('Uploading files or tabular data in preview' +
-            ' will be lost.');
+          var warning = 'Uploading in progress: data may be lost.';
+          var answer = confirm(warning); // eslint-disable-line no-alert
           if (!answer) {
             event.preventDefault();
           } else {
@@ -63,8 +69,9 @@ function metadataTableDirective (
 angular
   .module('refineryDataSetImport')
   .directive('metadataTable', [
-    'fileUploadStatusService',
     '$',
+    '$window',
+    'fileUploadStatusService',
     'metadataStatusService',
     metadataTableDirective
   ]);

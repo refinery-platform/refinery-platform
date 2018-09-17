@@ -33,6 +33,7 @@ describe('Permission Service', function () {
             group_uuid: fakeUuid,
             perms: {
               read: true,
+              read_meta: true,
               change: false
             }
           }
@@ -70,7 +71,7 @@ describe('Permission Service', function () {
     });
 
     it('getPermissionLevel returns a none', function () {
-      var response = service.getPermissionLevel({ read: false });
+      var response = service.getPermissionLevel({ read_meta: false });
       expect(response).toEqual('none');
     });
 
@@ -80,7 +81,11 @@ describe('Permission Service', function () {
     });
 
     it('getPermissionLevel returns a read', function () {
-      var response = service.getPermissionLevel({ read: true, change: false });
+      var response = service.getPermissionLevel({
+        read: true,
+        read_meta: true,
+        change: false
+      });
       expect(response).toEqual('read');
     });
   });

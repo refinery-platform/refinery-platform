@@ -109,61 +109,61 @@ function TreemapCtrl (
   dashboardIntroStarter,
   dashboardVisWrapperResizer
 ) {
-  var self = this;
+  var that = this;
 
-  self.$ = $;
-  self._ = _;
-  self.$q = $q;
-  self.d3 = d3;
-  self.HEX = HEX;
-  self.$log = $log;
-  self.$window = $window;
-  self.$rootScope = $rootScope;
-  self.$element = $element;
-  self.$d3Element = self.$element.find('.treemap svg');
-  self.settings = treemapSettings;
-  self.pubSub = pubSub;
-  self.treemapContext = treemapContext;
-  self.$visWrapper = self.$element.closest('.vis-wrapper');
-  self.$timeout = $timeout;
-  self.dashboardVisWrapperResizer = dashboardVisWrapperResizer;
+  that.$ = $;
+  that._ = _;
+  that.$q = $q;
+  that.d3 = d3;
+  that.HEX = HEX;
+  that.$log = $log;
+  that.$window = $window;
+  that.$rootScope = $rootScope;
+  that.$element = $element;
+  that.$d3Element = that.$element.find('.treemap svg');
+  that.settings = treemapSettings;
+  that.pubSub = pubSub;
+  that.treemapContext = treemapContext;
+  that.$visWrapper = that.$element.closest('.vis-wrapper');
+  that.$timeout = $timeout;
+  that.dashboardVisWrapperResizer = dashboardVisWrapperResizer;
 
-  self.Webworker = Webworker;
+  that.Webworker = Webworker;
 
-  self._visibleDepth = 1;
-  self.currentLevel = 0;
+  that._visibleDepth = 1;
+  that.currentLevel = 0;
 
-  self.treemap.width = self.$d3Element.width();
-  self.treemap.height = self.$d3Element.height();
+  that.treemap.width = that.$d3Element.width();
+  that.treemap.height = that.$d3Element.height();
 
-  self.numColors = 10;
-  self.steps = 6;
+  that.numColors = 10;
+  that.steps = 6;
 
-  // self.treemap.colors = new D3Colors(
-  //   self.d3.scale.category10().domain(d3.range(self.numColors)).range()
-  // ).getScaledFadedColors(self.steps);
+  // that.treemap.colors = new D3Colors(
+  //   that.d3.scale.category10().domain(d3.range(that.numColors)).range()
+  // ).getScaledFadedColors(that.steps);
 
   // Mono color scale
-  self.treemap.colors = new D3Colors(
+  that.treemap.colors = new D3Colors(
     ['#444444']
-  ).getScaledFadedColors(self.steps);
+  ).getScaledFadedColors(that.steps);
 
   // Mono color scale
-  self.treemap.lockHighlightColors = new D3Colors(
-    [self.settings.highlightBGColor]
-  ).getScaledFadedColors(self.steps);
+  that.treemap.lockHighlightColors = new D3Colors(
+    [that.settings.highlightBGColor]
+  ).getScaledFadedColors(that.steps);
 
-  self.multipleColorScaling = false;
+  that.multipleColorScaling = false;
 
-  self.treemap.x = self.d3.scale.linear()
-    .domain([0, self.treemap.width])
-    .range([0, self.treemap.width]);
+  that.treemap.x = that.d3.scale.linear()
+    .domain([0, that.treemap.width])
+    .range([0, that.treemap.width]);
 
-  self.treemap.y = self.d3.scale.linear()
-    .domain([0, self.treemap.height])
-    .range([0, self.treemap.height]);
+  that.treemap.y = that.d3.scale.linear()
+    .domain([0, that.treemap.height])
+    .range([0, that.treemap.height]);
 
-  self.treemap.el = self.d3.layout.treemap()
+  that.treemap.el = that.d3.layout.treemap()
     .children(function (d, depth) {
       return depth ? null : d._children;
     })
@@ -173,68 +173,70 @@ function TreemapCtrl (
     .round(false)
     .ratio(1);
 
-  self.treemap.element = self.d3.select(self.$d3Element[0])
-    .attr('viewBox', '0 0 ' + self.treemap.width + ' ' + self.treemap.height);
-  self.treemap.$element = self.$(self.treemap.element.node());
+  that.treemap.element = that.d3.select(that.$d3Element[0])
+    .attr('viewBox', '0 0 ' + that.treemap.width + ' ' + that.treemap.height);
+  that.treemap.$element = that.$(that.treemap.element.node());
 
-  self.treemap.mainGroup = self.treemap.element
+  that.treemap.mainGroup = that.treemap.element
     .append('g')
     .style('shape-rendering', 'crispEdges');
 
-  self.treemap.grandParent = self.d3.select(self.$visWrapper[0])
+  that.treemap.grandParent = that.d3.select(that.$visWrapper[0])
     .select('#treemap-root-path');
-  self.treemap.$grandParent = self.$(self.treemap.grandParent.node());
-  self.treemap.$grandParentContainer = self.treemap.$grandParent.parent();
+  that.treemap.$grandParent = that.$(that.treemap.grandParent.node());
+  that.treemap.$grandParentContainer = that.treemap.$grandParent.parent();
 
   // To-DO: Refactor, the `visData` service should handle this properly
   // The node index is needed to quickly access nodes since D3's tree map layout
   // requires a data structure which doesn't provide any quick access.
-  self.nodeIndex = {};
+  that.nodeIndex = {};
 
-  self.currentlyLockedNodes = {};
-  self.prevEventDataSets = {};
+  that.currentlyLockedNodes = {};
+  that.prevEventDataSets = {};
 
-  if (self.graph) {
-    self.graph.then(function (data) {
-      self.data = data;
-      self.pubSub.trigger('treemap.loaded');
-      self.draw();
-      self.addEventListeners();
+  if (that.graph) {
+    that.graph.then(function (data) {
+      that.data = data;
+      that.pubSub.trigger('treemap.loaded');
+      that.draw();
+      that.addEventListeners();
     });
   } else {
-    self.pubSub.trigger('treemap.noData');
+    that.pubSub.trigger('treemap.noData');
   }
 
-  self.introStart = function () {
-    dashboardIntroStarter.start('satori-treemap', self);
+  that.introStart = function () {
+    dashboardIntroStarter.start('satori-treemap', that);
   };
 
-  self.maximize = function () {
-    if (!self.isMaximized) {
+  that.maximize = function () {
+    if (!that.isMaximized) {
       dashboardVisWrapperResizer.maximize.call(dashboardVisWrapperResizer);
-      self.$timeout(self.reRender.bind(self), 0);
+      that.$timeout(that.reRender.bind(that), 0);
     }
   };
 
-  self.minimize = function () {
-    if (!self.isMinimized) {
+  that.minimize = function () {
+    if (!that.isMinimized) {
       dashboardVisWrapperResizer.minimize.call(dashboardVisWrapperResizer);
-      self.$timeout(self.reRender.bind(self), 0);
+      that.$timeout(that.reRender.bind(that), 0);
     }
   };
 
-  self.equalize = function () {
-    if (!self.isEqualized) {
+  that.equalize = function () {
+    if (!that.isEqualized) {
       dashboardVisWrapperResizer.equalize.call(dashboardVisWrapperResizer);
-      self.$timeout(self.reRender.bind(self), 0);
+      that.$timeout(that.reRender.bind(that), 0);
     }
   };
 
-  self.pubSub.on('resize', function () {
-    self.$timeout(self.reRender.bind(self), 25);
+  that.pubSub.on('resize', function () {
+    that.$timeout(that.reRender.bind(that), 25);
   });
 
-  self.treemapContext.set('treemap', this);
+  that.treemapContext.set('treemap', this);
+
+  that.icons = this.$window.getStaticUrl('images/icons.svg');
 }
 
 /*
@@ -321,7 +323,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     .append('use')
     .attr({
       class: 'icon icon-unlocked',
-      'xlink:href': '/static/images/icons.svg#unlocked'
+      'xlink:href': this.$window.getStaticUrl('images/icons.svg#unlocked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -329,7 +331,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     .append('use')
     .attr({
       class: 'icon icon-locked',
-      'xlink:href': '/static/images/icons.svg#locked'
+      'xlink:href': this.$window.getStaticUrl('images/icons.svg#locked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -705,10 +707,10 @@ TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
  * @param   {Boolean}   noNotification  If `true` no events will be emmited.
  */
 TreemapCtrl.prototype.lockNode = function (selection) {
-  var self = this;
+  var that = this;
 
   selection.each(function () {
-    self.lockHighlightEl(this);
+    that.lockHighlightEl(this);
   });
 };
 
@@ -723,10 +725,10 @@ TreemapCtrl.prototype.lockNode = function (selection) {
  * @date    2016-10-30
  */
 TreemapCtrl.prototype.unlockNode = function (selection) {
-  var self = this;
+  var that = this;
 
   selection.each(function () {
-    self.unlockHighlightEl(this);
+    that.unlockHighlightEl(this);
   });
 };
 
@@ -949,7 +951,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
     .append('use')
     .attr({
       class: 'icon icon-unlocked',
-      'xlink:href': '/static/images/icons.svg#unlocked'
+      'xlink:href': this.$window.getStaticUrl('images/icons.svg#unlocked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -957,7 +959,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
     .append('use')
     .attr({
       class: 'icon icon-locked',
-      'xlink:href': '/static/images/icons.svg#locked'
+      'xlink:href': this.$window.getStaticUrl('images/icons.svg#locked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -1744,7 +1746,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
       .append('svg')
       .attr('class', 'fa fa-arrow-left is-mirrored')
       .append('use')
-      .attr('xlink:href', '/static/images/icons.svg#arrow-left');
+      .attr('xlink:href', this.$window.getStaticUrl('images/icons.svg#arrow-left'));
   }
 
   current
@@ -1765,7 +1767,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
         .append('svg')
         .attr('class', 'icon-arrow-left is-mirrored')
         .append('use')
-        .attr('xlink:href', '/static/images/icons.svg#arrow-left');
+        .attr('xlink:href', this.$window.getStaticUrl('images/icons.svg#arrow-left'));
     }
 
     crumb

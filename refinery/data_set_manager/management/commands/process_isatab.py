@@ -1,6 +1,7 @@
+from __future__ import absolute_import
+
 from collections import OrderedDict
 import logging
-from optparse import make_option
 import os
 import re
 import sys
@@ -9,7 +10,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from celery.task.sets import TaskSet
 
-from data_set_manager.tasks import parse_isatab
+from ...tasks import parse_isatab
 
 logger = logging.getLogger(__name__)
 
@@ -22,29 +23,29 @@ class Command(BaseCommand):
     --public --file_base_path <base path if file locations are relative>
     --overwrite]\n
     """
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    def add_arguments(self, parser):
+        parser.add_argument('username')
+        parser.add_argument('base_isa_dir')
+        parser.add_argument(
             '--base_pre_isa_dir',
             action='store',
-            type='string'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '--file_base_path',
             action='store',
-            type='string',
             default=None
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '--public',
             action='store_true',
             default=False
         ),
-        make_option(
+        parser.add_argument(
             '--overwrite',
             action='store_true',
             default=False
         )
-    )
 
     """
     Name: handle
@@ -97,7 +98,7 @@ class Command(BaseCommand):
 
         s_tasks = list()
         # Add subtasks to list
-        for k, v_list in isatab_dict.items():
+        for v_list in isatab_dict.values():
             isa_file = v_list.pop(0)
             try:
                 pre_file = v_list.pop(0)
@@ -122,22 +123,22 @@ class Command(BaseCommand):
 
         task_num = 1
         total = len(isatab_dict)
-        for (uuid, filename, skipped) in result.iterate():
+        for uuid in result.iterate():
             try:
-                if not skipped:
+                if uuid is not None:
                     logger.info(
-                        "%s / %s: Successfully parsed %s into "
+                        "%s / %s: Successfully parsed file into "
                         "DataSet with UUID %s",
-                        task_num, total, filename, uuid)
+                        task_num, total, uuid)
                 else:
                     logger.info(
-                        "%s / %s: Skipped %s as it has been "
-                        "successfully parsed already. UUID %s",
-                        task_num, total, filename, uuid)
+                        "%s / %s: Import of %s failed. Please check "
+                        "Celery log files.",
+                        task_num, total, uuid)
                 task_num += 1
                 sys.stdout.flush()
             except:
-                logger.info("%s / %s: Unsuccessful parsed %s",
-                            task_num, total, filename)
+                logger.info("%s / %s: Unsuccessfully parsed",
+                            task_num, total)
                 task_num += 1
                 sys.stdout.flush()

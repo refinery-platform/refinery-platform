@@ -1,69 +1,44 @@
 import logging
 
 from django.conf import settings
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from haystack.forms import FacetedSearchForm
-from haystack.query import SearchQuerySet
-from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
 from tastypie.api import Api
-from rest_framework import routers
 
-from core.api import (AnalysisResource, ProjectResource, NodeSetResource,
-                      NodeResource, NodeSetListResource, NodePairResource,
-                      NodeRelationshipResource, WorkflowResource,
-                      ExtendedGroupResource,
-                      WorkflowInputRelationshipsResource, DataSetResource,
-                      StatisticsResource, GroupManagementResource,
-                      UserAuthenticationResource, InvitationResource,
-                      FastQCResource, UserProfileResource)
-from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import (WorkflowViewSet, NodeViewSet,
-                        CustomRegistrationView, NodeGroups, DataSetsViewSet,
-                        AnalysesViewSet)
-from file_store.views import FileStoreItems
-from data_set_manager.views import Assays, AssaysFiles, AssaysAttributes
-from data_set_manager.api import (AttributeOrderResource, StudyResource,
-                                  AssayResource, InvestigationResource,
-                                  ProtocolResource,
-                                  ProtocolReferenceResource,
-                                  ProtocolReferenceParameterResource,
-                                  PublicationResource, AttributeResource)
+from config.utils import RouterCombiner
+from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
+                      GroupManagementResource, InvitationResource,
+                      StatisticsResource, UserAuthenticationResource,
+                      UserProfileResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
+from core.models import AuthenticationFormUsernameOrEmail
+from core.urls import core_router
+from core.views import CustomRegistrationView
+from data_set_manager.api import (AssayResource, AttributeResource,
+                                  InvestigationResource, NodeResource,
+                                  ProtocolReferenceParameterResource,
+                                  ProtocolReferenceResource, ProtocolResource,
+                                  PublicationResource, StudyResource)
+from data_set_manager.urls import data_set_manager_router
+from file_store.urls import file_store_router
+from tool_manager.urls import django_docker_engine_url, tool_manager_router
+from user_files_manager.urls import (user_files_csv_url, user_files_router,
+                                     user_files_url)
 
 logger = logging.getLogger(__name__)
-
-# NG: facets for Haystack
-sqs = (SearchQuerySet().using("core")
-                       .models(DataSet)
-                       .facet('measurement')
-                       .facet('technology')
-                       .highlight())
-
-# Django REST Framework urls
-router = routers.DefaultRouter()
-router.register(r'workflows', WorkflowViewSet)
-router.register(r'nodes', NodeViewSet)
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
 
 v1_api.register(AnalysisResource())
-v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
 v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
-v1_api.register(AttributeOrderResource())
 v1_api.register(NodeResource())
-v1_api.register(NodeSetResource())
-v1_api.register(NodeSetListResource())
-v1_api.register(NodePairResource())
-v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
-v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(StatisticsResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
@@ -75,7 +50,6 @@ v1_api.register(ProtocolReferenceParameterResource())
 v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
-v1_api.register(FastQCResource())
 v1_api.register(UserProfileResource())
 
 
@@ -85,11 +59,8 @@ urlpatterns = patterns(
     # links in core urls
     url(r'^', include('core.urls')),
     url(r'^annotation_server/', include('annotation_server.urls')),
-    url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
-    url(r'^visualization_manager/', include('visualization_manager.urls')),
-    url(r'^file_server/', include('file_server.urls')),
     url(r'^tasks/', include('djcelery.urls')),
     url(r'^docs/', include('rest_framework_swagger.urls')),
 
@@ -140,44 +111,8 @@ urlpatterns = patterns(
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
 
-    # NG: Haystack (searching and querying) urls
-    # url(r'^search/', include('haystack.urls')),
-    url(
-        r'^search/',
-        FacetedSearchView(
-            form_class=FacetedSearchForm,
-            searchqueryset=sqs
-        ),
-        name='search'
-    ),
-    # Wire up our API using automatic URL routing.
-    url(r"^api/v2/", include(router.urls)),
-
-    url(r'^api/v2/node_groups/$', NodeGroups.as_view()),
-
-    url(r'^api/v2/assays/$', Assays.as_view()),
-
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/files/$', AssaysFiles.as_view()),
-
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/attributes/$', AssaysAttributes.as_view()),
-
-    url(r'^api/v2/file_store_items/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$', FileStoreItems.as_view()),
-
-    url(r'^api/v2/data_sets/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$',
-        DataSetsViewSet.as_view()),
-
-    url(r'^api/v2/analyses/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$',
-        AnalysesViewSet.as_view()),
+    user_files_url,
+    user_files_csv_url
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',
@@ -200,3 +135,20 @@ if settings.DEBUG:
         urlpatterns += patterns(
             '', url(r'^__debug__/', include(debug_toolbar.urls)),
         )
+
+
+# Django REST Framework Url Routing
+# RouterCombiner.extend(<router instance>) to include DRF Routers defined in
+# other apps urls.py files
+router = RouterCombiner()
+router.extend(core_router)
+router.extend(data_set_manager_router)
+router.extend(file_store_router)
+router.extend(tool_manager_router)
+router.extend(user_files_router)
+
+# Wire up our DRF APIs using automatic URL routing.
+urlpatterns += patterns(
+    '', url(r"^api/v2/", include(router.urls)),
+    django_docker_engine_url
+)

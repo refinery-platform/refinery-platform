@@ -17,25 +17,22 @@
   },
   "files": {
     "features": [
-      "analysis-launch",
       "analysis-monitor",
       "chart",
       "collaboration",
       "commons",
       "dashboard",
-      "data-set-explorer",
       "data-set-import",
       "data-set-nav",
+      "data-set-visualization",
       "file-browser",
       "data-set-about",
       "globals",
-      "igv",
       "metadata-table-import",
-      "node-mapping",
-      "node-relationship",
+      "provvis",
       "statistics",
-      "workflows",
-      "visualization"
+      "tool-launch",
+      "user-file-browser"
     ],
     "vendor": {
       "css": [
@@ -69,6 +66,7 @@
         "angular-animate/angular-animate.min.js",
         "angular-bootstrap/ui-bootstrap-tpls.min.js",
         "angular-bootstrap/ui-bootstrap.min.js",
+        "bootbox/bootbox.js",
         "angular-intro-js/build/angular-intro.min.js",
         "angular-local-storage/dist/angular-local-storage.min.js",
         "angular-file-model/angular-file-model.js",
@@ -92,9 +90,8 @@
         "intro-js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
         "filesize/lib/filesize.min.js",
-        "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
-        "ng-file-upload/angular-file-upload.min.js",
+        "ng-file-upload/ng-file-upload.min.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
         "jquery-file-upload/js/jquery.iframe-transport.js",
         "jquery-file-upload/js/vendor/jquery.ui.widget.js",
@@ -106,7 +103,8 @@
         "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
-        "tipsy/src/javascripts/jquery.tipsy.js"
+        "svgxuse/svgxuse.min.js",
+        "aws-sdk-js/dist/aws-sdk.min.js"
       ],
       "maps": [
         "angular/angular.min.js.map",

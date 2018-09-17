@@ -1,13 +1,12 @@
 from decimal import Decimal
-import logging
 import json
+import logging
 
 from django.db import connection
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
-from annotation_server import utils
-
+from .utils import GAP_REGIONS, MAPPABILITY_THEORETICAL, SUPPORTED_GENOMES
 
 logger = logging.getLogger(__name__)
 
@@ -20,35 +19,16 @@ def search_genes(request, genome, search_string):
                  "%s search: %s",
                  genome, search_string)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_EnsGene")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_EnsGene"]
         curr_vals = current_table.objects.filter(
             Q(name__contains=search_string) | Q(name2__contains=search_string)
         ).values('name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart',
                  'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds')
 
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
-
-    # Postbio query
-    # cursor = connection.cursor()
-    # query = """Select a.name, a.symbol, a.synonyms,
-    # <b.region as start, #>b.region as end, b.chrom FROM (SELECT name, symbol,
-    # synonyms from dm3.flybase2004xref where symbol ilike '%s') a JOIN
-    # (SELECT f.name, f.region, f.seq_id, s.name as chrom FROM dm3.flybase f
-    # JOIN dm3.sequence s ON f.seq_id = s.id where s.name = 'chr2L' OR
-    # s.name = 'chr2R' OR s.name = 'chr3L' OR s.name = 'chr3R' OR
-    # s.name = 'chr4' OR s.name ='chrX' )  b ON a.name = b.name """ %
-    # (search_string)
-    # cursor.execute(query)
-
-    # return HttpResponse(cursor_to_json(cursor), 'application/javascript')
-
-    # The code above doesn't work because `cursor` was already commented out.
-    # This method probably needs refactoring.
-    return HttpResponse(status=500)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def search_extended_genes(request, genome, search_string):
@@ -65,15 +45,14 @@ def get_sequence(request, genome, chrom, start, end):
                  "%s chrom: %s", genome, chrom)
     offset = int(end) - int(start)
     # NO SUBSTRING METHOD USING DJANGO ORM
-    if genome in utils.SUPPORTED_GENOMES:
+    if genome in SUPPORTED_GENOMES:
         cursor = connection.cursor()
         query = ("select name as chrom, substr(seq, %s, %s) as seq "
                  "from annotation_server_%s_sequence where name = '%s'")\
             .format(start, offset, genome, chrom)
         cursor.execute(query)
         return HttpResponse(cursor_to_json(cursor), 'application/javascript')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_length(request, genome):
@@ -81,13 +60,12 @@ def get_length(request, genome):
     """
     logger.debug("annotation_server.get_length called for genome: %s", genome)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_ChromInfo")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_ChromInfo"]
         data = ValuesQuerySetToDict(
             current_table.objects.values('chrom', 'size'))
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_chrom_length(request, genome, chrom):
@@ -95,14 +73,13 @@ def get_chrom_length(request, genome, chrom):
     logger.debug("annotation_server.get_chrom_length called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_ChromInfo")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_ChromInfo"]
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'size')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
     # TODO: return genome lengths according to chrom order i.e. 1,2,3 etc.
 
@@ -112,14 +89,13 @@ def get_cytoband(request, genome, chrom):
     logger.debug("annotation_server.get_cytoband called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_CytoBand")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_CytoBand"]
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'chromStart', 'chromEnd', 'name', 'gieStain')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_genes(request, genome, chrom, start, end):
@@ -127,17 +103,16 @@ def get_genes(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_genes called for genome: "
                  "%s chromosome: %s", genome, chrom)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_EnsGene")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_EnsGene"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(cdsStart__range=(start, end)) | Q(cdsEnd__range=(start, end))
         ).values('name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart',
                  'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_gc(request, genome, chrom, start, end):
@@ -145,16 +120,15 @@ def get_gc(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_gc called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_GC")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_GC"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(position__range=(start, end)),
         ).values('chrom', 'position', 'value')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_maptheo(request, genome, chrom, start, end):
@@ -164,16 +138,15 @@ def get_maptheo(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_maptheo called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.MAPPABILITY_THEORETICAL:
-        current_table = eval(genome + "_MappabilityTheoretical")
+    if genome in MAPPABILITY_THEORETICAL:
+        current_table = globals()[genome + "_MappabilityTheoretical"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(chromStart__range=(start, end)) | Q(chromEnd__range=(start, end))
         ).values('chrom', 'chromStart', 'chromEnd')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_mapemp(request, genome, chrom, start, end):
@@ -182,16 +155,15 @@ def get_mapemp(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_mapemp called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_MappabilityEmpirial")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_MappabilityEmpirial"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(chromStart__range=(start, end)) | Q(chromEnd__range=(start, end))
         ).values('chrom', 'chromStart', 'chromEnd')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_conservation(request, genome, chrom, start, end):
@@ -199,16 +171,15 @@ def get_conservation(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_conservation called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.SUPPORTED_GENOMES:
-        current_table = eval(genome + "_Conservation")
+    if genome in SUPPORTED_GENOMES:
+        current_table = globals()[genome + "_Conservation"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(position__range=(start, end)),
         ).values('chrom', 'position', 'value')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def get_gapregion(request, genome, chrom, start, end):
@@ -217,8 +188,8 @@ def get_gapregion(request, genome, chrom, start, end):
     logger.debug("annotation_server.get_gapregion called for genome: "
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
-    if genome in utils.GAP_REGIONS:
-        current_table = eval(genome + "_GapRegions")
+    if genome in GAP_REGIONS:
+        current_table = globals()[genome + "_GapRegions"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(chromStart__gte=start),
@@ -226,9 +197,8 @@ def get_gapregion(request, genome, chrom, start, end):
         ).values('bin', 'chromStart', 'chromEnd', 'ix', 'n', 'size', 'type',
                  'bridge')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+        return JsonResponse(data)
+    return HttpResponse(status=400)
 
 
 def cursor_to_json(cursor_in):

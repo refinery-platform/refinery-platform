@@ -1,0 +1,29 @@
+{
+  "name": "IGV with a bad filetype specified",
+  "tool_type": "VISUALIZATION",
+  "annotation": {
+    "extra_directories": ["/refinery-data"],
+    "image_name": "gehlenborglab/docker_igv_js:v0.0.3",
+    "description": "This visualization does really cool things... with IGV",
+    "parameters": [
+      {
+        "name": "Genome Build Param",
+        "description": "Genome Build Param description",
+        "value_type": "GENOME_BUILD",
+        "default_value": "hg19"
+      }
+    ],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [{"name": "BAD FILETYPE"}],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}

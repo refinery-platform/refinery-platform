@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required": [
+    "dataset_uuid",
+    "tool_definition_uuid",
+    "file_relationships"
+  ],
+  "properties": {
+    "dataset_uuid": {"$ref": "Base.json#patterns/uuid"},
+    "tool_definition_uuid": {"$ref": "Base.json#patterns/uuid"},
+    "file_relationships": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "display_name": {
+      "type": "string"
+    }
+  }
+}

@@ -1,27 +1,5 @@
 class refinery::aws {
 
-# Cron job to do backups
-
-# See https://puppet.com/blog/automating-puppet-cron-jobs-and-scheduled-tasks
-# for cron.
-cron { 'cron-backup':
-  ensure => present,
-  command => 'sh /srv/refinery-platform/deployment/bin/backup-data-volume',
-  hour => ['0'],
-  minute => ['13'],     # arbitrary, but we need to pick one.
-  target => 'root',
-  user => 'root',
-}
-
-cron { 'cron-backup-rds':
-  ensure => present,
-  command => 'sh /srv/refinery-platform/deployment/bin/backup-rds',
-  hour => ['0'],
-  minute => ['14'],     # arbitrary, but we need to pick one.
-  target => 'root',
-  user => 'root',
-}
-
 # Ensure formatted filesystem
 # https://forge.puppetlabs.com/puppetlabs/lvm
 # http://docs.puppetlabs.com/puppet/4.3/reference/types/mount.html
@@ -91,13 +69,12 @@ file { "$solr_core_data":
   group => "$app_user",
   mode => "0755",
 }
-
-
-python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
-  require     => Python::Requirements[$requirements],
-  virtualenv => $virtualenv,
-  owner      => $app_user,
-  group      => $app_group,
+->
+file { $::django_docker_engine_data_dir:
+    ensure => directory,
+    owner => "$app_user",
+    group => "$app_user",
+    mode => "0755",
 }
 
 exec { "generate_superuser_json":

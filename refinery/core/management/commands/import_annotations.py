@@ -1,7 +1,4 @@
 import logging
-from optparse import make_option
-import py2neo
-import requests
 import time
 import urlparse
 
@@ -11,13 +8,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 
 from guardian.utils import get_anonymous_user
+import py2neo
+import requests
 
 from core.models import DataSet, ExtendedGroup
-from core.utils import (
-    get_data_set_annotations,
-    normalize_annotation_ont_ids,
-    normalize_annotation_uris
-)
+from core.utils import (get_data_set_annotations, normalize_annotation_ont_ids,
+                        normalize_annotation_uris)
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
@@ -27,15 +23,14 @@ class Command(BaseCommand):
     help = """Annotate available ontology terms with datasets.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument(
             '-c',
             '--clear',
             action='store_true',
             dest='clear',
             help='Clear annotations before import'
-        ),
-    )
+        )
 
     def push_annotations_to_neo4j(self, annotations):
         # We currently disabled authentication as Neo4J is only accessible
@@ -186,7 +181,7 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.DEBUG)
 
         if options['clear']:
-            print('Clear existing annotations and users...')
+            self.stdout.write('Clear existing annotations and users...')
             start = time.time()
 
             graph = py2neo.Graph(
@@ -204,12 +199,12 @@ class Command(BaseCommand):
             end = time.time()
             minutes = int(round((end - start) // 60))
             seconds = int(round((end - start) % 60))
-            print(
+            self.stdout.write(
                 'Clear existing annotations and users... {} min and {} sec'
                 .format(minutes, seconds)
             )
 
-        print('Import annotations...')
+        self.stdout.write('Import annotations...')
 
         start = time.time()
 
@@ -234,7 +229,7 @@ class Command(BaseCommand):
         minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
 
-        print(
+        self.stdout.write(
             'Import annotations... {} min and {} sec'.format(
                 minutes, seconds
             )

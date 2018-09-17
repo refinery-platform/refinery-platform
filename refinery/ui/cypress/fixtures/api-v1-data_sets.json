@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "limit": 50,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "total_count": 1
+  },
+  "objects": [
+    {
+      "accession": "9909",
+      "accession_source": null,
+      "analyses": [
+        
+      ],
+      "creation_date": "2017-10-10T15:13:49.303358",
+      "date": "2017-10-10T15:13:49.726331",
+      "description": "",
+      "file_count": 8,
+      "file_size": 0,
+      "id": 2,
+      "is_owner": false,
+      "is_shared": true,
+      "isa_archive": "2e9b6457-177a-45f7-af1d-0b606d3df488",
+      "isa_archive_url": "Depends on IP of host, but not referenced by tests",
+      "modification_date": "2017-10-16T15:25:45.189990",
+      "name": "9909: Target data set.",
+      "owner": "9bf8da15-9688-4965-aa69-9ed4c31fef83",
+      "public": true,
+      "resource_uri": "/api/v1/data_sets/b80f6abf-058a-4629-888f-d31375c1927e/",
+      "share_list": null,
+      "slug": null,
+      "summary": "",
+      "title": "Target data set.",
+      "uuid": "b80f6abf-058a-4629-888f-d31375c1927e",
+      "version": 1
+    },
+    {
+      "accession": "9",
+      "accession_source": null,
+      "analyses": [
+        
+      ],
+      "creation_date": "2017-10-10T15:13:49.303358",
+      "date": "2017-10-10T15:13:49.726331",
+      "description": "",
+      "file_count": 8,
+      "file_size": 0,
+      "id": 3,
+      "is_owner": false,
+      "is_shared": true,
+      "isa_archive": "2e9b6457-177a-45f7-af1d-0b606d3df489",
+      "isa_archive_url": "Depends on IP of host, but not referenced by tests",
+      "modification_date": "2017-10-17T15:25:45.189990",
+      "name": "9: Other data set.",
+      "owner": "9bf8da15-9688-4965-aa69-9ed4c31fef83",
+      "public": true,
+      "resource_uri": "/api/v1/data_sets/b80f6abf-058a-4629-888f-d31375c1927f/",
+      "share_list": null,
+      "slug": null,
+      "summary": "",
+      "title": "Other data set.",
+      "uuid": "b80f6abf-058a-4629-888f-d31375c1927f",
+      "version": 1
+    }
+  ]
+}

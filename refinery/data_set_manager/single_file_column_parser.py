@@ -4,19 +4,18 @@ Created on Jun 20, 2012
 @author: nils
 '''
 import csv
-import file_server
 import logging
 import operator
 
 from django.conf import settings
 
-from annotation_server.models import species_to_taxon_id, Taxon
-from data_set_manager.models import (Investigation, Study, Node, Attribute,
-                                     Assay)
-from data_set_manager.tasks import create_dataset
-from file_store.models import generate_file_source_translator, FileStoreItem
-from file_store.tasks import create, import_file
+from annotation_server.models import Taxon, species_to_taxon_id
+from core.models import DataSet
+from file_store.models import FileStoreItem, generate_file_source_translator
+from file_store.tasks import import_file
 
+from .models import Assay, Attribute, Investigation, Node, Study
+from .tasks import create_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -182,11 +181,11 @@ class SingleFileColumnParser:
         # import in file as "pre-isa" file
         logger.info("trying to add pre-isa archive file %s",
                     self.metadata_file.name)
-        # FIXME: this will not create a FileStoreItem if self.metadata_file
-        # does not exist on disk (e.g., a file object like TemporaryFile)
-        investigation.pre_isarchive_file = create(
-            self.metadata_file.name)
-        import_file(investigation.pre_isarchive_file, refresh=True)
+        file_source = self.metadata_file.file.name if \
+            hasattr(self.metadata_file, "file") else self.metadata_file.name
+        file_store_item = FileStoreItem.objects.create(source=file_source)
+        investigation.pre_isarchive_file = file_store_item.uuid
+        import_file.delay(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
 
         # TODO: test if there are fewer columns than required
@@ -204,21 +203,16 @@ class SingleFileColumnParser:
             # add data file to file store
             data_file_path = self.file_source_translator(
                 row[self.file_column_index])
-            data_file_uuid = create(
-                source=data_file_path)
-            data_files.append(data_file_uuid)
+            data_file_item = \
+                FileStoreItem.objects.create(source=data_file_path)
+            data_files.append(data_file_item.uuid)
             # add auxiliary file to file store
             if self.auxiliary_file_column_index:
                 auxiliary_file_path = self.file_source_translator(
                     row[self.auxiliary_file_column_index])
-                auxiliary_file_uuid = create(
-                    source=auxiliary_file_path)
-                data_files.append(auxiliary_file_uuid)
-            else:
-                auxiliary_file_uuid = None
-            # add files to file server
-            # TODO: add error handling in case of None values for UUIDs
-            file_server.models.add(data_file_uuid, auxiliary_file_uuid)
+                auxiliary_file_item = \
+                    FileStoreItem.objects.create(source=auxiliary_file_path)
+                data_files.append(auxiliary_file_item.uuid)
             # create nodes if file was successfully created
             # source node
             source_name = self._create_name(
@@ -240,7 +234,7 @@ class SingleFileColumnParser:
             file_node = Node.objects.create(
                 study=study, assay=assay,
                 name=row[self.file_column_index].strip(),
-                file_uuid=data_file_uuid, type=Node.RAW_DATA_FILE,
+                file_uuid=data_file_item.uuid, type=Node.RAW_DATA_FILE,
                 species=self._get_species(row),
                 genome_build=self._get_genome_build(row),
                 is_annotation=self._is_annotation(row))
@@ -270,15 +264,15 @@ class SingleFileColumnParser:
 
         for uuid in data_files:
             try:
-                file_store_item = FileStoreItem.objects.get(
-                        uuid=uuid)
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error("Couldn't properly fetch FileStoreItem %s", e)
             else:
 
-                if self.file_permanent or file_store_item.source.startswith(
-                        settings.REFINERY_DATA_IMPORT_DIR):
+                if (self.file_permanent or file_store_item.source.startswith(
+                        (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                )):
                     import_file.delay(uuid)
 
         return investigation
@@ -298,10 +292,11 @@ def process_metadata_table(
     annotation_column=None,
     sample_column=None,
     assay_column=None,
-    slug=None,
     is_public=False,
     delimiter="comma",
-    custom_delimiter_string=","
+    custom_delimiter_string=",",
+    identity_id=None,
+    existing_data_set_uuid=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
@@ -326,10 +321,10 @@ def process_metadata_table(
     :type genome_build_column: int
     :param annotation_column: annotation column index
     :type annotation_column: int
-    :param slug: dataset name shortcut
-    :type slug: str
     :param is_public: is dataset available to public
     :type is_public: bool
+    :param  existing_data_set_uuid: UUID of an existing DataSet that a
+    metadata revision is to be performed upon
     :returns: UUID of the new dataset
     """
     try:
@@ -371,12 +366,6 @@ def process_metadata_table(
     except (TypeError, ValueError):
         assay_column = None
     try:
-        if slug:
-            slug = str(slug)
-    except ValueError:
-        slug = None
-
-    try:
         delimiter = str(delimiter)
     except ValueError:
         delimiter = "comma"
@@ -389,8 +378,12 @@ def process_metadata_table(
     data_file_permanent = bool(data_file_permanent)
     is_public = bool(is_public)
     file_source_translator = generate_file_source_translator(
-        username=username, base_path=base_path)
+        username=username, base_path=base_path, identity_id=identity_id
+    )
 
+    # TODO: From here on should be run within a transaction as to not commit
+    #  things to the db on an import failure, but doing so doesn't allow for
+    #  the association of uploaded datafiles
     parser = SingleFileColumnParser(
         metadata_file=metadata_file,
         file_source_translator=file_source_translator,
@@ -408,11 +401,15 @@ def process_metadata_table(
         delimiter=delimiter,
         custom_delimiter_string=custom_delimiter_string
     )
-
     investigation = parser.run()
     investigation.title = title
     investigation.save()
 
+    if existing_data_set_uuid:
+        data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
+        data_set.update_with_revised_investigation(investigation)
+        return existing_data_set_uuid
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
-        dataset_name=title, slug=slug, public=is_public)
+        dataset_name=title, public=is_public
+    )

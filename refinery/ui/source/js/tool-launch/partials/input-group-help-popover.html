@@ -1,0 +1,25 @@
+<div
+  class="node-input-group"
+  role="tablist"
+  aria-multiselectable="true">
+  <ul>
+    <li
+      ng-style="{'color': 'rgb(' + $ctrl.displayFileColor + ')',
+      'border-color': 'rgb(' + $ctrl.displayFileColor + ')'}">
+        {{ $ctrl.displayFile.name }}:
+        <
+        <div
+          class='fileTypes'
+          ng-repeat="fileObj in $ctrl.displayFile.allowed_filetypes">
+          {{fileObj.name}}
+          <span ng-if="$index < $ctrl.displayFile.allowed_filetypes.length - 1">
+            ,
+          </span>
+        </div>
+        >
+        <br>
+        <em>{{ $ctrl.displayFile.description }}</em>
+    </li>
+  </ul>
+</div>
+

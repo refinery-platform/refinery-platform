@@ -1,8 +1,7 @@
 import logging
-import time
 import shutil
 import sys
-from optparse import make_option
+import time
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -15,17 +14,14 @@ class Command(BaseCommand):
     wrapper for moving the compiled JAR to Solr's lib location.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument(
             '-j',
             '--jar',
             action='store',
             dest='jar',
-            type='string',
-            help='Path to JAR file'
-                 'e.g. /vagrant/transfer/myLib.jar'
-        ),
-    )
+            help='Path to JAR file e.g. /vagrant/transfer/myLib.jar'
+        )
 
     def handle(self, *args, **options):
         if not settings.SOLR_SYNONYMS:

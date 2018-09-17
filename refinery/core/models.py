@@ -6,65 +6,68 @@ Created on Feb 20, 2012
 from __future__ import absolute_import
 
 import ast
-import copy
+from collections import defaultdict
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
 import socket
-import pysolr
 from urlparse import urljoin
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission, User
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages import get_messages
-from django.contrib.messages import info
+from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
-from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete, post_delete
-from django.db.utils import IntegrityError
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
-from django.template import loader, Context
+from django.template import loader
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
-from django.template.loader import render_to_string
-from django_extensions.db.fields import UUIDField
+from cuser.middleware import CuserMiddleware
+from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
+from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
-from guardian.shortcuts import (get_users_with_perms,
-                                get_groups_with_perms, assign_perm,
-                                remove_perm, get_objects_for_group)
-from registration.models import RegistrationProfile, RegistrationManager
-from registration.signals import user_registered, user_activated
+from guardian.shortcuts import (
+    assign_perm, get_groups_with_perms, get_objects_for_group,
+    get_users_with_perms, remove_perm
+)
+import pysolr
+from registration.models import RegistrationManager, RegistrationProfile
+from registration.signals import user_activated, user_registered
 
-
-from file_store.models import get_file_size, FileStoreItem, FileType
-from file_store.tasks import rename
-from data_set_manager.models import (Node, Study, Assay, Investigation,
-                                     NodeCollection)
-from data_set_manager.utils import (add_annotated_nodes_selection,
-                                    index_annotated_nodes_selection)
-from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
-                                              countWorkflowSteps,
-                                              configure_workflow)
+import data_set_manager
+from data_set_manager.models import (
+    Assay, Investigation, Node, NodeCollection, Study
+)
+from data_set_manager.search_indexes import NodeIndex
+from data_set_manager.utils import (
+    add_annotated_nodes_selection, index_annotated_nodes_selection
+)
+from file_store.models import FileStoreItem, FileType
+from file_store.tasks import import_file
 from galaxy_connector.models import Instance
-from .utils import (update_data_set_index, delete_data_set_index,
-                    add_read_access_in_neo4j, remove_read_access_in_neo4j,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time, email_admin,
-                    add_or_update_user_to_neo4j, update_annotation_sets_neo4j,
-                    delete_user_in_neo4j)
+import tool_manager
+
+from .utils import (
+    add_or_update_user_to_neo4j, add_read_access_in_neo4j,
+    async_update_annotation_sets_neo4j, delete_data_set_index,
+    delete_data_set_neo4j, delete_ontology_from_neo4j, delete_user_in_neo4j,
+    email_admin, invalidate_cached_object, remove_read_access_in_neo4j,
+    skip_if_test_run, sync_update_annotation_sets_neo4j, update_data_set_index
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,16 +92,13 @@ class UserProfile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
+    primary_group = models.ForeignKey(Group, blank=True, null=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
-        return (
-            str(self.user.first_name) + " " +
-            str(self.user.last_name) + " (" +
-            str(self.affiliation) + "): " +
-            str(self.user.email)
-        )
+        return self.user.first_name + " " + self.user.last_name + \
+               " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_launchpad_tut(self):
         return Tutorials.objects.get(
@@ -277,23 +277,18 @@ class BaseResource(models.Model):
         # duplicated elsewhere.
 
         if self.duplicate_slug_exists():
-            raise forms.ValidationError("%s with slug: %s "
-                                        "already exists"
-                                        % (self.__class__.__name__,
-                                           self.slug))
+            raise forms.ValidationError(
+                "%s with slug: %s already exists",
+                self.__class__.__name__, self.slug)
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
 
         if self.duplicate_slug_exists():
-            logger.error("%s with slug: %s already exists" % (
-                self.__class__.__name__, self.slug))
+            logger.error("%s with slug: %s already exists",
+                         self.__class__.__name__, self.slug)
         else:
-            try:
-                super(BaseResource, self).save(*args, **kwargs)
-            except Exception as e:
-                logger.error("Could not save %s: %s" % (
-                    self.__class__.__name__, e))
+            super(BaseResource, self).save(*args, **kwargs)
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
@@ -315,6 +310,17 @@ class OwnableResource(BaseResource):
         assign_perm("read_%s" % self._meta.verbose_name, user, self)
         assign_perm("delete_%s" % self._meta.verbose_name, user, self)
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+
+    def transfer_ownership(self, user, new_owner):
+        remove_perm("add_%s" % self._meta.verbose_name, user, self)
+        remove_perm("read_%s" % self._meta.verbose_name, user, self)
+        remove_perm("delete_%s" % self._meta.verbose_name, user, self)
+        remove_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            remove_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+        self.set_owner(new_owner)
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -384,7 +390,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False):
+    def get_groups(self, changeonly=False, readonly=False, readmetaonly=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -396,11 +402,17 @@ class SharableResource(OwnableResource):
             group["id"] = group["group"].id
             group["change"] = False
             group["read"] = False
+            if self._meta.verbose_name == 'dataset':
+                group["read_meta"] = False
+
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read"):
+                elif permission.startswith("read_meta"):
+                    group["read_meta"] = True
+                elif permission.startswith("read"):
                     group["read"] = True
+
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
@@ -428,9 +440,8 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read"):
+                    if permission.startswith("read"):  # read_meta & read
                         return True
-
         return False
 
     class Meta:
@@ -477,21 +488,6 @@ class ManageableResource(models.Model):
         abstract = True
 
 
-class DataSetQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            try:
-                instance.delete()
-            except Exception as e:
-                return False, "Something unexpected happened. DataSet: {} " \
-                              "could not be deleted. {}".format(self, e)
-
-
-class DataSetManager(models.Manager):
-    def get_query_set(self):
-        return DataSetQuerySet(self.model, using=self._db)
-
-
 class DataSet(SharableResource):
     UNTITLED_DATA_SET_TITLE = "Untitled data set"
 
@@ -509,12 +505,11 @@ class DataSet(SharableResource):
     # actual title of the dataset
     title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
 
-    objects = DataSetManager()
-
     class Meta:
         verbose_name = "dataset"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+            ('read_meta_%s' % verbose_name, 'Can read meta %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
@@ -536,54 +531,11 @@ class DataSet(SharableResource):
         super(DataSet, self).save(*args, **kwargs)
 
     def delete(self, **kwargs):
-        """
-        Overrides the DataSet model's delete method.
-
-        Deletes NodeCollection and related object based on uuid of
-        Investigations linked to the DataSet.
-        This deletes Studys, Assays and Investigations in
-        addition to the related objects detected by Django.
-
-        This method will also delete the isa_archive or
-        pre_isa_archive associated with the DataSet if one exists.
-        """
-
-        try:
-            self.get_isa_archive().delete()
-
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's isa_archive: %s" % e)
-
-        try:
-            self.get_pre_isa_archive().delete()
-
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
-
-        related_investigation_links = self.get_investigation_links()
-
-        for investigation_link in related_investigation_links:
-
-            node_collection = investigation_link.get_node_collection()
-
-            try:
-                node_collection.delete()
-            except Exception as e:
-                logger.error("Couldn't delete NodeCollection:", e)
-
-        # Try to terminate any currently running FileImport tasks just to be
-        # safe
-        file_store_items = self.get_file_store_items()
-        if file_store_items is not None:
-            for file_store_item in file_store_items:
-                file_store_item.terminate_file_import_task()
         try:
             super(DataSet, self).delete()
-        except Exception as e:
-            return False, "Something unexpected happened. DataSet: {} could " \
-                          "not be deleted. {}".format(self.name, e)
+        except Exception as exc:
+            return False, "DataSet {} could not be deleted: {}".format(
+                self.name, exc)
         else:
             # Return a "truthy" value here so that the admin ui and
             # front-end ui knows if the deletion succeeded or not as well as
@@ -647,47 +599,52 @@ class DataSet(SharableResource):
         return version + 1
 
     def get_version(self):
-        try:
-            version = (
-                InvestigationLink.objects.filter(
-                    data_set=self
-                ).aggregate(Max("version"))["version__max"]
-            )
-            return version
-        except:
+        latest_investigation_link = self.get_latest_investigation_link()
+        if latest_investigation_link is not None:
+            return latest_investigation_link.version
+        return None
+
+    def get_latest_investigation_link(self, version=None):
+        """
+        Try to fetch the latest InvestigationLink related to the DataSet
+        instance. If a version is provided, try to fetch the latest
+        InvestigationLink for said version.
+        :param version: integer
+        :returns: an InvestigationLink Instance or `None`
+        """
+        if not self.is_valid:
             return None
 
-    def get_version_details(self, version=None):
-        try:
-            if version is None:
-                version = (
-                    InvestigationLink.objects.filter(
-                        data_set=self).aggregate(
-                        Max("version"))["version__max"]
-                )
-
-            return (
-                InvestigationLink.objects.filter(
-                    data_set=self, version=version).get()
-            )
-        except:
-            return None
-
-    def get_investigation(self, version=None):
         if version is None:
             try:
-                max_version = InvestigationLink.objects.filter(
-                    data_set=self).aggregate(Max("version"))["version__max"]
-            except:
-                return None
-        else:
-            max_version = version
+                return InvestigationLink.objects.filter(
+                    data_set=self
+                ).latest('date')
+            except InvestigationLink.DoesNotExist as exc:
+                logger.error("Failed to retrieve latest InvestigationLink: %s",
+                             exc)
         try:
-            il = InvestigationLink.objects.filter(
-                data_set=self, version=max_version).get()
-        except:
-            return None
-        return il.investigation
+            return InvestigationLink.objects.get(data_set=self,
+                                                 version=version)
+        except (InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as exc:
+            logger.error("Failed to retrieve InvestigationLink with version "
+                         "%s: %s", version, exc)
+
+    def get_latest_study(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_study()
+
+    def get_latest_assay(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_assay()
+
+    def get_investigation(self, version=None):
+        investigation_link = self.get_latest_investigation_link(version)
+        if investigation_link:
+            return investigation_link.investigation
 
     def get_studies(self, version=None):
         return Study.objects.filter(
@@ -695,11 +652,7 @@ class DataSet(SharableResource):
         )
 
     def get_assays(self, version=None):
-        return Assay.objects.filter(
-            study=Study.objects.filter(
-                investigation=self.get_investigation()
-            )
-        )
+        return Assay.objects.filter(study=self.get_studies(version))
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -712,60 +665,31 @@ class DataSet(SharableResource):
                 .filter(study=study.id, file_uuid__isnull=False)
                 .count()
             )
-
         return file_count
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
         investigation = self.get_investigation()
-        file_size = 0
+        file_uuids = Node.objects.filter(
+            study__in=investigation.study_set.all(), file_uuid__isnull=False
+        ).values_list('file_uuid', flat=True)
+        file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
+        return sum(
+            [item.get_file_size(report_symlinks=True) for item in file_items]
+        )
 
-        for study in investigation.study_set.all():
-            files = Node.objects.filter(
-                study=study.id, file_uuid__isnull=False).values("file_uuid")
-            for file in files:
-                size = get_file_size(
-                    file["file_uuid"], report_symlinks=True)
-                file_size += size
-
-        return file_size
-
-    def get_isa_archive(self):
-        """
-        Returns the isa_archive that was used to create the
-        DataSet
-        """
-        try:
-            return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.isarchive_file)
-
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
-
-    def get_pre_isa_archive(self):
-        """
-        Returns the pre_isa_archive that was used to create the
-        DataSet
-        """
-        try:
-            return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.pre_isarchive_file)
-
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
-
-    def share(self, group, readonly=True):
+    def share(self, group, readonly=True, readmetaonly=False):
+        # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
         super(DataSet, self).share(group, readonly)
+        assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
+        # read_meta only case; super reads as edit and is fixed here because
+        # it only applies to data set
+        if not readonly and readmetaonly:
+            remove_perm('read_%s' % self._meta.verbose_name, group, self)
+            remove_perm('add_%s' % self._meta.verbose_name, group, self)
+            remove_perm('change_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
@@ -781,13 +705,15 @@ class DataSet(SharableResource):
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
+        remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         # Need to check if the users of the group that is unshared still have
         # access via other groups or by ownership
         users = group.user_set.all()
         user_ids = []
         for user in users:
-            if not user.has_perm('core.read_dataset', DataSet):
+            if not user.has_perm('core.read_meta_dataset', DataSet):
                 user_ids.append(user.id)
 
         # We need to give the anonymous user read access too.
@@ -801,39 +727,149 @@ class DataSet(SharableResource):
             )
 
     def get_file_store_items(self):
-        investigation = self.get_investigation()
+        """Get a list of FileStoreItem instances corresponding to a
+        DataSet's latest Investigation"""
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_file_store_items()
 
+    @cached_property
+    def is_valid(self):
+        """
+        Helper method to determine if a DataSet is valid.
+        A DataSet is not valid if we can't fetch an InvestigationLink for it
+        :return: boolean
+        """
+        return bool(InvestigationLink.objects.filter(data_set=self))
+
+    def get_nodes(self):
+        return Node.objects.filter(
+            assay=self.get_latest_assay(),
+            study=self.get_latest_study()
+        )
+
+    def get_node_uuids(self):
+        return self.get_nodes().values_list('uuid', flat=True)
+
+    @property
+    def shared(self):  # is_shared breaks a tastypie interal
+        return len(self.get_groups()) > 0
+
+    def _invalidate_cached_properties(self):
         try:
-            study = Study.objects.get(investigation=investigation)
-            nodes = Node.objects.filter(study=study)
-        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Study properly: %s", e)
-        else:
-            file_store_items = []
+            delattr(self, "is_valid")
+        except AttributeError:
+            pass  # property hasn't been called and cached yet
 
-            for node in nodes:
-                try:
-                    file_store_items.append(
-                        FileStoreItem.objects.get(uuid=node.file_uuid)
+    def has_visualizations(self):
+        return bool(
+            tool_manager.models.VisualizationTool.objects.filter(dataset=self)
+        )
+
+    def is_clean(self):
+        """
+        Check whether or not any Analyses or Visualizations have been run on
+        a DataSet. Failed analyses won't yield any derived results so they
+        are not counted against a DataSet's "cleanliness"
+        :return: boolean
+        """
+        has_non_failed_analyses = any(
+            [not analysis.failed() for analysis in self.get_analyses()]
+        )
+        return not (
+            has_non_failed_analyses or self.has_visualizations()
+        )
+
+    def set_title(self, title):
+        self.title = title
+        self.save()
+
+    def update_with_revised_investigation(self, investigation):
+        """
+        Update an existing DataSet's Investigation with a new Investigation as
+        long as said DataSet is "clean" (No Analyses or Visualizations
+        performed) Any data files that were uploaded prior to this operation
+        will be reassociated and available from the new Investigation if
+        referenced within the new Investigation's list of data files. If
+        data files that were uploaded prior aren't referenced in the new
+        Investigation's list  of data files they will be deleted.
+        :param investigation: A newly created Investigation instance
+        """
+        if not self.is_clean():
+            raise RuntimeError(
+                "DataSet with UUID: {} is not clean (There have "
+                "been Analyses or Visualizations performed on it) "
+                "Remove these objects and try again"
+                .format(self.uuid)
+            )
+        self._associate_datafiles_with_investigation(investigation)
+        updated_data_set_title = investigation.get_title()
+        self.update_investigation(
+            investigation,
+            "Metadata Revision: for {}".format(updated_data_set_title)
+        )
+        data_set_manager.tasks.annotate_nodes(investigation.uuid)
+        self.set_title(updated_data_set_title)
+
+    @transaction.atomic()
+    def _associate_datafiles_with_investigation(self, investigation):
+        """
+        Transfer data files from an existing DataSet's FileStoreItems that
+        correspond to data files of the same source in an Investigation's
+        FileStoreItems
+        :param investigation: Investigation instance to transfer data files to
+        """
+        existing_investigation = self.get_investigation()
+        file_store_items_from_existing_data_set = \
+            existing_investigation.get_file_store_items(local_only=True)
+        new_file_store_items = investigation.get_file_store_items()
+        new_sources = [os.path.basename(f.source) for f in
+                       new_file_store_items]
+        for prior_file_store_item in file_store_items_from_existing_data_set:
+            if os.path.basename(prior_file_store_item.source) \
+                    not in new_sources:
+                prior_file_store_item.delete_datafile()
+            for new_file_store_item in new_file_store_items:
+                if os.path.basename(prior_file_store_item.source) == \
+                        os.path.basename(new_file_store_item.source):
+                    prior_file_store_item.transfer_data_file(
+                        new_file_store_item
                     )
-
-                except(FileStoreItem.DoesNotExist,
-                       FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error("Error while fetching FileStoreItem: %s", e)
-
-            return file_store_items
 
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a DataSet's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    with transaction.atomic():
+        for investigation_link in instance.get_investigation_links():
+            investigation_link.get_node_collection().delete()
+
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
-    update_annotation_sets_neo4j()
+    async_update_annotation_sets_neo4j()
+    invalidate_cached_object(instance)
 
 
 @receiver(post_save, sender=DataSet)
-def _dataset_saved(**kwargs):
-    update_annotation_sets_neo4j()
+def _dataset_saved(sender, instance, *args, **kwargs):
+    async_update_annotation_sets_neo4j()
+    update_data_set_index(instance)
+    invalidate_cached_object(instance)
+
+    # Invalidate cached properties on save
+    # See: https://docs.djangoproject.com/en/1.8/ref/utils/
+    # #django.utils.functional.cached_property
+    instance._invalidate_cached_properties()
+
+    if not Event.objects.filter(data_set=instance).exists():
+        Event.record_data_set_create(instance)
 
 
 class InvestigationLink(models.Model):
@@ -854,20 +890,7 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        try:
-            return NodeCollection.objects.get(
-                uuid=self.investigation.uuid)
-        except (NodeCollection.DoesNotExist,
-                NodeCollection.MultipleObjectsReturned) as e:
-            logger.error(("Could not fetch NodeCollection: " % e))
-
-
-class WorkflowDataInput(models.Model):
-    name = models.CharField(max_length=200)
-    internal_id = models.IntegerField()
-
-    def __unicode__(self):
-        return self.name + " (" + str(self.internal_id) + ")"
+        return NodeCollection.objects.get(uuid=self.investigation.uuid)
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):
@@ -884,41 +907,6 @@ class WorkflowEngine(OwnableResource, ManageableResource):
         )
 
 
-class DiskQuota(SharableResource, ManageableResource):
-    # quota is given in bytes
-    maximum = models.IntegerField()
-    current = models.IntegerField()
-
-    def __unicode__(self):
-        return (
-            self.name + " - Quota: " + str(
-                self.current / (1024 * 1024 * 1024)) +
-            " of " + str(self.maximum / (1024 * 1024 * 1024)) + "GB available"
-        )
-
-    class Meta:
-        verbose_name = "diskquota"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-
-class WorkflowInputRelationships(models.Model):
-    """Defines relationships between inputs based on the input string
-    assoicated with each workflow i.e refinery_relationship=[{"category":"1-1",
-    "set1":"input_file", "set2":"exp_file"}]
-    """
-    category = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
-    set1 = models.CharField(max_length=50)
-    set2 = models.CharField(max_length=50, blank=True, null=True)
-
-    def __unicode__(self):
-        return (
-            str(self.category) + " - " + str(self.set1) + "," + str(self.set2)
-        )
-
-
 class WorkflowQuerySet(models.query.QuerySet):
     def delete(self):
         for instance in self:
@@ -926,7 +914,7 @@ class WorkflowQuerySet(models.query.QuerySet):
 
 
 class WorkflowManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return WorkflowQuerySet(self.model, using=self._db)
 
 
@@ -945,15 +933,9 @@ class Workflow(SharableResource, ManageableResource):
             "download list."
         ),
     )
-
-    data_inputs = models.ManyToManyField(WorkflowDataInput, blank=True)
     internal_id = models.CharField(max_length=50)
     workflow_engine = models.ForeignKey(WorkflowEngine)
     show_in_repository_mode = models.BooleanField(default=False)
-    input_relationships = models.ManyToManyField(
-        WorkflowInputRelationships,
-        blank=True
-    )
     is_active = models.BooleanField(default=False, null=False, blank=False)
     type = models.CharField(
         default=ANALYSIS_TYPE,
@@ -966,8 +948,8 @@ class Workflow(SharableResource, ManageableResource):
 
     objects = WorkflowManager()
 
-    def __unicode__(self):
-        return self.name + " - " + self.summary
+    def __str__(self):
+        return "{} - {}".format(self.name, self.summary)
 
     class Meta:
         # unique_together = ('internal_id', 'workflow_engine')
@@ -1007,26 +989,14 @@ class Workflow(SharableResource, ManageableResource):
             return False, deletion_error_message
 
         else:
-            '''
-                If an Analysis hasn't been run on said Workflow delete
-                WorkflowDataInputs and WorkflowInputRelationships if they exist
-            '''
-            try:
-                self.data_inputs.remove()
-            except Exception as e:
-                logger.error("Could not delete WorkflowDataInput", e)
-            try:
-                self.input_relationships.remove()
-            except Exception as e:
-                logger.error("Could not delete WorkflowInputRelationship", e)
-
             super(Workflow, self).delete()
 
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
             return True, "Workflow: {} was deleted successfully".format(
-                self.name)
+                self.name
+            )
 
 
 class Project(SharableResource):
@@ -1044,28 +1014,6 @@ class Project(SharableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-
-
-class WorkflowFilesDL(models.Model):
-    step_id = models.TextField()
-    pair_id = models.TextField()
-    filename = models.TextField()
-
-    def __unicode__(self):
-        return (
-            str(self.step_id) + " <-> " +
-            str(self.pair_id) + "<->" +
-            self.filename
-        )
-
-
-class WorkflowDataInputMap(models.Model):
-    workflow_data_input_name = models.CharField(max_length=200)
-    data_uuid = UUIDField(auto=False)
-    pair_id = models.IntegerField(blank=True, null=True)
-
-    def __unicode__(self):
-        return str(self.workflow_data_input_name) + " <-> " + self.data_uuid
 
 
 class AnalysisResult(models.Model):
@@ -1093,17 +1041,6 @@ class AnalysisResult(models.Model):
         )
 
 
-class AnalysisQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            instance.delete()
-
-
-class AnalysisManager(models.Manager):
-    def get_query_set(self):
-        return AnalysisQuerySet(self.model, using=self._db)
-
-
 class Analysis(OwnableResource):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
@@ -1119,15 +1056,12 @@ class Analysis(OwnableResource):
     project = models.ForeignKey(Project, related_name="analyses")
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
-    workflow_data_input_maps = models.ManyToManyField(WorkflowDataInputMap,
-                                                      blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
     results = models.ManyToManyField(AnalysisResult, blank=True)
-    workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS,
@@ -1139,12 +1073,10 @@ class Analysis(OwnableResource):
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
 
-    objects = AnalysisManager()
-
-    def __unicode__(self):
-        return (
-            self.name + " - " +
-            self.get_owner_username() + " - " +
+    def __str__(self):
+        return "{} - {} - {}".format(
+            self.name,
+            self.get_owner_username(),
             self.summary
         )
 
@@ -1155,6 +1087,25 @@ class Analysis(OwnableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
         ordering = ['-time_end', '-time_start']
+
+    def get_expanded_workflow_graph(self):
+        return tool_manager.utils.create_expanded_workflow_graph(
+            ast.literal_eval(self.workflow_copy)
+        )
+
+    def has_nodes_used_in_downstream_analyses(self):
+        """
+        Check if any Nodes that are part of an Analysis have been Analyzed
+        further down the line.
+        :return: Boolean
+        """
+        for node in self.get_nodes():
+            analysis_node_connections_for_node = \
+                node.get_analysis_node_connections()
+            for analysis_node_connection in analysis_node_connections_for_node:
+                if analysis_node_connection.direction == 'in':
+                    return True
+        return False
 
     def delete(self, **kwargs):
         """
@@ -1167,64 +1118,17 @@ class Analysis(OwnableResource):
         2. Delete AnalysisResults
         3. Optimize Solr's index to reflect that
         4. Delete the Nodes
-        5. Continue on to delete the Analysis,
-        WorkflowFilesDls, WorkflowDataInputMaps,
-        AnalysisNodeConnections, and AnalysisStatus'
+        5. Continue on to delete the Analysis, AnalysisNodeConnections,
+        and AnalysisStatus'
         """
-
-        delete = True
-        nodes = self.get_nodes()
-
-        for node in nodes:
-
-            analysis_node_connections_for_node = \
-                node.get_analysis_node_connections()
-
-            for analysis_node_connection in analysis_node_connections_for_node:
-                if analysis_node_connection.direction == 'in':
-                    delete = False
-
-        if delete:
-            # Cancel Analysis (galaxy cleanup also happens here)
-            self.cancel()
-
-            # Delete associated AnalysisResults
-            self.get_analysis_results().delete()
-
-            for node in nodes:
-                # Delete associated FileStoreItems
-                if node.file_uuid:
-                    node.get_file_store_item().delete()
-
-                # Remove Nodes from Solr's Index
-                try:
-                    delete_analysis_index(node)
-                except Exception as e:
-                    logger.debug("No NodeIndex exists in Solr with id "
-                                 "%s:  %s", node.id, e)
-
-            # Optimize Solr's index to get rid of any traces of the Analysis
-            self.optimize_solr_index()
-
-            # Delete Nodes Associated w/ the Analysis
-            nodes.delete()
-
-            super(Analysis, self).delete()
-
-            # Return a "truthy" value here so that the admin ui and
-            # front-end ui knows if the deletion succeeded or not as well as
-            # the proper message to display to the end user
-            return True, "Analysis: {} was deleted successfully".format(
-                self.name)
-
-        else:
-            # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete Analysis: {} because " \
-                                     "its results have been used to run " \
-                                     "further Analyses. Please delete all " \
-                                     "downstream Analyses before you delete " \
-                                     "this one".format(self.name)
-
+        if self.has_nodes_used_in_downstream_analyses():
+            deletion_error_message = (
+                "Cannot delete Analysis: {} because "
+                "its results have been used to run "
+                "further Analyses. Please delete all "
+                "downstream Analyses before you delete "
+                "this one".format(self.name)
+            )
             logger.error(deletion_error_message)
 
             # Return a "falsey" value here so that the admin ui and
@@ -1232,28 +1136,39 @@ class Analysis(OwnableResource):
             # the proper message to display to the end user
             return False, deletion_error_message
 
+        try:
+            super(Analysis, self).delete()
+        except Exception as exc:
+            return False, "Analysis {} could not be deleted: {}".format(
+                self.name, exc)
+        else:
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well
+            # as the proper message to  display to the end user
+            return True, "Analysis: {} was deleted successfully".format(
+                self.name)
+
     def get_status(self):
         return self.status
 
     def get_nodes(self):
-        return Node.objects.filter(
-            analysis_uuid=self.uuid)
+        return Node.objects.filter(analysis_uuid=self.uuid)
 
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
 
+    @skip_if_test_run
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
-        '''
-            solr.optimize() Tells Solr to streamline the number of segments
-            used, essentially a defragmentation/ garbage collection
-            operation.
-        '''
+
+        # solr.optimize() Tells Solr to streamline the number of segments
+        # used, essentially a defragmentation/ garbage collection
+        # operation.
         try:
             solr.optimize()
         except Exception as e:
-            logger.error("Could not optimize Solr's index:", e)
+            logger.error("Could not optimize Solr's index: %s", e)
 
     def set_status(self, status, message=''):
         """Set analysis status and perform additional actions as required"""
@@ -1272,100 +1187,11 @@ class Analysis(OwnableResource):
     def running(self):
         return self.get_status() == self.RUNNING_STATUS
 
+    def galaxy_instance(self):
+        return self.workflow.workflow_engine.instance
+
     def galaxy_connection(self):
-        return self.workflow.workflow_engine.instance.galaxy_connection()
-
-    def prepare_galaxy(self):
-        """Prepare for analysis execution in Galaxy"""
-        error_msg = "Preparing Galaxy analysis failed: "
-        connection = self.galaxy_connection()
-
-        # creates new library in galaxy
-        library_name = "{} Analysis - {} ({})".format(
-            Site.objects.get_current().name, self.uuid,
-            get_aware_local_time())
-        try:
-            library = connection.libraries.create_library(library_name)
-        except galaxy.client.ConnectionError as exc:
-            logger.error(error_msg +
-                         "can not create Galaxy library for analysis '%s': %s",
-                         self.name, exc.message)
-            raise
-
-        # generates same ret_list purely based on analysis object
-        ret_list = self.get_config()
-        try:
-            workflow_dict = connection.workflows.export_workflow_json(
-                self.workflow.internal_id)
-        except galaxy.client.ConnectionError as exc:
-            logger.error(error_msg +
-                         "can not download Galaxy workflow for analysis '%s': "
-                         "%s", self.name, exc.message)
-            raise
-
-        # getting expanded workflow configured based on input: ret_list
-        new_workflow, history_download, analysis_node_connections = \
-            configure_workflow(workflow_dict, ret_list)
-
-        # import connections into database
-        for analysis_node_connection in analysis_node_connections:
-            # lookup node object
-            if analysis_node_connection["node_uuid"]:
-                node = Node.objects.get(
-                    uuid=analysis_node_connection["node_uuid"])
-            else:
-                node = None
-            AnalysisNodeConnection.objects.create(
-                analysis=self,
-                subanalysis=analysis_node_connection['subanalysis'],
-                node=node,
-                step=int(analysis_node_connection['step']),
-                name=analysis_node_connection['name'],
-                filename=analysis_node_connection['filename'],
-                filetype=analysis_node_connection['filetype'],
-                direction=analysis_node_connection['direction'],
-                is_refinery_file=analysis_node_connection['is_refinery_file']
-            )
-        # saving outputs of workflow to download
-        for file_dl in history_download:
-            temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
-                                      pair_id=file_dl['pair_id'],
-                                      filename=file_dl['name'])
-            temp_dl.save()
-            self.workflow_dl_files.add(temp_dl)
-            self.save()
-
-        # import newly generated workflow
-        try:
-            new_workflow_info = connection.workflows.import_workflow_json(
-                new_workflow)
-        except galaxy.client.ConnectionError as exc:
-            logger.error(error_msg +
-                         "error importing workflow into Galaxy for analysis "
-                         "'%s': %s", self.name, exc.message)
-            raise
-
-        # getting number of steps for current workflow
-        new_workflow_steps = countWorkflowSteps(new_workflow)
-
-        # creates new history in galaxy
-        history_name = "{} Analysis - {} ({})".format(
-            Site.objects.get_current().name, self.uuid,
-            get_aware_local_time())
-        try:
-            history = connection.histories.create_history(history_name)
-        except galaxy.client.ConnectionError as e:
-            error_msg += "error creating Galaxy history for analysis '%s': %s"
-            logger.error(error_msg, self.name, e.message)
-            raise
-
-        # updating analysis object
-        self.workflow_copy = new_workflow
-        self.workflow_steps_num = new_workflow_steps
-        self.workflow_galaxy_id = new_workflow_info['id']
-        self.library_id = library['id']
-        self.history_id = history['id']
-        self.save()
+        return self.galaxy_instance().galaxy_connection()
 
     def galaxy_progress(self):
         """Return analysis progress in Galaxy"""
@@ -1395,39 +1221,43 @@ class Analysis(OwnableResource):
         return history['percent_complete']
 
     def galaxy_cleanup(self):
-        """Determine when/if Galaxy libraries, workflows and histories are
-        to be deleted based on the value of
-        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
+        """
+        Delete Galaxy libraries, and histories based on the value of
+        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP
+        """
+        galaxy_cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+        galaxy_cleanup_states = [
+            self.canceled,
+            galaxy_cleanup == 'always',
+            galaxy_cleanup == 'on_success' and
+            self.get_status() == self.SUCCESS_STATUS
+        ]
 
-        cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+        if any(cleanup_state for cleanup_state in galaxy_cleanup_states):
+            logger.info("Purging galaxy of libraries, histories, "
+                        "and workflows related to the execution of Analysis "
+                        "with UUID: %s", self.uuid)
 
-        if (cleanup == 'always' or
-                cleanup == 'on_success' and
-                self.get_status() == self.SUCCESS_STATUS):
+            self.galaxy_instance().delete_library(self.library_id, self.name)
+            self.galaxy_instance().delete_history(self.history_id, self.name)
 
-            connection = self.galaxy_connection()
-            error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
+            try:
+                tool = tool_manager.models.WorkflowTool.objects.get(
+                    analysis__uuid=self.uuid
+                )
+            except(
+                tool_manager.models.WorkflowTool.DoesNotExist,
+                tool_manager.models.WorkflowTool.MultipleObjectsReturned
+            ) as e:
+                logger.error("Could not properly fetch Tool: %s", e)
+                return
+            try:
+                import_history_id = tool.galaxy_import_history_id
+            except KeyError:
+                logger.info("Tool hasn't interacted with Galaxy yet")
+                return
 
-            # Delete Galaxy libraries, workflows and histories
-            if self.library_id:
-                try:
-                    connection.libraries.delete_library(self.library_id)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'library', self.name, e.message)
-
-            if self.workflow_galaxy_id:
-                try:
-                    connection.workflows.delete_workflow(
-                        self.workflow_galaxy_id)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'workflow', self.name, e.message)
-
-            if self.history_id:
-                try:
-                    connection.histories.delete_history(self.history_id,
-                                                        purge=True)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'history', self.name, e.message)
+            self.galaxy_instance().delete_history(import_history_id, self.name)
 
     def cancel(self):
         """Mark analysis as cancelled"""
@@ -1436,15 +1266,12 @@ class Analysis(OwnableResource):
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
 
-    def get_input_file_uuid_list(self):
-        """Return a list of all input file UUIDs"""
-        input_file_uuid_list = []
-        for files in self.workflow_data_input_maps.all():
-            cur_node_uuid = files.data_uuid
-            cur_fs_uuid = Node.objects.get(
-                uuid=cur_node_uuid).file_uuid
-            input_file_uuid_list.append(cur_fs_uuid)
-        return input_file_uuid_list
+    def facet_name(self):
+        return '{}_{}_{}_s'.format(
+            NodeIndex.ANALYSIS_UUID_PREFIX,
+            self.data_set.get_latest_study().id,
+            self.data_set.get_latest_assay().id,
+        )
 
     def send_email(self):
         """Sends an email when the analysis is finished"""
@@ -1476,7 +1303,8 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
+                "data_sets/{}/#/analyses".format(data_set_uuid)
+            )
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                 site_name, name)
@@ -1519,9 +1347,8 @@ class Analysis(OwnableResource):
             temp_loader = loader.get_template(
                 'analysis_manager/analysis_email_full.txt')
 
-        context = Context(context_dict)
         try:
-            user.email_user(email_subj, temp_loader.render(context))
+            user.email_user(email_subj, temp_loader.render(context_dict))
         except smtplib.SMTPException as exc:
             logger.error("Error sending email to '%s' for analysis '%s': %s",
                          user.email, name, exc)
@@ -1541,186 +1368,51 @@ class Analysis(OwnableResource):
         logger.debug("Renaming analysis results")
         # rename file_store items to new name updated from galaxy file_ids
         for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
-            # new name to load
-            new_file_name = result.file_name
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming analysis result '%s': %s",
+                             result, exc)
+                break
+
             # workaround for FastQC reports downloaded from Galaxy as zip
             # archives
-            (root, ext) = os.path.splitext(new_file_name)
-            item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
+            (root, ext) = os.path.splitext(result.file_name)
             if ext == '.html':
                 try:
-                    zipfile = FileType.objects.get(name="ZIP")
+                    zipfile = FileType.objects.get(name='ZIP')
                 except (FileType.DoesNotExist,
                         FileType.MultipleObjectsReturned) as exc:
                     logger.error("Error renaming HTML to zip: %s", exc)
                 else:
-                    if item.get_filetype() == zipfile:
-                        new_file_name = ''.join([root, '.zip'])
-            renamed_file_store_item_uuid = rename(
-                result.file_store_uuid, new_file_name)
+                    if item.filetype == zipfile:
+                        item.rename_datafile(''.join([root, '.zip']))
+            else:
+                item.rename_datafile(result.file_name)
 
-            # Try to generate an auxiliary node for visualization purposes
-            # NOTE: We have to do this after renaming happens because before
-            #  renaming, said FileStoreItems's datafile field does not point
-            #  to an actual file
             try:
-                node = Node.objects.get(
-                    file_uuid=renamed_file_store_item_uuid)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-                logger.error("Error Fetching Node: %s", e)
+                node = Node.objects.get(file_uuid=item.uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+                logger.error("Error retrieving Node with file UUID '%s': %s",
+                             exc)
             else:
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
 
-    def get_config(self):
-        # TEST RECREATING RET_LIST DICTIONARY FROM ANALYSIS MODEL
-        # getting distinct workflow inputs
-        annot_inputs = {}
-        for data_input in self.workflow.data_inputs.all():
-            input_type = data_input.name
-            annot_inputs[input_type] = None
-        ret_list = []
-        ret_item = copy.deepcopy(annot_inputs)
-        temp_count = 0
-        temp_len = len(annot_inputs)
-        t2 = self.workflow_data_input_maps.all().order_by('pair_id')
-        for wd in t2:
-            if ret_item[wd.workflow_data_input_name] is None:
-                ret_item[wd.workflow_data_input_name] = {
-                    'pair_id': wd.pair_id,
-                    'node_uuid': wd.data_uuid
-                }
-                temp_count += 1
-            if temp_count == temp_len:
-                ret_list.append(ret_item)
-                ret_item = copy.deepcopy(annot_inputs)
-                temp_count = 0
-        return ret_list
-
-    def attach_outputs_dataset(self):
-        # for testing: attach workflow graph and output files to data set graph
-        # 0. get study and assay from the first input node
-        study = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=INPUT_CONNECTION)[0].node.study
-        assay = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=INPUT_CONNECTION)[0].node.assay
-        # 1. read workflow into graph
-        graph = create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy))
-        # 2. create data transformation nodes for all tool nodes
-        data_transformation_nodes = [graph.node[node_id]
-                                     for node_id in graph.nodes()
-                                     if graph.node[node_id]['type'] == "tool"]
-        for data_transformation_node in data_transformation_nodes:
-            # TODO: incorporate subanalysis id in tool name???
-            data_transformation_node['node'] = \
-                Node.objects.create(
-                    study=study, assay=assay, analysis_uuid=self.uuid,
-                    type=Node.DATA_TRANSFORMATION,
-                    name=data_transformation_node['tool_id'] + '_' +
-                    data_transformation_node['name']
-                )
-        # 3. create connection from input nodes to first data transformation
-        # nodes (input tool nodes in the graph are skipped)
-        for input_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=INPUT_CONNECTION):
-            for edge in graph.edges_iter([input_connection.step]):
-                if (graph[edge[0]][edge[1]]['output_id'] ==
-                        str(input_connection.step) + '_' +
-                        input_connection.filename):
-                    input_node_id = edge[1]
-                    data_transformation_node = \
-                        graph.node[input_node_id]['node']
-                    input_connection.node.add_child(data_transformation_node)
-        # 4. create derived data file nodes for all entries and connect to data
-        # transformation nodes
-        for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=OUTPUT_CONNECTION):
-            # create derived data file node
-            derived_data_file_node = \
-                Node.objects.create(
-                    study=study, assay=assay,
-                    type=Node.DERIVED_DATA_FILE,
-                    name=output_connection.name, analysis_uuid=self.uuid,
-                    subanalysis=output_connection.subanalysis,
-                    workflow_output=output_connection.name)
-            # retrieve uuid of corresponding output file if exists
-            logger.info("Results for '%s' and %s.%s: %s",
-                        self.uuid,
-                        output_connection.filename, output_connection.filetype,
-                        str(AnalysisResult.objects.filter(
-                            analysis_uuid=self.uuid,
-                            file_name=(output_connection.name + "." +
-                                       output_connection.filetype)).count()))
-            analysis_results = AnalysisResult.objects.filter(
-                analysis_uuid=self.uuid,
-                file_name=(output_connection.name + "." +
-                           output_connection.filetype))
-
-            if analysis_results.count() == 0:
-                logger.info("No output file found for node '%s' ('%s')",
-                            derived_data_file_node.name,
-                            derived_data_file_node.uuid)
-
-            if analysis_results.count() == 1:
-                derived_data_file_node.file_uuid = \
-                    analysis_results[0].file_store_uuid
-                logger.debug(
-                    "Output file %s.%s ('%s') assigned to node %s ('%s')",
-                    output_connection.name,
-                    output_connection.filetype,
-                    analysis_results[0].file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid)
-
-            if analysis_results.count() > 1:
-                logger.warning("Multiple output files returned for '%s.%s'." +
-                               "No assignment to output node was made.",
-                               output_connection.filename,
-                               output_connection.filetype)
-            output_connection.node = derived_data_file_node
-            output_connection.save()
-            # get graph edge that corresponds to this output node:
-            # a. attach output node to source data transformation node
-            # b. attach output node to target data transformation node
-            # (if exists)
-            if len(graph.edges([output_connection.step])) > 0:
-                for edge in graph.edges_iter([output_connection.step]):
-                    if (graph[edge[0]][edge[1]]['output_id'] ==
-                        str(output_connection.step) + "_" +
-                            output_connection.filename):
-                        output_node_id = edge[0]
-                        input_node_id = edge[1]
-                        data_transformation_output_node = \
-                            graph.node[output_node_id]['node']
-                        data_transformation_input_node = \
-                            graph.node[input_node_id]['node']
-                        data_transformation_output_node.add_child(
-                            derived_data_file_node)
-                        derived_data_file_node.add_child(
-                            data_transformation_input_node)
-                        # TODO: here we could add a (Refinery internal)
-                        # attribute to the derived data file node to indicate
-                        # which output of the tool it corresponds to
-            # connect outputs that are not inputs for any data transformation
-            if (output_connection.is_refinery_file and
-                    derived_data_file_node.parents.count() == 0):
-                graph.node[output_connection.step]['node'].add_child(
-                    derived_data_file_node)
-            # delete output nodes that are not refinery files and don't have
-            # any children
-            if (not output_connection.is_refinery_file and
-                    derived_data_file_node.children.count() == 0):
-                output_connection.node.delete()
-
-        # 5. create annotated nodes and index new nodes
-        node_uuids = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
-        ).values_list('node__uuid', flat=True)
-        add_annotated_nodes_selection(
-            node_uuids, Node.DERIVED_DATA_FILE,
-            study.uuid, assay.uuid)
-        index_annotated_nodes_selection(node_uuids)
+    def attach_derived_nodes_to_dataset(self):
+        graph_with_data_transformation_nodes = (
+            self._create_data_transformation_nodes(
+                self.get_expanded_workflow_graph()
+            )
+        )
+        graph_with_input_nodes_linked = (
+            self._link_input_nodes_to_data_transformation_nodes(
+                graph_with_data_transformation_nodes
+            )
+        )
+        self._create_derived_data_file_nodes(graph_with_input_nodes_linked)
+        self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
@@ -1743,6 +1435,287 @@ class Analysis(OwnableResource):
                 logger.warning(
                     "No file found for '%s' in download '%s' ('%s')",
                     analysis_result.file_store_uuid, self.name, self.uuid)
+
+    def terminate_file_import_tasks(self):
+        """
+        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
+        and trys to terminate their import_file tasks if possible
+        """
+        workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
+        if workflow_tool is not None:
+            for uuid in workflow_tool.get_input_file_uuid_list():
+                try:
+                    file_store_item = FileStoreItem.objects.get(uuid=uuid)
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(
+                        "Couldn't properly fetch "
+                        "FileStoreItem with UUID: %s %s",
+                        uuid,
+                        e
+                    )
+                else:
+                    file_store_item.terminate_file_import_task()
+
+    def _prepare_annotated_nodes(self, node_uuids):
+        """
+        Wrapper method to ensure that `rename_results` is called before
+        index_annotated_nodes_selection.
+
+        If `rename_results` isn't executed before
+        `index_annotated_nodes_selection` we end up indexing incorrect
+        information.
+
+        Call order is ensured through:
+        core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
+        """
+        self.rename_results()
+        index_annotated_nodes_selection(node_uuids)
+
+    def _get_output_connection_to_analysis_result_mapping(self):
+        """
+        Create and return a dict mapping each "output" type
+        AnalysisNodeConnection to it's respective analysis result.
+
+        This is especially useful when we run into the edge-case described
+        here: https://github.com/
+        refinery-platform/refinery-platform/pull/2099#issue-255989396
+        """
+        distinct_filenames_map = defaultdict(lambda: [])
+        output_connections_to_analysis_results = []
+
+        output_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION
+        )
+        # Fetch the distinct file names from our output
+        # AnalysisNodeConnections for this Analysis construct a dict
+        # mapping the unique file names to a list of AnalysisNodeConnections
+        # sharing said filename.
+        for output_connection in output_node_connections:
+            distinct_filenames_map[output_connection.filename].append(
+                output_connection
+            )
+        # Associate the AnalysisNodeConnections with their respective
+        # AnalysisResults
+        for output_connections in distinct_filenames_map.values():
+            for index, output_connection in enumerate(output_connections):
+                analysis_result = None
+                if output_connection.is_refinery_file:
+                    analysis_result = AnalysisResult.objects.filter(
+                        analysis_uuid=self.uuid,
+                        file_name=output_connection.filename
+                    )[index]
+                output_connections_to_analysis_results.append(
+                    (output_connection, analysis_result)
+                )
+        return output_connections_to_analysis_results
+
+    def _create_derived_data_file_node(self, study,
+                                       assay, analysis_node_connection):
+        return Node.objects.create(
+            study=study,
+            assay=assay,
+            type=Node.DERIVED_DATA_FILE,
+            name=analysis_node_connection.galaxy_dataset_name,
+            analysis_uuid=self.uuid,
+            subanalysis=analysis_node_connection.subanalysis,
+            workflow_output=analysis_node_connection.name
+        )
+
+    def has_all_local_input_files(self):
+        return all(file_store_item.is_local() for file_store_item in
+                   self.get_input_file_store_items())
+
+    def _get_input_nodes(self):
+        return [analysis_node_connection.node for analysis_node_connection in
+                AnalysisNodeConnection.objects.filter(
+                    analysis=self, direction=INPUT_CONNECTION
+                )]
+
+    def get_input_file_store_items(self):
+        return [node.get_file_store_item()
+                for node in self._get_input_nodes()]
+
+    def get_input_node_study(self):
+        return self._get_input_nodes()[0].study
+
+    def get_input_node_assay(self):
+        return self._get_input_nodes()[0].assay
+
+    def _create_data_transformation_nodes(self, graph):
+        """create data transformation nodes for all Tool nodes"""
+
+        data_transformation_nodes = [
+            graph.node[node_id] for node_id in graph.nodes()
+            if graph.node[node_id]['type'] == "tool"
+        ]
+        for data_transformation_node in data_transformation_nodes:
+            # TODO: incorporate subanalysis id in tool name???
+            node_name = "{tool_id}_{name}".format(**data_transformation_node)
+            data_transformation_node['node'] = (
+                Node.objects.create(
+                    study=self.get_input_node_study(),
+                    assay=self.get_input_node_assay(),
+                    analysis_uuid=self.uuid,
+                    type=Node.DATA_TRANSFORMATION,
+                    name=node_name
+                )
+            )
+        return graph
+
+    def _link_input_nodes_to_data_transformation_nodes(self, graph):
+        """create connection from input nodes to first data transformation
+         nodes (input tool nodes in the graph are skipped)"""
+        input_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=INPUT_CONNECTION
+        )
+        for input_connection in input_node_connections:
+            for edge in graph.edges_iter([input_connection.step]):
+                input_id = input_connection.get_input_connection_id()
+
+                if graph[edge[0]][edge[1]]['output_id'] == input_id:
+                    input_node_id = edge[1]
+                    data_transformation_node = \
+                        graph.node[input_node_id]['node']
+                    input_connection.node.add_child(data_transformation_node)
+        return graph
+
+    def _create_derived_data_file_nodes(self, graph):
+        """create derived data file nodes for all entries and connect to data
+            transformation nodes"""
+        output_connection_to_analysis_result_mapping = (
+            self._get_output_connection_to_analysis_result_mapping()
+        )
+        for output_connection, analysis_result in \
+                output_connection_to_analysis_result_mapping:
+            derived_data_file_node = self._create_derived_data_file_node(
+                self.get_input_node_study(),
+                self.get_input_node_assay(),
+                output_connection
+            )
+            if output_connection.is_refinery_file:
+                # retrieve uuid of corresponding output file if exists
+                logger.info(
+                    "Results for '%s' and %s: %s",
+                    self.uuid,
+                    output_connection,
+                    analysis_result
+                )
+                derived_data_file_node.file_uuid = (
+                    analysis_result.file_store_uuid
+                )
+                logger.debug(
+                    "Output file %s ('%s') assigned to node %s ('%s')",
+                    output_connection,
+                    analysis_result.file_store_uuid,
+                    derived_data_file_node.name,
+                    derived_data_file_node.uuid
+                )
+            output_connection.node = derived_data_file_node
+            output_connection.save()
+
+            self._link_derived_data_file_node_to_data_transformation_node(
+                graph,
+                output_connection,
+                derived_data_file_node
+            )
+
+    def _link_derived_data_file_node_to_data_transformation_node(
+            self,
+            graph,
+            output_connection,
+            derived_data_file_node
+    ):
+        """get graph edge that corresponds to this output node:
+        a. attach output node to source data transformation node
+        b. attach output node to target data transformation node
+        (if exists)"""
+        for edge in graph.edges_iter([output_connection.step]):
+            output_id = output_connection.get_output_connection_id()
+
+            if graph[edge[0]][edge[1]]['output_id'] == output_id:
+                input_node_id = edge[0]
+                output_node_id = edge[1]
+
+                data_transformation_input_node = \
+                    graph.node[input_node_id]['node']
+
+                data_transformation_output_node = \
+                    graph.node[output_node_id]['node']
+
+                data_transformation_input_node.add_child(
+                    derived_data_file_node
+                )
+                derived_data_file_node.add_child(
+                    data_transformation_output_node
+                )
+                # TODO: here we could add a (Refinery internal)
+                # attribute to the derived data file node to
+                # indicate which output of the tool it corresponds to
+
+        # connect outputs that are not inputs for any data transformation
+        if (output_connection.is_refinery_file and
+                derived_data_file_node.parents.count() == 0):
+            graph.node[output_connection.step]['node'].add_child(
+                derived_data_file_node
+            )
+        # delete output nodes that are not refinery files and don't have
+        # any children
+        if (not output_connection.is_refinery_file and
+                derived_data_file_node.children.count() == 0):
+            output_connection.node.delete()
+
+    def _create_annotated_nodes(self):
+        """create and index annotated nodes"""
+        node_uuids = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
+        ).values_list('node__uuid', flat=True)
+
+        add_annotated_nodes_selection(
+            node_uuids,
+            Node.DERIVED_DATA_FILE,
+            self.get_input_node_study().uuid,
+            self.get_input_node_assay().uuid
+        )
+        self._prepare_annotated_nodes(node_uuids)
+
+    def get_refinery_import_task_signatures(self):
+        """Create and return a list of import_file() task signatures for the
+        user-selected inputs of a WorkflowTool.launch()
+
+        NOTE: We avoid adding UUIDs of already imported FileStoreItem's as
+        to not re-import them without need.
+        """
+        return [
+            import_file.subtask((file_store_item.uuid,))
+            for file_store_item in self.get_input_file_store_items()
+            if not file_store_item.is_local()
+        ]
+
+
+@receiver(pre_delete, sender=Analysis)
+def _analysis_delete(sender, instance, *args, **kwargs):
+    """
+    Removes an Analyses's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    with transaction.atomic():
+        instance.cancel()
+        # Delete associated AnalysisResults
+        instance.get_analysis_results().delete()
+        # Delete Nodes Associated w/ the Analysis
+        instance.get_nodes().delete()
+
+    # Optimize Solr's index to get rid of any traces of the Analysis
+    instance.optimize_solr_index()
 
 
 #: Defining available relationship types
@@ -1769,9 +1742,9 @@ class AnalysisNodeConnection(models.Model):
 
     # (display) name for an output file "wig_outfile" or "outfile"
     # (unique for a given workflow template)
-    name = models.CharField(null=False, blank=False, max_length=100)
+    name = models.CharField(null=False, blank=False, max_length=500)
     # file name of the connection, e.g. "wig_outfile" or "outfile"
-    filename = models.CharField(null=False, blank=False, max_length=100)
+    filename = models.CharField(null=False, blank=False, max_length=500)
     # file type if known
     filetype = models.CharField(null=True, blank=True, max_length=100)
     # direction of the connection, either an input or an output
@@ -1782,13 +1755,23 @@ class AnalysisNodeConnection(models.Model):
     # inputs) exist in Refinery
     is_refinery_file = models.BooleanField(null=False, blank=False,
                                            default=False)
+    galaxy_dataset_name = models.CharField(null=True, blank=True,
+                                           max_length=250)
 
     def __unicode__(self):
-        return (
-            self.direction + ": " +
-            str(self.step) + "_" +
-            self.name + " (" + str(self.is_refinery_file) + ")"
+        return "{}: {}_{} ({}) {}".format(
+            self.direction,
+            self.step,
+            self.name,
+            self.is_refinery_file,
+            self.filetype
         )
+
+    def get_input_connection_id(self):
+        return "{}_{}".format(self.step, self.filename)
+
+    def get_output_connection_id(self):
+        return "{}_{}".format(self.step, self.name)
 
 
 class Download(TemporaryResource, OwnableResource):
@@ -1872,13 +1855,6 @@ class ExtendedGroup(Group):
         except:
             return None
 
-    def save(self, *args, **kwargs):
-        if len(self.name) == 0:
-            logger.error("Group name cannot be empty.")
-            return
-        else:
-            super(ExtendedGroup, self).save(*args, **kwargs)
-
 
 # automatic creation of a managed group when an extended group is created:
 def create_manager_group(sender, instance, created, **kwargs):
@@ -1896,251 +1872,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 
 
 post_save.connect(create_manager_group, sender=ExtendedGroup)
-
-
-class NodeGroup(SharableResource, TemporaryResource):
-    """A collection of Nodes representing data files.
-    Used to save selection state between sessions and to map data files to
-    workflow inputs.
-    """
-
-    #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
-    node_count = models.IntegerField(default=0)
-    #: Implicit node is created "on the fly" to support an analysis while
-    #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # The "current selection" node set for the associated study/assay
-    is_current = models.BooleanField(default=False)
-    # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(Node, blank=True,
-                                   null=True)
-
-    class Meta:
-        unique_together = ["assay", "name"]
-        verbose_name = "node group"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            self.get_owner_username()
-        )
-
-
-class NodeSet(SharableResource, TemporaryResource):
-    """A collection of Nodes representing data files.
-    Used to save selection state between sessions and to map data files to
-    workflow inputs.
-    """
-    # Solr query representing a list of Nodes
-    solr_query = models.TextField(blank=True, null=True)
-    # components of Solr query representing a list of Nodes (required to
-    # restore query object in JavaScript client)
-    solr_query_components = models.TextField(blank=True, null=True)
-    #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
-    node_count = models.IntegerField(blank=True, null=True)
-    #: Implicit node is created "on the fly" to support an analysis while
-    #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # is this the "current selection" node set for the associated study/assay?
-    is_current = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = "nodeset"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            self.get_owner_username()
-        )
-
-
-def get_current_node_set(study_uuid, assay_uuid):
-    """Retrieve current node set. Create current node set if does not exist"""
-    node_set = None
-
-    try:
-        node_set = NodeSet.objects.get_or_create(
-            study__uuid=study_uuid,
-            assay__uuid=assay_uuid,
-            is_implicit=True,
-            is_current=True
-        )
-    except NodeSet.MultipleObjectsReturned as e:
-        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
-    finally:
-        return node_set
-
-
-@transaction.commit_manually()
-def create_nodeset(name, study, assay, summary='', solr_query='',
-                   solr_query_components=''):
-    """Create a new NodeSet.
-    :param name: name of the new NodeSet.
-    :type name: str.
-    :param study: Study model instance.
-    :type study: Study.
-    :param study: Assay model instance.
-    :type study: Assay.
-    :param summary: description of the new NodeSet.
-    :type summary: str.
-    :param solr_query: Solr query representing a list of Node instances.
-    :type solr_query: str.
-    :param solr_query_components: JSON stringyfied representation of components
-        of Solr query representing a list of Node instances.
-    :type solr_query_components: str.
-    :returns: NodeSet -- new instance.
-    :raises: IntegrityError, ValueError
-    """
-    try:
-        nodeset = NodeSet.objects.create(
-            name=name,
-            study=study,
-            assay=assay,
-            summary=summary,
-            solr_query=solr_query,
-            solr_query_components=solr_query_components
-        )
-    except (IntegrityError, ValueError) as e:
-        transaction.rollback()
-        logger.error("Failed to create NodeSet: {}".format(e.message))
-        raise
-    transaction.commit()
-    logger.info("NodeSet created with UUID '{}'".format(nodeset.uuid))
-    return nodeset
-
-
-def get_nodeset(uuid):
-    """Retrieve a NodeSet given its UUID.
-    :param uuid: NodeSet UUID.
-    :type uuid: str.
-    :returns: NodeSet -- instance that corresponds to the given UUID.
-    :raises: DoesNotExist
-    """
-    try:
-        return NodeSet.objects.get(uuid=uuid)
-    except NodeSet.DoesNotExist:
-        logger.error(
-            "Failed to retrieve NodeSet: UUID '{}' does not exist".format(uuid)
-        )
-        raise
-
-
-def update_nodeset(uuid, name=None, summary=None, study=None, assay=None,
-                   solr_query=None, solr_query_components=None):
-    """Replace data in an existing NodeSet with the provided data.
-    :param uuid: NodeSet UUID.
-    :type uuid: str.
-    :param name: new NodeSet name.
-    :type name: str.
-    :param summary: new NodeSet description.
-    :type summary: str.
-    :param study: Study model instance.
-    :type study: Study.
-    :param assay: Assay model instance.
-    :type assay: Assay.
-    :param solr_query: new Solr query.
-    :type solr_query: str.
-    :raises: DoesNotExist
-    """
-    try:
-        nodeset = get_nodeset(uuid=uuid)
-    except NodeSet.DoesNotExist:
-        logger.error(
-            "Failed to update NodeSet: UUID '{}' does not exist".format(uuid)
-        )
-        raise
-    if name is not None:
-        nodeset.name = name
-    if summary is not None:
-        nodeset.summary = summary
-    if study is not None:
-        nodeset.study = study
-    if assay is not None:
-        nodeset.assay = assay
-    if solr_query is not None:
-        nodeset.solr_query = solr_query
-    if solr_query_components is not None:
-        nodeset.solr_query_components = solr_query_components
-    nodeset.save()
-
-
-def delete_nodeset(uuid):
-    """Delete a NodeSet specified by UUID.
-    :param uuid: NodeSet UUID.
-    :type uuid: str.
-    """
-    NodeSet.objects.filter(uuid=uuid).delete()
-
-
-class NodePair(models.Model):
-    """Linking of specific node relationships for a given node relationship"""
-    uuid = UUIDField(unique=True, auto=True)
-    #: specific file node
-    node1 = models.ForeignKey(Node,
-                              related_name="node1")
-    #: connected file node
-    node2 = models.ForeignKey(Node,
-                              related_name="node2", blank=True,
-                              null=True)
-    # defines a grouping of node relationships i.e. replicate
-    group = models.IntegerField(blank=True, null=True)
-
-
-class NodeRelationship(BaseResource):
-    """A collection of Nodes NodePair, representing connections between data
-    files, i.e. input/chip pairs. Used to define a collection of connections
-    between data files for a specified data set.
-    """
-    #: must refer to type from noderelationshiptype
-    type = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
-    #: references multiple nodepair relationships
-    node_pairs = models.ManyToManyField(NodePair, related_name='node_pairs',
-                                        blank=True, null=True)
-    #: references node_sets that were used to determine this relationship
-    node_set_1 = models.ForeignKey(NodeSet, related_name='node_set_1',
-                                   blank=True, null=True)
-    node_set_2 = models.ForeignKey(NodeSet, related_name='node_set_2',
-                                   blank=True, null=True)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # is this the "current mapping" node set for the associated study/assay?
-    is_current = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            str(self.study.title)
-        )
-
-
-def get_current_node_relationship(study_uuid, assay_uuid):
-    """Retrieve current node relationship. Create current node relationship if
-    does not exist.
-    """
-    relationship = None
-
-    try:
-        relationship = NodeRelationship.objects.get_or_create(
-            study__uuid=study_uuid,
-            assay__uuid=assay_uuid,
-            is_current=True
-        )
-    except NodeSet.MultipleObjectsReturned as e:
-        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
-    finally:
-        return relationship
 
 
 class RefineryLDAPBackend(LDAPBackend):
@@ -2256,16 +1987,15 @@ class Invitation(models.Model):
         return super(Invitation, self).save(*arg, **kwargs)
 
 
-# TODO - Back this with DB as a models.Model
-class FastQC(object):
-    def __init__(self, data=None):
-        self.data = data
-
-
 @receiver(post_save, sender=User)
+@skip_if_test_run
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
+    if not user.is_active:
+        logger.debug("User: %s has not been activated. Not adding them to "
+                     "Neo4J.", user.username)
+        return
     add_or_update_user_to_neo4j(user.id, user.username)
     add_read_access_in_neo4j(
         map(
@@ -2276,7 +2006,7 @@ def _add_user_to_neo4j(sender, **kwargs):
         ),
         [user.id]
     )
-    update_annotation_sets_neo4j(user.username)
+    sync_update_annotation_sets_neo4j(user.username)
 
 
 @receiver(pre_delete, sender=User)
@@ -2338,79 +2068,6 @@ class Ontology(models.Model):
 @receiver(pre_delete, sender=Ontology)
 def _ontology_delete(sender, instance, *args, **kwargs):
     delete_ontology_from_neo4j(instance.acronym)
-
-
-# http://web.archive.org/web/20140826013240/http://codeblogging.net/blogs/1/14/
-def get_subclasses(classes, level=0):
-    """
-        Return the list of all subclasses given class (or list of classes) has.
-        Inspired by this question:
-        http://stackoverflow.com/questions/3862310/how-can-i-find-all-
-        subclasses-of-a-given-class-in-python
-    """
-    # for convenience, only one class can can be accepted as argument
-    # converting to list if this is the case
-    if not isinstance(classes, list):
-        classes = [classes]
-
-    if level < len(classes):
-        classes += classes[level].__subclasses__()
-        return get_subclasses(classes, level + 1)
-    else:
-        return classes
-
-
-def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
-    """
-    A decorator for connecting receivers and all receiver's subclasses to
-    signals. Used by passing in the signal and keyword arguments to connect::
-        @receiver_subclasses(post_save, sender=MyModel)
-        def signal_receiver(sender, **kwargs):
-            ...
-    """
-
-    def _decorator(func):
-        all_senders = get_subclasses(sender)
-        for snd in all_senders:
-            signal.connect(
-                func, sender=snd, dispatch_uid=dispatch_uid_prefix + '_' +
-                snd.__name__, **kwargs)
-        return func
-
-    return _decorator
-
-
-@receiver_subclasses(post_delete, BaseResource, "baseresource_post_delete")
-def _baseresource_delete(sender, instance, **kwargs):
-    '''
-        Handles the invalidation of cached objects that inherit from
-        BaseResource after being deleted
-    '''
-    invalidate_cached_object(instance)
-
-
-@receiver_subclasses(post_save, BaseResource, "baseresource_post_save")
-def _baseresource_save(sender, instance, **kwargs):
-    '''
-        Handles the invalidation of cached objects that inherit from
-        BaseResource after being saved
-    '''
-    invalidate_cached_object(instance)
-
-
-@receiver_subclasses(pre_delete, NodeCollection,
-                     "nodecollection_pre_delete")
-def _nodecollection_delete(sender, instance, **kwargs):
-    '''
-        This finds all subclasses related to a DataSet's NodeCollections and
-        handles the deletion of all FileStoreItems related to the DataSet
-    '''
-    nodes = Node.objects.filter(study=instance)
-    for node in nodes:
-        try:
-            FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-        except Exception as e:
-            logger.debug("Could not delete FileStoreItem:%s" % str(e))
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
@@ -2480,7 +2137,7 @@ class CustomRegistrationManager(RegistrationManager):
 
         return new_user
 
-    create_inactive_user = transaction.commit_on_success(
+    create_inactive_user = transaction.atomic(
         custom_create_inactive_user)
 
 
@@ -2569,3 +2226,406 @@ class SiteProfile(models.Model):
 
     def __unicode__(self):
         return self.site.name
+
+
+class SiteStatistics(models.Model):
+    """
+    A model to encapsulate various information about a deployed Refinery
+    Instance's utilization.
+    """
+    datasets_shared = models.IntegerField(default=0)
+    datasets_uploaded = models.IntegerField(default=0)
+    groups_created = models.IntegerField(default=0)
+    run_date = models.DateTimeField(auto_now=True)
+    total_user_logins = models.IntegerField(default=0)
+    total_visualization_launches = models.IntegerField(default=0)
+    total_workflow_launches = models.IntegerField(default=0)
+    users_created = models.IntegerField(default=0)
+    unique_user_logins = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = "site statistics"
+
+    def collect(self):
+        self.datasets_uploaded = self._get_datasets_uploaded()
+        self.datasets_shared = self._get_datasets_shared()
+        self.groups_created = self._get_groups_created()
+        self.users_created = self._get_users_created()
+        self.unique_user_logins = self._get_unique_user_logins()
+        self.total_user_logins = self._get_total_user_logins()
+        self.total_workflow_launches = self._get_total_workflow_launches()
+        self.total_visualization_launches = \
+            self._get_total_visualization_launches()
+        self.save()
+
+    def _get_previous_instance(self):
+        previous_instance = SiteStatistics.objects.filter(
+            run_date__lt=self.run_date
+        ).order_by('-run_date').first()
+
+        # Return the previous instance by run_date, or the current instance
+        # if a prior one doesn't exist
+        return previous_instance or self
+
+    def _get_datasets_shared(self):
+        return len([
+            dataset for dataset in DataSet.objects.filter(
+                modification_date__gte=self._get_previous_instance().run_date
+            ) if dataset.shared
+        ])
+
+    def _get_datasets_uploaded(self):
+        return DataSet.objects.filter(
+            creation_date__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_total_visualization_launches(self):
+        return tool_manager.models.VisualizationTool.objects.filter(
+            creation_date__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_total_workflow_launches(self):
+        return tool_manager.models.WorkflowTool.objects.filter(
+            creation_date__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_unique_user_logins(self):
+        return User.objects.filter(
+            last_login__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_users_created(self):
+        return User.objects.filter(
+            date_joined__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_groups_created(self):
+        return ExtendedGroup.objects.exclude(manager_group=None).count() - sum(
+            s.groups_created for s in SiteStatistics.objects.exclude(
+                id=self.id
+            )
+        )
+
+    def _get_total_user_logins(self):
+        return sum(u.login_count for u in UserProfile.objects.all()) - \
+               sum(s.total_user_logins for s in
+                   SiteStatistics.objects.exclude(id=self.id))
+
+
+class Event(models.Model):
+    date_time = models.DateTimeField(default=timezone.now)
+    data_set = models.ForeignKey(DataSet, null=True)
+    group = models.ForeignKey(Group, null=True)
+    user = models.ForeignKey(User, null=True)
+    # Null user should not occur in production, but it lets older tests pass.
+    # I feel ambivalent about this.
+    # TODO: Consider cuser.CurrentUserField
+    type = models.CharField(max_length=32)
+
+    sub_type = models.CharField(max_length=32)
+    details = models.TextField()
+
+    # Types
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    # DELETE = 'DELETE'
+    # Note: No delete, because when the object in question no longer exists,
+    # no one has any access to it.
+
+    def get_details_as_dict(self):
+        if self.details:
+            return json.loads(self.details)
+
+    @staticmethod
+    def record_data_set_create(data_set):
+        user = CuserMiddleware.get_user()
+        Event.objects.create(
+            data_set=data_set, user=user, type=Event.CREATE, details='{}'
+        )
+
+    def render_data_set_create(self):
+        return '{:%x %X}: {} created data set '.format(
+            self.date_time, self.user) + self.data_set.name
+
+    # Sub-types for data sets:
+    PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_permissions_change(self):
+    #     return '{}'.format(self.user)
+
+    METADATA_REUPLOAD = 'METADATA_REUPLOAD'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_metadata_reupload():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_metadata_reupload(self):
+    #     return '{}'.format(self.user)
+
+    FILE_LINK = 'FILE_LINK'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_file_link():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_file_link(self):
+    #     return '{}'.format(self.user)
+
+    METADATA_EDIT = 'METADATA_EDIT'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_metadata_edit():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_metadata_edit(self):
+    #     return '{}'.format(self.user)
+
+    VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
+
+    @staticmethod
+    def record_data_set_visualization_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, details=blob,
+                      type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
+        event.save()
+
+    def render_data_set_visualization_creation(self):
+        details = self.get_details_as_dict()
+        return '{:%x %X}: {} launched visualization {} on data set {}'.format(
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
+        )
+
+    VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_visualization_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_visualization_deletion(self):
+    #     return '{}'.format(self.user)
+
+    ANALYSIS_CREATION = 'ANALYSIS_CREATION'
+
+    @staticmethod
+    def record_data_set_analysis_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, details=blob,
+                      type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
+        event.save()
+
+    def render_data_set_analysis_creation(self):
+        details = self.get_details_as_dict()
+        return '{:%x %X}: {} launched analysis {} on data set {}'.format(
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
+        )
+
+    ANALYSIS_DELETION = 'ANALYSIS_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_analysis_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_analysis_deletion(self):
+    #     return '{}'.format(self.user)
+
+    # Sub-types for groups:
+
+    # PERMISSIONS_CHANGE defined above for datasets
+
+    # TODO:
+    # @staticmethod
+    # def record_group_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_permissions_change(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_SENT = 'INVITATION_SENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_sent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_sent(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_ACCEPTED = 'INVITATION_ACCEPTED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_accepted():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_accepted(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_REVOKED = 'INVITATION_REVOKED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_revoked():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_revoked(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_RESENT = 'INVITATION_RESENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_resent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_resent(self):
+    #     return '{}'.format(self.user)
+
+    USER_PROMOTION = 'USER_PROMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_promotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_promotion(self):
+    #     return '{}'.format(self.user)
+
+    USER_DEMOTION = 'USER_DEMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_demotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_demotion(self):
+    #     return '{}'.format(self.user)
+
+    USER_REMOVAL = 'USER_REMOVAL'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_removal():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_removal(self):
+    #     return '{}'.format(self.user)
+
+    def __unicode__(self):
+        if self.data_set is not None and self.group is None:
+            if self.type == Event.CREATE:
+                return self.render_data_set_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_data_set_permissions_change()
+                elif self.sub_type == Event.METADATA_REUPLOAD:
+                    return self.render_data_set_metadata_reupload()
+                elif self.sub_type == Event.FILE_LINK:
+                    return self.render_data_set_file_link()
+                elif self.sub_type == Event.METADATA_EDIT:
+                    return self.render_data_set_metadata_edit()
+                elif self.sub_type == Event.VISUALIZATION_CREATION:
+                    return self.render_data_set_visualization_creation()
+                elif self.sub_type == Event.VISUALIZATION_DELETION:
+                    return self.render_data_set_visualization_deletion()
+                elif self.sub_type == Event.ANALYSIS_CREATION:
+                    return self.render_data_set_analysis_creation()
+                elif self.sub_type == Event.ANALYSIS_DELETION:
+                    return self.render_data_set_analysis_deletion()
+                else:
+                    raise StandardError(
+                        'Invalid event sub-type for data_set: {}'.format(
+                            self.sub_type
+                        )
+                    )
+            else:
+                raise StandardError(
+                    'Invalid event type for data_set: {}'.format(self.type)
+                )
+        elif self.group is not None and self.data_set is None:
+            if self.type == Event.CREATE:
+                return self.render_group_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_group_permissions_change()
+                elif self.sub_type == Event.INVITATION_SENT:
+                    return self.render_group_invitation_sent()
+                elif self.sub_type == Event.INVITATION_ACCEPTED:
+                    return self.render_group_invitation_accepted()
+                elif self.sub_type == Event.INVITATION_REVOKED:
+                    return self.render_group_invitation_revoked()
+                elif self.sub_type == Event.INVITATION_RESENT:
+                    return self.render_group_invitation_resent()
+                elif self.sub_type == Event.USER_PROMOTION:
+                    return self.render_group_user_promotion()
+                elif self.sub_type == Event.USER_DEMOTION:
+                    return self.render_group_user_demotion()
+                elif self.sub_type == Event.USER_REMOVAL:
+                    return self.render_group_user_removal()
+                else:
+                    raise StandardError(
+                        'Invalid event sub-type for group: {}'.format(
+                            self.sub_type
+                        )
+                    )
+            else:
+                raise StandardError(
+                    'Invalid event type for group: {}'.format(self.type)
+                )
+        else:
+            raise StandardError(
+                'Expected exactly one of data_set and group to be not None, '
+                'instead data_set="{}" and group="{}"'.format(
+                    self.data_set, self.group
+                )
+            )
+
+# TODO
+# @receiver(post_save, sender=GroupObjectPermission)
+# def _group_permissions_changed(sender, instance, *args, **kwargs):
+#     Event.record_data_set_permissions_change(???)

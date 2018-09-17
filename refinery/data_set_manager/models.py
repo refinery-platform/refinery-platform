@@ -3,22 +3,31 @@ Created on May 10, 2012
 
 @author: nils
 '''
+import os
 from datetime import datetime
 import logging
 
-import requests
-from celery.result import AsyncResult
-from requests.exceptions import HTTPError
-
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
+from celery.result import AsyncResult
 from django_extensions.db.fields import UUIDField
+import requests
+from requests.exceptions import HTTPError
 
 import core
-import file_store
+from core.utils import delete_analysis_index, skip_if_test_run
 import data_set_manager
-
 from file_store.models import FileStoreItem
+
+"""
+TODO: Refactor import data_set_manager. Importing
+data_set_manager.tasks.generate_auxiliary_file()
+results in a circular import error (see comments on PR #1590)
+"""
+
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +155,25 @@ class Investigation(NodeCollection):
     pre_isarchive_file = UUIDField(blank=True, null=True, auto=False)
 
     """easily retrieves the proper NodeCollection fields"""
+
+    def is_isa_tab_based(self):
+        return bool(self.isarchive_file)
+
+    def get_file_store_item(self):
+        """Get an Investigation's corresponding FileStoreItem instance"""
+        file_store_item_uuid = (
+            self.isarchive_file if self.is_isa_tab_based()
+            else self.pre_isarchive_file
+        )
+        try:
+            return FileStoreItem.objects.get(uuid=file_store_item_uuid)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(
+                "Couldn't fetch Investigation: %s's FileStoreItem from UUID: "
+                "%s %s", self, file_store_item_uuid, e
+            )
+
     def get_identifier(self):
         if (self.identifier is None) or (self.identifier.strip() == ""):
             # if there's no investigation identifier, then there's only 1 study
@@ -165,8 +193,20 @@ class Investigation(NodeCollection):
             return study.description
         return self.description
 
+    def get_study(self):
+        try:
+            return Study.objects.get(investigation=self)
+        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+
     def get_study_count(self):
         return self.study_set.count()
+
+    def get_assay(self):
+        try:
+            return Assay.objects.get(study=self.get_study())
+        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
 
     def get_assay_count(self):
         studies = self.study_set.all()
@@ -175,6 +215,66 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
+    def get_file_store_items(self, exclude_metadata_file=False,
+                             local_only=False):
+        """
+        Returns a list of all data files associated with an Investigation
+        :param exclude_metadata_file: <Boolean> Whether or not to exclude
+        the metadata file used to create the Investigation from the resulting
+        list
+        :param local_only:  <Boolean> Whether or not to only include
+        FileStoreItems that have been imported into Refinery
+        """
+        file_store_item_uuids = [
+            node.file_uuid for node in Node.objects.filter(
+                study=self.get_study()
+            )
+            if node.file_uuid
+        ]
+        file_store_items = list(
+            FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
+        )
+        if not exclude_metadata_file:
+            file_store_items.append(self.get_file_store_item())
+
+        return (
+            [f for f in file_store_items if f.is_local()] if local_only
+            else file_store_items
+        )
+
+    def get_datafile_names(self, local_only=False,
+                           exclude_metadata_file=False):
+        """
+        Returns a list of all data file names associated with an
+        Investigation
+
+        :param exclude_metadata_file: <Boolean> Whether or not to exclude
+        the metadata file used to crete the Investigation from the resulting
+        list
+        :param local_only:  <Boolean> Whether or not to only include data
+        file names of FileStoreItems that have been imported into Refinery
+        """
+        file_store_items = self.get_file_store_items(
+            local_only=local_only, exclude_metadata_file=exclude_metadata_file
+        )
+        return sorted(
+            [os.path.basename(f.source) for f in file_store_items]
+        )
+
+
+@receiver(pre_delete, sender=Investigation)
+def _investigation_delete(sender, instance, **kwargs):
+    """
+    Removes an Investigation's associated FileStoreItem upon deletion being
+    triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    instance.get_file_store_item().delete()
 
 
 class Ontology(models.Model):
@@ -194,11 +294,35 @@ class Study(NodeCollection):
     # TODO: should we support an archive file here? (see ISA-Tab Spec 4.1.3.2)
     file_name = models.TextField()
 
-    def assay_nodes(self):
-        self.node_set(type=Node.ASSAY)
+    def get_dataset(self):
+        investigation_uuid = self.investigation.uuid
+        try:
+            data_set = core.models.InvestigationLink.objects.filter(
+                investigation__uuid=investigation_uuid
+            ).order_by("version").reverse()[0].data_set
+        except (AttributeError, IndexError) as e:
+            raise RuntimeError(
+                "Couldn't fetch DataSet for Investigation {}: {}".format(
+                    investigation_uuid, e
+                )
+            )
+        return data_set
 
     def __unicode__(self):
         return unicode(self.identifier) + ": " + unicode(self.title)
+
+
+@receiver(pre_delete, sender=Study)
+def _study_delete(sender, instance, **kwargs):
+    """
+    Removes a Study's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    Node.objects.filter(study=instance).delete()
 
 
 class Design(models.Model):
@@ -296,28 +420,6 @@ class ProtocolComponent(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
 
-class NodeManager(models.Manager):
-    def genome_builds_for_files(self, file_uuids, default_fallback=True):
-        """Returns a dictionary that groups file nodes based on their genome
-        build information
-        """
-        file_list = Node.objects.filter(file_uuid__in=file_uuids).values(
-            "species", "genome_build", "file_uuid")
-        result = {}
-        for item in file_list:
-            if (item["genome_build"] is None and
-                    item["species"] is not None and
-                    default_fallback is True):
-                item["genome_build"] = \
-                    data_set_manager.genomes.\
-                    map_species_id_to_default_genome_build(
-                            item["species"])
-            if item["genome_build"] not in result:
-                result[item["genome_build"]] = []
-            result[item["genome_build"]].append(item["file_uuid"])
-        return result
-
-
 class Node(models.Model):
     # allowed node types
     SOURCE = "Source Name"
@@ -352,6 +454,7 @@ class Node(models.Model):
     PTM_ASSIGNMENT_FILE = "Post Translational Modification Assignment File"
     FREE_INDUCTION_DECAY_DATA_FILE = "Free Induction Decay Data File"
     ACQUISITION_PARAMETER_DATA_FILE = "Aquisition Parameter Data File"
+    METABOLITE_ASSIGNMENT_FILE = "Metabolite Assignment File"
 
     ASSAYS = {
         ASSAY,
@@ -378,15 +481,19 @@ class Node(models.Model):
         PROTEIN_ASSIGNMENT_FILE,
         PTM_ASSIGNMENT_FILE,
         FREE_INDUCTION_DECAY_DATA_FILE,
-        ACQUISITION_PARAMETER_DATA_FILE
+        ACQUISITION_PARAMETER_DATA_FILE,
+        METABOLITE_ASSIGNMENT_FILE
+    }
+
+    INDEXED_FILES = {
+        RAW_DATA_FILE, DERIVED_DATA_FILE,
+        ARRAY_DATA_FILE, DERIVED_ARRAY_DATA_FILE,
+        ARRAY_DATA_MATRIX_FILE, DERIVED_ARRAY_DATA_MATRIX_FILE
     }
 
     TYPES = ASSAYS | FILES | {
         SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION,
         DATA_TRANSFORMATION}
-
-    # replace default manager
-    objects = NodeManager()
 
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
@@ -406,7 +513,7 @@ class Node(models.Model):
     analysis_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
     is_auxiliary_node = models.BooleanField(default=False)
     subanalysis = models.IntegerField(null=True, blank=False)
-    workflow_output = models.CharField(null=True, blank=False, max_length=100)
+    workflow_output = models.CharField(null=True, blank=False, max_length=500)
 
     def __unicode__(self):
         return unicode(self.type) + ": " + unicode(self.name) + " (" +\
@@ -424,7 +531,17 @@ class Node(models.Model):
         node.save()
         return self
 
-    def get_derived_node_types(self):
+    def get_analysis(self):
+        try:
+            return core.models.Analysis.objects.get(uuid=self.analysis_uuid)
+        except core.models.Analysis.DoesNotExist:
+            return None
+        except core.models.Analysis.MultipleObjectsReturned as e:
+            logger.error("Multiple Analyses found for Node with UUID: %s %s",
+                         self.uuid, e)
+            return None
+
+    def _get_derived_node_types(self):
         """
         This finds all node types which are "derived"
         :returns: a list of all node types which are "derived"
@@ -444,9 +561,10 @@ class Node(models.Model):
         :returns True if the node in question's type exists in the list of
         Node types which are "derived"
         """
+        return self.type in self._get_derived_node_types()
 
-        if self.type in self.get_derived_node_types():
-            return True
+    def is_orphan(self):
+        return self.parents.count() == 0
 
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
@@ -456,15 +574,15 @@ class Node(models.Model):
         Returns the FileStoreItem associated with a given Node or None if
         there isn't one
         """
-        try:
-            return file_store.models.FileStoreItem.objects.get(
-                uuid=self.file_uuid)
-        except (file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return None
+        if self.file_uuid:
+            try:
+                return FileStoreItem.objects.get(uuid=self.file_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+        return None
 
-    def create_and_associate_auxiliary_node(self, filestore_item_uuid):
+    def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -484,7 +602,7 @@ class Node(models.Model):
             # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
             # child to its parent, otherwise nothing happens
-            # See here for reference: http://bit.ly/2bL0PH5
+            # https://docs.djangoproject.com/en/1.10/ref/models/querysets/#get-or-create
             node_object = node[0]
             is_newly_created_node = node[1]
 
@@ -526,13 +644,13 @@ class Node(models.Model):
         datafile if one exists, otherwise return None
         """
         try:
-            file_store_item = file_store.models.FileStoreItem.objects.get(
+            file_store_item = FileStoreItem.objects.get(
                 uuid=self.file_uuid
             )
             return file_store_item.get_datafile_url()
 
-        except (file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error(e)
             return None
 
@@ -558,19 +676,18 @@ class Node(models.Model):
         file_store_item = self.get_file_store_item()
 
         # Check if we pass the logic to generate aux. Files/Nodes
-        if (file_store_item.filetype.used_for_visualization and
-            file_store_item.is_local() and
+        if (file_store_item and file_store_item.filetype and
+                file_store_item.filetype.used_for_visualization and
+                file_store_item.is_local() and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 "on_file_import"):
-
             datafile_path = file_store_item.get_absolute_path()
 
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
-            auxiliary_file_store_item = FileStoreItem.objects.create(
-                source='auxiliary_file')
+            auxiliary_file_store_item = FileStoreItem.objects.create()
 
-            auxiliary_node = self.create_and_associate_auxiliary_node(
+            auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
 
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
@@ -590,6 +707,30 @@ class Node(models.Model):
             return AsyncResult(self.get_file_store_item().import_task_id).state
         else:
             return None
+
+    def update_solr_index(self):
+        data_set_manager.search_indexes.NodeIndex().update_object(
+            self, using="data_set_manager"
+        )
+
+
+@receiver(pre_delete, sender=Node)
+def _node_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a Node's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
+    # remove a Node's FileStoreItem upon deletion, if one exists
+    file_store_item = instance.get_file_store_item()
+    if file_store_item is not None:
+        file_store_item.delete()
+
+    delete_analysis_index(instance)
 
 
 class Attribute(models.Model):
@@ -620,9 +761,6 @@ class Attribute(models.Model):
         "value_unit",
         "node"
     ]
-
-    def is_attribute(self, string):
-        return string.split("[")[0].strip() in self.TYPES
 
     node = models.ForeignKey(Node, db_index=True)
     type = models.TextField(db_index=True)
@@ -698,31 +836,31 @@ class AttributeOrder(models.Model):
 
 
 class AnnotatedNodeRegistry(models.Model):
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    node_type = models.TextField(db_index=True)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
+    node_type = models.TextField()
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
 
 
 class AnnotatedNode(models.Model):
     node = models.ForeignKey(Node, db_index=True)
-    attribute = models.ForeignKey(Attribute, db_index=True)
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    attribute = models.ForeignKey(Attribute)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
     node_uuid = UUIDField()
     node_file_uuid = UUIDField(blank=True, null=True)
-    node_type = models.TextField(db_index=True)
-    node_name = models.TextField(db_index=True)
-    attribute_type = models.TextField(db_index=True)
+    node_type = models.TextField()
+    node_name = models.TextField()
+    attribute_type = models.TextField()
     # subtype further qualifies the attribute type, e.g. type = factor value
     # and subtype = age
-    attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
-    attribute_value = models.TextField(blank=True, null=True, db_index=True)
+    attribute_subtype = models.TextField(blank=True, null=True)
+    attribute_value = models.TextField(blank=True, null=True)
     attribute_value_unit = models.TextField(blank=True, null=True)
     # genome information
-    node_species = models.IntegerField(db_index=True, null=True)
-    node_genome_build = models.TextField(db_index=True, null=True)
+    node_species = models.IntegerField(null=True)
+    node_genome_build = models.TextField(null=True)
     node_analysis_uuid = UUIDField(
         default=None,
         blank=True,
@@ -758,16 +896,72 @@ def _is_internal_attribute(attribute):
 
 
 def _is_active_attribute(attribute):
-    return (not _is_internal_attribute(attribute) and attribute not in [])
+    return not _is_internal_attribute(attribute)
 
 
 def _is_exposed_attribute(attribute):
-    return True
+    return True  # TODO: Could we get rid of this?
 
 
 def _is_ignored_attribute(attribute):
     """Ignore Django internal Solr fields"""
     return attribute in ["django_ct", "django_id", "id"]
+
+
+def _query_solr(study, assay, attribute=None):
+    types = ' OR '.join(
+        '"{0}"'.format(type) for type in Node.FILES
+    )
+
+    url = '{base_url}data_set_manager/select'.format(
+        base_url=settings.REFINERY_SOLR_BASE_URL
+    )
+
+    params = {
+        'fq': 'study_uuid:{study_uuid} AND '
+              'assay_uuid: {assay_uuid} AND '
+              'is_annotation:false AND '
+              'type:({types})'.format(
+                  study_uuid=study.uuid,
+                  assay_uuid=assay.uuid,
+                  types=types
+              ),
+        'q': 'django_ct:data_set_manager.node',
+        'rows': 1,
+        'start': 0,
+        'wt': 'json'
+    }
+
+    if attribute is not None:
+        params.update({
+            'facet': 'true',
+            'facet.field': attribute,
+            'facet.sort': 'count',
+            'facet.limit': '-1'
+        })
+
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query parameters: %s', params)
+
+    headers = {'Accept': 'application/json'}
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except HTTPError as e:
+        logger.error(e)
+        raise
+
+    results = response.json()
+
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query results: %s', results)
+
+    if results['response']['numFound'] == 0:
+        raise ValueError('No results.')
+
+    return results
 
 
 def _is_facet_attribute(attribute, study, assay):
@@ -779,50 +973,7 @@ def _is_facet_attribute(attribute, study, assay):
     settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
     """
     ratio = 0.5
-
-    types = ' OR '.join(
-        '"{0}"'.format(type) for type in Node.FILES
-    )
-
-    url = '{base_url}data_set_manager/select'.format(
-        base_url=settings.REFINERY_SOLR_BASE_URL
-    )
-
-    params = {
-        'facet': 'true',
-        'facet.field': attribute,
-        'facet.sort': 'count',
-        'facet.limit': '-1',
-        'fq': 'study_uuid:{study_uuid} AND '
-              'assay_uuid: {assay_uuid} AND '
-              'is_annotation:false AND '
-              'type:({types})'.format(
-                  study_uuid=study.uuid,
-                  assay_uuid=assay.uuid,
-                  types=types
-              ),
-        'q': 'django_ct:data_set_manager.node',
-        'rows': 1,
-        'start': 0,
-        'wt': 'json'
-    }
-
-    logger.debug('Query parameters: %s', params)
-
-    headers = {'Accept': 'application/json'}
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-
-    results = response.json()
-
-    logger.debug('Query results: %s', results)
-
-    if results['response']['numFound'] == 0:
-        raise ValueError('No facets found.')
-
+    results = _query_solr(attribute=attribute, study=study, assay=assay)
     items = results['response']['numFound']
     attribute_values = len(
         results['facet_counts']['facet_fields'][attribute]
@@ -831,6 +982,7 @@ def _is_facet_attribute(attribute, study, assay):
     return (attribute_values / items) < ratio
 
 
+@skip_if_test_run
 def initialize_attribute_order(study, assay):
     """Initializes the AttributeOrder table after all nodes for the given study
     and assay have been indexed by Solr.
@@ -840,52 +992,9 @@ def initialize_attribute_order(study, assay):
     :type assay: Assay
     :returns: Number of attributes that were indexed.
     """
-
-    types = ' OR '.join(
-        '"{0}"'.format(type) for type in Node.FILES
-    )
-
-    url = '{base_url}data_set_manager/select'.format(
-        base_url=settings.REFINERY_SOLR_BASE_URL
-    )
-
-    params = {
-        'fq': 'study_uuid:{study_uuid} AND '
-              'assay_uuid: {assay_uuid} AND '
-              'is_annotation:false AND '
-              'type:({types})'.format(
-                  study_uuid=study.uuid,
-                  assay_uuid=assay.uuid,
-                  types=types
-              ),
-        'q': 'django_ct:data_set_manager.node',
-        'rows': 1,
-        'start': 0,
-        'wt': 'json'
-    }
-
-    logger.debug('Query parameters: %s', params)
-
-    headers = {'Accept': 'application/json'}
-
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-
-    results = response.json()
-
-    logger.debug('Query results: %s', results)
-
-    if results['response']['numFound'] == 0:
-        raise ValueError(
-            'Assay node type is not supported. Please consult the official '
-            'release candidate.'
-        )
+    results = _query_solr(study=study, assay=assay)
 
     attribute_order_objects = []
-    rank = 0
     for key in results['response']['docs'][0]:
         is_facet = _is_facet_attribute(key, study, assay)
         is_exposed = _is_exposed_attribute(key)
@@ -897,7 +1006,7 @@ def initialize_attribute_order(study, assay):
                     study=study,
                     assay=assay,
                     solr_field=key,
-                    rank=++rank,
+                    rank=0,
                     is_facet=is_facet,
                     is_exposed=is_exposed,
                     is_internal=is_internal,

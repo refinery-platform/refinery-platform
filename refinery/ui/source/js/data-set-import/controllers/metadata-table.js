@@ -5,11 +5,13 @@ function MetadataTableImportCtrl (
   $rootScope,
   $timeout,
   $window,
+  $location,
   d3,
   $uibModal,
   fileSources,
   tabularFileImportApi,
-  metadataStatusService
+  metadataStatusService,
+  settings
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -18,8 +20,11 @@ function MetadataTableImportCtrl (
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.settings = settings;
+  this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
+  this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
   this.whiteSpaceStripFlag = false;
 
   this.gridOptions = {
@@ -39,6 +44,10 @@ function MetadataTableImportCtrl (
   this.closeError = function () {
     this.isErrored = false;
   };
+
+  this.dataSetUUID = $location.search().data_set_uuid;
+  this.isMetaDataRevision = !!this.dataSetUUID;
+  this.importErrorMessage = null;
 }
 
 Object.defineProperty(
@@ -203,40 +212,53 @@ MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
 MetadataTableImportCtrl.prototype.checkFiles = function () {
   var self = this;
 
-  // Check if the files listed in the dataFileColumn exist on the server.
+  // check if the files listed in the dataFileColumn exist on the server
   var fileData = {
     base_path: self.basePath,
     list: []
   };
 
-  // Get the list of file references
+  // get the list of file references
   if (self.dataFileColumn) {
     self.metadata.forEach(function (row) {
       fileData.list.push(row[self.dataFileColumn]);
     });
   }
 
+  // collect Cognito identity ID if deployed on AWS and credentials are available
+  if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
+    fileData.identity_id = AWS.config.credentials.identityId;
+  }
+
+  var queryParams = {};
+  if (self.isMetaDataRevision) {
+    queryParams = { data_set_uuid: self.dataSetUUID };
+  }
   self.fileSources
-    .check({}, fileData)
+    .check(queryParams, fileData)
     .$promise
     .then(function (response) {
       var checkFilesDialogConfig;
-
-      if (response.length > 0) {
+      if (response.data_files_not_uploaded.length > 0) {
         checkFilesDialogConfig = {
-          title: 'The following files were not found on the server:',
-          items: response
+          title: 'Data File Information:',
+          items: response.data_files_not_uploaded
         };
       } else {
         checkFilesDialogConfig = {
           title: 'All files were found on the server',
-          items: response
+          items: []
         };
       }
+      checkFilesDialogConfig.isMetaDataRevision = self.isMetaDataRevision;
+      checkFilesDialogConfig.itemsToBeDeleted = response.data_files_to_be_deleted;
 
       self.$uibModal.open({
-        templateUrl:
-          '/static/partials/data-set-import/partials/dialog-list-confirmation.html',
+        templateUrl: function () {
+          return self.$window.getStaticUrl(
+            'partials/data-set-import/partials/dialog-list-confirmation.html'
+          );
+        },
         controller: 'ConfirmationDialogInstanceCtrl as modal',
         size: 'lg',
         resolve: {
@@ -252,6 +274,16 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
 };
 
+MetadataTableImportCtrl.prototype.confirmImport = function () {
+  var self = this;
+  if (self.isMetaDataRevision) {
+    var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
+    modalInstance.result.then(function () { self.startImport(); });
+  } else {
+    self.startImport();
+  }
+};
+
 MetadataTableImportCtrl.prototype.startImport = function () {
   var self = this;
 
@@ -260,6 +292,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   var formData = new FormData();
   if (self.file) {
     formData.append('file', self.strippedFile);
+    formData.append('file_name', self.file.name);
   }
   if (self.title) {
     formData.append('title', self.title);
@@ -295,27 +328,26 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.speciesColumn) {
     formData.append('species_column', self.speciesColumn);
   }
-  if (self.basePath) {
-    formData.append('base_path', self.basePath);
-  }
   if (self.annotationColumn) {
     formData.append('annotation_column', self.annotationColumn);
   }
   if (self.genomeBuildColumn) {
     formData.append('genome_build_column', self.genomeBuildColumn);
   }
-  if (self.slug) {
-    formData.append('slug', self.slug);
-  }
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
   }
-  if (self.makePublic) {
-    formData.append('is_public', self.makePublic);
+  // collect Cognito identity ID if deployed on AWS and credentials are available
+  if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
+    formData.append('identity_id', AWS.config.credentials.identityId);
   }
 
+  var queryParams = {};
+  if (this.isMetaDataRevision) {
+    queryParams = { data_set_uuid: this.dataSetUUID };
+  }
   return this.tabularFileImportApi
-    .create({}, formData)
+    .create(queryParams, formData)
     .$promise
     .then(function (response) {
       self.importedDataSetUuid = response.new_data_set_uuid;
@@ -328,6 +360,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     })
     .catch(function (error) {
       self.isErrored = true;
+      self.importErrorMessage = error.data.error;
       self.$log.error(error);
     })
     .finally(function () {
@@ -342,10 +375,12 @@ angular
     '$rootScope',
     '$timeout',
     '$window',
+    '$location',
     'd3',
     '$uibModal',
     'fileSources',
     'tabularFileImportApi',
     'metadataStatusService',
+    'settings',
     MetadataTableImportCtrl
   ]);

@@ -1,9 +1,11 @@
 'use strict';
 
-function rpAnalysisMonitorRunningTabIcon () {
+function rpAnalysisMonitorRunningTabIcon ($window) {
   return {
     restrict: 'A',
-    templateUrl: '/static/partials/analysis-monitor/partials/running-tab-icon.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/analysis-monitor/partials/running-tab-icon.html');
+    },
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
@@ -27,5 +29,6 @@ function rpAnalysisMonitorRunningTabIcon () {
 angular
   .module('refineryAnalysisMonitor')
   .directive('rpAnalysisMonitorRunningTabIcon', [
+    '$window',
     rpAnalysisMonitorRunningTabIcon
   ]);

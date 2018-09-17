@@ -1,5 +1,4 @@
-from annotation_server.models import GenomeBuild
-
+from .models import GenomeBuild
 
 SUPPORTED_GENOMES = [
     genome.name for genome in GenomeBuild.objects.filter(default_build=True)

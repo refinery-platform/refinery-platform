@@ -1,0 +1,18 @@
+<div class="p-a-1-2">
+  <ul class="paragraph">
+    <li ng-repeat="group in IGCCtrl.nodeSelection[row.entity.uuid].groupList track by $index">
+      <span
+        ng-if="IGCCtrl.inputFileTypes[0].uuid == IGCCtrl.nodeSelection[row.entity.uuid].inputTypeList[$index]"
+        ng-style="{'color': 'rgb(' + IGCCtrl.inputFileTypeColor[IGCCtrl.inputFileTypes[0].uuid] + ')'}">
+       {{ IGCCtrl.inputFileTypes[0].name }} at Index
+        {{ group[group.length - 1] + 1}}
+      </span>
+      <span
+        ng-if="IGCCtrl.inputFileTypes[1].uuid == IGCCtrl.nodeSelection[row.entity.uuid].inputTypeList[$index]"
+        ng-style="{'color': 'rgb(' + IGCCtrl.inputFileTypeColor[IGCCtrl.inputFileTypes[1].uuid] + ')'}">
+       {{ IGCCtrl.inputFileTypes[1].name }} at Index
+        {{ group[group.length - 1] + 1}},
+      </span>
+    </li>
+  </ul>
+</div>

@@ -1,0 +1,17 @@
+<p>
+  Only data set owners can change sharing options. To share
+  with an authenticated user, create a new group or invite the user to an
+  existing group
+  <span ng-if="!$ctrl.isCollaborationPage">
+    <a href='/collaboration'> on the collaboration page. </a> Owners can
+    update data set permissions (including making it public) on the dashboard by
+    by opening a data set preview (click a data set link) and then clicking
+    the “sharing” button.
+  </span>
+  <span ng-if="$ctrl.isCollaborationPage">
+    on the collaboration page. Owners can update data set permissions
+    (including making it public) on the <a href='/#'> dashboard </a> by
+    by opening a data set preview (click a data set link) and then clicking
+    the “sharing” button.
+  </span>
+</p>

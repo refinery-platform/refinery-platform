@@ -1,55 +1,53 @@
-import json
 import logging
-import os
-import re
-import requests
-from requests.exceptions import HTTPError
 import urllib
 from urlparse import urljoin
-import xmltodict
+from xml.parsers.expat import ExpatError
 
 from django.conf import settings
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, Site
-from django.contrib.sites.models import RequestSite
+from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseForbidden,
-                         HttpResponseRedirect, HttpResponseBadRequest,
-                         HttpResponseNotFound, HttpResponseServerError)
-
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.db import transaction
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
+import boto3
+import botocore
+from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
+                                get_perms)
+
+from guardian.core import ObjectPermissionChecker
 from guardian.utils import get_anonymous_user
-from guardian.shortcuts import get_perms
-from registration.views import RegistrationView
 from registration import signals
-from rest_framework import viewsets
-from rest_framework.views import APIView
+from registration.views import RegistrationView
+import requests
+from requests.exceptions import HTTPError
+from rest_framework import authentication, status, viewsets
+from rest_framework.decorators import detail_route
+from rest_framework.exceptions import APIException
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework import status
-from xml.parsers.expat import ExpatError
+from rest_framework.views import APIView
+import xmltodict
 
-from core.forms import (ProjectForm, UserForm, UserProfileForm,
-                        WorkflowForm, DataSetForm)
-from annotation_server.models import GenomeBuild
-from core.models import (ExtendedGroup, Project, DataSet, Workflow,
-                         UserProfile, WorkflowEngine, Analysis, Invitation,
-                         Ontology, NodeGroup, CustomRegistrationProfile)
-from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
-                              NodeSerializer)
-from core.utils import (get_data_sets_annotations,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
-from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params
-from file_store.models import FileStoreItem
-from visualization_manager.views import igv_multi_species
-from django.contrib.auth import login, logout
-
+from .forms import UserForm, UserProfileForm, WorkflowForm
+from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
+                     ExtendedGroup, Invitation, Ontology,
+                     UserProfile, Workflow, WorkflowEngine)
+from .serializers import (DataSetSerializer, EventSerializer,
+                          UserProfileSerializer, WorkflowSerializer)
+from .utils import (api_error_response, get_data_sets_annotations)
 
 logger = logging.getLogger(__name__)
 
@@ -72,13 +70,14 @@ def about(request):
                               context_instance=RequestContext(request))
 
 
-def contact(request):
-    return render_to_response('core/contact.html', {},
+def statistics(request):
+    return render_to_response('core/statistics.html', {},
                               context_instance=RequestContext(request))
 
 
-def statistics(request):
-    return render_to_response('core/statistics.html', {},
+@login_required
+def dashboard(request):
+    return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
 
 
@@ -114,6 +113,33 @@ def login_ml(request):
         return redirect('{}#/exploration'.format(reverse('home')))
 
 
+def auto_login(request):
+    try:
+        user = int(request.GET.get('user', -1))
+    except ValueError:
+        user = -1
+
+    exploration = request.GET.get('exploration', False)
+
+    if user >= 0 and user in settings.AUTO_LOGIN:
+        if request.user.is_authenticated():
+            logout(request)
+
+        try:
+            user = User.objects.get(id=user)
+            user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        except Exception:
+            logger.error('Auto login for user ID {} failed.'.format(user))
+            return redirect('{}'.format(reverse('home')))
+
+        login(request, user)
+
+        if exploration:
+            return redirect('{}#/exploration'.format(reverse('home')))
+
+    return redirect('{}'.format(reverse('home')))
+
+
 @login_required
 def collaboration(request):
     return render_to_response('core/collaboration.html', {},
@@ -127,7 +153,8 @@ def group_invite(request, token):
         return render_to_response(
             'core/group_invite.html',
             {
-                'site': get_current_site(request),
+                'site': '{}://{}'.format(settings.REFINERY_URL_SCHEME,
+                                         get_current_site(request)),
                 'message': 'Invalid token. Not found or expired.'
             },
             context_instance=RequestContext(request))
@@ -141,7 +168,8 @@ def group_invite(request, token):
         return render_to_response(
             'core/group_invite.html',
             {
-                'site': get_current_site(request),
+                'site': '{}://{}'.format(settings.REFINERY_URL_SCHEME,
+                                         get_current_site(request)),
                 'message': 'Invalid token. Unable to find pairing group'
             },
             context_instance=RequestContext(request))
@@ -156,7 +184,8 @@ def group_invite(request, token):
     return render_to_response(
         'core/group_invite.html',
         {
-            'site': get_current_site(request),
+            'site': '{}://{}'.format(settings.REFINERY_URL_SCHEME,
+                                     get_current_site(request)),
             'message': '%s has been added to the group %s.' %
                        (user.username, ext_group.name),
             'user': user,
@@ -167,8 +196,7 @@ def group_invite(request, token):
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
-    context = RequestContext(request, context_dict)
-    return temp_loader.render(context)
+    return temp_loader.render(context_dict, request)
 
 
 @login_required()
@@ -231,76 +259,6 @@ def group(request, query):
                               context_instance=RequestContext(request))
 
 
-def project_slug(request, slug):
-    p = get_object_or_404(Project, slug=slug)
-    return project(request, p.uuid)
-
-
-def project(request, uuid):
-    project = get_object_or_404(Project, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_project', project):
-        if 'read_project' not in get_perms(public_group, project):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(
-                        request, '403.html', {
-                            user: request.user,
-                            'msg': "view this project"
-                        }))
-            else:
-                return HttpResponse(
-                    custom_error_page(
-                        request, '401.html', {'msg': "view this project"}),
-                    status='401')
-    analyses = project.analyses.all()
-    return render_to_response('core/project.html',
-                              {'project': project, "analyses": analyses},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def project_new(request):
-    if request.method == "POST":  # If the form has been submitted
-        form = ProjectForm(request.POST)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-            project = form.save()
-            project.set_owner(request.user)
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('project', args=(project.uuid,))
-            )  # Redirect after POST
-    else:
-        form = ProjectForm()  # An unbound form
-    return render_to_response("core/project_new.html", {'form': form},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def project_edit(request, uuid):
-    project = get_object_or_404(Project, uuid=uuid)
-
-    if not request.user.has_perm('core.change_project', project):
-        return HttpResponseForbidden(
-            custom_error_page(request, '403.html',
-                              {user: request.user, 'msg': "edit this project"})
-        )
-    if request.method == "POST":  # If the form has been submitted
-        # A form bound to the POST data
-        form = ProjectForm(data=request.POST, instance=project)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('core.views.project', args=(uuid,)))
-    else:
-        form = ProjectForm(instance=project)  # An unbound form
-    return render_to_response("core/project_edit.html",
-                              {'form': form, 'project': project},
-                              context_instance=RequestContext(request))
-
-
 def data_set_slug(request, slug):
     d = get_object_or_404(DataSet, slug=slug)
     return data_set(request, d.uuid)
@@ -310,8 +268,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
 
-    if not request.user.has_perm('core.read_dataset', data_set):
-        if 'read_dataset' not in get_perms(public_group, data_set):
+    if not request.user.has_perm('core.read_meta_dataset', data_set):
+        if 'read_meta_dataset' not in get_perms(public_group, data_set):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(
                     custom_error_page(request, '403.html',
@@ -337,21 +295,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     assay_uuid = studies[0].assay_set.all()[0].uuid
     # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     assay_id = studies[0].assay_set.all()[0].id
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-    except:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except:
-        pass
+
     return render_to_response(
         'core/data_set.html',
         {
@@ -365,138 +309,10 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": isatab_archive,
-            "pre_isatab_archive": pre_isatab_archive,
+            "isatab_archive": investigation.get_file_store_item(),
+            "pre_isatab_archive": investigation.get_file_store_item(),
         },
         context_instance=RequestContext(request))
-
-
-def data_set2(request, data_set_uuid, analysis_uuid=None):
-    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_dataset', data_set):
-        if 'read_dataset' not in get_perms(public_group, data_set):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(request, '403.html',
-                                      {user: request.user,
-                                       'msg': "view this data set"}))
-            else:
-                return HttpResponse(
-                    custom_error_page(request, '401.html',
-                                      {'msg': "view this data set"}),
-                    status='401')
-    # get studies
-    investigation = data_set.get_investigation()
-    studies = investigation.study_set.all()
-    # If repository mode, only return workflows tagged for the repository
-    if (settings.REFINERY_REPOSITORY_MODE):
-        workflows = Workflow.objects.filter(show_in_repository_mode=True)
-    else:
-        workflows = Workflow.objects.all()
-
-    study_uuid = studies[0].uuid
-    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    study_id = studies[0].id
-    assay_uuid = studies[0].assay_set.all()[0].uuid
-    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    assay_id = studies[0].assay_set.all()[0].id
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-    except:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except:
-        pass
-    return render_to_response(
-        'core/data_set2.html',
-        {
-            "data_set": data_set,
-            "analysis_uuid": analysis_uuid,
-            "studies": studies,
-            "study_uuid": study_uuid,
-            "study_id": study_id,
-            "assay_uuid": assay_uuid,
-            "assay_id": assay_id,
-            "has_change_dataset_permission": 'change_dataset' in get_perms(
-                request.user, data_set),
-            "workflows": workflows,
-            "isatab_archive": isatab_archive,
-            "pre_isatab_archive": pre_isatab_archive,
-        },
-        context_instance=RequestContext(request))
-
-
-def data_set_edit(request, uuid):
-    data_set = get_object_or_404(DataSet, uuid=uuid)
-
-    if not request.user.has_perm('core.change_dataset', data_set):
-        if request.user.is_authenticated():
-            return HttpResponseForbidden(
-                custom_error_page(request, '403.html',
-                                  {user: request.user,
-                                   'msg': "edit this data set"})
-            )
-        else:
-            return HttpResponse(
-                custom_error_page(request, '401.html',
-                                  {'msg': "edit this data set"}),
-                status='401'
-            )
-    # get studies
-    investigation = data_set.get_investigation()
-    studies = investigation.study_set.all()
-    study_uuid = studies[0].uuid
-    assay_uuid = studies[0].assay_set.all()[0].uuid
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file
-            )
-    except:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except:
-        pass
-
-    if request.method == "POST":  # If the form has been submitted
-        # A form bound to the POST data
-        form = DataSetForm(data=request.POST, instance=data_set)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            # Redirect after POST
-            return HttpResponseRedirect(
-                reverse('core.views.data_set', args=(uuid,)))
-    else:
-        form = DataSetForm(instance=data_set)  # An unbound form
-    return render_to_response('core/data_set_edit.html',
-                              {
-                                  'data_set': data_set,
-                                  "studies": studies,
-                                  "study_uuid": study_uuid,
-                                  "assay_uuid": assay_uuid,
-                                  "isatab_archive": isatab_archive,
-                                  "pre_isatab_archive": pre_isatab_archive,
-                                  'form': form
-                              },
-                              context_instance=RequestContext(request))
 
 
 def workflow_slug(request, slug):
@@ -578,82 +394,6 @@ def workflow_engine(request, uuid):
     return render_to_response('core/workflow_engine.html',
                               {'workflow_engine': workflow_engine},
                               context_instance=RequestContext(request))
-
-
-def analyses(request, project_uuid):
-    project = Project.objects.get(uuid=project_uuid)
-    analyses = project.analyses.all()
-    return render_to_response('core/analyses.html',
-                              {"project": project, "analyses": analyses},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def analysis(request, analysis_uuid):
-    # TODO: handle DoesNotExist and MultipleObjectsReturned
-    analysis = Analysis.objects.get(uuid=analysis_uuid)
-    # project associated with this Analysis
-    project = analysis.project
-    # list of analysis inputs
-    data_inputs = analysis.workflow_data_input_maps.order_by('pair_id')
-    # list of analysis results
-    analysis_results = analysis.results
-    workflow = analysis.workflow
-    # getting file_store references
-    file_all = []
-    for i in analysis_results.all():
-        file_store_uuid = i.file_store_uuid
-        fs = FileStoreItem.objects.get(uuid=file_store_uuid)
-        file_all.append(fs)
-    # NG: get file_store items for inputs
-    input_filenames = []
-    for workflow_input in data_inputs.all():
-        file_uuid = Node.objects.get(uuid=workflow_input.data_uuid).file_uuid
-        file_store_item = FileStoreItem.objects.get_item(uuid=file_uuid)
-        if file_store_item:
-            file_path = file_store_item.get_absolute_path()
-            if file_path:
-                file_name = os.path.basename(file_path)
-                input_filenames.append(file_name)
-    return render_to_response('core/analysis.html',
-                              {
-                                  "analysis": analysis,
-                                  "analysis_results": analysis_results,
-                                  "inputs": data_inputs,
-                                  "input_filenames": input_filenames,
-                                  "project": project,
-                                  "workflow": workflow,
-                                  "fs_files": file_all
-                              },
-                              context_instance=RequestContext(request))
-
-
-def visualize_genome(request):
-    """Provide IGV.js visualization of requested species + file nodes
-
-    Looks up species by name, and data files by node_id,
-    and passes the information to IGV.js.
-    """
-    species = request.GET.get('species')
-    node_ids = request.GET.getlist('node_ids')
-
-    genome = re.search(r'\(([^)]*)\)', species).group(1)
-    # TODO: Better to pass genome id instead of parsing?
-    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
-        + "/data/igv-reference/" + genome + "/"
-    node_ids_json = json.dumps(node_ids)
-
-    return render_to_response(
-          'core/visualize/genome.html',
-          {
-              "fasta_url": url_base + genome + ".fa",
-              "index_url": url_base + genome + ".fa.fai",
-              "cytoband_url": url_base + "cytoBand.txt",
-              "bed_url": url_base + "refGene.bed",
-              "tbi_url": url_base + "refGene.bed.tbi",
-              "node_ids_json": node_ids_json
-          },
-          context_instance=RequestContext(request))
 
 
 def solr_core_search(request):
@@ -741,182 +481,9 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            response = json.dumps(response)
+            return JsonResponse(response)
 
     return HttpResponse(response, content_type='application/json')
-
-
-def solr_select(request, core):
-    # core format is <name_of_core>
-    # query.GET is a querydict containing all parts of the query
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    data = request.GET.urlencode()
-    try:
-        full_response = requests.get(url, params=data)
-        # FIXME:
-        # Solr sends back an additional 400 here in the data_sets 1 filebrowser
-        # when there is only one row defined in the metadata since
-        # full_response.content has no facet_fields. Handling
-        # this one-off case for now since the way data_sets 2 filebrowser
-        # interacts with Solr doesn't produce this extra 400 error
-        if ("Pivot Facet needs at least one field name"
-                not in full_response.content):
-            full_response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        response = json.dumps({})
-    else:
-        response = full_response.content
-    return HttpResponse(response, content_type='application/json')
-
-
-def solr_igv(request):
-    """Function for taking solr request url.
-    Removes pagination, facets from input query to create multiple
-    :param request: Django HttpRequest object including solr query
-    :type source: HttpRequest object.
-    :returns:
-    """
-
-    # copy querydict to make it editable
-    if request.is_ajax():
-        igv_config = json.loads(request.body)
-
-        logger.debug(json.dumps(igv_config, indent=4))
-
-        logger.debug('IGV data query: ' + str(igv_config['query']))
-        logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
-
-        if igv_config['query'] is None:
-            # generate solr_query method
-            # assay uuid
-            solr_query = generate_solr_params({}, igv_config['assay_uuid'])
-            url_path = '/'.join(["data_set_manager", "select"])
-            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
-            igv_config['query'] = ''.join([url, '/?', solr_query])
-
-        # attributes associated with node selection from interface
-        node_selection_blacklist_mode = igv_config[
-            'node_selection_blacklist_mode']
-        node_selection = igv_config['node_selection']
-
-        solr_results = get_solr_results(
-            igv_config['query'], selected_mode=node_selection_blacklist_mode,
-            selected_nodes=node_selection)
-
-        if igv_config['annotation'] is not None:
-            solr_annot = get_solr_results(igv_config['annotation'])
-        else:
-            solr_annot = None
-        # if solr query returns results
-        if solr_results:
-            try:
-                session_urls = igv_multi_species(solr_results, solr_annot)
-            except GenomeBuild.DoesNotExist:
-                logger.error(
-                    "Provided genome build cannot be found in the database.")
-                session_urls = "Couldn't find the provided genome build."
-
-        logger.debug("session_urls")
-        logger.debug(json.dumps(session_urls, indent=4))
-
-        return HttpResponse(json.dumps(session_urls),
-                            content_type='application/json')
-
-
-def get_solr_results(query, facets=False, jsonp=False, annotation=False,
-                     only_uuids=False, selected_mode=True,
-                     selected_nodes=None):
-    """Helper function for taking solr request url.
-    Removes facet requests, converts to json, from input solr query
-    :param query: solr http query string
-    :type query: string
-    :param facets: Removes facet query from solr query string
-    :type facets: boolean
-    :param jsonp: Removes JSONP query from solr query string
-    :type jsonp: boolean
-    :param only_uuids: Returns list of file_uuids from all solr results
-    :type only_uuids: boolean
-    :param selected_mode: UI selection mode (blacklist or whitelist)
-    :type selected_mode: boolean
-    :param selected_nodes: List of UUIDS to remove from the solr query
-    :type selected_nodes: array
-    :returns: dictionary of current solr results
-    """
-    logger.debug("core.views: get_solr_results")
-    if not facets:
-        # replacing facets w/ false
-        query = query.replace('facet=true', 'facet=false')
-    if not jsonp:
-        # ensuring json not jsonp response
-        query = query.replace('&json.wrf=?', '')
-    if annotation:
-        # changing annotation
-        query = query.replace('is_annotation:false', 'is_annotation:true')
-    # Checks for limit on solr query
-    # replaces i.e. '&rows=20' to '&rows=10000'
-    m_obj = re.search(r"&rows=(\d+)", query)
-    if m_obj:
-        # TODO: replace 10000 with settings parameter for max solr results
-        replace_rows_str = '&rows=' + str(10000)
-        query = query.replace(m_obj.group(), replace_rows_str)
-
-    try:
-        # opening solr query results
-        results = requests.get(query, stream=True)
-        results.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        return HttpResponseServerError(e)
-
-    # converting results into json for python
-    results = json.loads(results.content)
-
-    # IF list of nodes to remove from query exists
-    if selected_nodes:
-        # need to iterate over list backwards to properly delete from a list
-        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
-            node = results["response"]["docs"][i]
-
-            # blacklist mode (remove uuid's from solr query)
-            if selected_mode:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found -= 1
-            # whitelist mode (add's uuids from solr query)
-            else:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] not in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found += 1
-    # Will return only list of file_uuids
-    if only_uuids:
-        ret_file_uuids = []
-        solr_results = results["response"]["docs"]
-        for res in solr_results:
-            ret_file_uuids.append(res["uuid"])
-        return ret_file_uuids
-
-    return results
-
-
-def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
-    logger.debug("core.views.samples_solr called")
-    data_set = get_object_or_404(DataSet, uuid=ds_uuid)
-    workflows = Workflow.objects.all()
-    # TODO: retrieve from Django settings
-    solr_url = 'http://127.0.0.1:8983'
-
-    return render_to_response('core/samples_solr.html',
-                              {'workflows': workflows,
-                               'data_set': data_set,
-                               'study_uuid': study_uuid,
-                               'assay_uuid': assay_uuid,
-                               'solr_url': solr_url},
-                              context_instance=RequestContext(request))
 
 
 def doi(request, id):
@@ -927,7 +494,7 @@ def doi(request, id):
     # slashes.
     id = urllib.unquote(id).decode('utf8')
     id = id.replace('$', '/')
-    url = "https://dx.doi.org/{id}".format(id=id)
+    url = "https://doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
 
     try:
@@ -970,10 +537,7 @@ def pubmed_abstract(request, id):
     except ExpatError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(
-        json.dumps(response_dict),
-        content_type='application/json'
-    )
+    return JsonResponse(response_dict)
 
 
 def pubmed_search(request, term):
@@ -1032,11 +596,6 @@ def pubmed_summary(request, id):
     return HttpResponse(response, content_type='application/json')
 
 
-def fastqc_viewer(request):
-    return render_to_response('core/fastqc-viewer.html', {},
-                              context_instance=RequestContext(request))
-
-
 @gzip_page
 def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user"""
@@ -1089,45 +648,286 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """API endpoint that allows Workflows to be viewed"""
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
-    http_method_names = ['get']
-
-
-class NodeViewSet(viewsets.ModelViewSet):
-    """API endpoint that allows Nodes to be viewed"""
-    queryset = Node.objects.all()
-    serializer_class = NodeSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
-    # permission_classes = (IsAuthenticated,)
+
+    @detail_route(methods=['get'])
+    def graph(self, request, *args, **kwargs):
+        return HttpResponse(
+            get_object_or_404(Workflow, uuid=kwargs.get("uuid")).graph
+        )
+
+
+class EventViewSet(APIView):
+    """API endpoint that allows Events to be viewed"""
+    def get(self, request):
+        """Queryset based on DataSets that the requesting User has permission
+         to access"""
+        data_sets_for_user = get_objects_for_user(
+            request.user,
+            'core.read_meta_dataset',
+            accept_global_perms=False
+        )
+
+        user_events = Event.objects.filter(
+            data_set__in=data_sets_for_user
+        ).order_by('-date_time')[0:50]
+        serializer = EventSerializer(user_events, many=True,
+                                     context={'request': request})
+        return Response(serializer.data)
 
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete']
+    http_method_names = ['get', 'delete', 'patch']
+
+    def get(self, request):
+        params = request.query_params
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 100
+
+        filters = {
+            'is_owner': params.get('is_owner'),
+            'is_public': params.get('public')
+        }
+        try:
+            filters['group'] = ExtendedGroup.objects.get(
+                id=params.get('group')
+            )
+        except Exception:
+            filters['group'] = None
+
+        user_data_sets = get_objects_for_user(
+            request.user,
+            "core.read_meta_dataset",
+            accept_global_perms=False
+        ).order_by('-modification_date')
+
+        filtered_data_sets = []
+        check_own = filters.get('is_owner')
+        all_owner_perms = ObjectPermissionChecker(request.user)
+        all_owner_perms.prefetch_perms(user_data_sets)
+
+        check_public = filters.get('is_public')
+        all_public_perms = ObjectPermissionChecker(
+            ExtendedGroup.objects.public_group()
+        )
+        all_public_perms.prefetch_perms(user_data_sets)
+
+        group = filters.get('group')
+        if group:
+            all_group_perms = ObjectPermissionChecker(filters.get('group'))
+            all_group_perms.prefetch_perms(user_data_sets)
+
+        for data_set in user_data_sets:
+            is_public = all_public_perms.has_perm('read_meta_dataset',
+                                                  data_set)
+            is_owner = all_owner_perms.has_perm('share_dataset', data_set)
+            setattr(data_set, 'public', is_public)
+            setattr(data_set, 'is_owner', is_owner)
+
+            if not data_set.is_valid:
+                logger.warning(
+                    "DataSet with UUID: {} is invalid, and most likely is "
+                    "still being created".format(data_set.uuid)
+                )
+                continue
+            elif check_own or check_public or group:
+                if group:
+                    group_perms = all_group_perms.has_perm('read_meta_dataset',
+                                                           data_set)
+                # need to check for filter and then check data set perms
+                if check_own and check_public and group:
+                    if is_owner and is_public and group_perms:
+                        filtered_data_sets.append(data_set)
+                elif check_own and group:
+                    if is_owner and group_perms:
+                        filtered_data_sets.append(data_set)
+                elif check_own and check_public:
+                    if is_owner and is_public:
+                        filtered_data_sets.append(data_set)
+                elif check_public and group:
+                    if is_public and group_perms:
+                        filtered_data_sets.append(data_set)
+                elif check_own and is_owner or check_public and is_public\
+                        or group and group_perms:
+                    filtered_data_sets.append(data_set)
+            else:
+                filtered_data_sets.append(data_set)
+
+        total_data_sets = len(filtered_data_sets)
+        paged_data_sets = paginator.paginate_queryset(filtered_data_sets,
+                                                      request)
+        serializer = DataSetSerializer(paged_data_sets, many=True,
+                                       context={'request': request})
+
+        return Response({'data_sets': serializer.data,
+                        'total_data_sets': total_data_sets})
+
+    def get_object(self, uuid):
+        try:
+            return DataSet.objects.get(uuid=uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple objects returned.")
+
+    def is_user_authorized(self, user, data_set):
+        if (not user.is_authenticated() or
+                not user.has_perm('core.change_dataset', data_set)):
+            return False
+        else:
+            return True
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
             return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
-        else:
-            try:
-                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
-            except NameError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content="Bad Request")
-            except DataSet.DoesNotExist as e:
-                logger.error(e)
-                return HttpResponseNotFound(content="DataSet with UUID: {} "
-                                                    "not found.".format(uuid))
-            except DataSet.MultipleObjectsReturned as e:
-                logger.error(e)
-                return HttpResponseServerError(
-                    content="Multiple DataSets returned for this request")
+
+        try:
+            data_set = DataSet.objects.get(uuid=uuid)
+        except NameError as e:
+            logger.error(e)
+            return HttpResponseBadRequest(content="Bad Request")
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(content="DataSet with UUID: {} "
+                                                "not found.".format(uuid))
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple DataSets returned for this request")
+
+        if data_set.get_owner() == request.user:
+            data_set_deleted = data_set.delete()
+            if data_set_deleted[0]:
+                return Response({"data": data_set_deleted[1]})
             else:
-                if dataset_deleted[0]:
-                    return Response({"data": dataset_deleted[1]})
-                else:
-                    return HttpResponseBadRequest(content=dataset_deleted[1])
+                return HttpResponseBadRequest(content=data_set_deleted[1])
+
+        return Response('Unauthorized to delete data set with uuid: {'
+                        '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self, request, uuid, format=None):
+        self.data_set = self.get_object(uuid)
+        self.current_site = get_current_site(request)
+
+        # check edit permission for user
+        if self.is_user_authorized(request.user, self.data_set):
+            # update data set's owner
+            current_owner = self.data_set.get_owner()
+            if request.data.get('transfer_data_set') and current_owner == \
+                    request.user:
+                new_owner_email = request.data.get('new_owner_email')
+                try:
+                    new_owner = User.objects.get(email=new_owner_email)
+                except Exception:
+                    return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+
+                try:
+                    with transaction.atomic():
+                        self.data_set.transfer_ownership(current_owner,
+                                                         new_owner)
+                        perm_groups = self.update_group_perms(new_owner)
+                except Exception as e:
+                    return Response(
+                        e, status=status.HTTP_412_PRECONDITION_FAILED
+                    )
+
+                self.send_transfer_notification_email(current_owner,
+                                                      new_owner, perm_groups)
+                serializer = DataSetSerializer(self.data_set,
+                                               context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_202_ACCEPTED)
+
+            # update data set's fields
+            serializer = DataSetSerializer(
+                self.data_set, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            return Response(
+                uuid, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def send_transfer_notification_email(self, old_owner, new_owner,
+                                         perm_groups):
+        """
+        Helper method which emails the old and new owner of the data set
+        transfer and which groups have access
+        :param old_owner: data set's previous owner obj
+        :param new_owner: data set's new owner obj
+        :param perm_groups: obj with two obj of permission groups
+        """
+        subject = "{}: Data Set ownership transfer".format(
+           settings.EMAIL_SUBJECT_PREFIX
+        )
+        old_owner_name = old_owner.get_full_name() or  \
+            old_owner.username
+        new_owner_name = new_owner.get_full_name() or  \
+            new_owner.username
+
+        temp_loader = loader.get_template(
+            'core/owner_transfer_notification.txt')
+        context_dict = {
+            'site': self.current_site,
+            'old_owner_name': old_owner_name,
+            'old_owner_uuid': old_owner.profile.uuid,
+            'new_owner_name': new_owner_name,
+            'new_owner_uuid': new_owner.profile.uuid,
+            'data_set_name': self.data_set.name,
+            'data_set_uuid': self.data_set.uuid,
+            'groups_with_access': perm_groups.get('groups_with_access'),
+            'groups_without_access': perm_groups.get('groups_without_access')
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[new_owner.email, old_owner.email]
+        )
+        email.send()
+        return email
+
+    def update_group_perms(self, new_owner):
+        """
+        Helper method which updates the groups access to the data set based
+        on the new_owner's memberships
+        transfer and which groups have access
+        :param new_owner: data set's new owner obj
+        """
+        new_owner_group_ids = new_owner.groups.all().\
+            values_list('id', flat=True)
+        all_groups_with_ds_access = get_groups_with_perms(
+            self.data_set, attach_perms=True
+        )
+        groups_with_access = []
+        groups_without_access = []
+        for group in all_groups_with_ds_access:
+            group_details = {
+                'name': group.extendedgroup.name,
+                'profile': 'http://{}/groups/{}'.format(
+                    self.current_site,
+                    group.extendedgroup.uuid
+                )
+            }
+            if group.id in new_owner_group_ids:
+                groups_with_access.append(group_details)
+            else:
+                self.data_set.unshare(group)
+                groups_without_access.append(group_details)
+
+        return {"groups_with_access": groups_with_access,
+                "groups_without_access": groups_without_access}
 
 
 class AnalysesViewSet(APIView):
@@ -1161,7 +961,7 @@ class AnalysesViewSet(APIView):
 
 class CustomRegistrationView(RegistrationView):
 
-    def register(self, request, **cleaned_data):
+    def register(self, request):
         """
         Given a username, email address, password, first name, last name,
         and affiliation, register a new user account, which will initially
@@ -1186,12 +986,12 @@ class CustomRegistrationView(RegistrationView):
         class of this backend as the sender.
 
         """
-        username = cleaned_data['username']
-        email = cleaned_data['email']
-        password = cleaned_data['password1']
-        first_name = cleaned_data['first_name']
-        last_name = cleaned_data['last_name']
-        affiliation = cleaned_data['affiliation']
+        username = request.cleaned_data['username']
+        email = request.cleaned_data['email']
+        password = request.cleaned_data['password1']
+        first_name = request.cleaned_data['first_name']
+        last_name = request.cleaned_data['last_name']
+        affiliation = request.cleaned_data['affiliation']
 
         if Site._meta.installed:
             site = Site.objects.get_current()
@@ -1209,7 +1009,7 @@ class CustomRegistrationView(RegistrationView):
                                      request=request)
         return new_user
 
-    def get_success_url(self, request, user):
+    def get_success_url(self, user):
         """
         Return the name of the URL to redirect to after successful
         user registration.
@@ -1218,215 +1018,103 @@ class CustomRegistrationView(RegistrationView):
         return ('registration_complete', (), {})
 
 
-class NodeGroups(APIView):
-    """
-    Return NodeGroups object
+class OpenIDToken(APIView):
+    """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
+    token for a user authenticated by Django authentication process
 
-    ---
+    Requires:
+    * server must have access to AWS Cognito API
+    * Cognito identity pool with Refinery configured as a custom auth provider
+    """
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
+
+    def post(self, request):
+        # retrieve current AWS region and Cognito settings
+        try:
+            with open('/home/ubuntu/region') as f:
+                region = f.read().rstrip()
+        except IOError as exc:
+            message = "Error retrieving current AWS region: {}".format(exc)
+            logger.error(message)
+            return api_error_response(
+                message, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        try:
+            client = boto3.client('cognito-identity', region_name=region)
+        except botocore.exceptions.NoRegionError as exc:
+            message = "Server AWS configuration is incorrect: {}".format(exc)
+            logger.error(message)
+            return api_error_response(
+                message, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        try:
+            token = client.get_open_id_token_for_developer_identity(
+                IdentityPoolId=settings.COGNITO_IDENTITY_POOL_ID,
+                Logins={'login.refinery': request.user.username}
+            )
+        except (botocore.exceptions.ClientError,
+                botocore.exceptions.ParamValidationError) as exc:
+            message =\
+                "Could not obtain OpenID token for " \
+                "user '{}' in Identity Pool '{}': {}".format(
+                    request.user.username, settings.COGNITO_IDENTITY_POOL_ID,
+                    exc
+                )
+            logger.error(message)
+            return api_error_response(
+                message, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        token["Region"] = region
+
+        return Response(token)
+
+
+class UserProfileViewSet(APIView):
+    """API endpoint that allows for UserProfiles to be edited.
+     ---
     #YAML
 
-    GET:
-        serializer: NodeGroupSerializer
-        omit_serializer: false
-
-        parameters:
-            - name: uuid
-              description: NodeGroup uuid
-              paramType: query
-              type: string
-              required: false
-
-            - name: assay
-              description: Assay uuid or ids
-              paramType: query
-              type: string
-
-    POST:
-        consumes:
-            - application/json
-        produces:
-            - application/json
-        parameters:
-            - name: name
-              description: Name of node group
-              paramType: form
-              type: string
-              required: true
-
-            - name: study
-              description: Study uuid or ids
-              paramType: form
-              type: string
-              required: true
-
-            - name: assay
-              description: Assay uuid or ids
-              paramType: form
-              type: string
-              required: true
-
-            - name: is_current
-              description: The "current selection" node set for the study/assay
-              paramType: form
-              type: boolean
-              required: false
-
-            - name: nodes
-              description: uuids of nodes in group expect format uuid,uuid,uuid
-              paramType: form
-              type: array
-              required: false
-
-            - name: use_complement_nodes
-              description: True will subtract nodes from all assay file nodes
-              paramType: form
-              type: boolean
-              require: false
-
-            - name: filter_attribute
-              description: Filters for attributes fields {solr_name:[field]}
-              paramType: form
-              type: string
-              required: false
-
-
-    PUT:
+    PATCH:
         parameters_strategy:
         form: replace
         query: merge
 
         parameters:
             - name: uuid
-              description: Node Group Uuid
-              paramType: form
+              description: User profile uuid used as an identifier
               type: string
+              paramType: path
               required: true
-
-            - name: is_current
-              description: The "current selection" node set for the study/assay
+            - name: primary_group
+              description: group id
+              type: int
               paramType: form
-              type: boolean
-              required: false
-
-            - name: nodes
-              description: Uuids of nodes in group expect format uuid,uuid,uuid
-              paramType: form
-              type: array
-              required: false
-
-            - name: use_complement_nodes
-              description: True will subtract nodes from all assay file nodes
-              paramType: form
-              type: boolean
-              require: false
-
-            - name: filter_attribute
-              description: Filters for attributes fields {solr_name:[field]}
-              paramType: form
-              type: string
               required: false
     ...
     """
+    http_method_names = ["patch"]
 
-    def get_object(self, uuid):
-        try:
-            return NodeGroup.objects.get(uuid=uuid)
-        except (NodeGroup.DoesNotExist,
-                NodeGroup.MultipleObjectsReturned) as e:
-            raise Http404(e)
-
-    def get(self, request, format=None):
-        # Expects a uuid or assay uuid.
-        if request.query_params.get('uuid'):
-            node_group = self.get_object(request.query_params.get('uuid'))
-            serializer = NodeGroupSerializer(node_group)
-        elif request.query_params.get('assay'):
-            assay_uuid = request.query_params.get('assay')
-            node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
-            # If filter returns empty response
-            if not node_groups:
-                # Returns Response: created current_selection group or errors
-                return create_current_selection_node_group(assay_uuid)
-            # Serialize list of node_groups
-            serializer = NodeGroupSerializer(node_groups, many=True)
-            # Move current_selection to front of the list, if not already
-            if serializer.data[0].get('name') != 'Current Selection':
-                # Helper method returns array with current selection node first
-                return Response(move_obj_to_front(serializer.data, 'name',
-                                                  'Current Selection'))
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Return node_group or list of assay's node_groups
-        return Response(serializer.data)
-
-    def post(self, request, format=None):
-        # Swagger issue: put/post queryDict, make data mutable to update nodes
-        # Convert to dict for ease
-        if 'form-urlencoded' in request.content_type:
-            param_dict = {}
-            for key in request.data:
-                if key == 'nodes':
-                    param_dict[key] = request.data.get(
-                        key).replace(' ', '').split(',')
-                elif key == 'use_complement_nodes':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = json.loads(request.data.get(key))
-                else:
-                    param_dict[key] = request.data.get(key)
-        else:
-            param_dict = request.data
-
-        # Nodes list updated with remaining nodes after subtraction
-        if param_dict.get('use_complement_nodes'):
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                param_dict.get('assay'),
-                param_dict.get('nodes'),
-                param_dict.get('filter_attribute')
+    def patch(self, request, uuid):
+        if request.user.is_anonymous():
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
             )
-            param_dict['nodes'] = filtered_uuid_list
 
-        serializer = NodeGroupSerializer(data=param_dict)
+        serializer = UserProfileSerializer(request.user.profile,
+                                           data=request.data,
+                                           partial=True,
+                                           context={'request': request})
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, format=None):
-        try:
-            uuid = request.data.get('uuid')
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Swagger issue: put/post queryDict, make data mutable to update nodes
-        # Convert to dict for ease
-        if 'form-urlencoded' in request.content_type:
-            param_dict = {}
-            for key in request.data:
-
-                if key == 'nodes':
-                    param_dict[key] = request.data.get(
-                        key).replace(' ', '').split(',')
-                elif key == 'use_complement_nodes':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = json.loads(request.data.get(key))
-                else:
-                    param_dict[key] = request.data.get(key)
-        else:
-            param_dict = request.data
-
-        # Nodes list updated with remaining nodes after subtraction
-        if param_dict.get('use_complement_nodes'):
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                param_dict.get('assay'),
-                param_dict.get('nodes'),
-                param_dict.get('filter_attribute')
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
             )
-            param_dict['nodes'] = filtered_uuid_list
-        node_group = self.get_object(uuid)
-        serializer = NodeGroupSerializer(node_group, data=param_dict,
-                                         partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )

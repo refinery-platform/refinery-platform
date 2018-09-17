@@ -42,7 +42,8 @@
       track by solr_field
       dnd-draggable="attributeObj"
       dnd-moved="AFUMCtrl.updateAttributeRank(attributeObj, $index)"
-      dnd-effectllowed="move">
+      dnd-effectllowed="move"
+      ng-if="attributeObj.display_name != 'uuid'">
       <div class="row">
         <div class="col-xs-1 col-xs-offset-1">
           <i
@@ -112,6 +113,8 @@
 
 </div>
 <div class="modal-footer">
-  <button class="btn btn-default" ng-click="AFUMCtrl.close()">Close</button>
+  <button class="refinery-base btn btn-primary" ng-click="AFUMCtrl.close()">
+    Save
+  </button>
 </div>
 

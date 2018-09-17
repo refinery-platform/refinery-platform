@@ -1,0 +1,102 @@
+<div class="node-input-group">
+  <ul>
+    <form name="inputNodeForm">
+      <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='PAIR'">
+        <li
+          ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index"
+          ng-style="{'color': 'rgb(' + NSPCtrl.inputFileTypeColor[inputType.uuid] + ')',
+          'background-color': 'rgba(' + NSPCtrl.inputFileTypeColor[inputType.uuid] + ', 0.1)'}">
+          <div class="checkbox p-a-1-3">
+            <label>
+              <!-- Select: If there's NOT a group already started for the inputFileType than checkbox not selected-->
+              <span
+                ng-if="!(NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]
+                .length > 0)">
+                <input
+                  type="checkbox"
+                  ng-click="NSPCtrl.selectNode(inputType.uuid)"
+                  ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]">
+                 <strong>{{ inputType.name }}</strong>
+              </span>
+               <!-- Deselect: user can currently deselect any node in the current group-->
+              <span
+                ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
+                class="wrap-word">
+                <span
+                  ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
+                   <input
+                    type="checkbox"
+                    ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
+                    ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][selectedFile.uuid]">
+                  <strong>{{ inputType.name }}</strong>
+                  {{ selectedFile[NSPCtrl.attributes.Name] }}
+                </span>
+              </span>
+            </label>
+          </div>
+        </li>
+      </div>
+
+      <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='LIST'">
+        <!-- Select/Deselect nodes in the list -->
+        <div class="refinery-subheader">
+          <h4>
+            <i
+              class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]|groupTypeIcon}}"
+              aria-hidden="true"></i>
+            {{ NSPCtrl.depthNames[NSPCtrl.currentTypes.length - 1] }}:
+            <span ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid]">0</span>
+            {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length }}
+            file<span ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length != 1">s</span>
+            in Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length] }}
+          </h4>
+        </div>
+        <li
+           ng-style="{'color': 'rgb(' + NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid] + ')',
+          'background-color': 'rgba(' + NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid] + ', 0.1)'}">
+          <span>
+            <!-- active row selection, for list is always showing -->
+            <div class="checkbox p-a-1-3">
+              <label>
+                <input
+                  type="checkbox"
+                  ng-click="NSPCtrl.selectNode(NSPCtrl.inputFileTypes[0].uuid)"
+                  ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]">
+                <strong>{{ NSPCtrl.inputFileTypes[0].name }}</strong>
+
+                <div
+                  ng-if="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]"
+                  class="wrap-word">
+                  {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid]
+                  [NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length - 1]
+                  [NSPCtrl.attributes.Name] }}
+                </div>
+          </span>
+        </li>
+      </div>
+    </form>
+  </ul>
+</div>
+<div>
+  <span ng-if="NSPCtrl.currentTypes.length > 1">
+    <div class="refinery-subheader">
+      <h4>
+        <i
+          class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2]|groupTypeIcon}}"
+          aria-hidden="true"></i>
+        {{ NSPCtrl.depthNames[NSPCtrl.depthNames.length - 2] }}
+      </h4>
+    </div>
+    <rp-input-control-inner-nav></rp-input-control-inner-nav>
+  </span>
+  <div class="p-t-1 text-right">
+    <button
+      class="refinery-base btn btn-default btn-xs"
+      ng-click="closeSelectionPopover()">
+      Close
+    </button>
+  </div>
+</div>
+

@@ -1,13 +1,9 @@
 {% extends "base.html" %}
 
-{% load static %}
+{% load static from staticfiles %}
 
 {% block title %}
 {{ block.super }} - Collaborate
-{% endblock %}
-
-{% block vendor_scripts %}
-<script type="text/javascript" src="{% static "js/bootbox/bootbox.min.js" %}"></script>
 {% endblock %}
 
 {% block subheader %}

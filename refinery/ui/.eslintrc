@@ -13,7 +13,8 @@
     afterEach: false,
     beforeEach: false,
     expect: false,
-    spyOn: false
+    spyOn: false,
+    AWS: false
   },
   rules: {
     comma-dangle: [1, "never"],
@@ -25,11 +26,13 @@
     no-new: 0,
     no-param-reassign: [2, { props: false }],
     no-unused-vars: [2, { vars: "all", "args": "after-used" }],
+    no-use-before-define: [0, 'nofunc'],
     quotes: [2, "single", "avoid-escape"],
     semi: [2, "always"],
     space-before-function-paren: [2, "always"],
     keyword-spacing: 2,
-    strict: [2, "safe"],
-    vars-on-top: 0
+    strict: [0, "safe"],
+    vars-on-top: 0,
+    wrap-iife: [2, "any"]
   }
 }

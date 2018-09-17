@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% load static %}
+{% load static from staticfiles %}
 {% block head_html %}
-    <link rel="stylesheet" href="{% static "vendor/c3/c3.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/c3/c3.css" %}" />
 {% endblock %}
 
 {% block title %}
@@ -12,7 +12,7 @@
 {% block subheader %}
 <div class="page-header">
 	<h1>
-  		Statistics <small>{{ base_url }}</small>
+    Statistics <small>{{ base_url }}</small>
 	</h1>
 </div>
 {% endblock %}
@@ -24,5 +24,5 @@
 {% endblock %}
 
 {% block vendor_scripts %}
-<script type="text/javascript" src="/static/vendor/c3/c3.min.js"></script>
+  <script type="text/javascript" src="{% static "vendor/c3/c3.min.js" %}"></script>
 {% endblock %}

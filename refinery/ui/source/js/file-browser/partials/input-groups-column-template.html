@@ -1,0 +1,40 @@
+<div
+  popover-placement="top"
+  uib-popover-template="'inputgroupscolumnpopover.html'"
+  popover-title="File Input Type"
+  popover-trigger="'mouseenter'"
+  popover-append-to-body="true"
+  tabindex="0">
+  <div class="ngCellText grid-input-groups">
+    <div
+      ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0"
+      class="selected-node">
+      <div
+        class="paragraph ui-grid-cell-contents"
+        ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0">
+        <span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList track by $index">
+          <span
+            class="p-r-1-3 badge"
+            ng-style="{
+             'background-color': 'rgb(' + grid.appScope.inputFileTypeColor[
+             grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]
+             ] + ')'}">
+            <span class="p-a-1-3">
+              <i
+                class="{{grid.appScope.currentTypes[grid.appScope.currentTypes.length-1]|groupTypeIcon}}"
+                aria-hidden="true"></i>
+              {{group[group.length - 1] + 1}}
+            </span>
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/ng-template" id="inputgroupscolumnpopover.html">
+  <div>
+  <rp-input-groups-column-popover-detail>
+  </rp-input-groups-column-popover-detail>
+  </div>
+</script>

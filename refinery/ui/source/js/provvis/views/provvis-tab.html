@@ -1,0 +1,29 @@
+ <div class="dataSetTabContent ng-cloak" id="files">
+  <div class="row">
+    <div class="tabbable">
+      <div class="tab-content">
+        <div class="tab-pane active fade in" id="provenance-view-tab" style="overflow: hidden;">
+          <div class="refinery-panel-content">
+            <div id="provenance-visualization">
+              <div id="provvis-nav-bar" ng-controller="provvisNavbarController">
+                <div provvis-nav-bar></div>
+                <span
+                  ng-if="!provCtrl.isGraphReady"
+                  id="provvis-loader"
+                  class="text-center">
+                    <span id="provvis-loader-icon"
+                      class="refinery-spinner analyses-view"></span>
+                  &nbsp;<em>Loading graph......</em>
+                </span>
+              </div>
+              <div id="provvis-canvas" ng-controller="provvisCanvasController">
+                <div provvis-canvas></div>
+              </div>
+                <!-- the provenance graph -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

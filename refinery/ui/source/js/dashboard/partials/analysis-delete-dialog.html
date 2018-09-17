@@ -26,15 +26,14 @@
   </i>
   <span ng-switch on="analysis.status" ng-if="modal.deletionMessage == null">
     <span ng-if="modal.analysis.status == 'SUCCESS'">
-      <a
-      ng-href="/data_sets/{{modal.analysis
-      .data_set__uuid}}/analysis/{{modal.analysis.uuid}}">
+       <a
+         ng-href='/data_sets/{{modal.analysis.data_set__uuid}}/#/files/?{"{{modal.analysis.facet_name}}":"{{modal.analysis.name}}"}'>
       {{ modal.analysis.name }}
     </a>
     </span>
     <span ng-if="modal.analysis.status != 'SUCCESS'">
-      <a
-      ng-href="/data_sets/{{modal.analysis.data_set__uuid}}/#/analyses">
+       <a
+         ng-href='/data_sets/{{modal.analysis.data_set__uuid}}/#/analyses'>
       {{ modal.analysis.name }}
     </a>
     </span>
@@ -43,9 +42,8 @@
     {{ modal.analysis.name }}
   </span>
   <span ng-if="modal.deletionMessage != null && !modal.deleteSuccessful">
-    <a
-      ng-href="/data_sets/{{modal.analysis
-      .data_set__uuid}}/analysis/{{modal.analysis.uuid}}">
+     <a
+       ng-href='/data_sets/{{modal.analysis.data_set__uuid}}/#/analyses'>
       {{ modal.analysis.name }}
     </a>
   </span>

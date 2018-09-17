@@ -41,8 +41,9 @@ describe('DataSetImport.state:', function () {
     }
 
     beforeEach(function () {
-      mockTemplate('/static/partials/data-set-import/views/import.html');
-      mockTemplate('/static/partials/data-set-import/views/isa-tab-import.html');
+      // using window because $window is redefined above
+      mockTemplate(window.getStaticUrl('partials/data-set-import/views/import.html'));
+      mockTemplate(window.getStaticUrl('partials/data-set-import/views/isa-tab-import.html'));
     });
 
     it('should be "import" when path is empty', function () {

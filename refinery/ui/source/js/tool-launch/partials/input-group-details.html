@@ -1,0 +1,65 @@
+<div
+  ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid) ||
+         $ctrl.isGroupPopulated($ctrl.inputFileTypes[1].uuid)"
+  role="tablist"
+  aria-multiselectable="true"
+  id="input-group-details"
+  class="m-b-1-2 p-a-1-2">
+  <div
+    role="button"
+    ng-click="$ctrl.toggleCollapseDetails()"
+    class="p-t-1-2 refinery-subheader">
+    <h3>
+      <i
+        ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+        class="fa-pull-left"
+        aria-hidden="true"></i>
+      Pair Details
+    </h3>
+  </div>
+  <div
+    uib-collapse="$ctrl.collapseDetails"
+    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <ul
+        class="wrap-word"
+        ng-repeat="(displayName, internalName) in $ctrl.attributes">
+        <li
+          ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
+          $ctrl.groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[1].uuid][0][internalName] &&
+           displayName != 'Name'">
+          <div class="refinery-subheader">
+            <h4>
+              {{ displayName }}
+            </h4>
+          </div>
+          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ')'}">
+            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+          </div>
+          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid] + ')'}">
+           {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
+          </div>
+        </li>
+      </ul>
+
+      <ul
+        class="wrap-word"
+        ng-repeat="(displayName, internalName) in $ctrl.attributes">
+        <li
+          ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
+          .groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[1].uuid][0][internalName] &&
+          displayName != 'Name'"
+          ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ')'}">
+          <div class="refinery-subheader">
+            <h4>
+              {{ displayName }}
+            </h4>
+          </div>
+          {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+        </li>
+      </ul>
+   </div>
+</div>

@@ -1,9 +1,11 @@
 'use strict';
 
-function rpDataSetAboutSharing () {
+function rpDataSetAboutSharing ($window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/data-set-about/partials/sharing.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/data-set-about/partials/sharing.html');
+    },
     controller: 'AboutSharingCtrl',
     controllerAs: 'ASCtrl',
     bindToController: {
@@ -17,6 +19,7 @@ function rpDataSetAboutSharing () {
 angular
   .module('refineryDataSetAbout')
   .directive('rpDataSetAboutSharing', [
+    '$window',
     rpDataSetAboutSharing
   ]
 );

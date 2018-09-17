@@ -9,13 +9,14 @@ from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
-from core.models import (
-    Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, DiskQuota,
-    ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
-    Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
-    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation, Ontology, Tutorials, SiteProfile)
-from core.utils import admin_ui_deletion
+from tool_manager.utils import AdminFieldPopulator
+
+from .models import (
+    Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, Download,
+    ExtendedGroup, Event, InvestigationLink, Invitation, Ontology, Project,
+    SiteProfile, SiteStatistics, Tutorials, UserProfile, Workflow,
+    WorkflowEngine)
+from .utils import admin_ui_deletion
 
 
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
@@ -32,19 +33,6 @@ class AnalysisResultAdmin(ForeignKeyAutocompleteAdmin):
 
 class ProjectAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'is_catch_all']
-
-
-class WorkflowDataInputMapAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'workflow_data_input_name',
-                    'data_uuid', 'pair_id']
-
-
-class WorkflowDataInputAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'internal_id']
-
-
-class WorkflowFilesDlAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'step_id', 'pair_id', 'filename']
 
 
 class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
@@ -70,10 +58,6 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     delete_selected.short_description = "Delete selected Workflows"
     actions = [delete_selected, hide_selected_workflows,
                show_selected_workflows]
-
-
-class WorkflowInputRelationshipsAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'category', 'set1', 'set2']
 
 
 class WorkflowEngineAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
@@ -122,11 +106,6 @@ class AnalysisAdmin(GuardedModelAdmin):
     actions = [delete_selected]
 
 
-class DiskQuotaAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'summary', 'maximum',
-                    'current']
-
-
 class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'data_set', 'analysis',
                     'file_store_item']
@@ -135,20 +114,6 @@ class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 class ExtendedGroupAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'manager_group', 'uuid', 'is_public',
                     'member_list', 'perm_list', 'can_edit']
-
-
-class NodePairAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['id', 'uuid', 'node1', 'node2', 'group']
-
-
-class NodeRelationshipAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'type', 'node_set_1',
-                    'node_set_2', 'study', 'assay', 'is_current']
-
-
-class NodeSetAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'node_count', 'is_implicit',
-                    'study', 'assay', 'is_current']
 
 
 class UserProfileAdmin(GuardedModelAdmin):
@@ -185,27 +150,28 @@ class SiteProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'site']
 
 
+class SiteStatisticsAdmin(AdminFieldPopulator):
+    pass
+
+
+class EventAdmin(AdminFieldPopulator):
+    pass
+
+
 admin.site.register(ExtendedGroup, ExtendedGroupAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
 admin.site.register(InvestigationLink, InvestigationLinkAdmin)
 admin.site.register(Workflow, WorkflowAdmin)
-admin.site.register(WorkflowFilesDL, WorkflowFilesDlAdmin)
 admin.site.register(WorkflowEngine, WorkflowEngineAdmin)
-admin.site.register(WorkflowDataInput, WorkflowDataInputAdmin)
-admin.site.register(WorkflowDataInputMap, WorkflowDataInputMapAdmin)
 admin.site.register(Analysis, AnalysisAdmin)
 admin.site.register(Download, DownloadAdmin)
 admin.site.register(AnalysisResult, AnalysisResultAdmin)
 admin.site.register(AnalysisNodeConnection, AnalysisNodeConnectionAdmin)
-admin.site.register(DiskQuota, DiskQuotaAdmin)
-admin.site.register(NodePair, NodePairAdmin)
-admin.site.register(NodeRelationship, NodeRelationshipAdmin)
-admin.site.register(NodeSet, NodeSetAdmin)
 admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Tutorials, TutorialsAdmin)
-admin.site.register(WorkflowInputRelationships,
-                    WorkflowInputRelationshipsAdmin)
 admin.site.register(Ontology, OntologyAdmin)
 admin.site.register(SiteProfile, SiteProfileAdmin)
+admin.site.register(SiteStatistics, SiteStatisticsAdmin)
+admin.site.register(Event, EventAdmin)

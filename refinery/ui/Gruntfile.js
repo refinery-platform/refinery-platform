@@ -130,33 +130,6 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     /*
-     * Add vendor prefixes to out CSS to ensure better browser support.
-     */
-    autoprefixer: {
-      options: {
-        browsers: [
-          '> 5%',
-          'last 2 versions',
-          'Firefox ESR',
-          'Explorer >= 10',
-          'iOS >= 6',
-          'Opera >= 12',
-          'Safari >= 6'
-        ]
-      },
-      styles: {
-        files: [
-          {
-            expand: true,
-            cwd: '<%= cfg.basePath.ui.src %>/styles',
-            src: ['**/*.css'],
-            dest: '<%= cfg.basePath.ui.tmp %>/styles'
-          }
-        ]
-      }
-    },
-
-    /*
      * Read configs from `config.json`. Separating scripts and configs help
      * to keep things readable.
      */
@@ -522,13 +495,6 @@ module.exports = function (grunt) {
     },
 
     /*
-     * Autoformats JS code using esformatter.
-     */
-    esformatter: {
-      src: fileGlob
-    },
-
-    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      */
     eslint: {
@@ -882,7 +848,6 @@ module.exports = function (grunt) {
     'clean:uiCompile',
     'clean:staticCompile',
     'less:compile',
-    'autoprefixer',
     // IMPORTANT:
     // `concat-by-feature:compile` has to be called before `ngAnnotate` because
     // it adds features to the `ngAnnotate` task.

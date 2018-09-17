@@ -1,9 +1,11 @@
 'use strict';
 
-function analysisMonitorAnalysesList ($rootScope, $location) {
+function analysisMonitorAnalysesList ($location, $window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/analysis-monitor/partials/analyses-list.html');
+    },
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
@@ -17,7 +19,7 @@ function analysisMonitorAnalysesList ($rootScope, $location) {
         galaxyExport: 'Downloading analysis results from Galaxy'
       };
 
-      if ($location.absUrl().indexOf('data_sets2') > -1) {
+      if ($location.absUrl().indexOf('data_sets') > -1) {
         scope.AMCtrl.updateAnalysesList();
       } else {
         scope.$on('refinery/analyze-tab-active', function () {
@@ -96,7 +98,7 @@ function analysisMonitorAnalysesList ($rootScope, $location) {
 angular
   .module('refineryAnalysisMonitor')
   .directive('analysisMonitorAnalysesList', [
-    '$rootScope',
     '$location',
+    '$window',
     analysisMonitorAnalysesList
   ]);

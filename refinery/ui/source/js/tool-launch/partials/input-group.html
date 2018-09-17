@@ -1,0 +1,115 @@
+<div
+  class="node-input-group"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <ul>
+     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <li
+        ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
+        ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ')',
+        'background-color': 'rgba(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ', 0.1)'}">
+        <span
+          class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+            <strong>{{ inputFile.name }}</strong>
+              &nbsp
+              <a
+                popover-placement="right"
+                uib-popover-template="'inputgrouphelppopover.html'"
+                popover-title="Input Group File Types"
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true"
+                class="no-decoration-link"
+                tabindex="0">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
+          <br>
+          <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
+            {{ node[$ctrl.attributes.Name] }}
+          </span>
+        </span>
+          <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
+          <strong>{{ inputFile.name }}</strong>
+          &nbsp
+            <a
+              popover-placement="right"
+              uib-popover-template="'inputgrouphelppopover.html'"
+              popover-title="Input Group File Types"
+              popover-trigger="'outsideClick'"
+              popover-append-to-body="true"
+              class="no-decoration-link"
+              tabindex="0">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
+          <br>
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in inputFile.allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < inputFile.allowed_filetypes.length - 1">,</span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
+        </span>
+      </li>
+     </div>
+
+    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
+      <li
+        class="wrap-word"
+        ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ')',
+        'background-color': 'rgba(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ', 0.1)'}">
+        <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          <strong>{{ $ctrl.inputFileTypes[0].name }}</strong>:
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">,</span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
+        </div>
+        <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          <div
+            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]">
+            {{ node[$ctrl.attributes.Name] }}
+          </div>
+        </div>
+      </li>
+     </div>
+  </ul>
+  <div
+    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <rp-input-group-details></rp-input-group-details>
+  </div>
+  <div>
+    <span ng-if="$ctrl.currentTypes.length > 1">
+      <button
+        class="refinery-base btn btn-default btn-xs outline"
+        ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
+        ng-click="$ctrl.removeGroup()">
+        Remove
+      </button>
+    </span>
+  <button
+    class="refinery-base btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection)"
+    ng-click="$ctrl.removeAllGroups()">
+    Remove All
+  </button>
+  </div>
+</div>
+
+<script type="text/ng-template" id="inputgrouphelppopover.html">
+  <div>
+    <rp-input-group-help-popover
+      display-file='inputFile'
+      display-file-color='$ctrl.inputFileTypeColor[inputFile.uuid]'>
+    </rp-input-group-help-popover>
+  </div>
+</script>

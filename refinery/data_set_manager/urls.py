@@ -8,11 +8,15 @@ from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
-from data_set_manager.views import (
-    DataSetImportView, ImportISATabView, ProcessISATabView,
-    ProcessMetadataTableView, CheckDataFilesView, ChunkedFileUploadView,
-    ChunkedFileUploadCompleteView, TakeOwnershipOfPublicDatasetView)
+from constants import UUID_RE
+from rest_framework.routers import DefaultRouter
 
+from .views import (AddFileToNodeView, Assays, AssaysAttributes,
+                    AssaysFiles, CheckDataFilesView,
+                    ChunkedFileUploadCompleteView, ChunkedFileUploadView,
+                    DataSetImportView, ImportISATabView, NodeViewSet,
+                    ProcessISATabView, ProcessMetadataTableView,
+                    TakeOwnershipOfPublicDatasetView)
 
 urlpatterns = patterns(
     'data_set_manager.views',
@@ -39,7 +43,20 @@ urlpatterns = patterns(
         login_required(ChunkedFileUploadCompleteView.as_view()),
         name='api_chunked_upload_complete'),
     url(r'^import/take_ownership/$',
-        TakeOwnershipOfPublicDatasetView.as_view(),
-        name='take_ownership_of_public_dataset'),
-
+        login_required(TakeOwnershipOfPublicDatasetView.as_view()),
+        name='take_ownership_of_public_dataset')
 )
+
+# DRF url routing
+data_set_manager_router = DefaultRouter()
+data_set_manager_router.urls.extend([
+    url(r'^assays/$', Assays.as_view()),
+    url(r'^assays/(?P<uuid>' + UUID_RE + ')/files/$',
+        AssaysFiles.as_view()),
+    url(r'^assays/(?P<uuid>' + UUID_RE + ')/attributes/$',
+        AssaysAttributes.as_view()),
+    url(r'^data_set_manager/add-file/$',
+        AddFileToNodeView.as_view()),
+    url(r'^nodes/(?P<uuid>' + UUID_RE + r')/$',
+        NodeViewSet.as_view()),
+])

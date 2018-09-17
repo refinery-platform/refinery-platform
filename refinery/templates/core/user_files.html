@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+{% load markup %}
+{% load static from staticfiles %}
+
+
+{% block head_html %}
+  <link rel="stylesheet" href="{% static "styles/file-browser.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
+  <link rel="styleSheet" href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"/>
+  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
+{% endblock head_html %}
+
+<!-- DIFF: Title -->
+{% block title %} - All Files{% endblock %}
+
+{% block subheader %}
+  <div class="page-header">
+    <!-- DIFF: Title -->
+    <h1>All Files</h1>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <!-- DIFF: Remove surrounding divs and tabs -->
+
+  <div class="refinery-panel refinery-panel-content jquery-full-height"
+       id="data-set-view"
+       style="overflow-x: hidden;"><!-- TODO: Understand why it is too wide and remove cruft. -->
+    <rp-user-file-browser></rp-user-file-browser>
+  </div>
+{% endblock %}
+
+{% block script %}
+
+
+  <!-- Refinery libraries -->
+  <script type="text/javascript">
+    var externalAssayUuid = "{{ assay_uuid }}";
+    var externalStudyUuid = "{{ study_uuid }}";
+    var dataSetUuid = "{{ data_set.uuid }}";
+    var analysisUuid = "{{ analysis_uuid }}";
+
+    {% if REFINERY_REPOSITORY_MODE %}
+      var REFINERY_REPOSITORY_MODE = true;
+    {% else %}
+      var REFINERY_REPOSITORY_MODE = false;
+    {% endif %}
+
+    var csrf_token = "{{ csrf_token }}";
+  </script>
+    
+{% endblock %}

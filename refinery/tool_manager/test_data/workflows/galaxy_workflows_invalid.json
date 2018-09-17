@@ -1,0 +1,431 @@
+[
+    {
+        "annotation": "{\n  \"refinery_type\": \"analysis\",\n  \"description\": \"Test LIST:LIST:PAIR description\",\n \"file_relationship\": {\n    \"value_type\": \"LIST\",\n    \"name\": \"List of Lists\",\n    \"file_relationship\": {\n      \"value_type\": \"LIST\",\n      \"name\": \"List of Pairs\",\n      \"file_relationship\": {\n        \"value_type\": \"PAIR\",\n        \"name\": \"Pair of input files\",\n        \"file_relationship\": {},\n        \"input_files\": [\n          {\n            \"name\": \"Cool Input File A\",\n            \"description\": \"Cool Input File A Description\",\n            \"allowed_filetypes\": [\n              {\n                \"name\": \"BAM\"\n              },\n              {\n                \"name\": \"FASTQ\"\n              }\n            ]\n          },\n          {\n            \"name\": \"Cool Input File B\",\n            \"description\": \"Cool Input File B Description\",\n            \"allowed_filetypes\": [\n              {\n                \"name\": \"BAM\"\n              },\n              {\n                \"name\": \"FASTQ\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  }\n}",
+        "deleted": false,
+        "id": "035579cc588f5c92",
+        "inputs": {
+            "0": {
+                "label": "Input Dataset",
+                "uuid": "99555524-505d-4fc1-89a8-51d1671d30db",
+                "value": ""
+            }
+        },
+        "latest_workflow_uuid": "813cc65e-c7f3-4877-b9a8-f9d67d6db7ce",
+        "model_class": "StoredWorkflow",
+        "name": "Test LIST:LIST:PAIR",
+        "graph": {"steps": []},
+        "owner": "scott",
+        "published": false,
+        "steps": {
+            "0": {
+                "annotation": null,
+                "id": 0,
+                "input_steps": {},
+                "tool_id": null,
+                "tool_inputs": {
+                    "name": "Input Dataset"
+                },
+                "tool_version": null,
+                "type": "data_input"
+            },
+            "1": {
+                "annotation": null,
+                "id": 1,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 0,
+                        "step_output": "output"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "2": {
+                "annotation": null,
+                "id": 2,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 1,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "3": {
+                "annotation": null,
+                "id": 3,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 2,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "4": {
+                "annotation": null,
+                "id": 4,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 3,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "5": {
+                "annotation": "{\n\t\"output_file\": {\n\t\t\"name\": \"test tool out\",\n\t\t\"description\": \"\",\n\t\t\"type\": \"txt\"\n\t},\n\t\"parameters\": [{\n\t\t\"name\": \"empty_outfile\",\n\t\t\"description\": \"Whether or not to include an empty output file.\",\n\t\t\"value_type\": \"BOOLEAN\",\n\t\t\"default_value\": false\n\t}, {\n\t\t\"name\": \"stdout\",\n\t\t\"description\": \"Whether or not to write to stdout.\",\n\t\t\"value_type\": \"BOOLEAN\",\n\t\t\"default_value\": false\n\t}, {\n\t\t\"name\": \"exit_code\",\n\t\t\"description\": \"The exit_code for this tool step\",\n\t\t\"value_type\": \"INTEGER\",\n\t\t\"default_value\": 0\n\t}]\n}",
+                "id": 5,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 4,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            }
+        },
+        "tags": [],
+        "url": "/api/workflows/035579cc588f5c92"
+    },
+    {
+        "annotation": "{\n  \"refinery_type\": \"analysis\",\n  \"description\": \"Test LIST description\",\n  \"file_relationship\": {\n    \"value_type\": \"LIST\",\n    \"name\": \"Flat list of N Samples\",\n    \"file_relationship\": {},\n    \"input_files\": [\n      {\n        \"name\": \"Cool Input File\",\n        \"description\": \"Cool Input File Description\",\n        \"allowed_filetypes\": [\n          {\n            \"name\": \"FASTQ\"\n          }\n        ]\n      }\n    ]\n  }\n}",
+        "deleted": false,
+        "id": "13cea0e6d733b865",
+        "inputs": {
+            "0": {
+                "label": "Input Dataset",
+                "uuid": "99555524-505d-4fc1-89a8-51d1671d30db",
+                "value": ""
+            }
+        },
+        "latest_workflow_uuid": "1f1df3df-c414-46df-b189-0cd9e0228c4d",
+        "model_class": "StoredWorkflow",
+        "name": "Test LIST",
+        "graph": {"steps": []},
+        "owner": "scott",
+        "published": false,
+        "steps": {
+            "0": {
+                "annotation": null,
+                "id": 0,
+                "input_steps": {},
+                "tool_id": null,
+                "tool_inputs": {
+                    "name": "Input Dataset"
+                },
+                "tool_version": null,
+                "type": "data_input"
+            },
+            "1": {
+                "annotation": null,
+                "id": 1,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 0,
+                        "step_output": "output"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "2": {
+                "annotation": null,
+                "id": 2,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 1,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "3": {
+                "annotation": null,
+                "id": 3,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 2,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "4": {
+                "annotation": null,
+                "id": 4,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 3,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "5": {
+                "annotation": "{\n\t\"output_file\": {\n\t\t\"name\": \"test tool out\",\n\t\t\"description\": \"\",\n\t\t\"type\": \"txt\"\n\t},\n\t\"parameters\": [{\n\t\t\"name\": \"empty_outfile\",\n\t\t\"description\": \"Whether or not to include an empty output file.\",\n\t\t\"value_type\": \"BOOLEAN\",\n\t\t\"default_value\": false\n\t}, {\n\t\t\"name\": \"stdout\",\n\t\t\"description\": \"Whether or not to write to stdout.\",\n\t\t\"value_type\": \"BOOLEAN\",\n\t\t\"default_value\": false\n\t}, {\n\t\t\"name\": \"exit_code\",\n\t\t\"description\": \"The exit_code for this tool step\",\n\t\t\"value_type\": \"INTEGER\",\n\t\t\"default_value\": 0\n\t}]\n}",
+                "id": 5,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 4,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            }
+        },
+        "tags": [],
+        "url": "/api/workflows/13cea0e6d733b865"
+    },
+    {
+        "annotation": "{\n  \"refinery_type\": \"analysis\",\n  \"description\": \"Test LIST:PAIR description\",\n  \"file_relationship\": \n{\n    \"value_type\": \"LIST\",\n    \"name\": \"List of Pairs\",\n    \"file_relationship\": {\n      \"value_type\": \"PAIR\",\n      \"name\": \"Pair of input files\",\n      \"file_relationship\": {},\n      \"input_files\": [\n        {\n          \"name\": \"Cool Input File A\",\n          \"description\": \"Cool Input File A Description\",\n          \"allowed_filetypes\": [\n            {\n              \"name\": \"BAM\"\n            },\n            {\n              \"name\": \"FASTQ\"\n            }\n          ]\n        },\n        {\n          \"name\": \"Cool Input File B\",\n          \"description\": \"Cool Input File B Description\",\n          \"allowed_filetypes\": [\n            {\n              \"name\": \"BAM\"\n            },\n            {\n              \"name\": \"FASTQ\"\n            }\n          ]\n        }\n      ]\n    }\n  }\n}",
+        "deleted": false,
+        "id": "4dbd0e549801df7e",
+        "inputs": {
+            "0": {
+                "label": "Input Dataset",
+                "uuid": "99555524-505d-4fc1-89a8-51d1671d30db",
+                "value": ""
+            }
+        },
+        "latest_workflow_uuid": "90bd7f14-8efa-419d-beee-aab7f7925048",
+        "model_class": "StoredWorkflow",
+        "name": "Test LIST:PAIR",
+        "graph": {"steps": []},
+        "owner": "scott",
+        "published": false,
+        "steps": {
+            "0": {
+                "annotation": null,
+                "id": 0,
+                "input_steps": {},
+                "tool_id": null,
+                "tool_inputs": {
+                    "name": "Input Dataset"
+                },
+                "tool_version": null,
+                "type": "data_input"
+            },
+            "1": {
+                "annotation": null,
+                "id": 1,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 0,
+                        "step_output": "output"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "2": {
+                "annotation": null,
+                "id": 2,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 1,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "3": {
+                "annotation": null,
+                "id": 3,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 2,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "4": {
+                "annotation": null,
+                "id": 4,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 3,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            },
+            "5": {
+                "annotation": "{\n\t\"output_file\": {\n\t\t\"name\": \"test tool out\",\n\t\t\"description\": \"\",\n\t\t\"type\": \"txt\"\n\t},\n\t\"parameters\": [{\n\t\t\"name\": \"empty_outfile\",\n\t\t\"description\": \"Whether or not to include an empty output file.\",\n\t\t\"value_type\": \"BOOLEAN\",\n\t\t\"default_value\": false\n\t}, {\n\t\t\"name\": \"stdout\",\n\t\t\"description\": \"Whether or not to write to stdout.\",\n\t\t\"value_type\": \"BOOLEAN\",\n\t\t\"default_value\": false\n\t}, {\n\t\t\"name\": \"exit_code\",\n\t\t\"description\": \"The exit_code for this tool step\",\n\t\t\"value_type\": \"INTEGER\",\n\t\t\"default_value\": 0\n\t}]\n}",
+                "id": 5,
+                "input_steps": {
+                    "input_file": {
+                        "source_step": 4,
+                        "step_output": "output_file"
+                    }
+                },
+                "tool_id": "testtoolshed.g2.bx.psu.edu/repos/refinery-platform/refinery_test/refinery_test_1-1/0.1",
+                "tool_inputs": {
+                    "empty_outfile": "\"false\"",
+                    "exit_code": "\"0\"",
+                    "input_file": "{\"__class__\": \"RuntimeValue\"}",
+                    "p_fail": "\"0.0\"",
+                    "sleep_time": "\"0\"",
+                    "stderr": "\"false\"",
+                    "stdout": "\"false\""
+                },
+                "tool_version": "0.1",
+                "type": "tool"
+            }
+        },
+        "tags": [],
+        "url": "/api/workflows/4dbd0e549801df7e"
+    }
+]

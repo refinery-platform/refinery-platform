@@ -1,34 +1,46 @@
-<div ng-controller="provvisNavbarController">
+<div ng-controller="provvisNavbarController as $ctrl">
   <div id="provenance-controls">
     <div id="prov-ctrl-node-btn-group" class="btn-group">
-      <button id="prov-ctrl-layers-click" class="btn btn-xs btn-primary">
+      <label
+        id="prov-ctrl-layers-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Layers'">
         <i class="fa fa-bars"></i>&nbsp;Layers
-      </button>
-      <button id="prov-ctrl-analyses-click"
-              class="btn btn-xs btn-primary"><i
-          class="fa fa-cogs"></i>&nbsp;Analyses
-      </button>
-      <button id="prov-ctrl-subanalyses-click"
-              class="btn btn-xs btn-primary"><i
-          class="fa fa-cog"></i>&nbsp;Analysis Groups
-      </button>
-      <button id="prov-ctrl-workflows-click"
-              class="btn btn-xs btn-primary"><i
-          class="fa fa-sitemap rotate-icon-90"></i>&nbsp;Workflows
-      </button>
+      </label>
+      <label
+        id="prov-ctrl-analyses-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Analyses'">
+        <i class="fa fa-cogs"></i>&nbsp;Analyses
+      </label>
+      <label
+        id="prov-ctrl-subanalyses-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Analysis-Groups'">
+        <i class="fa fa-cog"></i>&nbsp;Analysis Groups
+      </label>
+      <label
+        id="prov-ctrl-workflows-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Workflows'">
+        <i class="fa fa-sitemap rotate-icon-90"></i>&nbsp;Workflows
+      </label>
     </div>
 
     <div id="prov-ctrl-node-labeling-btn-group" class="btn-group">
       <!-- Attributes -->
-      <button id="prov-ctrl-visible-attribute"
-              class="refinery-base btn btn-default dropdown">
-        <a class="btn btn-xs dropdown-toggle"
+      <div id="prov-ctrl-visible-attribute"
+              class="refinery-base dropdown">
+        <button class="refinery-base btn btn-default btn-xs dropdown-toggle"
            data-toggle="dropdown"
-           href="#"
             aria-expanded="true">
           <i class="fa fa-wrench"></i>&nbsp;Attributes&nbsp;<i
             class="fa fa-caret-down"></i>
-        </a>
+        </button>
         <ul id="prov-ctrl-visible-attribute-list"
             class="dropdown-menu scrollable-menu"></ul>
         <script>
@@ -38,7 +50,7 @@
                 e.stopPropagation();
               });
         </script>
-      </button>
+      </div>
     </div>
 
     <label style="display: inline; margin-top: 3px; margin-right: 5px;">
@@ -47,11 +59,11 @@
 
     <div id="prov-ctrl-filter-action" class="btn-group"
          data-toggle="buttons">
-      <label class="btn btn-xs active">
+      <label class="refinery-base btn btn-default btn-xs active">
         <input type="radio" id="prov-ctrl-filter-action-blend"
                name="Blend" value="blend" /> Blend
       </label>
-      <label class="btn btn-xs">
+      <label class="refinery-base btn btn-default btn-xs">
         <input type="radio" id="prov-ctrl-filter-action-hide"
                name="Hide" value="hide" /> Hide
       </label>
@@ -74,49 +86,34 @@
     <label id="prov-ctrl-toggle-fit-label"
            style="margin-right: 20px;">Scale graph</label>
 
-    <a href="#" id="help-provenance-button"
-       style="height:20px; width: 20px;">
-      <i class="fa fa-question-circle"
+    <a
+      id="help-provenance-button"
+      popover-placement="bottom"
+      popover-class="help-prov-button-popover"
+      uib-popover-html="'<div>
+      <div class=refinery-subheader><h4>Node and path specific:</h4></div>
+      <ul class=list-unstyled>
+      <li><strong>(Un)Select</strong>: Click</li>
+      <li><strong>Highlight predecessors</strong>: Click on left anchor</li>
+      <li><strong>Highlight successors</strong>: Click on right anchor</li>
+      <li><strong>Collapse node</strong>: Click on enclosing bounding
+      box</li>
+      <li><strong>Expand node</strong>: Double click on node</li></ul>
+      <div class=refinery-subheader>
+      <h4>Global:</h4></div>
+      <ul class=list-unstyled>
+      <li><strong>Clear highlighting</strong>: Left click on background</li>
+      <li><strong>Fit graph to screen</strong>: Left double click on
+      background</li>
+      </ul><div>'"
+      popover-title="Provenance Visualization Info"
+      popover-trigger="'outsideClick'"
+      popover-append-to-body="true"
+      tabindex="0">
+
+      <i class="fa fa-question-circle info-icon icon-only"
          style="font-size: 19px; margin-left: 5px; margin-right: 5px;
          position: relative; top: 3px;"></i>
     </a>
-
-    <div id="provvis-loader">
-      <i id="provvis-loader-icon"
-         class="fa fa-spinner fa-spin"></i>
-    </div>
   </div>
 </div>
-
-<script type="application/javascript">
-    $("#help-provenance-button").click( function(event) {
-    bootbox.alert(
-        "<h3>Provenance Visualization Info</h3>" +
-        "<ul>" +
-        "<li>" +
-        "<div class='refinery-subheader'>" +
-        "<h4>Node and path specific:</h4>" +
-        "</div>" +
-        "</li>" +
-        "</ul>" +
-        "<ul>" +
-        "<li>(Un)Select: Left click</li>" +
-        "<li>Highlight predecessors: Left click on left anchor</li>" +
-        "<li>Highlight successors: Left click on right anchor</li>" +
-        "<li>Collapse Node: Left click on enclosing bounding box</li>" +
-        "<li>Expand Node: Double click on node</li>" +
-        "</ul>" +
-        "<br>" +
-        "<li>" +
-        "<div class='refinery-subheader'>" +
-        "<h4>Global:</h4>" +
-        "</div>" +
-        "</li>" +
-        "<ul>" +
-        "<li>Clear highlighting: Left click on background</li>" +
-        "<li>Fit graph to screen: Left double click on background</li>" +
-        "</ul>" +
-        "</ul>"
-    );
-  });
-</script>

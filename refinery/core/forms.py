@@ -8,19 +8,9 @@ from django.contrib.auth.models import User
 from django.forms import ModelForm, ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from registration.forms import (RegistrationFormUniqueEmail, RegistrationForm)
+from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 
-from core.models import Project, UserProfile, Workflow, DataSet
-
-
-class ProjectForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(ProjectForm, self).__init__(*args, **kwargs)
-        self.fields['slug'].label = "Shortcut Name"
-
-    class Meta:
-        model = Project
-        fields = ["name", "slug", "summary", "description"]
+from .models import UserProfile, Workflow
 
 
 class RegistrationFormCustomFields(RegistrationForm):
@@ -44,6 +34,16 @@ class RegistrationFormCustomFields(RegistrationForm):
         error_messages={'required': _("You must provide an Affiliation")},
         label=_("Affiliation")
     )
+    spam_filter = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+
+    def clean_spam_filter(self):
+        if self.cleaned_data['spam_filter']:
+            raise ValidationError('Hidden fields should not be filled.',
+                                  code='invalid')
+        return self.cleaned_data['spam_filter']
 
 
 class RegistrationFormWithCustomFields(
@@ -78,9 +78,3 @@ class WorkflowForm(ModelForm):
     class Meta:
         model = Workflow
         fields = ["name", "slug", "summary", "description", "is_active"]
-
-
-class DataSetForm(ModelForm):
-    class Meta:
-        model = DataSet
-        fields = ["summary", "description", "slug"]

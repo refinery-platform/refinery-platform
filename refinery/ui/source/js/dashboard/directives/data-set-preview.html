@@ -39,7 +39,7 @@
           class="btn btn-important"
           ng-show="!preview.settings.djangoApp.satoriDemo"
           ng-href="data_sets/{{ preview.dataSetUuid }}">
-          <i class="fa fa-table"></i>
+          <i class="fa fa-folder-open-o"></i>
           View content in File Browser
         </a>
         <a
@@ -47,7 +47,7 @@
           class="btn btn-important is-not-allowed"
           ng-show="preview.settings.djangoApp.satoriDemo"
           ng-click="dashboard.openFileBrowserDisabled()">
-          <i class="fa fa-table"></i>
+          <i class="fa fa-folder-open-o"></i>
           View content in File Browser
         </a>
         <span class="separator">&middot;</span>
@@ -58,6 +58,44 @@
           ng-if="preview.exploration">
           <span class="fa fa-info-circle"></span>
           Tour
+        </button>
+        <button
+          class="btn clickable spinnable"
+          title="Import this shared data set into your own space to run analyses"
+          ng-if="!preview.dataSetDetails.is_owner && preview.dataSetDetails
+          .isa_archive && app.settings.djangoApp.userId != undefined &&
+          (preview.userPerms === 'change' || preview.userPerms === 'read')"
+          ng-class="{
+            'disabled': preview.importStatus[preview.dataSetUuid].isDataSetReImporting,
+            'btn-success': preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess,
+            'btn-danger': preview.importStatus[preview.dataSetUuid].isDataSetReImportFail
+          }"
+          ng-disabled="preview.importDataSetStarted"
+          ng-click="preview.importDataSet()"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="top"
+          refinery-tooltip-delay-show="750"
+          refinery-tooltip-delay-hide="150"
+          refinery-tooltip-hide-when="preview.importDataSetStarted">
+          <div
+            class="refinery-spinner-bg"
+            ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImporting">
+            <div class="refinery-spinner"></div>
+          </div>
+          <span ng-if="!preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess &&
+                       !preview.importStatus[preview.dataSetUuid].isDataSetReImportFail">
+            <i class="fa fa-cloud-download" aria-hidden="true"></i>
+            Import into Own Space
+          </span>
+          <span ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess">
+            <i class="fa fa-check" aria-hidden="true"></i>
+            Import successful!
+          </span>
+          <span ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImportFail">
+            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            Import failed!
+          </span>
         </button>
         <button
           class="btn"
@@ -85,9 +123,7 @@
     <div class="refinery-notifier-icon refinery-spinner"></div>
   </div>
   <div class="content scrollable">
-    <div
-      class="singleStudy"
-      ng-if="preview.numStudies === 1">
+    <div>
       <div id="data-set-summary-summary">
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
@@ -96,17 +132,17 @@
       <div
         class="inline-container">
         <h6>Description</h6>
-        <p ng-if="preview.studies.description">
-          {{ preview.studies.description | cut:true:preview.descLength }}
+        <p ng-if="preview.dataSetDetails.description">
+          {{ preview.dataSetDetails.description }}
         </p>
-        <p ng-if="!preview.studies.description">
+        <p ng-if="!preview.dataSetDetails.description">
           <em>None</em>
         </p>
         <button
           class="is-mirrorable icon-only"
-          ng-if="preview.studies.description.length > preview.settings.dashboard.preview.defaultLengthDescription"
+          ng-if="preview.dataSetDetails.description.length > preview.settings.dashboard.preview.defaultLengthDescription"
           ng-click="preview.toggleDescription()"
-          ng-class="{'is-mirrored': preview.descLength > preview.studies.description.length }">
+          ng-class="{'is-mirrored': preview.descLength > preview.dataSetDetails.description.length }">
           <i class="fa fa-chevron-right"></i>
         </button>
       </div>
@@ -206,12 +242,13 @@
             refinery-tooltip-placement="left">
           </i>
           <span ng-if="analysis.status === 'SUCCESS'">
-             <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
+            <a
+              ng-href='/data_sets/{{analysis.data_set__uuid}}/#/files/?{"{{analysis.facet_name}}":"{{analysis.name}}"}'>
               {{ analysis.name }}
              </a>
           </span>
           <span ng-if="analysis.status !== 'SUCCESS'">
-            <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses">
+            <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses/">
               {{ analysis.name }}
             </a>
           </span>
@@ -256,7 +293,7 @@
               <a
                 target="_blank"
                 ng-if="publication.doi"
-                ng-href="http://dx.doi.org/{{ publication.doi }}">
+                ng-href="https://doi.org/{{ publication.doi }}">
                 <i class="fa fa-external-link-square" aria-hidden="true"></i>
                 Source
               </a>

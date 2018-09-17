@@ -1,6 +1,6 @@
 'use strict';
 
-function listGraphDirective () {
+function listGraphDirective ($window) {
   return {
     bindToController: {
       graphData: '=graph',
@@ -12,12 +12,19 @@ function listGraphDirective () {
     controllerAs: 'listGraph',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/commons/list-graph/template.html'
+    scope: {
+      graphData: '=graph',
+      valuePropertyName: '=valuePropertyName'
+    },
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/commons/list-graph/template.html');
+    }
   };
 }
 
 angular
   .module('listGraph')
   .directive('listGraph', [
+    '$window',
     listGraphDirective
   ]);

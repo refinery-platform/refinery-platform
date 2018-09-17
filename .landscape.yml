@@ -1,0 +1,4 @@
+uses:
+  - django
+ignore-paths:
+  - migrations

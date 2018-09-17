@@ -1,52 +1,57 @@
 from __future__ import absolute_import
-import logging
 
 import ast
-import os
-import py2neo
+import logging
+import sys
+from urlparse import urljoin
 
-import requests
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework import status
-from urlparse import urlparse, urljoin
 
+from celery.task import task
+from guardian.shortcuts import get_objects_for_user
+from guardian.utils import get_anonymous_user
+import py2neo
+import requests
+from rest_framework.response import Response
+
+import constants
+# These imports go against our coding style guide, but are necessary for the
+#  time being due to mutual import issues
 import core
+from core.search_indexes import DataSetIndex
 import data_set_manager
 
 logger = logging.getLogger(__name__)
 
 
-def skip(func):
-    """Decorator to be used on function calls that don't necessarily need to
-    be run on CI i.e. Neo4J and Solr stuff tend to pollute log output
+def skip_if_test_run(func):
+    """Decorator to be used on functions that don't necessarily need to
+    be run during tests or CI i.e. Neo4J and Solr stuff tend to pollute
+    log output
     """
     def func_wrapper(*args, **kwargs):
-        try:
-            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
+        if "test" in sys.argv:
                 return
-        except KeyError:
-            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
-        return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
     return func_wrapper
 
 
-@skip
+@skip_if_test_run
 def update_data_set_index(data_set):
     """Update a dataset's corresponding document in Solr.
     """
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().update_object(data_set,
-                                                         using='core')
+        DataSetIndex().update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -55,21 +60,21 @@ def update_data_set_index(data_set):
         logger.error("Could not update DataSetIndex: %s", e)
 
 
-@skip
-def add_data_set_to_neo4j(dataset_uuid, user_id):
+@skip_if_test_run
+def add_data_set_to_neo4j(dataset, user_id):
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
     """
 
     logger.info(
         'Add dataset (uuid: %s) to Neo4J and give read access to user ' +
-        '(id: %s)', dataset_uuid, user_id
+        '(id: %s)', dataset.uuid, user_id
     )
 
     graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Get annotations of the data_set
-    annotations = get_data_set_annotations(dataset_uuid)
+    annotations = get_data_set_annotations(dataset.uuid)
     annotations = normalize_annotation_ont_ids(annotations)
 
     try:
@@ -80,13 +85,13 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
 
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
@@ -96,7 +101,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                     statement_uri,
                     {
                         'uri': annotation['value_uri'],
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
             else:
@@ -108,7 +114,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                             ':' +
                             annotation['value_accession']
                         ),
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
 
@@ -129,7 +136,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         tx.append(
             statement,
             {
-                'ds_uuid': dataset_uuid,
+                'ds_uuid': dataset.uuid,
                 'user_id': user_id
             }
         )
@@ -142,11 +149,11 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         """
         logger.error(
             'Failed to add read access to data set (uuid: %s) for user '
-            '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
+            '(uuid: %s) to Neo4J. Exception: %s', dataset.uuid, user_id, e
         )
 
 
-@skip
+@skip_if_test_run
 def add_read_access_in_neo4j(dataset_uuids, user_ids):
     """Give one or more user read access to one or more datasets.
     """
@@ -190,13 +197,26 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-@skip
-def update_annotation_sets_neo4j(username=''):
+@skip_if_test_run
+def async_update_annotation_sets_neo4j(username=''):
     """
-    Update annotation sets in Neo4J
+    Trigger async update of annotation sets in Neo4J
     AnnotationSets link Ontology classes from accessible DataSets with users
     """
+    _update_annotation_sets_neo4j.delay(username)
 
+
+@skip_if_test_run
+def sync_update_annotation_sets_neo4j(username=''):
+    """
+    Trigger async update of annotation sets in Neo4J
+    AnnotationSets link Ontology classes from accessible DataSets with users
+    """
+    _update_annotation_sets_neo4j(username)
+
+
+@task()
+def _update_annotation_sets_neo4j(username):
     logger.info(
         'Updating annotation sets for "%s" (If username is empty, updates for '
         'all users) in Neo4J.',
@@ -219,7 +239,7 @@ def update_annotation_sets_neo4j(username=''):
         )
 
 
-@skip
+@skip_if_test_run
 def add_or_update_user_to_neo4j(user_id, username):
     """
     Add or update a user in Neo4J
@@ -257,7 +277,7 @@ def add_or_update_user_to_neo4j(user_id, username):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_user_in_neo4j(user_id, user_name):
     """
     Delete a user and its annotation set in Neo4J
@@ -304,7 +324,7 @@ def delete_user_in_neo4j(user_id, user_name):
         )
 
 
-@skip
+@skip_if_test_run
 def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
@@ -347,15 +367,14 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_data_set_index(data_set):
     """Remove a dataset's related document from Solr's index.
     """
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().remove_object(data_set,
-                                                         using='core')
+        DataSetIndex().remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -364,7 +383,7 @@ def delete_data_set_index(data_set):
         logger.error("Could not delete from DataSetIndex: %s", e)
 
 
-@skip
+@skip_if_test_run
 def delete_data_set_neo4j(dataset_uuid):
     """Remove a dataset's related node in Neo4J.
     """
@@ -397,7 +416,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_ontology_from_neo4j(acronym):
     """Remove ontology and all class nodes that belong exclusively to an
     ontology.
@@ -455,8 +474,11 @@ def normalize_annotation_ont_ids(annotations):
     some only provide the ID.
     """
 
-    new_annotations = []
-    for annotation in annotations:
+    # Copy annotation list
+    new_annotations = list(annotations)
+
+    # Update new annotations in place
+    for annotation in new_annotations:
         underscore_pos = annotation['value_accession'].rfind('_')
         if underscore_pos >= 0:
             annotation['value_accession'] = \
@@ -770,13 +792,14 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Updated %s', ontology)
 
 
-@skip
+@skip_if_test_run
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
         data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager')
+            node_instance, using='data_set_manager'
+        )
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -784,7 +807,7 @@ def delete_analysis_index(node_instance):
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not delete from NodeIndex:", e)
+        logger.error("Could not delete from NodeIndex: %s", e)
 
 
 def invalidate_cached_object(instance, is_test=False):
@@ -814,47 +837,27 @@ def invalidate_cached_object(instance, is_test=False):
         return mc
 
 
-def get_full_url(relative_url):
-    """ Creates a full url (including hostname) from a given relative url
-    :param relative_url: Relative url to build a full url from
-    :type  relative_url: String.
-    :returns A fully constructed url from the Site model's domain, the Django
-    setting: REFINERY_URL_SCHEME, and the passed in relative url or None if
-    something breaks
+def get_absolute_url(string):
+    """Creates an absolute URL from a relative URL using the current Site
+    domain and REFINERY_URL_SCHEME Django setting
     """
+    if not string or is_absolute_url(string):
+        return string
 
-    # If url passed in is already a full url, simply return that
-    if is_url(relative_url):
-        return relative_url
-
-    # Being defensive is good
     try:
         current_site = Site.objects.get_current()
     except Site.DoesNotExist:
-        logger.error(
-            "Cannot provide a full URL: no Sites configured or "
-            "SITE_ID is not set correctly")
+        logger.error("Can not construct a full URL: no Sites configured or "
+                     "SITE_ID is invalid")
         return None
 
-    try:
-        url_scheme = settings.REFINERY_URL_SCHEME
-    except AttributeError:
-        logger.error(
-            "Couldnt fetch the 'REFINERY_URL_SCHEME' Django setting. Is it "
-            "set properly???")
-        return None
-
-    # Construct the url
-    full_url = '{}://{}{}'.format(
-        url_scheme, current_site.domain, relative_url
+    return "{}://{}{}".format(
+        settings.REFINERY_URL_SCHEME, current_site.domain, string
     )
 
-    return full_url
 
-
-def is_url(string):
-    """Check if a given string is a URL"""
-    return urlparse(string).scheme != ""
+def is_absolute_url(string):
+    return string and '://' in string
 
 
 def get_aware_local_time():
@@ -868,43 +871,6 @@ def email_admin(subject, message):
     """
     send_mail(subject, message, settings.SERVER_EMAIL,
               [settings.ADMINS[0][1]])
-
-
-def create_current_selection_node_group(assay_uuid):
-    """
-    Helper method to create a current selection group which
-    is default for all node_group list
-
-    :param assay_uuid: string of uuid
-    :return: Response obj
-    """
-    # confirm an assay exists
-    try:
-        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
-    except data_set_manager.models.Assay.DoesNotExist as e:
-        return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    study_uuid = assay.study.uuid
-    # initialize node_group with a current_selection
-    serializer = core.serializers.NodeGroupSerializer(data={
-        'assay': assay_uuid,
-        'study': study_uuid,
-        'name': 'Current Selection'
-    })
-
-    # creating a default current_selection, therefore returning 201
-    if serializer.is_valid():
-        serializer.save()
-        # UI expects a list from assay query
-        return Response(
-            [serializer.data],
-            status=status.HTTP_201_CREATED)
-    else:
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST)
 
 
 def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
@@ -922,7 +888,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
     params = {
         'attributes': 'uuid',
         'facets': 'uuid',
-        'limit': 10000000,
+        'limit': constants.REFINERY_SOLR_DOC_LIMIT,
         'include_facet_count': 'false'
     }
 
@@ -938,7 +904,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = data_set_manager.utils.generate_solr_params(
+    solr_params = data_set_manager.utils.generate_solr_params_for_assay(
         params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
@@ -1011,3 +977,31 @@ def move_obj_to_front(obj_arr, match_key, match_value):
             break
 
     return modified_obj_arr
+
+
+def api_error_response(error_message, http_status_code):
+    """Return a standardized error for Django Rest Framework API calls"""
+    return Response({'Error': error_message}, status=http_status_code)
+
+
+def get_resources_for_user(user, resource_type):
+    return get_objects_for_user(
+        user if user.is_authenticated()
+        else get_anonymous_user(),
+        which_default_read_perm(resource_type),
+        accept_global_perms=accept_global_perms(resource_type)
+    )
+
+
+def which_default_read_perm(resource_type):
+    if resource_type == 'dataset':
+        return 'core.read_meta_dataset'
+    return 'core.read_%s' % resource_type
+
+
+# False, accept_global_perms will be ignored, which means that only object
+# permissions will be checked.
+def accept_global_perms(resource_type):
+    if resource_type == 'dataset':
+        return False
+    return True

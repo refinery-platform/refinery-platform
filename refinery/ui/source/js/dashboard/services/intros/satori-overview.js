@@ -108,8 +108,7 @@ function DashboardIntrosSatoriOverview (
       {
         element: '#intro-js-satori-overview-start',
         intro:
-          'This was a quick over. If you want to dive in deeper you can check' +
-          'out the following guides that explain a bit more details: <ul>' +
+          'That was a quick overview. The following guides go into more detail: <ul>' +
           '<li class="clickable" onclick="introJsSatoriOverview' +
             '(\'satori-data-set-view\')">Data set view</li>' +
           '<li class="clickable" onclick="introJsSatoriOverview' +

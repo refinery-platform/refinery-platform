@@ -1,0 +1,32 @@
+ <div>
+  <button
+    class="refinery-base btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length - 1] == 0"
+    ng-click="$ctrl.navLeft($ctrl.currentGroup.length - 1)">
+    <i class="fa fa-backward"></i>
+  </button>
+  <span class="badge">
+    {{ $ctrl.currentGroup[$ctrl.currentGroup.length - 1] + 1}}
+  </span>
+   <!-- Checking the type containing the inner most, ['PAIR', 'LIST] -->
+  <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2] == 'PAIR'">
+    <button
+      class="refinery-base btn btn-default btn-xs outline"
+      ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length - 1] == 1 ||
+      $ctrl.needMoreNodes()"
+      ng-click="$ctrl.navRight($ctrl.currentGroup.length - 1)">
+      <i class="fa fa-forward"></i>
+    </button>
+  </span>
+    <!-- Checking the type containing the inner most, ['PAIR', 'LIST] -->
+  <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2]  == 'LIST'">
+    <button
+      class="refinery-base btn btn-default btn-xs outline"
+      ng-disabled="$ctrl.needMoreNodes()"
+      ng-click="$ctrl.navRight($ctrl.currentGroup.length - 1)">
+      <i class="fa fa-forward"></i>
+    </button>
+  </span>
+</div>
+
+

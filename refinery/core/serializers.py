@@ -1,166 +1,150 @@
 import logging
 
-import celery
+from django.conf import settings
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
-import file_store
-import data_set_manager
-from .models import Workflow, NodeGroup
-
+from .models import DataSet, Event, User, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
 
-class NodeGroupSerializer(serializers.ModelSerializer):
-    # Slug related field associated uuids with model
-    nodes = serializers.SlugRelatedField(
-        many=True, slug_field='uuid',
-        queryset=data_set_manager.models.Node.objects.all(),
-        required=False, allow_null=True)
-    assay = serializers.SlugRelatedField(
-        queryset=data_set_manager.models.Assay.objects.all(),
-        slug_field='uuid')
-    study = serializers.SlugRelatedField(
-        queryset=data_set_manager.models.Study.objects.all(),
-        slug_field='uuid')
+class DataSetSerializer(serializers.ModelSerializer):
+    slug = serializers.CharField(
+            max_length=250,
+            trim_whitespace=True,
+            validators=[UniqueValidator(
+                queryset=DataSet.objects.all(),
+                message='Slugs must be unique.'
+            )]
+    )
+    description = serializers.CharField(max_length=5000)
+    is_owner = serializers.SerializerMethodField()
+    public = serializers.SerializerMethodField()
+    is_clean = serializers.SerializerMethodField()
+    file_count = serializers.SerializerMethodField()
+    analyses = serializers.SerializerMethodField()
+
+    def get_analyses(self, data_set):
+        return [dict(uuid=analysis.uuid,
+                     name=analysis.name,
+                     status=analysis.status,
+                     owner=analysis.get_owner().profile.uuid)
+                for analysis in data_set.get_analyses()]
+
+    def get_is_owner(self, data_set):
+        try:
+            return data_set.is_owner
+        except:
+            owner = data_set.get_owner()
+            try:
+                user_request = self.context.get('request').user
+            except AttributeError as e:
+                logger.error("Request is missing a user: %s", e)
+                return False
+            return user_request == owner
+
+    def get_public(self, data_set):
+        try:
+            return data_set.public
+        except:
+            is_public = data_set.is_public()
+            return is_public
+
+    def get_is_clean(self, data_set):
+        return data_set.is_clean()
+
+    def get_file_count(self, data_set):
+        return data_set.get_file_count()
 
     class Meta:
-        model = NodeGroup
-        fields = ('uuid', 'node_count', 'is_implicit', 'study',
-                  'assay', 'is_current', 'nodes', 'name')
+        model = DataSet
+        fields = ('title', 'accession', 'analyses', 'summary', 'description',
+                  'slug', 'uuid', 'modification_date', 'id', 'is_owner',
+                  'public', 'is_clean', 'file_count')
 
-    def create(self, validated_data):
-        node_group = NodeGroup.objects.create(
-            study=validated_data.get('study'),
-            assay=validated_data.get('assay'),
-            name=validated_data.get('name'),
-            is_current=validated_data.get('is_current', False),
-        )
-        # Add foreign keys after object is created
-        if validated_data.get('nodes'):
-            node_group.nodes.add(*validated_data.get('nodes'))
-            node_group.node_count = len(validated_data.get('nodes'))
-            node_group.save()
-
-        return node_group
-
-    def update(self, instance, validated_data):
+    def partial_update(self, instance, validated_data):
         """
-        Update and return an existing `NodeGroup` instance, given the
+        Update and return an existing `DataSet` instance, given the
         validated data.
         """
-        if validated_data.get('nodes'):
-            instance.nodes = validated_data.get('nodes', instance.nodes)
-            instance.node_count = len(validated_data.get('nodes'))
+        instance.title = validated_data.get('title', instance.title)
+        instance.accession = validated_data.get(
+            'accession', instance.accession
+        )
+        instance.summary = validated_data.get('summary', instance.summary)
+        instance.description = validated_data.get(
+            'description', instance.description
+        )
+        instance.slug = validated_data.get('slug', instance.slug)
 
-        instance.is_current = validated_data.get('is_current',
-                                                 instance.is_current)
         instance.save()
         return instance
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        fields = ('primary_group', 'uuid')
+
+    def validate_primary_group(self, group):
+        user = self.context.get('request').user
+        if user.id in group.user_set.values_list('id', flat=True):
+            pass
+        else:
+            raise serializers.ValidationError(
+                'User is not a member of group, {}'.format(group)
+            )
+
+        if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:
+            return group
+        else:
+            raise serializers.ValidationError('Primary group can not be '
+                                              'the Public group')
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `UserProfile` instance, given the
+        validated data.
+        """
+        instance.primary_group = validated_data.get('primary_group',
+                                                    instance.primary_group)
+        instance.save()
+        return instance
+
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'profile', 'username')
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
     instance = serializers.HyperlinkedIdentityField(
         view_name='workflow-detail')
     workflow_engine = serializers.StringRelatedField()
-    data_inputs = serializers.StringRelatedField()
-    input_relationships = serializers.StringRelatedField()
 
     class Meta:
         model = Workflow
 
 
-class NodeSerializer(serializers.HyperlinkedModelSerializer):
-    assay = serializers.StringRelatedField()
-    study = serializers.StringRelatedField()
-    child_nodes = serializers.SerializerMethodField('_get_children')
-    parent_nodes = serializers.SerializerMethodField('_get_parents')
-    auxiliary_nodes = serializers.SerializerMethodField('_get_aux_nodes')
-    auxiliary_file_generation_task_state = serializers.SerializerMethodField(
-                '_get_aux_node_task_state'
-            )
-    file_extension = serializers.SerializerMethodField(
-        '_get_file_extension')
-    relative_file_store_item_url = serializers.SerializerMethodField(
-        '_get_relative_url')
-    ready_for_igv_detail_view = serializers.SerializerMethodField(
-     '_ready_for_igv_detail_view')
-    is_auxiliary_node = serializers.SerializerMethodField(
-     '_is_auxiliary_node')
-
-    def _get_children(self, obj):
-        return obj.get_children()
-
-    def _get_parents(self, obj):
-        return obj.get_parents()
-
-    def _get_aux_nodes(self, obj):
-        aux_nodes = obj.get_auxiliary_nodes()
-        urls = []
-        for uuid in aux_nodes:
-            try:
-                node = data_set_manager.models.Node.objects.get(uuid=uuid)
-                urls.append(node.get_relative_file_store_item_url())
-            except (data_set_manager.models.Node.DoesNotExist,
-                    data_set_manager.models.Node.MultipleObjectsReturned) as e:
-                logger.debug(e)
-        return urls
-
-    def _get_aux_node_task_state(self, obj):
-        return obj.get_auxiliary_file_generation_task_state()
-
-    def _get_file_extension(self, obj):
-        try:
-            return file_store.models.FileStoreItem.objects.get(
-                    uuid=obj.file_uuid).get_file_extension()
-        except (file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
-            logger.debug(e)
-            return None
-
-    def _get_relative_url(self, obj):
-        return obj.get_relative_file_store_item_url() or None
-
-    def _ready_for_igv_detail_view(self, obj):
-        if not obj.is_auxiliary_node:
-            ready_for_igv_detail_view = True
-            for item in obj.get_auxiliary_nodes():
-                try:
-                    node = data_set_manager.models.Node.objects.get(uuid=item)
-                except (data_set_manager.models.Node.DoesNotExist,
-                        data_set_manager.models.Node.MultipleObjectsReturned) \
-                        as e:
-                    logger.error(e)
-                    return False
-
-                state = node.get_auxiliary_file_generation_task_state()
-                if not state == celery.states.SUCCESS:
-                    ready_for_igv_detail_view = False
-
-            return ready_for_igv_detail_view
-        else:
-            return None
-
-    def _is_auxiliary_node(self, obj):
-        return obj.is_auxiliary_node
+class EventSerializer(serializers.ModelSerializer):
+    data_set = DataSetSerializer()
+    user = UserSerializer()
+    message = serializers.SerializerMethodField()
+    details = serializers.JSONField(source="get_details_as_dict")
+    date_time = serializers.DateTimeField()
 
     class Meta:
-        model = data_set_manager.models.Node
-        fields = [
-            'uuid',
-            'name',
-            'type',
-            'analysis_uuid',
-            'subanalysis',
-            'assay',
-            'study',
-            'relative_file_store_item_url',
-            'parent_nodes',
-            'child_nodes',
-            'auxiliary_nodes',
-            'is_auxiliary_node',
-            'file_extension',
-            'auxiliary_file_generation_task_state',
-            'ready_for_igv_detail_view',
-            'file_uuid'
-        ]
+        model = Event
+        fields = (
+            'date_time', 'data_set', 'group', 'user',
+            'type', 'sub_type', 'details', 'message'
+        )
+
+    @staticmethod
+    def get_message(obj):
+        return unicode(obj)

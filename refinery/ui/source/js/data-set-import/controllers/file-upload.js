@@ -9,6 +9,7 @@ function RefineryFileUploadCtrl (
   $timeout,
   $window,
   $,
+  addFileToDataSetService,
   chunkedUploadService,
   fileUploadStatusService,
   settings,
@@ -16,7 +17,7 @@ function RefineryFileUploadCtrl (
   getCookie
 ) {
   var vm = this;
-  vm.overallFileStatus = fileUploadStatusService.fileUploadStatus;
+  vm.overallFileStatus = fileUploadStatusService.fileUploadStatus.status;
   // Caches file names to avoid uploading multiple times the same file and
   // ui for statuses.
   vm.fileCache = {};
@@ -133,12 +134,22 @@ function RefineryFileUploadCtrl (
       totalNumFilesUploaded++;
       file.uploaded = true; // used by ui to reset progress bars
       vm.fileCache[data.files[0].name].status = 'uploaded';
-      if ($element.fileupload('active') > 0) {
+      if ($('#fileupload').fileupload('active') > 0) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('none');
       } else {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
+      }
+      if (vm.isNodeUpdate) {
+        addFileToDataSetService.update({
+          node_uuid: vm.nodeUuid
+        }).$promise
+          .then(function () {
+            vm.addFileStatus = 'success';
+          }, function () {
+            vm.addFileStatus = 'error';
+          });
       }
 
       $timeout(function () {
@@ -317,6 +328,7 @@ angular
     '$timeout',
     '$window',
     '$',
+    'addFileToDataSetService',
     'chunkedUploadService',
     'fileUploadStatusService',
     'settings',

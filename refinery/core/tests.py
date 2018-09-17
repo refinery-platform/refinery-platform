@@ -1,44 +1,52 @@
-import json
-from urlparse import urljoin
+from datetime import timedelta
+import re
 
-import mock
-
-from django.contrib.auth.models import User, Group
+from django.apps import apps
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser, Group, User
+from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import unittest, timezone
+from django.core.management import CommandError, call_command
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
+from django.utils import timezone
 
-from rest_framework.test import APIRequestFactory, APIClient, \
-    force_authenticate
-from rest_framework.test import APITestCase
-from guardian.shortcuts import assign_perm
+from cuser.middleware import CuserMiddleware
+from guardian.shortcuts import get_objects_for_group
+import mock
 import mockcache as memcache
-from tastypie.test import ResourceTestCase
 
-from core.api import AnalysisResource
+from analysis_manager.models import AnalysisStatus
+from data_set_manager.models import (AnnotatedNode, Assay, Contact,
+                                     Investigation, Node, NodeCollection,
+                                     Study)
+from factory_boy.django_model_factories import AnalysisNodeConnectionFactory, \
+    FileStoreItemFactory, GalaxyInstanceFactory, NodeFactory
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_tool_with_necessary_models,
+                               make_analyses_with_single_dataset)
+from file_store.models import FileStoreItem, FileType
+from file_store.tasks import import_file
 
-from core.management.commands.create_user import init_user
-
-from core.models import (
-    NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project,
-    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, NodeGroup, Tutorials)
-from core.utils import (get_aware_local_time,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
-from core.views import NodeGroups, DataSetsViewSet, AnalysesViewSet
-from .serializers import NodeGroupSerializer
-from file_store.models import FileStoreItem
-from file_store.models import FileExtension
-
-from data_set_manager.models import (Study, Assay, Node, Investigation)
-from galaxy_connector.models import Instance
+from .management.commands.create_user import init_user
+from .management.commands.import_annotations import \
+    Command as ImportAnnotationsCommand
+from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                     AnalysisNodeConnection, AnalysisResult, BaseResource,
+                     DataSet, Event, ExtendedGroup, InvestigationLink, Project,
+                     SiteStatistics, Tutorials, UserProfile, Workflow,
+                     WorkflowEngine, invalidate_cached_object)
+from .search_indexes import DataSetIndex
+from .tasks import collect_site_statistics
+from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
+                    get_resources_for_user, move_obj_to_front,
+                    which_default_read_perm)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
 
-class UserCreateTest(unittest.TestCase):
+class UserCreateTest(TestCase):
     """Test User instance creation"""
 
     def setUp(self):
@@ -49,9 +57,6 @@ class UserCreateTest(unittest.TestCase):
         self.last_name = "Sample"
         self.affiliation = "University"
         self.public_group_name = ExtendedGroup.objects.public_group().name
-
-    def tearDown(self):
-        User.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -70,950 +75,7 @@ class UserCreateTest(unittest.TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
-class NodeSetTest(unittest.TestCase):
-    """Test all NodeSet operations"""
-
-    def setUp(self):
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.query = json.dumps({
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        })
-
-    def test_create_minimal_nodeset(self):
-        """Test adding a new NodeSet with required fields only"""
-        name = 'nodeset'
-        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay)
-        self.assertIsInstance(nodeset, NodeSet)
-        self.assertEqual(nodeset.name, name)
-        self.assertEqual(nodeset.summary, '')
-        self.assertEqual(nodeset.solr_query, '')
-
-    def test_create_full_nodeset(self):
-        """Test adding a new NodeSet with a list of Node instances and summary
-        """
-        name = 'nodeset'
-        summary = 'sample summary'
-        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay,
-                                 summary=summary, solr_query=self.query)
-        self.assertIsInstance(nodeset, NodeSet)
-        self.assertEqual(nodeset.name, name)
-        self.assertEqual(nodeset.summary, summary)
-        self.assertEqual(nodeset.solr_query, self.query)
-
-    def test_get_nodeset_with_valid_uuid(self):
-        """Test retrieving an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(get_nodeset(nodeset.uuid), nodeset)
-
-    def test_get_nodeset_with_invalid_uuid(self):
-        """Test retrieving a NodeSet instance that doesn't exist"""
-        self.assertRaises(
-            NodeSet.DoesNotExist, get_nodeset, uuid='Invalid UUID'
-        )
-
-    def test_delete_nodeset_with_valid_uuid(self):
-        """Test deleting an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        delete_nodeset(nodeset.uuid)
-        self.assertRaises(
-            NodeSet.DoesNotExist, NodeSet.objects.get, uuid=nodeset.uuid
-        )
-
-    def test_delete_nodeset_with_invalid_uuid(self):
-        """Test deleting a NodeSet instance that doesn't exist"""
-        self.assertIsNone(delete_nodeset(uuid='Invalid UUID'))
-
-    def test_update_nodeset_name(self):
-        """Test updating NodeSet name"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_name = 'new nodeset name'
-        update_nodeset(uuid=nodeset.uuid, name=new_name)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).name, new_name
-        )
-
-    def test_update_nodeset_summary(self):
-        """Test updating NodeSet summary"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_summary = 'new nodeset summary'
-        update_nodeset(uuid=nodeset.uuid, summary=new_summary)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).summary, new_summary)
-
-    def test_update_nodeset_study(self):
-        """Test updating NodeSet study"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_study = Study.objects.create(investigation=self.investigation)
-        update_nodeset(uuid=nodeset.uuid, study=new_study)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).study, new_study
-        )
-
-    def test_update_nodeset_assay(self):
-        """Test updating NodeSet assay"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_assay = Assay.objects.create(study=self.study)
-        update_nodeset(uuid=nodeset.uuid, assay=new_assay)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay
-        )
-
-    def test_update_nodeset_with_solr_query(self):
-        """Test updating NodeSet with a new Solr query"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, solr_query='')
-        update_nodeset(uuid=nodeset.uuid, solr_query=self.query)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).solr_query, self.query
-        )
-
-    def test_update_nodeset_with_blank_solr_query(self):
-        """Test deleting Solr query from a NodeSet"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay,
-                                         solr_query=self.query)
-        new_query = ''
-        update_nodeset(uuid=nodeset.uuid, solr_query=new_query)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).solr_query, new_query
-        )
-
-    def test_update_nodeset_with_invalid_uuid(self):
-        """Test updating a NodeSet instance that doesn't exist"""
-        self.assertRaises(
-            NodeSet.DoesNotExist, update_nodeset, uuid='Invalid UUID'
-        )
-
-
-def make_api_uri(resource_name, resource_id='', sharing=False):
-    """Helper function to build Tastypie REST URIs"""
-    base_url = '/api/v1'
-    uri = '/'.join([base_url, resource_name]) + '/'
-    uri_with_resource_id = '/'.join([base_url, resource_name, resource_id]) \
-                           + '/'
-
-    def add_sharing(uri):
-        return uri + 'sharing/'
-
-    if resource_id:
-        if sharing:
-            return add_sharing(uri_with_resource_id)
-        else:
-            return uri_with_resource_id
-    else:
-        if sharing:
-            return add_sharing(uri)
-        else:
-            return uri
-
-
-class NodeSetResourceTest(ResourceTestCase):
-    """Test NodeSet REST API operations"""
-
-    def setUp(self):
-        super(NodeSetResourceTest, self).setUp()
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-        self.investigation2 = Investigation.objects.create()
-        self.study2 = Study.objects.create(investigation=self.investigation)
-        self.assay2 = Assay.objects.create(study=self.study2)
-        self.query = {
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        }
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '',
-                                              self.password2)
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username,
-                                            password=self.password)
-
-    def test_get_nodeset(self):
-        """Test retrieving an existing NodeSet that belongs to a user who
-        created it
-        """
-        nodeset = NodeSet.objects.create(
-            name='ns',
-            study=self.study,
-            assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(
-            nodeset_uri,
-            format='json',
-            authentication=self.get_credentials()
-        )
-        self.assertValidJSONResponse(response)
-        keys = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit',
-                'node_count', 'solr_query', 'solr_query_components',
-                'resource_uri', 'is_current']
-        self.assertKeys(self.deserialize(response), keys)
-
-    # Test fails because the API doesn't authorize users.
-    # def test_get_nodeset_list(self):
-    #     """Test retrieving a list of NodeSets that belong to a user who
-    #     created them
-    #     """
-    #     nodeset1 = NodeSet.objects.create(
-    #         name='ns1',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     # nodeset1.set_owner(self.user)
-    #     assign_perm(
-    #         "read_%s" % nodeset1._meta.module_name,
-    #         self.user,
-    #         nodeset1
-    #     )
-    #     nodeset2 = NodeSet.objects.create(
-    #         name='ns2',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     # nodeset2.set_owner(self.user2)
-    #     assign_perm(
-    #         "read_%s" % nodeset2._meta.module_name,
-    #         self.user2,
-    #         nodeset2
-    #     )
-    #     nodeset_uri = make_api_uri('nodeset')
-    #     self.api_client.client.logout()
-    #     response = self.api_client.get(
-    #         nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertValidJSONResponse(response)
-    #     data = self.deserialize(response)['objects']
-    #     self.assertEqual(len(data), 1)
-    #     self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_nodeset_list_for_given_study_and_assay(self):
-        """Test retrieving a list of NodeSets for given study and assay"""
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
-        )
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'study__uuid': self.study.uuid,
-                                             'assay__uuid': self.assay.uuid})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_sorted_nodeset_list(self):
-        """Get a list of NodeSets with sorting params applied
-        (e.g., order_by=name)
-        """
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
-        )
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'order_by': 'name'})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_empty_nodeset_list(self):
-        """Test retrieving a list of NodeSets when none exist"""
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_get_nodeset_without_login(self):
-        """Test retrieving an existing NodeSet without logging in"""
-        nodeset = NodeSet.objects.create(
-            name='ns', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(nodeset_uri, format='json')
-        self.assertHttpUnauthorized(response)
-
-    def test_get_nodeset_list_without_login(self):
-        """Test retrieving a list of NodeSets without logging in"""
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
-        )
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json')
-        self.assertHttpUnauthorized(response)
-
-    # See https://github.com/refinery-platform/refinery-platform/issues/586
-    # def test_get_nodeset_without_owner(self):
-    #     """Test retrieving an existing NodeSet that belongs to no one.
-    #     """
-    #     nodeset = NodeSet.objects.create(
-    #         name='nodeset',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-    #     response = self.api_client.get(
-    #         nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertHttpNotFound(response)
-
-    # See https://github.com/refinery-platform/refinery-platform/issues/586
-    # def test_get_nodeset_without_permission(self):
-    #     """Test retrieving an existing NodeSet that belongs to a different
-    #     user
-    #     """
-    #     nodeset = NodeSet.objects.create(
-    #         name='nodeset',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     assign_perm(
-    #         "read_%s" % nodeset._meta.module_name, self.user2, nodeset
-    #     )
-    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-    #     response = self.api_client.get(
-    #         nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertHttpNotFound(response)
-
-    def test_get_nodeset_with_invalid_uuid(self):
-        """Test retrieving a NodeSet instance that doesn't exist"""
-        nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
-        nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpNotFound(response)
-
-    def test_create_minimal_nodeset(self):
-        """Test adding a new NodeSet with required fields only"""
-        dataset = DataSet.objects.create()
-        InvestigationLink.objects.create(data_set=dataset,
-                                         investigation=self.investigation)
-        assign_perm("read_%s" % dataset._meta.module_name, self.user, dataset)
-        nodeset_data = {
-            'name': 'nodeset1',
-            'study': make_api_uri('study', self.study.uuid),
-            'assay': make_api_uri('assay', self.assay.uuid),
-            'is_implicit': True
-        }
-        nodeset_uri = make_api_uri('nodeset')
-
-        self.assertEqual(NodeSet.objects.count(), 0)
-        response = self.api_client.post(nodeset_uri, format='json',
-                                        data=nodeset_data,
-                                        authentication=self.get_credentials())
-        self.assertHttpCreated(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset = NodeSet.objects.get(name=nodeset_data['name'])
-        self.assertEqual(nodeset.get_owner(), self.user)
-
-    def test_create_minimal_nodeset_without_login(self):
-        """Test adding a new NodeSet without logging in"""
-        self.assertEqual(NodeSet.objects.count(), 0)
-        nodeset_data = {
-            'name': 'nodeset1',
-            'study': make_api_uri('study', self.study.uuid),
-            'assay': make_api_uri('assay', self.assay.uuid),
-            'is_implicit': True
-        }
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.post(nodeset_uri, format='json',
-                                        data=nodeset_data)
-        self.assertHttpUnauthorized(response)
-        self.assertEqual(NodeSet.objects.count(), 0)
-
-    def test_create_minimal_nodeset_without_permission(self):
-        """Test adding a new NodeSet by a user that doesn't have read_dataset
-        permission on the linked dataset object.
-        """
-        self.assertEqual(NodeSet.objects.count(), 0)
-        nodeset_data = {
-            'name': 'nodeset1',
-            'study': make_api_uri('study', self.study.uuid),
-            'assay': make_api_uri('assay', self.assay.uuid),
-            'is_implicit': True
-        }
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.post(nodeset_uri, format='json',
-                                        data=nodeset_data,
-                                        authentication=self.get_credentials())
-        self.assertHttpUnauthorized(response)
-        self.assertEqual(NodeSet.objects.count(), 0)
-
-    def test_update_nodeset(self):
-        """Test updating an existing NodeSet instance with new data"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        self.assertEqual(nodeset.name, 'nodeset')
-        self.assertFalse(nodeset.is_implicit)
-        assign_perm(
-            "change_%s" % nodeset._meta.module_name, self.user, nodeset)
-
-        new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        self.api_client.put(nodeset_uri, format='json', data=new_nodeset_data,
-                            authentication=self.get_credentials())
-        self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
-        self.assertEqual(nodeset.name, 'new_nodeset')
-        self.assertTrue(nodeset.is_implicit)
-
-    # def test_update_failure_nodeset(self):
-    #     """Test failing update for an existing NodeSet instance when the user
-    #     has no change permission.
-    #     """
-    #     nodeset = NodeSet.objects.create(
-    #         name='nodeset',
-    #         study=self.study,
-    #         assay=self.assay
-    #     )
-    #     self.assertEqual(NodeSet.objects.count(), 1)
-    #     self.assertEqual(nodeset.name, 'nodeset')
-    #     self.assertFalse(nodeset.is_implicit)
-    #     nodeset.set_owner(self.user2)
-    #     new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
-    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-    #     response = self.api_client.put(
-    #         nodeset_uri,
-    #         format='json',
-    #         data=new_nodeset_data,
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertHttpUnauthorized(response)
-    #     self.assertEqual(NodeSet.objects.count(), 1)
-    #     nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
-    #     self.assertEqual(nodeset.name, 'nodeset')
-    #     self.assertFalse(nodeset.is_implicit)
-
-    def test_delete_nodeset(self):
-        """Test deleting an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % nodeset._meta.module_name, self.user, nodeset
-        )
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.delete(
-            nodeset_uri, format='json', authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
-
-
-class NodeSetListResourceTest(ResourceTestCase):
-    """Test NodeSetListResource REST API operations"""
-
-    def setUp(self):
-        super(NodeSetListResourceTest, self).setUp()
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-        self.investigation2 = Investigation.objects.create()
-        self.study2 = Study.objects.create(investigation=self.investigation)
-        self.assay2 = Assay.objects.create(study=self.study2)
-        self.query = {
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        }
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '',
-                                              self.password2)
-        self.nodeset_uri = make_api_uri('nodesetlist')
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username,
-                                            password=self.password)
-
-    # Same reason
-    # def test_get_nodeset_list(self):
-    #     """Test retrieving a list of NodeSets that belong to a user who
-    #     created them
-    #     """
-    #     nodeset1 = NodeSet.objects.create(
-    #         name='ns1',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         node_count=1,
-    #         is_implicit=True,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     assign_perm(
-    #         "read_%s" % nodeset1._meta.module_name,
-    #         self.user,
-    #         nodeset1
-    #     )
-    #     nodeset2 = NodeSet.objects.create(
-    #         name='ns2',
-    #         study=self.study2,
-    #         assay=self.assay2,
-    #         node_count=1,
-    #         is_implicit=True,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     assign_perm(
-    #         "read_%s" % nodeset2._meta.module_name,
-    #         self.user2,
-    #         nodeset2
-    #     )
-    #     response = self.api_client.get(
-    #         self.nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertValidJSONResponse(response)
-    #     data = self.deserialize(response)['objects']
-    #     self.assertEqual(len(data), 1)
-    #     self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_sorted_nodeset_list(self):
-        """Get a list of NodeSets with sorting params applied
-        (e.g., order_by=name)
-        """
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
-        )
-        response = self.api_client.get(self.nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'order_by': 'name'})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_nodeset_list_for_given_study_and_assay(self):
-        """Test retrieving a list of NodeSets for given study and assay"""
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
-        )
-        response = self.api_client.get(self.nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'study__uuid': self.study.uuid,
-                                             'assay__uuid': self.assay.uuid})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_empty_nodeset_list(self):
-        """Test retrieving a list of NodeSets when none exist"""
-        response = self.api_client.get(self.nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_get_nodeset_list_without_login(self):
-        """Test retrieving a list of NodeSets without logging in"""
-        response = self.api_client.get(self.nodeset_uri, format='json')
-        self.assertHttpUnauthorized(response)
-
-    def test_delete_nodeset_list(self):
-        """Test deleting a list of NodeSets"""
-        nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % nodeset._meta.module_name, self.user, nodeset
-        )
-        response = self.api_client.delete(
-            self.nodeset_uri, format='json',
-            authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
-
-
-class AnalysisResourceTest(ResourceTestCase):
-    """Test Analysis REST API operations"""
-
-    def setUp(self):
-        super(AnalysisResourceTest, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
-        self.get_credentials()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-
-    def tearDown(self):
-        FileExtension.objects.all().delete()
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
-        )
-
-    def test_get_analysis(self):
-        """Test retrieving an existing Analysis that belongs to a user who
-        created it
-        """
-
-        self.dataset.set_owner(self.user)
-
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertKeys(data, AnalysisResource.Meta.fields)
-        self.assertEqual(data['uuid'], analysis.uuid)
-
-    def test_get_analysis_list(self):
-        """Test retrieving a list of Analysis instances that belong to a user
-        who created them.
-        """
-
-        self.dataset.set_owner(self.user)
-
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis1
-        )
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis2
-        )
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], analysis2.name)
-
-    def test_get_analysis_without_login(self):
-        """Test retrieving an existing Analysis without logging in"""
-        self.api_client.client.logout()
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json')
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_without_permission(self):
-        """Test retrieving an existing Analysis that belongs to a different
-        user
-        """
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user2)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_with_invalid_uuid(self):
-        """Test retrieving an Analysis instance that doesn't exist.
-        """
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        assign_perm(
-            "read_%s" % Analysis._meta.module_name, self.user, analysis
-        )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, 'Invalid UUID')
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_list_for_given_dataset(self):
-        """Test retrieving a list of Analysis instances for a given dataset"""
-
-        self.dataset.set_owner(self.user)
-
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis1.set_owner(self.user)
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset2,
-            workflow=self.workflow
-        )
-        analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json',
-            data={'data_set__uuid': self.dataset.uuid}
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], analysis1.name)
-
-    def test_get_sorted_analysis_list(self):
-        """Get a list of Analysis instances with sorting params applied
-        (e.g., order_by=name)
-        """
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis1.set_owner(self.user)
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset2,
-            workflow=self.workflow
-        )
-        analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json',
-            data={'order_by': 'name'}
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], analysis1.name)
-
-    def test_get_empty_analysis_list(self):
-        """Test retrieving a list of Analysis instances when none exist"""
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_delete_analysis(self):
-        """Test deleting an existing Analysis instance"""
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        self.assertEqual(Analysis.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
-        )
-
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.delete(
-            analysis_uri, format='json', authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(Analysis.objects.count(), 1)
-
-    def test_delete_analysis_without_login(self):
-        """Test deleting an existing Analysis instance with logging in"""
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        self.assertEqual(Analysis.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
-        )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.delete(analysis_uri, format='json')
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(Analysis.objects.count(), 1)
-
-
-class BaseResourceSlugTest(unittest.TestCase):
+class BaseResourceSlugTest(TestCase):
     """Tests for BaseResource Slugs"""
 
     def setUp(self):
@@ -1029,10 +91,6 @@ class BaseResourceSlugTest(unittest.TestCase):
             name="project3",
             slug=None
         )
-
-    def tearDown(self):
-        DataSet.objects.all().delete()
-        Project.objects.all().delete()
 
     def test_duplicate_slugs(self):
         # Try to create DS with existing slug
@@ -1114,7 +172,7 @@ class BaseResourceSlugTest(unittest.TestCase):
             name="project_no_slug_duplicate3"))
 
 
-class CachingTest(unittest.TestCase):
+class CachingTest(TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
@@ -1129,7 +187,7 @@ class CachingTest(unittest.TestCase):
         )
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
-            DataSet.objects.create(slug="TestSlug%d" % index)
+            create_dataset_with_necessary_models(slug="TestSlug%d" % index)
         # Adding to cache
         cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
 
@@ -1139,8 +197,6 @@ class CachingTest(unittest.TestCase):
     def tearDown(self):
         self.cache = invalidate_cached_object(DataSet.objects.get(
             slug="TestSlug1"), True)
-        DataSet.objects.all().delete()
-        User.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
         # Grab a DataSet and see if we can invalidate the cache
@@ -1206,7 +262,7 @@ class CachingTest(unittest.TestCase):
         self.assertNotEqual(self.initial_cache, new_cache)
 
 
-class WorkflowDeletionTest(unittest.TestCase):
+class WorkflowDeletionTest(TestCase):
     """Testing for the deletion of Workflows"""
 
     def setUp(self):
@@ -1215,7 +271,7 @@ class WorkflowDeletionTest(unittest.TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1236,15 +292,6 @@ class WorkflowDeletionTest(unittest.TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-
     def test_verify_workflow_used_by_analysis(self):
         self.assertEqual(self.analysis.workflow.name,
                          "workflow_used_by_analyses")
@@ -1263,103 +310,141 @@ class WorkflowDeletionTest(unittest.TestCase):
                           name="workflow_not_used_by_analyses")
 
 
-class DataSetDeletionTest(unittest.TestCase):
+class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
-
     def setUp(self):
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
         )
-        self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
-        self.isa_archive_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.zip',
-                'Coffee is delicious!')
-        )
-        self.pre_isa_archive_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!')
-        )
-        self.investigation = Investigation.objects.create(
-                isarchive_file=self.isa_archive_file.uuid,
-                pre_isarchive_file=self.pre_isa_archive_file.uuid
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
             )
 
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
-        self.dataset_with_analysis = DataSet.objects.create(
-            name="dataset_with_analysis")
-        self.dataset_without_analysis = \
-            DataSet.objects.create(name="dataset_without_analysis")
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset_without_analysis)
+    def test_transaction_rollback_on_dataset_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.dataset.delete()
 
-        self.analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset_with_analysis,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        self.analysis.set_owner(self.user)
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnnotatedNode.objects.count(), 0)
+        self.assertGreater(Assay.objects.count(), 0)
+        self.assertGreater(DataSet.objects.count(), 0)
+        self.assertGreater(FileStoreItem.objects.count(), 0)
+        self.assertGreater(Investigation.objects.count(), 0)
+        self.assertGreater(InvestigationLink.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+        self.assertGreater(NodeCollection.objects.count(), 0)
+        self.assertGreater(Study.objects.count(), 0)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
+    def test_dataset_deletion_removes_related_objects(self):
+        self.dataset.delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
+
+    def test_dataset_bulk_deletion_removes_related_objects(self):
+        # make a second DataSet
+        create_dataset_with_necessary_models(is_isatab_based=True)
         DataSet.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        FileStoreItem.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
 
-    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
-        self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_without_analysis"))
-        self.dataset_without_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_without_analysis")
-
-    def test_verify_dataset_deletion_if_analysis_run_upon_it(self):
-        self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_with_analysis"))
-        self.dataset_with_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_with_analysis")
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_isa_archive_deletion(self):
-        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
+        isatab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True
+        )
+        isatab_file_store_item_uuid = \
+            isatab_dataset.get_investigation().get_file_store_item().uuid
+        isatab_dataset.delete()
+        with self.assertRaises(FileStoreItem.DoesNotExist):
+            FileStoreItem.objects.get(uuid=isatab_file_store_item_uuid)
 
     def test_pre_isa_archive_deletion(self):
-        self.assertIsNotNone(
-            self.dataset_without_analysis.get_pre_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
+        tabular_file_store_item_uuid = \
+            self.dataset.get_investigation().get_file_store_item().uuid
+        self.dataset.delete()
+        with self.assertRaises(FileStoreItem.DoesNotExist):
+            FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
 
 
-class AnalysisDeletionTest(unittest.TestCase):
+class AnalysisDeletionTest(TestCase):
     """Testing for the deletion of Analyses"""
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
+            )
+        self.analysis = self.analyses[0]
 
+    def test_transaction_rollback_on_analysis_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.analysis.delete()
+
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
+        self.assertGreater(AnalysisResult.objects.count(), 0)
+        self.assertGreater(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+
+    def test_analysis_deletion_removes_related_objects(self):
+        self.analysis.delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
+
+    def test_analysis_bulk_deletion_removes_related_objects(self):
+        # make a second Analysis
+        make_analyses_with_single_dataset(1, self.user)
+        with mock.patch('celery.result.AsyncResult'):
+            Analysis.objects.all().delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
+
+
+class AnalysisTests(TestCase):
     def setUp(self):
         # Create a user
         self.username = self.password = 'user'
@@ -1372,7 +457,7 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.project1 = Project.objects.create()
 
         # Create a galaxy Instance
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
 
         # Create a WorkflowEngine
         self.workflow_engine = WorkflowEngine.objects.create(
@@ -1384,6 +469,23 @@ class AnalysisDeletionTest(unittest.TestCase):
             name="Workflow1", workflow_engine=self.workflow_engine)
         self.workflow1 = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
+
+        text_filetype = FileType.objects.get(name="TXT")
+
+        # Create FileStoreItems
+        self.file_store_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
+            ),
+            filetype=text_filetype
+        )
+        self.file_store_item1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
+            )
+        )
 
         # Create some DataSets that will have an analysis run upon them
         self.dataset_with_analysis = DataSet.objects.create()
@@ -1400,6 +502,9 @@ class AnalysisDeletionTest(unittest.TestCase):
             data_set=self.dataset_with_analysis,
             workflow=self.workflow,
             status="SUCCESS"
+        )
+        self.analysis_status = AnalysisStatus.objects.create(
+            analysis=self.analysis
         )
         self.analysis_with_node_analyzed_further = Analysis.objects.create(
             name='analysis_with_node_analyzed_further',
@@ -1430,39 +535,65 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.assay1 = Assay.objects.create(study=self.study1)
 
         # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study,
-                                        analysis_uuid=self.analysis.uuid)
+        self.node = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            name="test_node",
+            analysis_uuid=self.analysis.uuid,
+            file_uuid=self.file_store_item.uuid
+        )
+        self.node2 = Node.objects.create(
+            assay=self.assay1,
+            study=self.study,
+            analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
+            file_uuid=self.file_store_item1.uuid
+        )
 
-        self.node2 = Node.objects.create(assay=self.assay1, study=self.study1,
-                                         analysis_uuid=self.
-                                         analysis_with_node_analyzed_further
-                                         .uuid)
+        self.node_filename = "{}.{}".format(
+            self.node.name,
+            self.node.get_file_store_item().get_extension()
+        )
+
         # Create AnalysisNodeConnections
-        self.analysis_node_connection = \
-            AnalysisNodeConnection.objects.create(analysis=self.analysis,
-                                                  node=self.node, step=1,
-                                                  direction="out")
-        self.analysis_node_connection_with_node_analyzed_further = \
+        self.analysis_node_connection_a = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=1,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True,
+                galaxy_dataset_name="Galaxy File Name"
+            )
+        )
+        self.analysis_node_connection_b = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=2,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=False
+            )
+        )
+        self.analysis_node_connection_c = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=3,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True
+            )
+        )
+        self.analysis_node_connection_with_node_analyzed_further = (
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis_with_node_analyzed_further,
-                node=self.node2, step=2,
-                direction="in")
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
+                node=self.node2,
+                step=0,
+                direction=INPUT_CONNECTION
+            )
+        )
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
@@ -1481,165 +612,205 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
 
+    def test_has_nodes_used_in_downstream_analyses(self):
+        self.assertTrue(self.analysis_with_node_analyzed_further
+                        .has_nodes_used_in_downstream_analyses())
+        self.assertFalse(self.analysis.has_nodes_used_in_downstream_analyses())
 
-class NodeGroupAPITests(APITestCase):
+    def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
+        self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
+        self.analysis_status.galaxy_import_progress = 96
 
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
+        self.assertEqual(
+            self.analysis_status.galaxy_file_import_state(),
+            [
+                {
+                    'state': self.analysis_status.galaxy_import_state,
+                    'percent_done': self.analysis_status.galaxy_import_progress
+                }
+            ]
+        )
+
+    def test_galaxy_tool_file_import_state_is_empty_without_an_import_state(
+            self):
+        self.analysis_status.galaxy_import_progress = 96
+
+        self.assertEqual(
+            self.analysis_status.galaxy_file_import_state(),
+            []
+        )
+
+    def test_galaxy_tool_file_import_state_is_empty_without_import_progress(
+            self):
+        self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
+
+        self.assertEqual(
+            self.analysis_status.galaxy_file_import_state(),
+            []
+        )
+
+    def test_facet_name(self):
+        self.assertRegexpMatches(
+            self.analysis_with_node_analyzed_further.facet_name(),
+            'REFINERY_ANALYSIS_UUID_' + r'\d+_\d+' + '_s'
+        )
+
+    @mock.patch("core.models.index_annotated_nodes_selection")
+    @mock.patch.object(Analysis, "rename_results")
+    def test__prepare_annotated_nodes_calls_methods_in_proper_order(
+            self,
+            rename_results_mock,
+            index_annotated_nodes_selection_mock
+    ):
+        mock_manager = mock.Mock()
+        mock_manager.attach_mock(rename_results_mock, "rename_results_mock")
+        mock_manager.attach_mock(index_annotated_nodes_selection_mock,
+                                 "index_annotated_nodes_selection_mock")
+
+        self.analysis._prepare_annotated_nodes(node_uuids=None)
+
+        # Assert that `rename_results` is called before
+        # `index_annotated_nodes_selection`
+        self.assertEqual(
+            mock_manager.mock_calls,
+            [
+                mock.call.rename_results_mock(),
+                mock.call.index_annotated_nodes_selection_mock(None)
+            ]
+        )
+
+    def create_analysis_results(self, include_faulty_result=False):
+        common_params = {
+            "analysis_uuid": self.analysis.uuid,
+            "file_store_uuid": self.node.file_uuid,
+            "file_name": self.node_filename,
+            "file_type": self.node.get_file_store_item().filetype
         }
-        self.assay = Assay.objects.create(**assay)
-        self.node_1 = Node.objects.create(assay=self.assay,
-                                          study=self.study,
-                                          name='Node1')
+        analysis_result_0 = AnalysisResult.objects.create(**common_params)
 
-        self.node_2 = Node.objects.create(assay=self.assay,
-                                          study=self.study,
-                                          name='Node2')
-        self.node_group = NodeGroup.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name='Test Node Group 1'
+        if include_faulty_result:
+            # This analysis result has a filename that doesn't correspond to
+            #  any specified AnalysisNodeConnection Output filenames
+            AnalysisResult.objects.create(
+                **dict(common_params, file_name="Bad Filename")
+            )
+        else:
+            AnalysisResult.objects.create(**common_params)
+
+        analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
+        return analysis_result_0, analysis_result_1
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        analysis_result_0, analysis_result_1 = self.create_analysis_results()
+
+        output_mapping = (
+            self.analysis._get_output_connection_to_analysis_result_mapping()
         )
-        self.nodes_list = [self.node_1, self.node_2]
-        self.nodes_list_uuid = [self.node_1.uuid, self.node_2.uuid]
-        self.node_group.nodes.add(*self.nodes_list)
-        self.node_group.node_count = len(self.nodes_list)
-        self.node_group.save()
 
-        self.node_group_2 = NodeGroup.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name='Test Node Group 2'
+        self.assertEqual(
+            output_mapping,
+            [
+                (self.analysis_node_connection_c, analysis_result_0),
+                (self.analysis_node_connection_b, None),
+                (self.analysis_node_connection_a, analysis_result_1)
+            ]
         )
-        self.node_group_list = [self.node_group, self.node_group_2]
-        self.valid_uuid = self.node_group.uuid
-        self.url_root = '/api/v2/node_groups/'
-        self.view = NodeGroups.as_view()
-        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
-        self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Node.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
+    def test___get_output_connection_to_analysis_result_mapping_failure_state(
+        self
+    ):
+        self.create_analysis_results(include_faulty_result=True)
 
-    def test_get_valid_uuid(self):
-        # valid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (
-            self.url_root, self.valid_uuid))
-        response = self.view(request, self.valid_uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data,
-                         NodeGroupSerializer(self.node_group).data)
+        with self.assertRaises(IndexError):
+            self.analysis._get_output_connection_to_analysis_result_mapping()
 
-    def test_get_valid_assay_uuid(self):
-        # valid_assay_uuid
-        request = self.factory.get('%s/?assay=%s' % (
-            self.url_root, self.assay.uuid))
-        response = self.view(request, self.assay.uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), len(self.node_group_list))
-        self.assertItemsEqual(response.data, NodeGroupSerializer(
-            self.node_group_list, many=True).data)
+    def test_analysis_node_connection_input_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_input_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.filename)
+        )
 
-    def test_get_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-                                                    self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
+    def test_analysis_node_connection_output_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_output_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.name)
+        )
 
-    def test_get_invalid_assay_uuid(self):
-        # invalid_assay_uuid
-        request = self.factory.get('%s/?assay=%s' % (self.url_root,
-                                                     self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
+    def test__create_derived_data_file_node(self):
+        derived_data_file_node = self.analysis._create_derived_data_file_node(
+            self.study,
+            self.assay,
+            self.analysis_node_connection_a
+        )
+        self.assertEqual(derived_data_file_node.name, "Galaxy File Name")
+        self.assertEqual(derived_data_file_node.study, self.study)
+        self.assertEqual(derived_data_file_node.assay, self.assay)
+        self.assertEqual(derived_data_file_node.type, Node.DERIVED_DATA_FILE)
+        self.assertEqual(derived_data_file_node.analysis_uuid,
+                         self.analysis.uuid)
+        self.assertEqual(derived_data_file_node.subanalysis,
+                         self.analysis_node_connection_a.subanalysis)
+        self.assertEqual(derived_data_file_node.workflow_output,
+                         self.analysis_node_connection_a.name)
 
-    def test_get_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/?uuid=%s'
-                                   % (self.url_root,
-                                      self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
+    def test__get_input_nodes(self):
+        analysis = self.analysis_with_node_analyzed_further
+        self.assertEqual(analysis._get_input_nodes(), [self.node2])
 
-    def test_post_valid_form(self):
-        # valid form
-        new_node_group = {'name': 'Test Group3',
-                          'assay': self.assay.uuid,
-                          'study': self.study.uuid,
-                          'nodes': self.nodes_list_uuid
-                          }
-        request = self.factory.post('%s/' % self.url_root, new_node_group)
-        response = self.view(request)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data.get('name'), new_node_group.get('name'))
-        self.assertEqual(response.data.get('node_count'),
-                         len(self.nodes_list_uuid))
-        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+    def test__get_input_file_store_items(self):
+        analysis = self.analysis_with_node_analyzed_further
+        self.assertEqual(
+            analysis.get_input_file_store_items(),
+            [self.node2.get_file_store_item()]
+        )
 
-    def test_post_invalid_form(self):
-        # invalid form
-        new_node_group = {'name': 'Test Group3',
-                          'assay': self.assay.uuid,
-                          'study': self.study.uuid,
-                          'nodes': '%s' % self.invalid_uuid}
-        request = self.factory.post('%s/' % self.url_root, new_node_group)
-        response = self.view(request)
-        self.assertEqual(response.status_code, 400)
+    def test_has_all_local_input_files_non_local_inputs(self):
+        analysis = self.analysis_with_node_analyzed_further
+        node = analysis._get_input_nodes()[0]
+        node.get_file_store_item().delete_datafile()
+        self.assertFalse(analysis.has_all_local_input_files())
 
-    def test_put_valid_uuid_and_valid_input(self):
-        # valid uuid and valid input
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.node_group_2.uuid,
-                                    'nodes': self.nodes_list_uuid,
-                                    'is_current': True})
-        response = self.view(request)
-        self.assertEqual(response.status_code, 202)
-        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
+    def test_has_all_local_input_files(self):
+        self.assertTrue(self.analysis.has_all_local_input_files())
 
-    def test_put_valid_uuid_and_invalid_node(self):
-        # valid uuid but node invalid uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.node_group_2.uuid,
-                                    'nodes': self.invalid_uuid,
-                                    'is_current': True})
-        response = self.view(request)
-        self.assertEqual(response.status_code, 400)
+    def test_get_refinery_import_task_signatures(self):
+        # Create and associate an AnalysisNodeConnection with a remote file
+        file_store_item = FileStoreItemFactory(
+            source="http://www.example.com/analysis_input.txt"
+        )
+        node = NodeFactory(assay=self.assay, study=self.study,
+                           name="Input Node", analysis_uuid=self.analysis.uuid,
+                           file_uuid=file_store_item.uuid)
+        AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
+                                      step=0, filename=self.node_filename,
+                                      direction=INPUT_CONNECTION,
+                                      is_refinery_file=False)
+        self.assertEqual(
+            self.analysis.get_refinery_import_task_signatures(),
+            [import_file.subtask(
+                (self.analysis.get_input_file_store_items()[0].uuid,)
+            )]
+        )
 
-    def test_put_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.invalid_uuid}
-                                   )
-        response = self.view(request)
-        self.assertEqual(response.status_code, 404)
-
-    def test_put_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.invalid_format_uuid}
-                                   )
-        response = self.view(request)
-        self.assertEqual(response.status_code, 404)
+    def test_get_refinery_import_task_signatures_inputs_all_local(self):
+        # Create and associate an AnalysisNodeConnection with a "local" file
+        file_store_item = FileStoreItemFactory(
+            source="local_analysis_input.txt"
+        )
+        node = NodeFactory(assay=self.assay, study=self.study,
+                           name="Input Node", analysis_uuid=self.analysis.uuid,
+                           file_uuid=file_store_item.uuid)
+        AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
+                                      step=0, filename=self.node_filename,
+                                      direction=INPUT_CONNECTION,
+                                      is_refinery_file=False)
+        with mock.patch.object(FileStoreItem, "is_local", return_value=True):
+            self.assertEqual(
+                self.analysis.get_refinery_import_task_signatures(), []
+            )
 
 
 class UtilitiesTest(TestCase):
@@ -1669,11 +840,61 @@ class UtilitiesTest(TestCase):
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
 
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
+    def test_get_resources_for_user(self):
+        django_anon_user = AnonymousUser()
+        guardian_anon_user = User.get_anonymous()
+        auth_user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password')
+        public_group = ExtendedGroup.objects.public_group()
+
+        def django_anon_datasets():
+            return get_resources_for_user(django_anon_user, 'dataset')
+
+        def guardian_anon_datasets():
+            return get_resources_for_user(guardian_anon_user, 'dataset')
+
+        def auth_datasets():
+            return get_resources_for_user(auth_user, 'dataset')
+
+        def public_datasets():
+            return get_objects_for_group(
+                public_group,
+                'core.read_dataset'
+            )
+
+        # The point of this test is to make sure getting
+        # resources for the Anonymous User is the same as
+        # getting resources for the Public Group.
+        # (In practice, it should be the Guardian
+        # Anonymous, but if it's Django for some reason,
+        # it should still work.)
+
+        self.assertTrue(auth_user.is_authenticated())
+
+        # Both ways should be the same, and empty, to begin:
+
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 0)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Create a data set:
+
+        dataset = create_dataset_with_necessary_models()
+        dataset.set_owner(auth_user)
+
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Make data set public:
+
+        dataset.share(public_group)
+        self.assertEqual(len(django_anon_datasets()), 1)
+        self.assertEqual(len(guardian_anon_datasets()), 1)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 1)
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -1681,14 +902,6 @@ class UtilitiesTest(TestCase):
         difference_time = response_time - expected_time
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
-
-    def test_create_current_selection_node_group_valid(self):
-        response = create_current_selection_node_group(self.valid_uuid)
-        self.assertEqual(response.status_code, 201)
-
-    def test_create_current_selection_node_group_invalid(self):
-        response = create_current_selection_node_group(self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
 
     # Mock methods used in filter_nodes_uuids_in_solr
     def fake_generate_solr_params(params, assay_uuid):
@@ -1731,7 +944,7 @@ class UtilitiesTest(TestCase):
             ]
         return {'nodes': response_node_uuids}
 
-    @mock.patch("data_set_manager.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
                 fake_generate_solr_params)
     @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
     @mock.patch("data_set_manager.utils.format_solr_response",
@@ -1750,7 +963,7 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
         self.assertItemsEqual(response, response_node_uuids)
 
-    @mock.patch("data_set_manager.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
                 fake_generate_solr_params)
     @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
     @mock.patch("data_set_manager.utils.format_solr_response",
@@ -1832,6 +1045,14 @@ class UtilitiesTest(TestCase):
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
 
+    def test_which_default_read_perm_for_dataset(self):
+        self.assertEqual(which_default_read_perm('dataset'),
+                         'core.read_meta_dataset')
+
+    def test_which_default_read_perm_for_analysis(self):
+        self.assertEqual(which_default_read_perm('analysis'),
+                         'core.read_analysis')
+
 
 class UserTutorialsTest(TestCase):
     """
@@ -1845,148 +1066,14 @@ class UserTutorialsTest(TestCase):
         )
         self.userprofile = UserProfile.objects.get(user=self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Tutorials.objects.all().delete()
-
     def test_tutorial_creation(self):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
         )
 
 
-class DataSetResourceTest(ResourceTestCase):
-    """Test DataSet V1 REST API operations"""
-
-    def setUp(self):
-        super(DataSetResourceTest, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
-        self.get_credentials()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset,
-                version=1
-            )
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
-        )
-
-    def test_get_dataset(self):
-        """Test retrieving an existing Dataset that belongs to a user who
-        created it
-        """
-
-        self.dataset.set_owner(self.user)
-
-        dataset_uri = make_api_uri(
-            "data_sets", self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
-
-    def test_get_dataset_expecting_analyses(self):
-        a1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        a2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-
-        a1.set_owner(self.user)
-        a2.set_owner(self.user)
-
-        dataset_uri = make_api_uri("data_sets",
-                                   self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertIsNotNone(data['analyses'])
-        self.assertEqual(len(data['analyses']), 2)
-
-        self.assertIsNotNone(data['analyses'][0]['is_owner'])
-        self.assertTrue(data['analyses'][0]['is_owner'])
-        self.assertIsNotNone(data['analyses'][0]['owner'])
-        self.assertEqual(data['analyses'][0]['owner'],
-                         UserProfile.objects.get(user=self.user).uuid)
-
-    def test_get_dataset_expecting_no_analyses(self):
-        dataset_uri = make_api_uri("data_sets",
-                                   self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertEqual(data['analyses'], [])
-
-
-class DataSetClassMethodsTest(unittest.TestCase):
-    """ Testing of methods specific to the DataSet model
-    """
+class DataSetTests(TestCase):
+    """ Testing of the DataSet model"""
 
     def setUp(self):
         self.username = self.password = 'user'
@@ -2001,408 +1088,628 @@ class DataSetClassMethodsTest(unittest.TestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset,
-                version=1
-            )
 
-        self.file_store_item = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
-            )
-        self.file_store_item1 = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
-            )
-        self.file_store_item2 = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
-            )
-        self.node = Node.objects.create(
-            name="n0", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item.uuid)
-        self.node1 = Node.objects.create(
-            name="n1", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item1.uuid)
-        self.node2 = Node.objects.create(
-            name="n2", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item2.uuid)
-        self.node3 = Node.objects.create(
-            name="n3", assay=self.assay, study=self.study)
-        self.node4 = Node.objects.create(
-            name="n4", assay=self.assay, study=self.study)
+        self.isa_tab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True,
+            user=self.user
+        )
+        self.latest_tabular_dataset_version = 3
+        self.tabular_dataset = create_dataset_with_necessary_models(
+            user=self.user2,
+            latest_version=self.latest_tabular_dataset_version
+        )
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        FileStoreItem.objects.all().delete()
+    def test_get_studies(self):
+        studies = self.isa_tab_dataset.get_studies()
+        self.assertEqual(len(studies), 1)
+
+    def test_get_assays(self):
+        assays = self.isa_tab_dataset.get_assays()
+        self.assertEqual(len(assays), 1)
 
     def test_get_file_store_items(self):
-        file_store_items = self.dataset.get_file_store_items()
+        file_store_items = self.isa_tab_dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
-        self.assertIn(self.file_store_item, file_store_items)
-        self.assertIn(self.file_store_item1, file_store_items)
-        self.assertIn(self.file_store_item2, file_store_items)
+
+    def test_dataset_complete(self):
+        self.assertTrue(self.isa_tab_dataset.is_valid)
+
+    def test_dataset_incomplete(self):
+        dataset = create_dataset_with_necessary_models(user=self.user)
+        # Delete InvestigationLink to simulate a Dataset that hasn't
+        # finished being created
+        dataset.get_latest_investigation_link().delete()
+        dataset.save()
+        self.assertFalse(dataset.is_valid)
+
+    def test_neo4j_called_on_post_save(self):
+        with mock.patch(
+            "core.models.async_update_annotation_sets_neo4j"
+        ) as neo4j_mock:
+            self.isa_tab_dataset.save()
+            self.assertTrue(neo4j_mock.called)
+
+    def test_solr_called_on_post_save(self):
+        with mock.patch(
+            "core.models.update_data_set_index"
+        ) as solr_mock:
+            self.isa_tab_dataset.save()
+            self.assertTrue(solr_mock.called)
+
+    def test_get_latest_investigation_link(self):
+        self.assertEqual(
+            self.tabular_dataset.get_latest_investigation_link().version,
+            self.latest_tabular_dataset_version
+        )
+
+    def test_get_latest_investigation(self):
+        self.assertEqual(
+            self.isa_tab_dataset.get_latest_investigation_link().investigation,
+            self.isa_tab_dataset.get_investigation()
+        )
+
+    def test_get_latest_study(self):
+        self.assertEqual(
+            self.isa_tab_dataset.get_latest_study(),
+            Study.objects.get(
+                investigation=self.isa_tab_dataset.
+                get_latest_investigation_link().investigation
+            )
+        )
+
+    def test_get_latest_study_no_studies(self):
+        self.isa_tab_dataset.get_latest_study().delete()
+        with self.assertRaises(RuntimeError) as context:
+            self.isa_tab_dataset.get_latest_study()
+            self.assertIn("Couldn't fetch Study", context.exception.message)
+
+    def test_get_nodes(self):
+        nodes = Node.objects.all()
+        self.assertGreater(nodes.count(), 0)
+        for node in self.isa_tab_dataset.get_nodes():
+            self.assertIn(node, nodes)
+
+    def test_get_nodes_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.isa_tab_dataset.get_nodes(), [])
+
+    def test_get_node_uuids(self):
+        node_uuids = Node.objects.all().values_list("uuid", flat=True)
+        self.assertGreater(node_uuids.count(), 0)
+        for node_uuid in self.isa_tab_dataset.get_node_uuids():
+            self.assertIn(node_uuid, node_uuids)
+
+    def test_get_node_uuids_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.isa_tab_dataset.get_node_uuids(), [])
+
+    def test_get_metadata_as_file_store_item(self):
+        self.assertIsNotNone(
+            self.isa_tab_dataset.get_investigation().get_file_store_item()
+        )
+        self.assertIsNotNone(
+            self.tabular_dataset.get_investigation().get_file_store_item()
+        )
+
+    def test_is_isatab_based(self):
+        self.assertTrue(
+            self.isa_tab_dataset.get_investigation().is_isa_tab_based()
+        )
+        self.assertFalse(
+            self.tabular_dataset.get_investigation().is_isa_tab_based()
+        )
+
+    def test_cached_is_valid_property_is_invalidated_on_save(self):
+        # Trigger load into cache
+        self.assertTrue(self.tabular_dataset.is_valid)
+        with mock.patch(
+            "core.models.DataSet._invalidate_cached_properties"
+        ) as invalidate_cached_props_mock:
+            self.tabular_dataset.save()
+            invalidate_cached_props_mock.assert_called()
+
+    def test_is_clean_on_clean_dataset(self):
+        self.assertTrue(self.isa_tab_dataset.is_clean())
+
+    def test_is_clean_if_dataset_has_analyses(self):
+        analyses, dataset = make_analyses_with_single_dataset(1, self.user)
+        self.assertFalse(dataset.is_clean())
+
+    def test_is_clean_if_dataset_has_failed_analyses(self):
+        analyses, dataset = make_analyses_with_single_dataset(1, self.user)
+        for analysis in analyses:
+            analysis.set_status(Analysis.FAILURE_STATUS)
+        self.assertTrue(dataset.is_clean())
+
+    def test_is_clean_if_dataset_has_visualizations(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION")
+        self.assertFalse(tool.dataset.is_clean())
+
+    def test_is_clean_if_data_set_is_shared(self):
+        data_set = create_dataset_with_necessary_models()
+        data_set.share(ExtendedGroup.objects.public_group())
+        self.assertTrue(data_set.is_clean())
 
 
-class DataSetApiV2Tests(APITestCase):
+class CoreIndexTests(TestCase):
+    def setUp(self):
+        self.dataset_index = DataSetIndex()
+        self.good_dataset = create_dataset_with_necessary_models()
+        self.bad_dataset = DataSet.objects.create()
+
+    def test_prepare(self):
+        data = self.dataset_index.prepare(self.good_dataset)
+        self.assertRegexpMatches(
+            data['text'],
+            re.compile(
+                r'AnnotatedNode-\d.*AnnotatedNode-\d',
+                re.DOTALL
+            )
+        )
+
+    def test_prepare_submitter(self):
+        contact = Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name="Scott",
+            last_name="Ouellette"
+        )
+        # Create an identical contact to ensure we prepare a unique list of
+        # submitters
+        Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name="Scott",
+            last_name="Ouellette"
+        )
+        self.good_dataset.save()
+
+        prepared_submitters = self.dataset_index.prepare_submitter(
+            self.good_dataset
+        )
+
+        self.assertEqual(
+            prepared_submitters,
+            [u"{}, {}".format(contact.last_name, contact.first_name)]
+        )
+
+    def test_prepare_submitter_funky_contact(self):
+        contact = Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name=u'Sc\xd6tt',
+            last_name=u'\xd6uellette'
+        )
+        self.good_dataset.save()
+
+        prepared_submitters = self.dataset_index.prepare_submitter(
+            self.good_dataset
+        )
+        self.assertEqual(
+            prepared_submitters,
+            [u"{}, {}".format(contact.last_name, contact.first_name)]
+        )
+
+    def test_prepare_description_bad_dataset(self):
+        prepared_description = self.dataset_index.prepare_description(
+            self.bad_dataset
+        )
+        self.assertEqual(prepared_description, "")
+
+    def test_prepare_description_good_dataset(self):
+        prepared_description = self.dataset_index.prepare_description(
+            self.good_dataset
+        )
+        self.assertEqual(
+            prepared_description,
+            self.good_dataset.get_investigation().get_description()
+        )
+
+
+class TestMigrations(TestCase):
+    """
+    Useful test class for testing Django Data migrations
+
+    From https://www.caktusgroup.com/blog/2016/02/02/
+    writing-unit-tests-django-migrations/
+    """
+    @property
+    def app(self):
+        return apps.get_containing_app_config(type(self).__module__).name
+
+    migrate_from = None
+    migrate_to = None
 
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
+        assert self.migrate_from and self.migrate_to, \
+            "TestCase '{}' must define migrate_from and migrate_to properties"\
+            .format(type(self).__name__)
+        self.migrate_from = [(self.app, self.migrate_from)]
+        self.migrate_to = [(self.app, self.migrate_to)]
+        executor = MigrationExecutor(connection)
+        old_apps = executor.loader.project_state(self.migrate_from).apps
 
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.view = DataSetsViewSet.as_view()
+        # Reverse to the original migration
+        executor.migrate(self.migrate_from)
 
-        self.url_root = '/api/v2/data_sets/'
+        self.setUpBeforeMigration(old_apps)
 
-        # Create Datasets
-        self.dataset = DataSet.objects.create(name="coffee dataset")
-        self.dataset2 = DataSet.objects.create(name="cool dataset")
+        # Run the migration to test
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()  # reload.
+        executor.migrate(self.migrate_to)
 
-        # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = Investigation.objects.create()
+        self.apps = executor.loader.project_state(self.migrate_to).apps
 
-        # Create Studys and Assays
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
+    def setUpBeforeMigration(self, apps):
+        pass
 
-        # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study)
 
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
+class TestManagementCommands(TestCase):
+    def test_set_up_site_name(self):
+        site_name = "Refinery Test"
+        domain = "www.example.com"
+        call_command('set_up_site_name', site_name, domain)
 
-        self.client.login(username=self.username, password=self.password)
-
-        # Make reusable requests & responses
-        self.get_request = self.factory.get(self.url_root)
-        self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
+        self.assertIsNotNone(
+            Site.objects.get(domain=domain, name=site_name)
         )
-        self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.options_response = self.view(self.options_request)
 
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
+    def test_set_up_site_name_failure(self):
+        with self.assertRaises(CommandError):
+            call_command('set_up_site_name')
 
-    def test_unallowed_http_verbs(self):
+    def _user_in_public_group(self, user_instance):
+        return bool(
+            user_instance.groups.filter(
+                name=ExtendedGroup.objects.public_group().name
+            ).count()
+        )
+
+    def test_add_users_to_public_group(self):
+        # We have a post-save hook on User for this functionality, but this
+        # doesn't apply when we create the super/guest user with 'loaddata'
+        # where save() is never actually called
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username="guest")
+        self.assertFalse(self._user_in_public_group(user))
+
+        call_command("add_users_to_public_group")
+        self.assertTrue(self._user_in_public_group(user))
+
+    def test_activate_user(self):
+        guest_username = "guest"
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username=guest_username)
+        self.assertFalse(user.is_active)
+
+        call_command("activate_user", guest_username)
+        self.assertTrue(User.objects.get(username=guest_username).is_active)
+
+    def test_import_annotations(self):
+        """ We just care about this in the context of the optparse -> argparse
+        upgrade for Django 1.8 and don't necessarily want to test the
+        neo4j interactions """
+        with mock.patch.object(ImportAnnotationsCommand, "handle"):
+            call_command("import_annotations", "-c")
+
+    def test_create_workflow_engine(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        call_command(
+            "create_workflowengine",
+            str(galaxy_instance.id),
+            ExtendedGroup.objects.public_group().name
+        )
+        self.assertIsNotNone(
+            WorkflowEngine.objects.get(instance=galaxy_instance)
+        )
+
+    def test_create_workflow_engine_bad_galaxy_instance(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(123),
+                ExtendedGroup.objects.public_group().name
+            )
+
+    def test_create_workflow_engine_bad_group_name(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(galaxy_instance.id),
+                "non-existent group name"
+            )
+
+
+class SiteStatisticsUnitTests(TestCase):
+    def setUp(self):
+        # Simulate a day of user activity
+        test_group = ExtendedGroup.objects.create(name="Test Group",
+                                                  is_public=True)
+        user_a = User.objects.create_user("user_a", "", "user_a")
+        user_b = User.objects.create_user("user_b", "", "user_b")
+        self.client.login(username="user_a", password="user_a")
+        self.client.login(username="user_b", password="user_b")
+        self.client.login(username="user_b", password="user_b")
+        self.client.login(username="user_b", password="user_b")
+        create_dataset_with_necessary_models(user=user_a)
+        create_dataset_with_necessary_models(user=user_a).share(test_group)
+        create_dataset_with_necessary_models(user=user_b).share(test_group)
+        create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
+        create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
+        self.site_statistics = SiteStatistics.objects.create()
+        self.site_statistics.collect()
+
+    def test__get_previous_instance(self):
+        self.assertNotEqual(self.site_statistics._get_previous_instance(),
+                            self.site_statistics)
+
+    def test__get_datasets_shared(self):
+        self.assertEqual(self.site_statistics._get_datasets_shared(), 2)
+
+    def test__get_datasets_uploaded(self):
+        self.assertEqual(self.site_statistics._get_datasets_uploaded(), 5)
+
+    def test__get_total_visualization_launches(self):
         self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
+            self.site_statistics._get_total_visualization_launches(),
+            1
+        )
+
+    def test__get_total_workflow_launches(self):
         self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
+            self.site_statistics._get_total_workflow_launches(),
+            1
+        )
+
+    def test__get_unique_user_logins(self):
+        self.assertEqual(self.site_statistics._get_unique_user_logins(), 2)
+
+    def test__get_users_created(self):
+        # 3 instead of the expected 2 because the emission of
+        # the post_migrate signal creates the AnonymousUser
+        self.assertEqual(self.site_statistics._get_users_created(), 3)
+
+    def test__get_groups_created(self):
+        self.assertEqual(self.site_statistics._get_groups_created(), 1)
+
+    def test__get_total_user_logins(self):
+        self.assertEqual(self.site_statistics._get_total_user_logins(), 4)
+
+
+class SiteStatisticsIntegrationTests(TestCase):
+    def setUp(self):
+        test_group = ExtendedGroup.objects.create(name="Test Group A")
+
+        # Simulate a day of user activity
+        user_a = User.objects.create_user("user_a", "", "user_a")
+        self.client.login(username="user_a", password="user_a")
+        self.dataset_a = create_dataset_with_necessary_models(user=user_a)
+        self.dataset_b = create_dataset_with_necessary_models(user=user_a)
+        self.dataset_b.share(test_group)
+        self.site_statistics_a = SiteStatistics.objects.create()
+        self.site_statistics_a.collect()
+
+        # Simulate a day where nothing happened
+        self.site_statistics_b = SiteStatistics.objects.create()
+        self.site_statistics_b.collect()
+
+        # Simulate another day of user activity
+        user_b = User.objects.create_user("user_b", "", "user_b")
+        user_c = User.objects.create_user("user_c", "", "user_c")
+        self.client.login(username="user_b", password="user_b")
+        self.client.login(username="user_c", password="user_c")
+        self.client.login(username="user_c", password="user_c")
+        self.client.login(username="user_c", password="user_c")
+        self.dataset_c = create_dataset_with_necessary_models(user=user_b)
+        self.dataset_d = create_dataset_with_necessary_models(user=user_b)
+        self.dataset_d.share(test_group)
+        self.dataset_e = create_dataset_with_necessary_models(user=user_c)
+        self.dataset_e.share(test_group)
+        ExtendedGroup.objects.create(name="Test Group B")
+        create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
+        create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
+        self.site_statistics_c = SiteStatistics.objects.create()
+        self.site_statistics_c.collect()
+
+    def test__get_previous_instance(self):
         self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
+            (self.site_statistics_a._get_previous_instance().id,
+             self.site_statistics_b._get_previous_instance().id,
+             self.site_statistics_c._get_previous_instance().id),
+            (SiteStatistics.objects.first().id,
+             self.site_statistics_a.id,
+             self.site_statistics_b.id)
+        )
+
+    def test_datasets_uploaded(self):
         self.assertEqual(
-            self.get_response.data['detail'], 'Method "GET" not allowed.')
-
-    def test_dataset_delete_successful(self):
-
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-        self.delete_request1 = self.factory.delete(
-           urljoin(self.url_root, self.dataset.uuid)
+            (self.site_statistics_a.datasets_uploaded,
+             self.site_statistics_b.datasets_uploaded,
+             self.site_statistics_c.datasets_uploaded),
+            (2, 0, 5)
         )
 
-        force_authenticate(self.delete_request1, user=self.user)
-
-        self.delete_response = self.view(self.delete_request1,
-                                         self.dataset.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(DataSet.objects.all().count(), 1)
-
-        self.delete_request2 = self.factory.delete(
-          urljoin(self.url_root, self.dataset2.uuid)
+    def test_datasets_shared(self):
+        self.assertEqual(
+            (self.site_statistics_a.datasets_shared,
+             self.site_statistics_b.datasets_shared,
+             self.site_statistics_c.datasets_shared),
+            (1, 0, 2)
         )
 
-        force_authenticate(self.delete_request2, user=self.user)
-
-        self.delete_response = self.view(self.delete_request2,
-                                         self.dataset2.uuid)
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(DataSet.objects.all().count(), 0)
-
-    def test_dataset_delete_no_auth(self):
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, self.dataset.uuid)
+    def test_users_created(self):
+        self.assertEqual(
+            (self.site_statistics_a.users_created,
+             self.site_statistics_b.users_created,
+             self.site_statistics_c.users_created),
+            # + 2 instead of the expected 1 because the emission of
+            # the post_migrate signal creates the AnonymousUser
+            (self.site_statistics_a._get_previous_instance().users_created + 2,
+             0,
+             self.site_statistics_c._get_previous_instance().users_created + 2)
         )
 
-        self.delete_response = self.view(self.delete_request,
-                                         self.dataset.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 403)
-
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-    def test_dataset_delete_not_found(self):
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-        uuid = self.dataset.uuid
-
-        self.dataset.delete()
-
-        self.assertEqual(DataSet.objects.all().count(), 1)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
+    def test_groups_created(self):
+        self.assertEqual(
+            (self.site_statistics_a.groups_created,
+             self.site_statistics_b.groups_created,
+             self.site_statistics_c.groups_created),
+            (1, 0, 1)
         )
-        force_authenticate(self.delete_request, user=self.user)
 
-        self.delete_response = self.view(self.delete_request,
-                                         uuid)
+    def test_unique_user_logins(self):
+        self.assertEqual(
+            (self.site_statistics_a.unique_user_logins,
+             self.site_statistics_b.unique_user_logins,
+             self.site_statistics_c.unique_user_logins),
+            (1, 0, 2)
+        )
 
-        self.assertEqual(self.delete_response.status_code, 404)
+    def test_total_user_logins(self):
+        self.assertEqual(
+            (self.site_statistics_a.total_user_logins,
+             self.site_statistics_b.total_user_logins,
+             self.site_statistics_c.total_user_logins),
+            (1, 0, 4)
+        )
 
-        self.assertEqual(DataSet.objects.all().count(), 1)
+    def test_total_workflow_launches(self):
+        self.assertEqual(
+            (self.site_statistics_a.total_workflow_launches,
+             self.site_statistics_b.total_workflow_launches,
+             self.site_statistics_c.total_workflow_launches),
+            (0, 0, 1)
+        )
+
+    def test_total_visualization_launches(self):
+        self.assertEqual(
+            (self.site_statistics_a.total_visualization_launches,
+             self.site_statistics_b.total_visualization_launches,
+             self.site_statistics_c.total_visualization_launches),
+            (0, 0, 1)
+        )
+
+    def test__get_previous_instance_returns_itself_if_only_instance(self):
+        SiteStatistics.objects.all().delete()
+        site_statistics = SiteStatistics.objects.create()
+        self.assertEqual(site_statistics._get_previous_instance(),
+                         site_statistics)
+
+    def test_periodic_task_is_scheduled_for_daily_runs(self):
+        self.assertEqual(
+            settings.CELERYBEAT_SCHEDULE["collect_site_statistics"],
+            {
+                'task': 'core.tasks.collect_site_statistics',
+                'schedule': timedelta(days=1),
+                'options': {
+                    'expires': 30,  # seconds
+                }
+            }
+        )
+
+    def test_collect_site_statistics_creates_new_instance(self):
+        initial_site_statistics_count = SiteStatistics.objects.count()
+        collect_site_statistics()
+        self.assertEqual(initial_site_statistics_count + 1,
+                         SiteStatistics.objects.count())
 
 
-class AnalysisApiV2Tests(APITestCase):
+class EventTests(TestCase):
 
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
-        self.project = Project.objects.create()
+        self.user = User.objects.create_user('testuser')
+        CuserMiddleware.set_user(self.user)
+        self.pre_re = u'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
+        self.post_re = u' data set Test DataSet - [0-9a-f-]+$'
 
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
+    def test_data_set_create(self):
+        create_dataset_with_necessary_models()
+        events = Event.objects.all()
+        self.assertEqual(len(events), 1)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + u'created data set Test DataSet - [0-9a-f-]+$'
         )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
+
+    # DataSetPermissionsUpdateTests covers data_set_permissions_change.
+
+    def test_data_set_metadata_reupload(self):
+        pass  # TODO
+
+    def test_data_set_file_link(self):
+        pass  # TODO
+
+    def test_data_set_metadata_edit(self):
+        pass  # TODO
+
+    def test_data_set_visualization_creation(self):
+        create_tool_with_necessary_models("VISUALIZATION")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created' + self.post_re
         )
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.view = AnalysesViewSet.as_view()
-
-        self.url_root = '/api/v2/analyses/'
-
-        # Create Datasets
-        self.dataset = DataSet.objects.create(name="coffee dataset")
-        self.dataset2 = DataSet.objects.create(name="cool dataset")
-
-        # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = Investigation.objects.create()
-
-        # Create Studys and Assays
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-
-        # Create Analyses
-        self.analysis = Analysis.objects.create(
-            name='Coffee Analysis',
-            summary='coffee',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
+        self.assertRegexpMatches(
+            str(events[1]),
+            self.pre_re +
+            r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' +
+            self.post_re
         )
-        self.analysis.set_owner(self.user)
 
-        self.analysis2 = Analysis.objects.create(
-            name='Coffee Analysis2',
-            summary='coffee2',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
+    def test_data_set_visualization_deletion(self):
+        pass  # TODO
+
+    def test_data_set_analysis_creation(self):
+        create_tool_with_necessary_models("WORKFLOW")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            unicode(events[0]),
+            self.pre_re + u'created' + self.post_re
         )
-        self.analysis2.set_owner(self.user)
-
-        # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study)
-
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
-
-        self.client.login(username=self.username, password=self.password)
-
-        # Make reusable requests & responses
-        self.get_request = self.factory.get(self.url_root)
-        self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
+        self.assertRegexpMatches(
+            unicode(events[1]),
+            self.pre_re +
+            u'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
+            self.post_re
         )
-        self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.options_response = self.view(self.options_request)
 
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
-        Analysis.objects.all().delete()
+    def test_data_set_analysis_deletion(self):
+        pass  # TODO
 
-    def test_unallowed_http_verbs(self):
+    def test_group_permissions_change(self):
+        pass  # TODO
+
+    def test_group_invitation_sent(self):
+        pass  # TODO
+
+    def test_group_invitation_accepted(self):
+        pass  # TODO
+
+    def test_group_invitation_revoked(self):
+        pass  # TODO
+
+    def test_group_invitation_resent(self):
+        pass  # TODO
+
+    def test_group_user_promotion(self):
+        pass  # TODO
+
+    def test_group_user_demotion(self):
+        pass  # TODO
+
+    def test_group_user_removal(self):
+        pass  # TODO
+
+    def test_get_details_as_dict(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION",
+                                                 user=self.user)
+        event = Event.objects.last()
         self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
-        self.assertEqual(
-            self.get_response.data['detail'], 'Method "GET" not allowed.')
-
-    def test_analysis_delete_successful(self):
-
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        self.delete_request1 = self.factory.delete(
-           urljoin(self.url_root, self.analysis.uuid)
+            event.get_details_as_dict(),
+            {
+                u'display_name': tool.display_name
+            }
         )
-
-        force_authenticate(self.delete_request1, user=self.user)
-
-        self.delete_response = self.view(self.delete_request1,
-                                         self.analysis.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
-        self.delete_request2 = self.factory.delete(
-          urljoin(self.url_root, self.analysis2.uuid)
-        )
-
-        force_authenticate(self.delete_request2, user=self.user)
-
-        self.delete_response = self.view(self.delete_request2,
-                                         self.analysis2.uuid)
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(Analysis.objects.all().count(), 0)
-
-    def test_analysis_delete_no_auth(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, self.analysis.uuid)
-        )
-
-        self.delete_response = self.view(self.delete_request,
-                                         self.analysis.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 403)
-
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-    def test_analysis_delete_not_found(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        uuid = self.analysis.uuid
-
-        self.analysis.delete()
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
-        )
-        force_authenticate(self.delete_request, user=self.user)
-
-        self.delete_response = self.view(self.delete_request,
-                                         uuid)
-
-        self.assertEqual(self.delete_response.status_code, 404)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)

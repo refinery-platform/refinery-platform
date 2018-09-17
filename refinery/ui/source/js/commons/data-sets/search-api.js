@@ -21,7 +21,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // found
           'f.description.hl.alternateField': 'description',
           // Fields that are returned
-          fl: 'dbid,uuid,access',
+          fl: 'dbid,uuid,access,name,modification_date,title',
           // Limit search space to data sets only
           fq: 'django_ct:core.dataset',
           // Highlighting enabled
@@ -39,7 +39,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // Query
           q: searchQuery,
           // Query fields
-          qf: 'title^0.5 accession submitter text',
+          qf: 'title^0.5 accession submitter text description',
           // # results returned
           rows: limit,
           // Start of return

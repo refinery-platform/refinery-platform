@@ -20,6 +20,7 @@
 *.rar
 *.tar
 *.zip
+!/refinery/data_set_manager/test-data/*.zip
 
 # Logs and databases #
 ######################
@@ -37,9 +38,6 @@ Thumbs.db
 
 # machine/user specific files #
 ###############################
-setup_refinery.sh
-/docs/_build/*
-/docs/_static/*
 .idea/
 .project
 .pydevproject
@@ -47,20 +45,17 @@ setup_refinery.sh
 /refinery/solr/*/data
 /refinery/solr/lib/
 /refinery/solr/*/conf/custom-synonyms.txt
-/refinery/fabric/
+/refinery/solr/**/conf/solrconfig.xml
 supervisord.conf
 codekit-config.json
 .vagrant/
 /deployment/.librarian/
 /deployment/.tmp/
 /deployment/Puppetfile.lock
-/deployment/aws-config/auto-config.yaml
 /deployment/aws-config/config.yaml
-/deployment/aws-config/stack-name
-/deployment/web.json
+/deployment/aws-config/tags.yaml
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
-/refinery/solr/**/conf/solrconfig.xml
 /refinery/static/production/
 /refinery/static/development/
 /refinery/ui/production/
@@ -70,6 +65,8 @@ codekit-config.json
 /refinery/ui/.tmp/
 /refinery/ui/coverage/
 /refinery/ui/docs/
+/refinery/ui/cypress/screenshots/
+/refinery/ui/cypress/videos/
 /isa-tab/
 /import/
 /static/
@@ -84,3 +81,13 @@ codekit-config.json
 # to be moved into refinery/ui
 refinery/static/styles/css/font-awesome*.css
 refinery/static/styles/css/refinery-style*.css
+
+### Terraform template
+# Compiled files
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+# Module directory
+.terraform/
+# Variable values for development
+terraform.tfvars

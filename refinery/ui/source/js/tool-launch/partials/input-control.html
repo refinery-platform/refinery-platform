@@ -1,0 +1,98 @@
+<div
+  class="panel-group"
+  id="tool-input-control"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">
+        <div
+          role="button"
+          data-toggle="collapse"
+          data-parent="#tool-input-control"
+          ng-click="$ctrl.isToolInputControlCollapsed = !$ctrl
+          .isToolInputControlCollapsed">
+            <i
+              ng-class="$ctrl.isToolInputControlCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              aria-hidden="true"></i>
+            Input Files
+        </div>
+      </h4>
+    </div>
+    <div
+      id="tool-launch-body"
+      class="panel-collapse p-a-0"
+      uib-collapse="$ctrl.isToolInputControlCollapsed"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-body p-a-0">
+        <div class="input-template">
+          <div
+            ng-repeat="depthName in $ctrl.depthNames|orderBy:'$index':true track by $index"
+            id="control-panel-list">
+            <div ng-if="$index == 0" class="p-l-1-2">
+              <div class="refinery-subheader">
+                <h4>
+                  <i
+                    class="{{$ctrl.currentTypes[$ctrl.currentTypes.length-1]|groupTypeIcon}}"
+                    aria-hidden="true"></i>
+                  {{ $ctrl.depthNames[$ctrl.depthNames.length-1] }}
+                </h4>
+              </div>
+              <rp-input-group></rp-input-group>
+            </div>
+
+            <div
+              ng-if="$index > 0"
+              class="tree-panel"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <div class="refinery-subheader">
+                <h4>
+                  <i class="{{$ctrl.currentTypes[$ctrl.currentGroup.length-$index]|groupTypeIcon}}" aria-hidden="true"></i>
+                  {{ depthName }}
+                </h4>
+              </div>
+            </div>
+
+            <div
+              ng-if="$index == 1"
+              class="p-a-1-2"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <rp-input-control-inner-nav></rp-input-control-inner-nav>
+            </div>
+            <div
+              ng-if="$index > 1"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <button
+                class="refinery-base btn btn-default btn-xs outline"
+                ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+                ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
+                <i class="fa fa-backward"></i>
+              </button>
+              <span class="badge">
+                {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
+              </span>
+              <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'PAIR'">
+                <button
+                  class="refinery-base btn btn-default btn-xs outline"
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
+                </button>
+              </span>
+              <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'LIST'">
+                <button
+                  class="refinery-base btn btn-default btn-xs outline"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
+                </button>
+              </span>
+            </div>
+          </div>
+         </div>
+      </div>
+    </div>
+  </div>
+</div>

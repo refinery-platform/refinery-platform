@@ -1,21 +1,15 @@
-import uuid as uuid_builtin
 from datetime import datetime
+import uuid as uuid_builtin
 
-import django
 import factory
 
-from core.models import DataSet, Analysis
-
-# Call to django.setup() needed due to the new handling of the AppRegistry in
-# Django 1.7
-django.setup()
+from data_set_manager.models import Node
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a DataSet for testing purposes"""
+    """Minimal representation of a DataSet"""
     class Meta:
         model = "core.DataSet"
-        django_get_or_create = ('uuid',)
 
     uuid = uuid_builtin.uuid4()
     title = "Test DataSet - {}".format(uuid)
@@ -24,16 +18,16 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     modification_date = datetime.now()
 
 
-class InvestigationFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Investigation for testing purposes"""
+class AssayFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Assay"""
     class Meta:
-        model = "data_set_manager.Investigation"
+        model = "data_set_manager.Assay"
 
     uuid = uuid_builtin.uuid4()
 
 
 class StudyFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Study for testing purposes"""
+    """Minimal representation of a Study"""
     class Meta:
         model = "data_set_manager.Study"
 
@@ -41,7 +35,7 @@ class StudyFactory(factory.django.DjangoModelFactory):
 
 
 class InvestigationLinkFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an InvestigationLink for testing purposes"""
+    """Minimal representation of an InvestigationLink"""
     class Meta:
         model = "core.InvestigationLink"
 
@@ -49,8 +43,28 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
     date = datetime.now()
 
 
+class NodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Node"""
+    class Meta:
+        model = "data_set_manager.Node"
+
+    type = Node.RAW_DATA_FILE
+
+
+class AnnotatedNodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnnotatedNode"""
+    class Meta:
+        model = "data_set_manager.AnnotatedNode"
+
+
+class AttributeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Attribute"""
+    class Meta:
+        model = "data_set_manager.Attribute"
+
+
 class AnalysisFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an Analysis for testing purposes"""
+    """Minimal representation of an Analysis"""
     class Meta:
         model = "core.Analysis"
         django_get_or_create = ('uuid',)
@@ -63,25 +77,26 @@ class AnalysisFactory(factory.django.DjangoModelFactory):
 
 
 class ProjectFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Project for testing purposes"""
+    """Minimal representation of a Project"""
     class Meta:
         model = "core.Project"
 
 
-class GalaxyInstanceFactory(factory.DjangoModelFactory):
-    """Minimal representation of a GalaxyInstance for testing purposes"""
+class GalaxyInstanceFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a GalaxyInstance"""
     class Meta:
         model = "galaxy_connector.Instance"
+    base_url = "http://www.example.com/galaxy"
 
 
-class WorkflowEngineFactory(factory.DjangoModelFactory):
-    """Minimal representation of a WorkflowEngine for testing purposes"""
+class WorkflowEngineFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a WorkflowEngine"""
     class Meta:
         model = "core.WorkflowEngine"
 
 
-class WorkflowFactory(factory.DjangoModelFactory):
-    """Minimal representation of a Workflow for testing purposes"""
+class WorkflowFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Workflow"""
     class Meta:
         model = "core.Workflow"
 
@@ -89,82 +104,102 @@ class WorkflowFactory(factory.DjangoModelFactory):
     name = "Test Workflow - {}".format(uuid)
 
 
-def make_datasets(number_to_create, user_instance):
-    """Create some minimal DataSets"""
-    while number_to_create >= 1:
-
-        dataset_uuid = uuid_builtin.uuid4()
-        dataset = DataSetFactory(
-                uuid=dataset_uuid,
-                title="Test DataSet - {}".format(dataset_uuid),
-                name="Test DataSet - {}".format(dataset_uuid)
-            )
-
-        investigation_uuid = uuid_builtin.uuid4()
-        investigation = InvestigationFactory(uuid=investigation_uuid)
-
-        study_uuid = uuid_builtin.uuid4()
-        study = StudyFactory(uuid=study_uuid, investigation=investigation)
-
-        InvestigationLinkFactory(
-            data_set=dataset,
-            investigation=study.investigation,
-            version=1,
-            date=datetime.now()
-        )
-
-        number_to_create -= 1
-
-    for dataset in DataSet.objects.all():
-        dataset.set_owner(user_instance)
-        dataset.save()
+class NodeCollectionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a NodeCollection"""
+    class Meta:
+        model = "data_set_manager.NodeCollection"
+    uuid = uuid_builtin.uuid4()
 
 
-def make_analyses_with_single_dataset(number_to_create, user_instance):
-    """Create some minimal Analyses"""
-    instance = GalaxyInstanceFactory()
-    workflow_engine = WorkflowEngineFactory(instance=instance)
-    workflow_uuid = uuid_builtin.uuid4()
-    workflow = WorkflowFactory(uuid=workflow_uuid,
-                               workflow_engine=workflow_engine)
-    project = ProjectFactory(is_catch_all=True)
+class InvestigationFactory(NodeCollectionFactory):
+    """Minimal representation of a Investigation"""
+    class Meta:
+        model = "data_set_manager.Investigation"
 
-    dataset_uuid = uuid_builtin.uuid4()
-    dataset = DataSetFactory(
-            uuid=dataset_uuid,
-            title="Test DataSet - {}".format(dataset_uuid),
-            name="Test DataSet - {}".format(dataset_uuid)
-        )
 
-    investigation_uuid = uuid_builtin.uuid4()
-    investigation = InvestigationFactory(uuid=investigation_uuid)
+class ToolDefinitionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a ToolDefinition"""
+    class Meta:
+        model = "tool_manager.ToolDefinition"
 
-    study_uuid = uuid_builtin.uuid4()
-    study = StudyFactory(uuid=study_uuid, investigation=investigation)
 
-    InvestigationLinkFactory(
-        data_set=dataset,
-        investigation=study.investigation,
-        version=1,
-        date=datetime.now()
-    )
+class ToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Tool"""
+    class Meta:
+        model = "tool_manager.Tool"
 
-    while number_to_create >= 1:
-        analysis_uuid = uuid_builtin.uuid4()
-        AnalysisFactory(
-                uuid=analysis_uuid,
-                name="Test Analysis - {}".format(analysis_uuid),
-                project=project,
-                data_set=dataset,
-                workflow=workflow
-            )
 
-        number_to_create -= 1
+class VisualizationToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a VisualizationTool"""
+    class Meta:
+        model = "tool_manager.VisualizationTool"
 
-    for dataset in DataSet.objects.all():
-        dataset.set_owner(user_instance)
-        dataset.save()
 
-    for analysis in Analysis.objects.all():
-        analysis.set_owner(user_instance)
-        analysis.save()
+class WorkflowToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a WorkflowTool"""
+    class Meta:
+        model = "tool_manager.WorkflowTool"
+
+
+class FileRelationshipFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileRelationship"""
+    class Meta:
+        model = "tool_manager.FileRelationship"
+
+
+class InputFileFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an InputFile"""
+    class Meta:
+        model = "tool_manager.InputFile"
+
+
+class ParameterFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Parameter"""
+    class Meta:
+        model = "tool_manager.Parameter"
+
+
+class GalaxyParameterFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a GalaxyParameter"""
+    class Meta:
+        model = "tool_manager.GalaxyParameter"
+
+
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileType"""
+    class Meta:
+        model = "file_store.FileType"
+
+
+class FileExtensionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileExtension"""
+    class Meta:
+        model = "file_store.FileExtension"
+
+
+class FileStoreItemFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileStoreItem"""
+
+    class Meta:
+        model = "file_store.FileStoreItem"
+
+
+class AnalysisNodeConnectionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnalysisNodeConnection"""
+
+    class Meta:
+        model = "core.AnalysisNodeConnection"
+
+
+class AnalysisResultFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnalysisResult"""
+
+    class Meta:
+        model = "core.AnalysisResult"
+
+
+class AnalysisStatusFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnalysisStatus"""
+
+    class Meta:
+        model = "analysis_manager.AnalysisStatus"

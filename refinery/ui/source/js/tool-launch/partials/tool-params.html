@@ -1,0 +1,139 @@
+<div
+  ng-if="$ctrl.params.length > 0"
+  class="panel-group"
+  id="tool-info-display"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">
+        <div
+          role="button"
+          data-toggle="collapse"
+          data-parent="#tool-info-display"
+          ng-click="$ctrl.isToolParamsCollapsed = !$ctrl.isToolParamsCollapsed"
+          aria-expanded="true">
+            <i
+              ng-class="$ctrl.isToolParamsCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              aria-hidden="true"></i>
+            Parameters
+        </div>
+      </h4>
+    </div>
+    <div
+      id="tool-launch-body"
+      class="panel-collapse"
+      uib-collapse="$ctrl.isToolParamsCollapsed"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-body">
+       <ul class="plain">
+         <form name="toolParamForm">
+           <li
+             ng-repeat="param in $ctrl.params"
+             class="p-b-1-2">
+             <div class="refinery-subheader">
+               <h3>
+                 {{ param.name }}
+                 &nbsp
+                <a
+                  popover-placement="right"
+                  uib-popover-template="'paramhelppopover.html'"
+                  popover-title="{{ param.name}}"
+                  popover-trigger="'outsideClick'"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
+                <div ng-if="param.is_user_adjustable">
+               <div
+                 ng-switch="param.value_type"
+                 class="p-a-1-2">
+                 <div ng-switch-when="INTEGER">
+                   <input
+                     autofocus
+                     type="text"
+                     name="{{param.uuid}}"
+                     ng-class="{'form-validation-error': toolParamForm[param.uuid].$error.pattern}"
+                     placeholder="{{ param.default_value }}"
+                     ng-model="$ctrl.paramsForm[param.uuid]"
+                     ng-maxlength="32"
+                     ng-pattern="/^\d+$/">
+                   <div
+                      ng-messages="toolParamForm[param.uuid].$error"
+                      role="alert"
+                      class="text-danger">
+                      <div ng-message="pattern">
+                        <i class="fa fa-warning" aria-hidden="true"></i>
+                        Must be an integer.
+                      </div>
+                   </div>
+                 </div>
+                 <div ng-switch-when="FLOAT">
+                   <input
+                     autofocus
+                     type="text"
+                     name="{{param.uuid}}"
+                     ng-class="{'form-validation-error': toolParamForm[param.uuid].$error.pattern}"
+                     placeholder="{{ param.default_value }}"
+                     ng-model="$ctrl.paramsForm[param.uuid]"
+                     ng-maxlength="32"
+                     ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/">
+                    <div
+                      ng-messages="toolParamForm[param.uuid].$error"
+                      role="alert"
+                      class="text-danger">
+                      <div ng-message="pattern">
+                        <i class="fa fa-warning" aria-hidden="true"></i>
+                        Must be a float.
+                      </div>
+                   </div>
+                 </div>
+                 <div ng-switch-when="BOOLEAN">
+                   <label
+                     class="p-l-1-2"
+                     ng-if="param.default_value == 'True'">
+                      <input
+                        type="checkbox"
+                        ng-checked=true
+                        ng-model="$ctrl.paramsForm[param.uuid]">
+                   </label>
+                   <label
+                     class="p-l-1-2"
+                     ng-if="param.default_value == 'False'">
+                      <input
+                        type="checkbox"
+                        ng-model="$ctrl.paramsForm[param.uuid]">
+                   </label>
+                  </div>
+                 <div ng-switch-default>
+                   <input
+                     autofocus
+                     type="text"
+                     name="{{param.uuid}}"
+                     class="form-control"
+                     placeholder="{{ param.default_value }}"
+                     ng-model="$ctrl.paramsForm[param.uuid]"
+                     ng-maxlength="32"
+                     ng-pattern="STRING">
+                 </div>
+               </div>
+             </div>
+               </h3>
+             </div>
+           </li>
+         </form>
+       </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/ng-template" id="paramhelppopover.html">
+  <div id="param-help-popover">
+    <rp-tool-params-help-popover tool-param='param'>
+    </rp-tool-params-help-popover>
+  </div>
+</script>

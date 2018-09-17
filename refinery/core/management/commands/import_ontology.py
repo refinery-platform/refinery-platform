@@ -1,13 +1,17 @@
-import logging
-import sys
-import subprocess
-import py2neo
-import urlparse
+from __future__ import absolute_import
+
 import json
-from optparse import make_option
+import logging
+import subprocess
+import sys
+import urlparse
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from core.utils import create_update_ontology
+
+import py2neo
+
+from ...utils import create_update_ontology
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
@@ -18,52 +22,51 @@ class Command(BaseCommand):
     from https://github.com/flekschas/owl2neo4j.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument('verbosity', type=int)
+        parser.add_argument('ontology_file')
+        parser.add_argument('ontology_abbr')
+        parser.add_argument('ontology_name')
+        parser.add_argument('batch_import_file')
+        parser.add_argument(
             '-b',
             '--batch',
             action='store',
             dest='batch_import_file',
-            type='string',
-            help='Batch import definition file, '
-                 'e.g. /vagrant/transfer/import.json'
-        ),
-        make_option(
+            help='Batch import definition file, e.g. '
+                 '/vagrant/transfer/import.json'
+        )
+        parser.add_argument(
             '-o',
             '--ontology',
             action='store',
             dest='ontology_file',
-            type='string',
             help='OWL ontology file, e.g. /vagrant/transfer/GO.owl'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '-n',
             '--name',
             action='store',
             dest='ontology_name',
-            type='string',
             help='Ontology full name, e.g. Gene Ontology'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '-a',
             '--abbreviation',
             action='store',
             dest='ontology_abbr',
-            type='string',
             help='Ontology abbreviation or prefix, e.g. GO'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '--eqp',
             action='store',
             dest='eqp',
-            type='string',
             help=('Existencial quantification property, e.g. ' +
                   'http://purl.obolibrary.org/obo/RO_0002202')
-        ),
-    )
+        )
 
     def handle(self, *args, **options):
-        verbosity = int(options['verbosity'])
+        verbosity = options['verbosity']
 
         if verbosity == 0:
             logger.setLevel(logging.ERROR)
@@ -153,7 +156,7 @@ class Command(BaseCommand):
         logger.debug('Call Owl2Neo4J: %s', cmd)
         try:
             # Note that `owl2neo4j.jar` handles all other possible errors.
-            if int(options['verbosity']) > 0:
+            if options['verbosity'] > 0:
                 subprocess.check_call(cmd, shell=True)
             else:
                 subprocess.check_output(cmd, shell=True)

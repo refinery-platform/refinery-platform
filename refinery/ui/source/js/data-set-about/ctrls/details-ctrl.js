@@ -1,28 +1,61 @@
 'use strict';
 
 function AboutDetailsCtrl (
-  dataSetAboutFactory,
-  $scope,
   $location,
+  $log,
+  $scope,
   $window,
-  $log
+  dataSetAboutFactory,
+  dataSetPermsService,
+  dataSetTakeOwnershipService,
+  fileRelationshipService
   ) {
   var vm = this;
-  vm.dataSet = dataSetAboutFactory.dataSet;
-  vm.studies = dataSetAboutFactory.studies;
+  vm.loggedIn = typeof $window.djangoApp !== 'undefined' &&
+      typeof $window.djangoApp.userName !== 'undefined';
   vm.assays = dataSetAboutFactory.assays;
+  vm.dataSet = dataSetAboutFactory.dataSet;
+  vm.dataSetImportStatus = 'NONE';
   vm.dataSetUuid = $window.dataSetUuid;
+  vm.editedDataSet = {};
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
+  vm.isCollapsed = {
+    title: true,
+    summary: true,
+    description: true,
+    slug: true
+  };
+  vm.studies = dataSetAboutFactory.studies;
+  vm.userPerms = dataSetPermsService.userPerms;
+
+  vm.cancel = function (fieldName) {
+    vm.editedDataSet[fieldName] = '';
+    vm.isCollapsed[fieldName] = true;
+  };
+
+  vm.importDataSet = function (dataSetUuid) {
+    vm.dataSetImportStatus = 'RUNNING';
+    dataSetTakeOwnershipService.save({
+      data_set_uuid: dataSetUuid
+    }).$promise.then(function () {
+      vm.dataSetImportStatus = 'SUCCESS';
+    }, function (error) {
+      $log.error(error);
+      vm.dataSetImportStatus = 'FAIL';
+    });
+  };
 
   vm.refreshDataSetStats = function () {
     dataSetAboutFactory
       .getDataSet(vm.dataSetUuid)
       .then(function () {
         vm.dataSet = dataSetAboutFactory.dataSet;
+        // initialize the edited dataset, avoids updating while user edits
+        angular.copy(vm.dataSet, vm.editedDataSet);
         // grab meta-data info
         if (dataSetAboutFactory.dataSet.isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
-        } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
+        } else if (dataSetAboutFactory.dataSet.pre_isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
         }
       }, function (error) {
@@ -63,19 +96,47 @@ function AboutDetailsCtrl (
       });
   };
 
+  vm.updateDataSet = function (fieldName, formInput) {
+    var params = { uuid: vm.dataSetUuid };
+    params[fieldName] = formInput;
+    dataSetAboutFactory.updateDataSet(params).then(function () {
+      vm.dataSet[fieldName] = formInput;
+      if (fieldName === 'accession') {
+        vm.isCollapsed.title = true;
+      } else {
+        vm.isCollapsed[fieldName] = true;
+      }
+    }, function (error) {
+      $log.error(error);
+    });
+  };
+
+  $scope.$watchCollection(
+    function () {
+      return dataSetPermsService.userPerms;
+    },
+    function () {
+      vm.userPerms = dataSetPermsService.userPerms;
+    }
+  );
+
   vm.refreshDataSetStats();
   vm.refreshStudies();
+    // Close ui-grid popover when tabbing
+  fileRelationshipService.hideNodePopover = true;
 }
 
 angular
   .module('refineryDataSetAbout')
   .controller('AboutDetailsCtrl',
   [
-    'dataSetAboutFactory',
-    '$scope',
     '$location',
-    '$window',
     '$log',
+    '$scope',
+    '$window',
+    'dataSetAboutFactory',
+    'dataSetPermsService',
+    'dataSetTakeOwnershipService',
+    'fileRelationshipService',
     AboutDetailsCtrl
   ]);
-

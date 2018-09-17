@@ -2,119 +2,34 @@
 
 {% load humanize %}
 {% load markup %}
-{% load static %}
+{% load static from staticfiles %}
 
 
 {% block head_html %}
+  <link rel="stylesheet" href="{% static "styles/file-browser.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
+  <link rel="styleSheet" href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"/>
+  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/spectrum/spectrum.css" %}" />
   <link rel="stylesheet" href="{% static "styles/provenance-visualization.css" %}" />
-  <link rel="stylesheet" href="{% static "vendor/tipsy/src/stylesheets/tipsy.css" %}" />
-  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
-  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
+  <link rel="stylesheet" type="text/css"
+    href="{% static "vendor/jquery-file-upload/css/jquery.fileupload.css" %}">
+  <link rel="stylesheet" type="text/css"
+    href="{% static "vendor/jquery-file-upload/css/jquery.fileupload-ui.css" %}">
 
-  <style type="text/css">
-    /*svg {
-      background-color: none;
-      padding: 5px;
-      margin-top: 15px;
-      margin-bottom: 15px;
-    }*/
-
-    .background {
-      fill: #FD0;
-    }
-
-    line {
-    /* stroke : #eee;*/
-    }
-
-    text.active {
-      fill: red;
-    }
-
-    text.matrix-label {
-      fill: #222222;
-    }
-
-    text.matrix-label-selected {
-      fill: #136382;
-      font-weight: bold;
-    }
-    th.field-header-sort{
-       white-space: nowrap;
-       min-width: 70px;
-    }
-    rect.frame {
-      stroke: #f0f0f0;
-    }
-
-    rect.active {
-      fill: red;
-    }
-
-    .pivot-matrix {
-    //background-color: #f00;
-    }
-
-    .facet-title {
-      cursor:pointer;
-    }
-
-    .facet-value {
-      cursor:pointer;
-    }
-
-    tr th {
-      cursor:pointer;
-    }
-
-    .field-name {
-      cursor:pointer;
-    }
-
-    #facet-view .active {
-      cursor:pointer;
-      background-color: #3A87AD;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    #pager-view {
-      text-align:right;
-    }
-
-    #statistics-view {
-    //text-align:right;
-    }
-    #url-view {
-      text-align:right;
-    }
-
-    .facet-value-list td {
-      padding: 2px;
-    }
-    .facet-value-list tr {
-      padding: 2px;
-    }
-
-    .facet-value-count {
-      white-space: nowrap;
-    }
-
-    .facet-value-list.selected {
-    }
-
-    .facet-title {
-      margin-top: 10px;
-    }
-  </style>
 {% endblock head_html %}
 
-{% block title %} - Data Set {{ data_set.name }}{% endblock %}
+{% block title %} - Data Set
+  {{ data_set.accession }}:
+  {{ data_set.title }} {% endblock %}
 
 {% block subheader %}
   <div class="page-header">
-    <h1>Data Set <small>{{ data_set.name }}</small></h1>
+    <h1>Data Set
+      <small>
+        {{ data_set.accession }}: {{ data_set.title }}
+      </small>
+    </h1>
   </div>
 
 {% endblock %}
@@ -122,822 +37,97 @@
 {% block content %}
   <!-- tab headers -->
 
-<div ng-controller="DataSetNavCtrl" ng-cloak>
-  <div ng-controller="DataSetUiModeCtrl">
 
-    <div class="refinery-panel-tabs">
-
-      <div class="row">
-
-        <div class="col-md-3">
-          <div class="btn-group" role="group" aria-label="...">
-          <!-- ng-hide if the file tab is not selected -->
-            <button type="button" class="btn btn-warning data-set-view-tabs"
-              ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
-              ui-sref-active="active">
-              Browse
-            </button>
-            {% if has_change_dataset_permission %}
-              <button type="button" class="btn btn-warning data-set-view-tabs"
-                ng-class="{active:$root.mode==='analyze'}"
-                ui-sref="analyze" ui-sref-active="active">
-                Analyze
-              </button>
-            {% endif %}
-            <button type="button" id="visualizeTab" class="btn btn-warning
-            data-set-view-tabs"
-              ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
-              ui-sref-active="active">
-              Visualize
-            </button>
-          </div>
-        </div>
-
-        <div class="col-md-9">
-          <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li ui-sref-active="active" id="filesTab">
-              <a ui-sref="files" class="dataSetTabs">
-                Files
-              </a>
-            </li>
-            {% if has_change_dataset_permission %}
-              <li ui-sref-active="active"><a
-              ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
-            {% endif %}
-            <li ui-sref-active="active">
-              <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysisMonitorCtrl">
-                  <span rp-analysis-monitor-running-tab-icon></span>
-                </span>
-                Analyses
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="details" class="dataSetTabs" >
-                Details
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="sharing" class="dataSetTabs">
-                Sharing
-              </a>
-            </li>
-          </ul>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow">
-      {% if data_set %}
-        <!-- tabs -->
-        <form id="sampleForm" method="post" class="form-inline" hidden>
-          {% csrf_token %}
-          <!-- pass study information into the receiving view when posting -->
-          <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
-        </form>
-
-          <div class="dataSetTabContent ng-cloak" id="files">
-            <!-- <div ng-controller="FileMappingCtrl"> -->
-            <div class="row">
-
-              {% verbatim %}
-              <div class="{{ $root.ctrlTabSpanSize }}"
-                   ng-init="$root.ctrlTabSpanSize='col-md-2'"
-                   ng-show="showCtrlTab" ng-cloak
-                   style="background-color: #eaeaea; padding: 10px;">
-                <!-- <div ui-view="data-set-ui-mode-controls"></div> -->
-                <div ui-view></div>
-              </div>
-              {% endverbatim %}
-
-              {% verbatim %}
-                <div class="{{ $root.mainTabSpanSize }}"
-                     ng-init="$root.mainTabSpanSize='col-md-12'" ng-cloak>
-              {% endverbatim %}
-
-                  <div class="row" ng-if="$root.mode==='analyze'">
-                    <div ng-include="'/static/partials/data-set-nav/partials/data-set-ui-node-mapping.html'">
-                    </div>
-                    <div ui-view="data-set-ui-mapping-controls"></div>
-                    <!-- <div ui-view></div> -->
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-2">
-                      {% if not REFINERY_REPOSITORY_MODE %}
-                        <div class="row" style="margin-bottom: 5px;">
-                          <div class="col-md-12">
-                              <span id="node-set-manager-panel">
-                                <!-- <label class="control-label"
-                                style="font-size: large; margin-left: 15px;
-                                margin-right: 5px; position: relative; top: 3px;">
-                                Selection
-                                </label> -->
-                                <span id="node-set-manager-controls"></span>
-                              </span>
-                          </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 5px;">
-                          <div class="col-md-12">
-                            <div style="width: 100%;">
-                              <div id="node-set-save-button" class="refinery-base
-                              btn btn-default btn-xs">
-                                Save
-                              </div>
-                              <div id="clear-facets"
-                                class="refinery-base btn btn-default btn-xs">
-                                Reset
-                              </div>
-                              <!-- <div id="" class="btn btn-mini">Download</div> -->
-                            </div>
-                          </div>
-                        </div>
-                      {% endif %}
-
-                    <!--
-                    <ul class="nav nav-pills" id="navigation-tabs">
-                        <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
-                    </ul>
-                    -->
-                      <div class="row y-scrollable">
-                        <div class="col-md-12">
-                          <span style="font-style: italic; color: darkgray;">
-                            Attribute Filter
-                          </span>
-                          <div id="solr-facet-view" class="panel-group"></div>
-                        </div>
-                        <div class="col-md-12">
-                          <span style="font-style: italic; color: darkgray;">
-                            Analysis Filter
-                          </span>
-                          <div id="solr-analysis-view" class="panel-group"></div>
-                        </div>
-                      </div>
-                    </div>
-
-                  {% verbatim %}
-                    <div class="col-md-10" id="main-area">
-                  {% endverbatim %}
-
-                    <div class="row" style="margin-bottom: 5px;">
-                      <div class="col-md-3">
-                        <span class="control-label"
-                          id="solr-document-count-view" style="float: left;
-                          margin-top: 3px;"></span>
-                        <a href="#" id="help-selection-button" style="height:
-                         20px; width: 20px;"><i class="fa fa-question-circle"
-                          style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                      </div>
-
-                      <div class="col-md-9">
-                        <!--
-                        <a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
-                        <a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                        -->
-
-                        {% if REFINERY_REPOSITORY_MODE %}
-                          <!-- CHECK BOXES FOR SELECTING SAMPLES -->
-                          {% for work in workflows %}
-                            <a id="submitReposBtn" data-workflow_id="
-                            {{work.uuid}}" role="button" style="margin-left:
-                            5px" class="btn  btn-warning disabled"
-                              rel="tooltip" data-placement="bottom"
-                              data-html="true" title="">
-                              <i class="fa fa-arrow-circle-o-down"></i>&nbsp;&nbsp;Download as
-                              Archive</a>
-                            <a href="#" id="help-download-button"
-                              style="height: 20px; width: 20px;"><i
-                              class="fa fa-question-circle" style="font-size:
-                              20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                          {% endfor %}
-                        {% endif %}
-
-                        <div id="view-selector-div">
-                          <label id="label-display" for="s2id_autogen1">Display</label>
-                          <select id="view-selector">
-                            <option value="table-view-tab">Table</option>
-                            <option value="pivot-view-tab">Matrix</option>
-                            <option value="provenance-view-tab">Provenance
-                            </option>
-                          </select>
-                          <a href="#" id="help-view-selector-button">
-                            <i class="fa fa-question-circle"></i>
-                          </a>
-                        </div>
-
-                        <!-- the original tab pills: now remote controlled by the select2 -->
-                        <div class="tabbable" hidden>
-                          <ul class="nav nav-pills" id="navigation-tabs">
-                            <li class="active">
-                              <a href="#table-view-tab" data-toggle="pill">List</a>
-                            </li>
-                            <li>
-                              <a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
-                            </li>
-                            <li>
-                              <a href="#provenance-view-tab" data-toggle="pill">Provenance</a>
-                            </li>
-                          </ul>
-                        </div>
-
-                        <!-- Prepared for future use! Do not remove. -->
-                        <!--
-                        <div style="float:right; display: block;">
-                            <label style="dispaly: inline; float:left; margin-top: 3px; margin-right: 5px;">View </label>
-
-                            <div class="btn-group annotation-buttons" data-toggle="buttons-radio" >
-                                <button type="button" id="data-button" data-toggle="button" class="btn active"  rel="tooltip" data-placement="bottom" data-html="true" title="View (primary) data files<br>included in this data set.">Data</button>
-                                <button type="button" id="annotation-button" data-toggle="button" class="btn" rel="tooltip" data-placement="bottom" data-html="true" title="View annotation files<br>associated with this data set.">Annotation</button>
-                            </div>
-                            <a href="#" id="help-data-annotation-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 15px; position: relative; top: 5px;"></i></a>
-                        </div>
-                        -->
-
-                        <!--
-                                    {% if user.is_authenticated %}
-                                    <span id="p1p">
-                                        <span class="controls">
-                                            <label class="control-label" style="font-size: large; margin-left: 15px; margin-right: 5px; position: relative; top: 3px;">Workflow</label>
-                                            <span id="process_1" class=""></span>
-                                        </span>
-                                    </span>
-                                    {% endif %}
-                                    -->
-                      </div>
-                    </div>
-
-                    <div class="row">
-                      <div class="tabbable">
-                        <div class="tab-content">
-                          <div class="tab-pane active fade in" id="table-view-tab">
-                            <dynamic>
-                              <div class="refinery-panel-content">
-                                <div id="solr-table-view" class="scrollable scrollable-floatThead jquery-full-height"></div>
-                              </div>
-                            </dynamic>
-                          </div>
-                          <div class="tab-pane fade in" id="pivot-view-tab">
-                            <div id="pivot-view"></div>
-                            <div id="solr-pivot-matrix">
-                              <!-- the matrix -->
-                            </div>
-                          </div>
-                          <div class="tab-pane fade in"
-                               id="provenance-view-tab"
-                               style="overflow: hidden;">
-                              <div class="refinery-panel-content">
-                                <div id="provenance-visualization">
-                                  <div id="provvis-nav-bar"
-                                       ng-controller="provvisNavbarController">
-                                      <div provvis-nav-bar></div>
-                                  </div>
-                                  <div id="provvis-canvas"
-                                       ng-controller="provvisCanvasController">
-                                      <div provvis-canvas></div>
-                                  </div>
-                                  <!-- the provenance graph -->
-                                </div>
-                              </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                  <!--
-                  <div class="span2" id="process_container" style="opacity: 0; ">
-
-                      <script type="text/template" id="template_workflow_item">
-                          <%= name %>
-                      </script>
-
-                      <script type="text/template" id="template_inputs">
-                          <div class="refinery-subheader">
-                          <label class="control-label" for="pr_workflow">Choose Workflow</label>
-                          </div>
-                      </script>
-
-                      <div id="process_2" class="well"></div>
-
-                      <script type="text/template" id="template_field_item">
-                          <input name="matchingRadio" type="radio" value=<%= full_name%> id=<%= full_name%>><%= name %>
-                      </script>
-
-                      <div class="well" id="process_3_p" style="opacity:0">
-                          <legend>Relationship<button type="button" class="close" aria-hidden="true" onclick="nrApp.nrMod.hidePanel('#process_3_p')">&times;</button>
-                          </legend>
-                          <form>
-
-                              <div class="control-group">
-                                  <div class="input-prepend">
-                                      <span class="add-on"><i class="icon-pencil"></i></span>
-                                      <input id="rel_name" type="text" class="input-small" required placeholder="Name">
-                                  </div>
-                                  <div class="input-prepend">
-                                      <span class="add-on"><i class="icon-book"></i></span>
-                                      <input id="rel_description" type="text" class="input-small" placeholder="Description">
-                                  </div>
-                              </div>
-
-
-                              <div class="control-group">
-                                  <div id="process_3"></div>
-                              </div>
-
-                              <a id="run_analysis_single_btn" href="#" onclick="nrApp.nrMod.createRelationship()" role="button" class="btn-block  btn btn-warning" data-toggle="modal" rel="tooltip"><i class="icon-dashboard"></i>&nbsp;&nbsp;Create</a>
-
-                          </form>
-                      </div>
-
-                  </div>
-                  -->
-
-                    </div>
-                  </div>
-                </div>
-            </div>
-            <!-- </div> --> <!-- FileMappingCtrl -->
-          </div>
-
-          {% if has_change_dataset_permission %}
-            <div class="dataSetTabContent ng-cloak" id="attributes">
-              <div class="refinery-header">
-                <span class="refinery-header-left">
-                    <h3>Attributes</h3>
-                </span>
-              </div>
-
-              <div class="refinery-subheader">
-                <h4>Attribute Order and Visibility</h4>
-              </div>
-              <div id="configurator-panel">
-              </div>
-            </div>
-          {% endif %}
-
-          <div class="dataSetTabContent ng-cloak" id="analyses">
-            <div class="refinery-header">
-              <span class="refinery-header-left">
-                  <h3>Analyses</h3>
-              </span>
-            </div>
-            <p>
-              <div class="row">
-                <analysis-monitor-analyses-list></analysis-monitor-analyses-list>
-              </div>
-            </p>
-          </div>
-
-          <div class="dataSetTabContent ng-cloak" id="details">
-
-            <div class="refinery-header">
-              <span class="refinery-header-left">
-                <h3>{{ data_set.name }}</h3>
-              </span>
-            </div>
-
-            <div class="refinery-subheader">
-              <h4>Summary</h4>
-            </div>
-            <p>
-              {% if data_set.summary %}
-                {{ data_set.summary }}
-              {% else %}
-                <i>None provided.</i>
-              {% endif %}
-            </p>
-
-            <div class="refinery-subheader">
-              <h4>Description</h4>
-            </div>
-            <p>
-              {% if data_set.description %}
-                {{ data_set.description|markdown:"safe"}}
-              {% else %}
-                <i>None provided.</i>
-              {% endif %}
-            </p>
-
-            <div class="refinery-subheader">
-              <h4>Shortcut Name</h4>
-            </div>
-            <p>{% if data_set.slug %} {{ data_set.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
-
-            {% if not REFINERY_REPOSITORY_MODE %}
-              <div class="refinery-header">
-                <span class="refinery-header-left">
-                    <h3>Studies</h3>
-                </span>
-              </div>
-              {% for study in studies %}
-                <p><strong>{{study.identifier}}</strong>: {{study.title}}</p>
-                <ul>
-                  {% for assay in study.assay_set.all %}
-                    <li>Assay - {{assay}}</li>
-                  {% endfor %}
-                </ul>
-              {% endfor %}
-            {% endif %}
-
-            <div class="refinery-header">
-              <span class="refinery-header-left">
-                  <h3>Files</h3>
-              </span>
-            </div>
-
-            <span class="refinery-subheader">
-                <h3>Meta Data</h3>
+<div class="refinery-panel-tabs">
+  <div class="row">
+    <div class="col-md-9 col-md-offset-3">
+      <ul class="nav nav-tabs float-right" id="tabs">
+        <li ui-sref-active="active" id="filesTab">
+          <a ui-sref="files" class="dataSetTabs">
+            <rp-user-perms-icon></rp-user-perms-icon> Files
+          </a>
+        </li>
+        <li ui-sref-active="active">
+          <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
+            <span ng-controller="AnalysisMonitorCtrl">
+              <span rp-analysis-monitor-running-tab-icon></span>
             </span>
-            {% if isatab_archive %}
-              {% load core_extras %}
-                  {% if isatab_archive %}
-                <p><a href="{{isatab_archive.get_datafile_url}}">{{isatab_archive.uuid|simple_name}}</a> ({{isatab_archive.get_file_size|filesizeformat}})</p>
-                  {% endif %}
-                  {% if pre_isatab_archive %}
-                    <p><a href="{{pre_isatab_archive.get_datafile_url}}">{{pre_isatab_archive.uuid|simple_name}}</a> ({{pre_isatab_archive.get_file_size|filesizeformat}})</p>
-                  {% endif %}
-                {% else %}
-                  <p><i>Not available.</i></p>
-                {% endif %}
-
-            <span class="refinery-subheader">
-              <h3>Data Files</h3>
-            </span>
-            <p>{{ data_set.file_count }} files using {{ data_set.file_size|filesizeformat }}</p>
-
-            <div class="refinery-header">
-              <span class="refinery-header-left">
-                  <h3>History</h3>
-              </span>
-            </div>
-            <p>Current version <i>{{ data_set.get_version_details.version }}</i> created <i>{{ data_set.get_version_details.date }}</i>.
-              Data set created <i>{{ data_set.creation_date }}</i>. Last modified <i>{{ data_set.modification_date }}</i>.</p>
-            <span>
-              {% if isatab_archive and data_set.is_public and data_set.get_owner_username != user.username and user.id %}
-                <form id="isaTabImportForm" enctype="multipart/form-data" action="{% url "take_ownership_of_public_dataset" %}" method="post">
-                  {% csrf_token %}
-                  <p>
-                    <input id="id_isa_tab_url" type="hidden" name="isa_tab_url" value="{{ isatab_archive.get_datafile_url }}" />
-                  </p>
-                  <input class="refinery-base btn btn-important"
-                         id="isa-import-button" type="submit" value="Import into own Space"/>
-                  <div style="padding: 15px; display: block; height: 22px; width: 22px;" id="isa-spinner"></div>
-                </form>
-              {% endif %}
-          </span>
-          </div>
-
-
-          <div class="dataSetTabContent ng-cloak" id="sharing">
-            <div class="refinery-header">
-              <span class="refinery-header-left">
-                  <h3>Sharing</h3>
-              </span>
-            </div>
-            <div class="refinery-subheader">
-              <h4>Owner</h4>
-            </div>
-            <p>
-              <span class="fa fa-user"></span>&nbsp;
-              {% if data_set.get_owner %}
-                <a href="{% url "user" data_set.get_owner.profile.uuid %}">
-                  {{ data_set.get_owner_full_name }}
-                </a>
-              {% else %}
-                {{ data_set.get_owner_full_name }}
-              {% endif %}
-            </p>
-
-            {% if data_set.get_groups|length > 0 %}
-              <div class="refinery-subheader">
-                <h4>Groups</h4>
-              </div>
-              <p>
-                {% for perm in data_set.get_groups %}
-                  <a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
-                  {% if perm.read %}
-                    <i class="fa fa-eye"></i>
-                  {% endif %}
-                  {% if perm.change %}
-                    <i class="fa fa-pencil"></i>
-                  {% endif %}
-                {% endfor %}
-              </p>
-            {% endif %}
-          </div>
-
-      {% else %}
-        <p>No valid data set.</p>
-      {% endif %}
+            Analyses
+          </a>
+        </li>
+        <li ui-sref-active="active">
+          <a ui-sref="visualizations" class="dataSetTabs" >
+            Visualizations
+          </a>
+        </li>
+         <li ui-sref-active="active">
+          <a ui-sref="about" class="dataSetTabs" >
+            Details
+          </a>
+        </li>
+        <li ui-sref-active="active">
+           <a ui-sref="provvis" class="dataSetTabs" >
+            Provenance
+          </a>
+        </li>
+      </ul>
     </div>
-
-    <!-- Modal -->
-    <div id="igvModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">√ó</button>
-        <h3 id="myModalLabel">Launch IGV.js</h3>
-      </div>
-      <div class="modal-body" id="myModalBody">
-      </div>
-      <div class="modal-footer">
-        <button class="refinery-base btn btn-default" data-dismiss="modal"
-          aria-hidden="true">Close</button>
-      </div>
-    </div>
-
   </div>
+</div>
+
+
+<div class="refinery-panel refinery-panel-content jquery-full-height" id="data-set-view">
+  {% if data_set %}
+    <!-- tabs -->
+    <form id="sampleForm" method="post" class="form-inline" hidden>
+      {% csrf_token %}
+      <!-- pass study information into the receiving view when posting -->
+      <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
+    </form>
+    <!-- Tab views -->
+    <div id="main-area-view" ui-view></div>
+ {% else %}
+    <p>No valid data set.</p>
+  {% endif %}
 </div>
 
 {% endblock %}
 
 {% block vendor_scripts %}
-  <script type="text/javascript" src="{% static "js/d3/fisheye.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/underscore/underscore-min.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/backbone/backbone-min.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/backbone-marionette/backbone.marionette.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/bootbox/bootbox.min.js" %}"></script>
-
-  <!-- adding spinner -->
-  <script language="javascript" type="text/javascript" src="{% static "js/spin/spin.min.js" %}"></script>
-
-  <script language="javascript" type="text/javascript">
-    var opts = {
-      lines: 13, // The number of lines to draw
-      length: 4, // The length of each line
-      width: 2, // The line thickness
-      radius: 6, // The radius of the inner circle
-      corners: 1, // Corner roundness (0..1)
-      rotate: 0, // The rotation offset
-      color: '#000', // #rgb or #rrggbb
-      speed: 1, // Rounds per second
-      trail: 60, // Afterglow percentage
-      shadow: false, // Whether to render a shadow
-      hwaccel: false, // Whether to use hardware acceleration
-      className: 'spinner', // The CSS class to assign to the spinner
-      zIndex: 2e9, // The z-index (defaults to 2000000000)
-      top: 'top', // Top position relative to parent in px
-      left: 'top' // Left position relative to parent in px
-    };
-  </script>
-
-
-  <!-- Refinery libraries -->
-  <script type="text/javascript">
-    var REFINERY_BASE_URL = document.location.host;
-    var REFINERY_API_BASE_URL = "/api/v1/";
-    var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
-    var externalAssayUuid = "{{ assay_uuid }}";
-    var externalStudyUuid = "{{ study_uuid }}";
-    var externalAssayId = "{{ assay_id }}";
-    var externalStudyId = "{{ study_id }}";
-    var dataSetUuid = "{{ data_set.uuid }}";
-    var analysisUuid = "{{ analysis_uuid }}";
-
-    {% if REFINERY_REPOSITORY_MODE %}
-      var REFINERY_REPOSITORY_MODE = true;
-    {% else %}
-      var REFINERY_REPOSITORY_MODE = false;
-    {% endif %}
-
-    {% if user.is_authenticated %}
-      var REFINERY_USER_AUTHENTICATED = true;
-    {% else %}
-      var REFINERY_USER_AUTHENTICATED = false;
-    {% endif %}
-
-    var csrf_token = "{{ csrf_token }}";
-  </script>
-
-{% endblock %}
-
-{% block script %}
-
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_utilities.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_client.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_query.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_response.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_document_table.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_facet_view.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_analysis_view.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_document_count_view.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/solr/solr_pivot_matrix.js" %}"></script>
-  <script type="text/javascript" src="{% static "vendor/tipsy/src/javascripts/jquery.tipsy.js" %}"></script>
-
-  <script type="text/javascript" src="{% static "js/refinery/contents.js" %}">var query;</script>
-  <script type="text/javascript" src="{% static "js/refinery/data_set_manager/data_set_configurator.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/core/node_set_manager.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/core/analysis_api_client.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/refinery/core/data_set_monitor.js" %}"></script>
-
-  <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
-
   <!-- provenance visualization -->
   <script type="text/javascript" src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
+  <!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+  <script src="{% static "vendor/jquery-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
+  <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+  <script src="{% static "vendor/jquery-file-upload/js/jquery.iframe-transport.js" %}"></script>
+  <!-- The basic File Upload plugin -->
+  <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload.js" %}"></script>
+  <!-- The File Upload processing plugin -->
+  <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-process.js" %}"></script>
+  <!-- Calculate md5 -->
+  <script src="{% static "vendor/spark-md5/spark-md5.min.js" %}"></script>
 
-  <script type="text/javascript" src="{% static "js/provvis/provvis-helpers.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-decl.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-init.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-layout.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
-  <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
-
-
-  <script type="application/javascript">
-    setTimeout(function() {
-          sizing();
-      }, 750);
-    $(document).ready(function () {
-      $( "#view-selector" ).select2({minimumResultsForSearch: -1});
-      $( "#view-selector" ).on("change", function(event) {
-        $( '#navigation-tabs a[href="#' + event.added.element[0].value + '"]').tab('show');
-      });
-
-      $("#navigation-tabs a").on('shown', function (e) {
-        sizing();
-        $(window).trigger('refinery/floatThead/reflow');
-      })
-
-      $("[rel=tooltip]").tooltip();
-
-      $("#help-igv-button").click( function(event) {
-        bootbox.alert(
-            "<h3><i class=\"fa fa-bar-chart-o\"></i>&nbsp;&nbsp;View in " +
-            "IGV</h3>" +
-            "<p>" +
-            "The selected files can be viewed in IGV (<a href=\"http://www.broadinstitute.org/igv\">Integrative Genomics Viewer</a>) along with the meta data shown in the table. " +
-            "IGV is launched through <a href=\"http://www.java.com/en/download/faq/java_webstart.xml\">Java WebStart</a>. This means that the software will be launched even if IGV is not installed on your computer. <b>Java needs to be installed for Java WebStart to be available</b>." +
-            "</p>" +
-            "<p>" +
-            "Once you have selected a of files and the clicked the \"View in IGV\" button (and selected a genome build) a <b>JNLP</b> file named \"igv.jnlp\" will be downloaded to your computer." +
-            "</p>" +
-            "<p>" +
-            "Many browsers will automatically open the downloaded JNLP file to launch the Java WebStart application. <b>If IGV is not launched by your browser after the file was downloaded, you need to launch IGV manually by double-clicking the downloaded JNLP file</b>." +
-            "</p>"
-        );
-      });
-
-      $("#help-download-button").click( function(event) {
-        bootbox.alert(
-            "<h3><i class=\"fa fa-arrow-circle-o-down\"></i>&nbsp;&nbsp;Download as " +
-            "Archive</h3>" +
-            "<p>" +
-            "The selected files can be bulk downloaded as an archive file if you are logged in and if you have selected 20 or less files." +
-            "</p>" +
-            "<p>" +
-            "Archives are created on demand and will require some time to be processed. After clicking the \"Download as Archive\" button you will be taken to a progress page. You can leave this page at any time." +
-            "</p>" +
-            "<p>" +
-            "You will receive an email once the archive is ready for downloading. You can also monitor progress on the homepage in the \"Downloads\" section if you are logged in." +
-            "</p>"
-        );
-      });
-
-      $("#help-data-annotation-button").click( function(event) {
-        bootbox.alert(
-            "<h3>Showing Data or Annotation Files</h3>" +
-            "<p>" +
-            "Data sets can have associated \"annotation\" files that will be included when you launch IGV with a set of selected data files. " +
-            "To view available annotation files select \"Annotation\". To switch back to the data files select \"Data\"." +
-            "</p>"
-        );
-      });
-
-      $("#help-view-selector-button").click( function(event) {
-        bootbox.alert(
-            "<h3>Select File Display Mode</h3>" +
-            "<p>" +
-            "The collection of files in this data set can be displayed using different representations." +
-            "</p>"
-        );
-      });
-
-      $("#help-selection-button").click( function(event) {
-        bootbox.alert(
-            "<h3>Current File Selection</h3>" +
-            "<p>" +
-            "The number of files currently selected. Use facet attribute filters and individual file selection check boxes to modify the current selection." +
-            "</p>"
-        );
-      });
-
-    });
-
-    document.getElementById('view-selector').onclick = function()
-    {
-      var selectedDisplay = $(this).val();
-      if (selectedDisplay === 'pivot-view-tab' ||
-        selectedDisplay === 'provenance-view-tab')
-      {
-        $('#solrdoctab1-top-controls').hide();
-      }
-      else
-      {
-        $('#solrdoctab1-top-controls').show();
-      }
-    };
-    /*
-     * Sticky table header using floatThead.js
-     */
-    (function(window, $, undefined){
-      'use strict';
-
-      var $solrTable = $('#solr-table-view'),
-          $table = $('#table_matrix'),
-          $window = $(window);
-
-      /**
-       * Debounce / Throttle
-       * Call a function with a delay after some calling.
-       * @param  {Function} fn    Function to be called.
-       * @param  {Int}      delay Delay in milliseconds.
-       * @return {Function}       Function to be called.
-       */
-      function debounce(fn, delay) {
-        var timer = null;
-        return function () {
-          var context = this, args = arguments;
-          clearTimeout(timer);
-          timer = setTimeout(function () {
-            fn.apply(context, args);
-          }, delay);
-        };
-      }
-
-      /*
-       * Initialize floatThead with all its magic.
-       */
-      function initFloatThead () {
-        /*
-         * Start floatThead
-         */
-        $table.floatThead({
-          autoReflow: true,
-          scrollContainer: function($table){
-            return $table.closest('.scrollable-floatThead');
-          },
-          zIndex: 2
-        });
-
-        /*
-         * Reflow floatThead when the browser's window size changes
-         */
-        $window.on('resize.floatThead orientationchange.floatThead',
-          debounce(function () {
-            if ($table.is(":visible")) {
-              $table.floatThead('reflow');
-            }
-          }, 250)
-        );
-
-        /*
-         * Reflow floatThead when an custom script makes changes that change
-         * the tables layout.
-         */
-        $window.on('refinery/floatThead/reflow', debounce(function () {
-          if ($table.is(":visible")) {
-            $table.floatThead('reflow');
-          }
-        }, 100));
-
-        $solrTable.on('refinery/solrTable/destroy', destroyFloatThead);
-      }
-
-      function destroyFloatThead () {
-        $table.floatThead('destroy');
-        $window.off('refinery/floatThead/reflow');
-        $window.off('resize.floatThead orientationchange.floatThead');
-      }
-
-      /*
-       * The table might not have been created when this code runs so we have to
-       * listen to a custom event to tell us that we are all set. We make sure
-       * to only listen to that event once!
-       */
-      if (!$table.length) {
-        $solrTable.on('refinery/solrTable/created', function () {
-          $table = $('#table_matrix');
-          initFloatThead();
-        })
-      } else {
-        initFloatThead();
-      }
-    }
-    )(window, jQuery);
-
-
-  $("#isa-import-button").on( "click", function() {
-    $("#import-errors").html( "");
-    var target = document.getElementById('isa-spinner');
-    var spinner = new Spinner(opts).spin();
-    target.appendChild(spinner.el);
-    $("#import-message").html( "Running ...")
-  });
-</script>
-<!-- end spinner -->
 {% endblock %}
+
+{% block script %}
+  <!-- Refinery libraries -->
+  <script type="text/javascript">
+    var externalAssayUuid = "{{ assay_uuid }}";
+    var externalStudyUuid = "{{ study_uuid }}";
+    var dataSetUuid = "{{ data_set.uuid }}";
+    var analysisUuid = "{{ analysis_uuid }}";
+
+    var csrf_token = "{{ csrf_token }}";
+  </script>
+
+  <!-- Scripts for popup content in the ui-grid-->
+  <script type="text/ng-template" id="nodeselectionpopover.html">
+    <rp-node-selection-popover-detail>
+    </rp-node-selection-popover-detail>
+  </script>
+
+{% endblock %}
+

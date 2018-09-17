@@ -5,7 +5,6 @@
 function dataUploadTutorialCtrl2 (
   $scope, tutorialPageNavigation, updateUserTutorials) {
   var stepText = $scope.refineryTutorialSteps.DATA_UPLOAD_TUTORIAL;
-  var lastEventId = null;
 
   $scope.dataUploadCompletedEvent = function () {
     var data = {
@@ -20,12 +19,10 @@ function dataUploadTutorialCtrl2 (
   $scope.dataUploadExitEvent = function () {
   };
 
-  $scope.dataUploadChangeEvent = function (event) {
-    lastEventId = event.id;
+  $scope.dataUploadChangeEvent = function () {
   };
 
   $scope.dataUploadBeforeChangeEvent = function (event) {
-    console.log(lastEventId);
     if (! event.id) {
       document.getElementById('dataUploadTutorial_click').click();
       setTimeout(function () {
@@ -52,8 +49,8 @@ function dataUploadTutorialCtrl2 (
   $scope.dataUploadIntroOptions = {
     showStepNumbers: false,
     showBullets: false,
-    exitOnOverlayClick: false,
-    exitOnEsc: false,
+    exitOnOverlayClick: true,
+    exitOnEsc: true,
     nextLabel: '<strong><i class="fa fa-arrow-right"></i></strong>',
     prevLabel: '<strong><i class="fa fa-arrow-left"></i></strong>',
     skipLabel: '<strong><i class="fa fa-times"></i></strong>',

@@ -1,11 +1,11 @@
-import celery
-from celery.result import TaskSetResult
 import logging
 
 from django.db import models
 from django.db.models.fields import CharField, PositiveSmallIntegerField
-from django_extensions.db.fields import UUIDField
 
+import celery
+from celery.result import TaskSetResult
+from django_extensions.db.fields import UUIDField
 
 logger = logging.getLogger(__name__)
 
@@ -26,27 +26,64 @@ class AnalysisStatus(models.Model):
                                               auto=False)
     galaxy_import_task_group_id = UUIDField(blank=True, null=True, auto=False)
     galaxy_export_task_group_id = UUIDField(blank=True, null=True, auto=False)
+    galaxy_workflow_task_group_id = UUIDField(blank=True,
+                                              null=True,
+                                              auto=False)
+    #: state of Galaxy file imports
+    galaxy_import_state = CharField(max_length=10, blank=True,
+                                    choices=GALAXY_HISTORY_STATES)
     #: state of Galaxy history
     galaxy_history_state = CharField(max_length=10, blank=True,
                                      choices=GALAXY_HISTORY_STATES)
+
+    #: percentage of successfully imported datasets in Galaxy history
+    galaxy_import_progress = PositiveSmallIntegerField(default=0)
+
     #: percentage of successfully processed datasets in Galaxy history
+    # TODO: refactor `galaxy_history_progress` to take advantage of a
+    # default value of 0, and
     galaxy_history_progress = PositiveSmallIntegerField(blank=True, null=True)
 
     def __unicode__(self):
         return self.analysis.name
 
     def set_galaxy_history_state(self, state):
+        """
+        Set the `galaxy_history_state` of an analysis
+        :param state: a valid GALAXY_HISTORY_STATE
+        """
         if state in dict(self.GALAXY_HISTORY_STATES).keys():
             self.galaxy_history_state = state
             self.save()
         else:
             raise ValueError("Invalid Galaxy history state given")
 
-    def refinery_import_state(self):
-        return get_task_group_state(self.refinery_import_task_group_id)
+    def set_galaxy_import_state(self, state):
+        """
+        Set the `galaxy_import_state` of an analysis
+        :param state: a valid GALAXY_HISTORY_STATE
+        """
+        if state in dict(self.GALAXY_HISTORY_STATES).keys():
+            self.galaxy_import_state = state
+            self.save()
+        else:
+            raise ValueError("Invalid Galaxy history state given")
 
-    def galaxy_import_state(self):
-        return get_task_group_state(self.galaxy_import_task_group_id)
+    def refinery_import_state(self):
+        if self.analysis.has_all_local_input_files():
+            return [{'state': celery.states.SUCCESS, 'percent_done': 100}]
+        else:
+            return get_task_group_state(self.refinery_import_task_group_id)
+
+    def galaxy_file_import_state(self):
+        if self.galaxy_import_state and self.galaxy_import_progress != 0:
+            galaxy_file_import_state = [{
+                'state': self.galaxy_import_state,
+                'percent_done': self.galaxy_import_progress
+            }]
+        else:
+            galaxy_file_import_state = []
+        return galaxy_file_import_state
 
     def galaxy_analysis_state(self):
         if self.galaxy_history_state and self.galaxy_history_progress:
@@ -60,6 +97,14 @@ class AnalysisStatus(models.Model):
 
     def galaxy_export_state(self):
         return get_task_group_state(self.galaxy_export_task_group_id)
+
+    def set_galaxy_import_task_group_id(self, galaxy_import_task_group_id):
+        self.galaxy_import_task_group_id = galaxy_import_task_group_id
+        self.save()
+
+    def set_galaxy_workflow_task_group_id(self, galaxy_workflow_task_group_id):
+        self.galaxy_workflow_task_group_id = galaxy_workflow_task_group_id
+        self.save()
 
 
 def get_task_group_state(task_group_id):

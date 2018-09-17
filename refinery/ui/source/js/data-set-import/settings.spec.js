@@ -37,8 +37,16 @@ describe('refineryDataSetImport.settings: unit tests', function () {
         .toEqual('/data_set_manager/import/chunked-upload-complete/');
     });
 
-    it('should have chunkSize constant', function () {
-      expect(settings.chunkSize).toEqual(10485760);
+    it('should have chunkSize constant set to a positive integer', function () {
+      expect(settings.chunkSize).toBeGreaterThan(0);
+    });
+
+    it('should have queueSize constant set to a positive integer', function () {
+      expect(settings.queueSize).toBeGreaterThan(0);
+    });
+
+    it('should have ACL constant set to a string', function () {
+      expect(settings.ACL).toEqual(jasmine.any(String));
     });
   });
 });

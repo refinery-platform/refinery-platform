@@ -1,6 +1,5 @@
 <div id="launch-pad"
   class="col-md-4"
-  style="float: left;"
   refinery-expandable-panel>
   <div class="refinery-panel">
     <div class="refinery-header flex-c flex-ac flex-sb">
@@ -31,7 +30,8 @@
             <svg class="svg-icon icon-cursor-default">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
-                xlink:href="/static/images/icons.svg#cursor-default"></use>
+                xlink:href=""
+                ng-attr-xlink:href="{{ dashboard.icons + '#cursor-default' }}"></use>
             </svg>
           </span>
         </span>
@@ -46,7 +46,8 @@
             <svg class="svg-icon icon-cursor-click">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
-                xlink:href="/static/images/icons.svg#cursor-click"></use>
+                xlink:href=""
+                ng-attr-xlink:href="{{ dashboard.icons + '#cursor-click' }}"></use>
             </svg>
           </span>
         </span>
@@ -62,7 +63,8 @@
             <svg class="svg-icon icon-cursor-click">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
-                xlink:href="/static/images/icons.svg#cursor-click"></use>
+                xlink:href=""
+                ng-attr-xlink:href="{{ dashboard.icons + '#cursor-click' }}"></use>
             </svg>
           </span>
           <span class="f-box">or</span>
@@ -75,7 +77,8 @@
             <svg class="svg-icon icon-cursor-dblclick">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
-                xlink:href="/static/images/icons.svg#cursor-dblclick"></use>
+                xlink:href=""
+                ng-attr-xlink:href="{{ dashboard.icons + '#cursor-dblclick' }}"></use>
             </svg>
           </span>
         </span>
@@ -88,6 +91,13 @@
                ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
                ng-intro-onafterchange="dataUploadAfterChangeEvent">
             <div>
+              <span>
+                <a
+                  href="/files/"
+                  class="no-underline btn">
+                  <i class="fa fa-list"></i> List
+                </a>
+              </span>
               <button
                 class="no-underline btn"
                 ng-class="{'active': dashboard.dataSetExploration}"
@@ -99,7 +109,7 @@
               <button
                 class="no-underline btn"
                 ng-click="dashboard.toggleDataSetsExploration()"
-                ng-if="dashboard.explorationEnabled && dashboard.settings.djangoApp.satoriDemo && dashboard.userIsAuthenticated">
+                ng-if="dashboard.explorationEnabled && dashboard.settings.djangoApp.satoriDemo">
                 <i class="fa fa-{{ dashboard.dataSetExploration ? 'arrow-circle-left' : 'compass' }}" title="Explore data sets"></i>
                 {{ dashboard.dataSetExploration ? 'Back Home' : 'Start Exploring' }}
               </button>
@@ -400,7 +410,7 @@
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="right"
                   refinery-tooltip-hide-on-click="true">
-                  <i class="primary-text-color fa fa-table"></i>
+                  <i class="primary-text-color fa fa-folder-open-o"></i>
                 </a>
                 <a
                   class="preview"
@@ -411,7 +421,7 @@
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="right"
                   refinery-tooltip-hide-on-click="true">
-                  <i class="primary-text-color fa fa-table"></i>
+                  <i class="primary-text-color fa fa-folder-open-o"></i>
                 </a>
                 <button
                   class="zoom-out"
@@ -490,7 +500,7 @@
                     <li class="separator">&middot;</li>
                     <li class="indicator" ng-if="dataSet.analyses.length > 0">
                       <a id="analyses-indicator" class="pointer"
-                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
+                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses/"
                       title="{{ dataSet.analyses.length }} {{ dataSet.analyses.length > 1 ? 'Analyses
                        have' : 'Analysis has' }} been run
                        on this Dataset"
@@ -564,7 +574,7 @@
                 refinery-tooltip-delay-show="750"
                 refinery-tooltip-delay-hide="150"
                 refinery-tooltip-hide-on-click="true">
-                <i class="primary-text-color fa fa-table"></i>
+                <i class="primary-text-color fa fa-folder-open-o"></i>
               </a>
               <a
                 class="preview"
@@ -577,7 +587,7 @@
                 refinery-tooltip-delay-show="750"
                 refinery-tooltip-delay-hide="150"
                 refinery-tooltip-hide-on-click="true">
-                <i class="primary-text-color fa fa-table"></i>
+                <i class="primary-text-color fa fa-folder-open-o"></i>
               </a>
               <button
                 class="zoom-out"
@@ -656,7 +666,7 @@
                   <li class="separator">&middot;</li>
                   <li class="indicator" ng-if="dataSet.analyses.length > 0">
                       <a id="analyses-indicator" class="pointer"
-                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
+                      ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses/"
                       title="{{ dataSet.analyses.length }} {{
                       dataSet.analyses.length > 1 ? 'Analyses
                        have' : 'Analysis has' }} been run
@@ -702,7 +712,7 @@
               </div>
               <p
                 class="snippet"
-                ng-if="dataSet.description && dashboard.searchDataSet"
+                ng-if="dataSet.descriptionHtml && dashboard.searchDataSet"
                 ng-bind-html="dataSet.descriptionHtml"></p>
             </li>
             <li ng-if="dashboard.dataSetsAdapter.isLoading">
@@ -735,7 +745,7 @@
                 <svg class="icon-refinery">
                   <use
                     xmlns:xlink="http://www.w3.org/1999/xlink"
-                    xlink:href="/static/images/icons.svg#refinery"></use>
+                    ng-attr-xlink:href="{{ dashboard.icons + '#refinery' }}"></use>
                 </svg><br/>
                 Repository Mode
               </div>
@@ -780,27 +790,6 @@
       </span>
     </div>
     <div class="refinery-sub-panel">
-      <!--
-      <ul
-        class="no-list-style"
-        ng-if="dashboard.allProjects.meta.total_count > 0">
-        <li ng-repeat="project in dashboard.allProjects.objects">
-          <i class="icon-user"></i>
-          <a ng-href="projects/{{ project.uuid }}">{{ project.name }}</a>
-        </li>
-      </ul>
-      <div
-        class="refinery-request-loading"
-        ng-if="dashboard.projectServiceLoading">
-        <span class="refinery-spinner"></span>
-      </div>
-      <span
-        class="alert alert-info"
-        ng-if="dashboard.allProjects.meta.total_count === 0 && dashboard.allAnalyses.meta.total_count === 0">
-        No projects found.
-      </span>
-      -->
-
       <div class="refinery-panel-header">
         <div
           class="refinery-notification"
@@ -920,21 +909,20 @@
             adapter="dashboard.analysesAdapter">
             <span ng-switch on="analysis.status">
               <span ng-if="SUCCESS">
-                <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
-                {{ analysis.name }}
-              </a>
+                <a ng-href='/data_sets/{{analysis.data_set__uuid}}/#/files/?{"{{analysis.facet_name}}":"{{analysis.name}}"}'>
+                  {{ analysis.name }}
+                </a>
               </span>
               <span ng-if="!SUCCESS">
                 <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses/">
                 {{ analysis.name }}
               </a>
               </span>
             </span>
             <div class="flex-box indicators">
                 <ul class="flex-item-two flex-left no-list-style">
-                  <li>
+                  <li class="indicator">
                     <i
                       class="analyses-status {{ analysis.status | analysisStatusIcon }}"
                       title="{{ analysis.status | analysisStatusTitle }}"

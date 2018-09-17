@@ -3,41 +3,36 @@ import logging
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
 
-from core.models import DataSet, InvestigationLink
-from data_set_manager.models import Investigation, Study
-from data_set_manager.tasks import annotate_nodes
-from file_store.models import is_permanent, FileStoreItem
-from file_store.tasks import create, import_file
-
 from celery.task import task
 
+from data_set_manager.models import Investigation, Study
+from data_set_manager.tasks import annotate_nodes
+from file_store.models import FileStoreItem
+from file_store.tasks import import_file
+
+from .models import DataSet, InvestigationLink, SiteStatistics
 
 logger = logging.getLogger(__name__)
 
 
-def copy_file(orig_uuid):
-    """Helper function that copies a file if given the original file's UUID
-    :param orig_uuid: UUID of file to copy.
-    :type orig_uuid: str.
-    :returns: UUID of newly copied file.
-    """
-    newfile_uuid = None
+def copy_file(original_item_uuid):
+    """Creates a copy of a FileStoreItem with the given UUID"""
     try:
-        orig_fsi = FileStoreItem.objects.get(uuid=orig_uuid)
-    except(FileStoreItem.DoesNotExist,
-           FileStoreItem.MultipleObjectsReturned)as e:
-        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+        original_item = FileStoreItem.objects.get(uuid=original_item_uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as exc:
+        logger.error("Failed to copy FileStoreItem with UUID '%s': %s",
+                     original_item_uuid, exc)
+        return None
+    try:
+        new_item = FileStoreItem.objects.create(
+            source=original_item.source, filetype=original_item.filetype
+        )
+    except AttributeError:
+        return None
     else:
-        try:
-            newfile_uuid = create(
-                orig_fsi.source, orig_fsi.sharename, orig_fsi.filetype,
-                permanent=is_permanent(orig_uuid)
-            )
-            import_file(newfile_uuid, refresh=True)
-        except AttributeError:
-            pass
-
-    return newfile_uuid
+        import_file(new_item.uuid, refresh=True)
+        return new_item.uuid
 
 
 def copy_object(obj, value=None, field=None, duplicate_order=None,
@@ -225,3 +220,8 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     dataset_copy.save()
 
     return dataset_copy
+
+
+@task()
+def collect_site_statistics():
+    SiteStatistics.objects.create().collect()

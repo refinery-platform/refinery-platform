@@ -97,7 +97,9 @@
           <div class="col-md-5 analysis-name">
             <span ng-switch on="analysis.status">
               <span ng-switch-when="SUCCESS">
-                <a ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                <a
+                  ng-href='/data_sets/{{analysis.data_set__uuid}}/#/files/?{"{{analysis.facet_name}}":"{{analysis.name}}"}'
+                  target='_blank'>
                   {{ analysis.name }}
                 </a>
               </span>
@@ -254,7 +256,7 @@
           <a> {{pageNum + 1}}  </a>
         </li>
         <li ng-class="nextPageDisabled()">
-          <a href ng-click="nextPage()">»</a>
+          <a ng-click="nextPage()">»</a>
         </li>
       </ul>
     </div>

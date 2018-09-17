@@ -1,59 +1,105 @@
 <div class="dataSetTabContent" id="files">
-  <!-- function row includes view selection, utils,  node group, and launchers -->
-  <div class="row view-control p-t-1-2 p-b-1-2">
-    <div class="col-md-2">
-      <rp-file-display></rp-file-display>
-      <span ng-if="FBCtrl.isOwner">
-        <i class="fa fa-wrench fa-border"
-          rp-assay-files-util-modal>
-        </i>
-        <a
-          id="help-view-selector"
-          popover-placement="right"
-          uib-popover="The collection of files in this data set can be displayed using different representations."
-          popover-title="Select File Display Mode"
-          popover-trigger="focus"
-          popover-append-to-body="true"
-          tabindex="0">
-          <i class="fa fa-question-circle info-icon"></i>
-        </a>
-      </span>
-    </div>
-    <div class="col-md-4">
-      <span class="align-bottom p-r-1-3">
-        {{ FBCtrl.selectNodesCount }} of
-        {{ FBCtrl.assayFilesTotal }} files selected.
-      </span>
-      <rp-file-browser-selection-reset>
-      </rp-file-browser-selection-reset>
-      <a
-        popover-placement="right"
-        uib-popover=" The number of files currently selected. Use facet
-        attribute filters and individual file selection check boxes to modify
-        the current selection. Reset node selections and filters."
-        popover-title="Current File Selection"
-        popover-trigger="focus"
-        popover-append-to-body="true"
-        tabindex="0">
-          <i class="fa fa-question-circle info-icon"></i>
-      </a>
-      <rp-file-browser-node-group></rp-file-browser-node-group>
-    </div>
-    <div class="col-md-3 text-right">
-      <rp-visualization></rp-visualization>
-    </div>
-    <div class="col-md-3 text-right">
-      <rp-select-workflow></rp-select-workflow>
-      <rp-analysis-launch></rp-analysis-launch>
-    </div>
-  </div>
   <!-- filters and content  -->
-  <div class="row y-scrollable m-t-1-2 p-t-1">
-    <div class="col-md-2">
-      <rp-file-browser-assay-filters>
-      </rp-file-browser-assay-filters>
+  <div class="row y-scrollable">
+    <div
+      class="col-lg-3 col-md-3 col-sm-4 p-r-1"
+      ng-if="!FBCtrl.collapsedToolPanel">
+        <rp-tool-display></rp-tool-display>
     </div>
-    <div class="col-md-10" id="main-area">
+    <div class="col-lg-2 col-md-2 col-sm-3 p-r-1">
+      <div class="row"
+        id="tool-panel-show-button">
+        <span ng-if="FBCtrl.userPerms == 'read' || FBCtrl.userPerms == 'change'">
+          <button
+            class="btn btn-primary btn-sm"
+            data-target="#tool-launch-panel"
+            ng-click="FBCtrl.toggleToolPanel()">
+            <span ng-if="FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+               Show Tool Panel
+            </span>
+            <span ng-if="!FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+               Hide Tool Panel
+            </span>
+          </button>
+        </span>
+        <span class="float-right content">
+          <span
+            ng-if="FBCtrl.dataSet.is_owner"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="FBCtrl.openPermissionEditor()"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="bottom"
+            title="Update the data set's permissions">
+            <i class="fa fa-share-square-o"></i>
+            <span id="share-button-text"></span>
+          </span>
+          <span
+            ng-if="FBCtrl.dataSet.is_owner"
+            class="refinery-base btn btn-default btn-sm m-l-1-4"
+            rp-assay-files-util-modal
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="bottom"
+            title="Update the data set's configuration.">
+            <i class="fa fa-wrench"></i>
+            <span id="config-button-text"></span>
+          </span>
+        </span>
+
+      </div>
+      <div id="table-filter" class="row">
+        <div id="filter-panel-body">
+          <rp-file-browser-assay-filters>
+          </rp-file-browser-assay-filters>
+        </div>
+      </div>
+    </div>
+    <div
+      ng-class="{'col-lg-7 col-md-7 col-sm-5': !FBCtrl.collapsedToolPanel,
+      'col-lg-10 col-md-10 col-sm-9': FBCtrl.collapsedToolPanel}"
+      id="main-area">
+      <div class="refinery-subheader grid_data_set_total">
+        <h3 class="p-l-1">
+          {{ FBCtrl.assayFilesTotal }} files
+        </h3>
+        <span class="p-l-1"
+          ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+          ng-if="FBCtrl.dataSet.isa_archive.length && FBCtrl.dataSet.is_owner">
+          <a
+            ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
+            class="refinery-base btn btn-default btn-xs header-button"
+            ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
+            .title }}/#/isa-tab-import?data_set_uuid={{ FBCtrl.dataSet.uuid }}">
+            Revise Metadata
+          </a>
+        </span>
+        <span class="p-l-1"
+          ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+          ng-if="FBCtrl.dataSet.pre_isa_archive.length && FBCtrl.dataSet.is_owner">
+          <a
+            ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
+            class="refinery-base btn btn-default btn-xs header-button"
+            ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
+            .title }}/#/?data_set_uuid={{ FBCtrl.dataSet.uuid }}">
+            Revise Metadata
+          </a>
+        </span>
+        <span class="p-l-1-3" ng-if="FBCtrl.dataSet.is_owner">
+          <a
+            popover-placement="right"
+            uib-popover-html="'Redirects to the Data Set Upload page where you
+            can upload revised metadata. <strong>Note:</strong> Once you have
+            run an analysis or visualization on a data set, its metadata can no longer be revised.'"
+            popover-title="Revise Metadata"
+            popover-trigger="'outsideClick'"
+            popover-append-to-body="true">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+          </a>
+        </span>
+      </div>
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>
   </div>

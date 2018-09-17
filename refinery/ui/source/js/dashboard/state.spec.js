@@ -41,7 +41,8 @@ describe('Dashboard.state:', function () {
     }
 
     beforeEach(function () {
-      mockTemplate('/static/partials/dashboard/views/launch-pad.html');
+      // using window because $window is redefined above
+      mockTemplate(window.getStaticUrl('partials/dashboard/views/launch-pad.html'));
     });
 
     it('should be "launchPad" when path is empty', function () {

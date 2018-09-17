@@ -1,0 +1,33 @@
+<span ng-if="$ctrl.userPerms === 'read_meta'" class="perm-tab-icon">
+   <span
+     class="fa-stack"
+     refinery-tooltip
+     refinery-tooltip-container="body"
+     refinery-tooltip-placement="right"
+     title="Read-meta-only: you can only view the data set's meta data.">
+    <i class="fa fa-eye fa-stack-0-8x fa-stack-right-corner"></i>
+    <i class="fa fa-file-o fa-stack-1x"></i>
+   </span>
+</span>
+<span ng-if="$ctrl.userPerms === 'read'" class="perm-tab-icon">
+   <span
+     class="fa-stack"
+     refinery-tooltip
+     refinery-tooltip-container="body"
+     refinery-tooltip-placement="right"
+     title="Read: you can view the data set.">
+    <i class="fa fa-eye fa-stack-0-8x fa-stack-right-corner"></i>
+    <i class="fa fa-file-text-o fa-stack-1x"></i>
+   </span>
+</span>
+<span ng-if="$ctrl.userPerms === 'change'" class="perm-tab-icon">
+   <span
+     class="fa-stack"
+     refinery-tooltip
+     refinery-tooltip-container="body"
+     refinery-tooltip-placement="right"
+     title="Modify: you can view and edit the data set.">
+    <i class="fa fa-pencil fa-stack-0-8x fa-stack-right-corner"></i>
+    <i class="fa fa-file-text-o fa-stack-1x"></i>
+   </span>
+</span>

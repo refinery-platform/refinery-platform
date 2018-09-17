@@ -1,0 +1,22 @@
+{
+  "name": "Test LIST Visualization bad extra_directories",
+  "tool_type": "VISUALIZATION",
+  "annotation": {
+    "extra_directories": {"/test": "dir"},
+    "image_name": "nginx:1.10.3-alpine",
+    "description": "This visualization does really cool things",
+    "parameters": [],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [{"name": "GFF"}],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}

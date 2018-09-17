@@ -1,0 +1,55 @@
+{ "name": "Test LIST:PAIR:LIST",
+  "tool_type": "WORKFLOW",
+  "galaxy_workflow_id": "66b2fe95-9250-425d-86ae-5953c1d6e5b6",
+  "graph": "",
+  "annotation": {
+    "refinery_type": "analysis",
+    "description": "This workflow has a nested LIST of PAIRs of LISTs",
+    "parameters": [
+       {
+        "name": "Integer Param",
+        "description": "Integer Param description",
+        "value_type": "INTEGER",
+        "default_value": 1337,
+        "galaxy_workflow_step": 1
+      },
+      {
+        "name": "Attribute Param",
+        "description": "Attribute Param description",
+        "value_type": "ATTRIBUTE",
+        "default_value": "Species",
+        "galaxy_workflow_step": 4
+      },
+      {
+        "name": "File Param",
+        "description": "File Param description",
+        "value_type": "FILE",
+        "default_value": "/media/file_store/file.cool",
+        "galaxy_workflow_step": 5
+      }
+    ],
+    "file_relationship": {
+      "value_type": "LIST",
+      "name": "List of Pairs",
+      "file_relationship": {
+        "value_type": "PAIR",
+        "name": "Pair of Lists",
+        "file_relationship": {
+          "file_relationship": {},
+          "value_type": "LIST",
+          "name": "Lists",
+          "input_files": [
+            {
+              "allowed_filetypes": [
+                {"name": "FASTQ"},
+                {"name": "BAM"}
+              ],
+              "name": "Cool Input Files",
+              "description": "Cool Input Files Description"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

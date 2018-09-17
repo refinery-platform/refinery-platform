@@ -1,0 +1,275 @@
+<div class="refinery-panel" id="dashboard-data-set-card">
+  <div class="refinery-header">
+    <h3>
+      <i class="m-r-1-4 fa fa-database"></i>Data Sets
+      <span class="float-right">
+        <a
+          href="/files/"
+          class="no-underline btn btn-sm">
+          <i class="fa fa-list"></i> List
+        </a>
+        <!--ToDo: check perms first -->
+        <a
+          href="/data_set_manager/import/"
+          class="btn btn-sm btn-primary p-l-1-2"
+          id="import-button">
+          <i class="fa fa-plus-circle"></i> Upload
+        </a>
+      </span>
+    </h3>
+  </div>
+  <div class="refinery-sub-panel">
+    <div class="card-sub-header">
+      <div
+        id="search-interface-dashboard"
+        class="form-group navbar-search col-sm-6 col-xs-12"
+        ng-form="metadataSearch"
+        ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
+        <i class="fa fa-search"></i>
+        <i class="fa fa-times-circle"
+          ng-if="$ctrl.searchQueryDataSets"
+          ng-click="$ctrl.resetDataSetSearch()"></i>
+        <!--The 'metadata-search' id below is used to define custom
+          styling to address a padding issue observed in Firefox-->
+         <button
+            id="search-interface-dashboard-button"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
+            ng-disabled="$ctrl.searchQueryDataSets.length < 2">
+            Search
+          </button>
+          <input
+            id="dashboard-data-search"
+            type="text"
+            class="search-query form-control"
+            ng-model="$ctrl.searchQueryDataSets"
+            ng-minlength="2"
+            name="searchQuery"
+            ng-keyup="$event.keyCode == 13 ? $ctrl.searchDataSets($ctrl.searchQueryDataSets) : null">
+      </div>
+      <div class="col-md-6">
+        <rp-primary-group-button class="float-left p-r-1"></rp-primary-group-button>
+        <div class="refinery-base btn btn-default btn-sm"
+          ng-model="$ctrl.groupFilter['owned']"
+          ng-change="$ctrl.filterDataSets('owned')"
+          uib-btn-checkbox>
+          <span ng-if="$ctrl.groupFilter.owned">
+            <i class="fa fa-check"></i>
+          </span>
+          Owned
+        </div>
+        <div class="float-left m-l-1" uib-dropdown auto-close="outsideClick">
+          <button
+            class="refinery-base btn btn-default btn-sm"
+            id="btn-append-to-single-button"
+            uib-dropdown-toggle
+            ng-class="{'banned':$ctrl.groups.length < 2}"
+            ng-disabled="disabled || $ctrl.groups.length < 2">
+            <span ng-if="$ctrl.groupFilter.selectedName !== 'All'">
+              <i class="fa fa-check"></i>
+            </span>
+            Groups <i class="fa fa-caret-down"></i>
+          </button>
+          <ul class="dropdown-menu radio-drop-down" uib-dropdown-menu role="menu"
+            aria-labelledby="btn-append-to-single-button">
+            <li role="menuitem">
+              <label>
+                <input type="radio"
+                  ng-model="$ctrl.groupFilter.selectedName"
+                  ng-change="$ctrl.filterDataSets(0)"
+                  value="All">
+                  All
+              </label>
+            </li>
+            <li ng-repeat="group in $ctrl.groups" role="menuitem">
+               <span ng-if="group.name !== 'Public'">
+                  <label>
+                    <input type="radio"
+                      ng-model="$ctrl.groupFilter.selectedName"
+                      ng-change="$ctrl.filterDataSets(group.id)"
+                      value="{{ group.name }}">
+                    {{ group.name }}
+                    <span ng-if="$ctrl.primaryGroupID == group.id">
+                      &nbsp; <em>(Primary Group)</em>
+                    </span>
+                  </label>
+               </span>
+            </li>
+          </ul>
+        </div>
+        <div
+          class="refinery-base btn btn-default btn-sm m-l-1"
+          ng-model="$ctrl.groupFilter['public']"
+          ng-change="$ctrl.filterDataSets('public')"
+          uib-btn-checkbox>
+          <span ng-if="$ctrl.groupFilter.public">
+            <i class="fa fa-check"></i>
+          </span>
+          Public
+        </div>
+      </div>
+    </div>
+    <div
+      class="refinery-sub-panel-notice">
+      <div
+        ng-messages="metadataSearch.searchQuery.$error"
+        role="alert">
+        <div ng-message="minlength" class="text-warning notice">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          <strong>Too short!</strong>: Enter at least 2 characters to search.
+        </div>
+        <div
+          ng-show="!$ctrl.loadingDataSets && $ctrl.dataSets.length === 0 &&
+          $ctrl.searchQueryDataSets
+          .length > 1 && !$ctrl.dataSetsError"
+          class="text-warning notice">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          <strong>Info</strong>: No data sets found.
+        </div>
+         <div
+          ng-show="$ctrl.loadingDataSets && $ctrl.dataSets.length === 0 && $ctrl
+          .searchQueryDataSets.length === 0 && !$ctrl.dataSetsError"
+          class="text-info notice">
+          <strong>Info</strong>: Loading Data Sets.
+        </div>
+        <div
+          ng-show="!$ctrl.loadingDataSets && $ctrl.dataSets.length === 0 &&
+          $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSetsError"
+          class="text-info notice">
+          <strong>Info</strong>: No data sets available.
+        </div>
+        <div
+            id="launchpad_warning"
+            ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSetsError"
+            class="text-danger notice">
+            <strong>Error: </strong>
+            Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
+        </div>
+      </div>
+      <div id="dashboard-total-datasets">
+        <span ng-if="$ctrl.dataSets.length">
+          {{ $ctrl.totalDataSets }} data sets
+        </span>
+        <span ng-if="$ctrl.searchQueryDataSets.length > 0 && $ctrl.isFiltersEmpty()">
+          <button
+            class="refinery-base btn btn-default btn-xs m-l-1-2"
+            ng-click="$ctrl.resetDataSetSearch()">
+            <i class="fa fa-times"></i>
+            Search
+          </button>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div id="dashboard-data-set-list">
+    <div class="refinery-panel-content">
+      <div ng-if="$ctrl.loadingDataSets">
+        <h4 class="emphasized text-align-center m-t-1-5">
+          <span class="refinery-spinner refinery-spinner-inline"></span>
+        </h4>
+      </div>
+      <ul class="list-unstyled">
+        <li ng-repeat="dataSet in $ctrl.dataSets" class="p-t-1-2">
+          <a href="/data_sets/{{ dataSet.uuid }}" class="data-set-name">
+            {{ dataSet.title }}&nbsp;
+            <span
+               class="file-browser-go-icon"
+               refinery-tooltip
+               refinery-tooltip-container="body"
+               refinery-tooltip-placement="right"
+               title="View data set's files, tools, and details">
+               <i class="fa fa-folder-open-o"></i>
+             </span>
+          </a>
+          <div class="indicator data-set-description">
+            {{ dataSet.description }}
+          </div>
+          <div class="flex-box indicators data-set-details">
+             <ul class="flex-item-two flex-left no-list-style p-b-1-2">
+               <li ng-if="dataSet.is_owner"
+                 class="indicator"
+                  title="You own this data set"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-user"></i>
+                </li>
+                <li ng-if="dataSet.public"
+                  class="indicator"
+                  title="Data set is public"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-globe"></i>
+                </li>
+               <li class="indicator"
+                  title="Modification Date"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-calendar-o"></i>
+                  {{ dataSet.modification_date | utcToReadableDate}}
+                </li>
+               <li ng-if="dataSet.is_owner">
+                 <span class="separator">&middot;</span>
+               </li>
+               <li ng-if="dataSet.is_owner">
+                 <a
+                    ng-click="$ctrl.openDataSetDeleteModal(dataSet)"
+                    class="pointer"
+                    refinery-tooltip
+                    refinery-tooltip-container="body"
+                    refinery-tooltip-placement="bottom"
+                    refinery-tooltip-hide-on-click="true
+                    title="Delete data set">
+                  <i class="fa fa-trash-o"></i>
+                 Delete
+                 </a>
+               </li>
+               <li ng-if="dataSet.is_owner">
+                 <span class="separator">&middot;</span>
+               </li>
+               <li ng-if="dataSet.is_owner">
+                 <a
+                    class="pointer"
+                    ng-click="$ctrl.openPermissionEditor(dataSet.uuid)"
+                    refinery-tooltip
+                    refinery-tooltip-container="body"
+                    refinery-tooltip-placement="bottom"
+                    title="Update the data set's permissions">
+                    <i class="fa fa-share-square-o"></i>
+                    Share
+                  </a>
+               </li>
+               <li ng-if="dataSet.is_owner">
+                 <span class="separator">&middot;</span>
+               </li>
+               <li ng-if="dataSet.is_owner">
+                 <a
+                    ng-click="$ctrl.openDataSetTransferModal(dataSet)"
+                    class="pointer"
+                    refinery-tooltip
+                    refinery-tooltip-container="body"
+                    refinery-tooltip-placement="bottom"
+                    refinery-tooltip-hide-on-click="true
+                    title="Transfer data set ownership">
+                  <i class="fa fa-long-arrow-right"></i><i class="fa fa-user-o"></i>
+                 Transfer Ownership
+                 </a>
+               </li>
+             </ul>
+           </div>
+        </li>
+      </ul>
+      <div ng-show="$ctrl.numPages > 1">
+        <ul
+          uib-pagination total-items="$ctrl.totalDataSets"
+          ng-model="$ctrl.currentPage" items-per-page="$ctrl.itemsPerPage"
+          class="pagination-sm" boundary-link-numbers="true" rotate="false"
+          max-size="7" ng-change="$ctrl.pageChangedUpdate()">
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>

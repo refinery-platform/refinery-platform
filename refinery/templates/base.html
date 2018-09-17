@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 {% load humanize %}
-{% load static %}
+{% load static from staticfiles %}
 
 <html lang="en">
 <head>
@@ -30,6 +30,8 @@
       userId: '{{ user.id }}',
       userName: '{{ user.username }}',
       userprofileUUID: '{{ user.profile.uuid|escapejs }}',
+      userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
+      userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
       launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
       collaboration_tut_viewed: `{{ user.profile.has_viewed_collaboration_tut}}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
@@ -39,7 +41,13 @@
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
-      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }}
+      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }},
+      staticUrl: '{{ STATIC_URL|escapejs }}',
+      userFilesColumns: '{{ USER_FILES_COLUMNS }}'.split(','),
+      userFilesFilters: '{{ USER_FILES_FILTERS }}'.split(','),
+      mediaBucket: '{{ MEDIA_BUCKET }}',
+      uploadBucket: '{{ UPLOAD_BUCKET }}',
+      deploymentPlatform: '{{ REFINERY_DEPLOYMENT_PLATFORM }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
@@ -54,19 +62,18 @@
   <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
 
   {% block tracking %}
-
   {% if REFINERY_GOOGLE_ANALYTICS_ID != "" %}
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ REFINERY_GOOGLE_ANALYTICS_ID }}"></script>
   <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    ga('create', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}', 'auto');
-    ga('send', 'pageview');
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ REFINERY_GOOGLE_ANALYTICS_ID }}');
   </script>
   {% endif %}
-
   {% endblock %}
+
 </head>
 
 <body
@@ -125,49 +132,73 @@
         </button>
       </div>
 
-      <div class="navbar-text pull-right">
+      <div class="navbar-text pull-right" id="navbar-right">
        {% if user.is_authenticated %}
-         <a class="pointer" popover-placement="bottom" popover-trigger="click" uib-popover-template="dynamicPopover.templateUrl">
+         <a href="/dashboard" class="pointer">
+           <i id="refinery-logout" class="fa fa-tachometer icon-only"></i>&nbsp;
+           <span id="dashboard-icon-text">
+             My Dashboard
+           </span>
+         </a>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+         <a
+           class="pointer"
+           popover-placement="bottom"
+           popover-trigger="'outsideClick'"
+           uib-popover-template="dynamicPopover.templateUrl">
             <i class="fa fa-question-circle"></i>
-            Help
+           <span id="help-icon-text">
+              Help
+           </span>
          </a>
          &nbsp;&nbsp;|&nbsp;&nbsp;
       {% endif %}
 
         {% if user.is_authenticated %}
-          <i class="fa fa-user"></i>
-          <a href="{% url "user" user.profile.uuid %}" tabindex=5>
-          {% if user.first_name != "" or user.last_name != "" %}
-            {{ user.first_name }} {{ user.last_name }}
-          {% else %}
-            {{ user.username }}
-          {% endif %}
+          <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
+             tabindex=5>
+            <i class="fa fa-user"></i>
+            <span id="login-name-icon-text">
+              {% if user.first_name != "" or user.last_name != "" %}
+                {{ user.first_name }} {{ user.last_name }}
+              {% else %}
+                {{ user.username }}
+              {% endif %}
+            </span>
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="fa fa-sign-out"></i>&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
-            Logout
+             <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
+            <span id="logout-icon-text">
+              Logout
+            </span>
           </a>
         {% else %}
           {% url 'registration.views.register' as registration_url %}
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
-            <a rel="tooltip" data-placement="left" title="Sign Up"
-            href="{{registration_url}}" tabindex=7>
+            <a href="{{registration_url}}" tabindex=7>
               Register
             </a>&nbsp;&nbsp;
           &nbsp;&nbsp;|&nbsp;&nbsp;
           {% endif %}
-          <i class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
-          data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
+        <a href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">
+          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;
+          <span id="login-icon-text">
+            Login
+          </span>
+      </a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span id="analyses-popover">
-      <a tabindex=8 rp-analysis-monitor-global-list-status-popover
-        title="Recent Analyses">
-         <span rp-analysis-monitor-global-list-status></span>
-        </a>
+        <span>
+          <a rp-analysis-monitor-global-status-tooltip-hider
+            tabindex=8>
+             <span>
+               <rp-analysis-monitor-global-status>
+               </rp-analysis-monitor-global-status>
+             </span>
+          </a>
       </span>
       </div>
       <div class="collapse navbar-collapse" id="navbarMain"
@@ -190,6 +221,11 @@
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
           </li>
+          {% if REFINERY_CUSTOM_NAVBAR_ITEM %}
+             <li>
+               {{ REFINERY_CUSTOM_NAVBAR_ITEM|safe }}
+             </li>
+          {% endif %}
         </ul>
       </div>
       </div>
@@ -226,20 +262,10 @@
     {% endblock %}
   </div>
 
-  <!-- Script for popup content in the tool status and analyses icon-->
-  <script type="text/ng-template" id="analysesgloballist.html">
-    <rp-analysis-monitor-global-list-status-popover-details>
-    </rp-analysis-monitor-global-list-status-popover-details>
-  </script>
-  <script type="text/ng-template" id="analysislaunchmodal.html">
-    <rp-analysis-launch-modal-detail>
-    </rp-analysis-launch-modal-detail>
-  </script>
-
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
-  <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
   <script src="{% static "vendor/bootstrap/dist/js/bootstrap.min.js" %}"></script>
+  <script src="{% static "vendor/bootbox/bootbox.js" %}"></script>
   <script src="{% static "vendor/intro-js/minified/intro.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
   <script src="{% static "vendor/angular-intro-js/build/angular-intro.min.js" %}"></script>
@@ -273,7 +299,7 @@
 
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>
-
+  <script src="{% static "vendor/aws-sdk-js/dist/aws-sdk.min.js" %}"></script>
   {% block vendor_scripts %}
   {% endblock %}
 
@@ -286,36 +312,47 @@
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
-  <script src="{% static "js/analysis-launch.js" %}"></script>
   <script src="{% static "js/analysis-monitor.js" %}"></script>
   <script src="{% static "js/file-browser.js" %}"></script>
-  <script src="{% static "js/node-mapping.js" %}"></script>
-  <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
-  <script src="{% static "js/node-relationship.js" %}"></script>
-  <script src="{% static "js/data-set-explorer.js" %}"></script>
   <script src="{% static "js/statistics.js" %}"></script>
-  <script src="{% static "js/provvis/provvis.js" %}"></script>
+  <script src="{% static "js/provvis.js" %}"></script>
   <script src="{% static "js/dashboard.js" %}"></script>
   <script src="{% static "js/collaboration.js" %}"></script>
-  <script src="{% static "js/chart.js"%}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>
-  <script src="{% static "js/visualization.js" %}"></script>
-  <script src="{% static "js/igv.js" %}"></script>
+  <script src="{% static "js/data-set-visualization.js" %}"></script>
+  <script src="{% static "js/tool-launch.js" %}"></script>
+  <script src="{% static "js/user-file-browser.js" %}"></script>
 
-  <script src="{% static "vendor/ng-file-upload/angular-file-upload.min.js" %}"></script>
+  <script src="{% static "vendor/ng-file-upload/ng-file-upload.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-grid/ui-grid.min.js" %}"></script>
   <script src="{% static "js/metadata-table-import.js" %}"></script>
   <!-- The File Upload Angular JS module -->
   <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-angular.js" %}"></script>
   <script src="{% static "js/data-set-import.js" %}"></script>
 
+  <!-- Fetch external SVGs referenced in <use> elements when the browser fails to do so -->
+  <script defer src="{% static "vendor/svgxuse/svgxuse.min.js" %}"></script>
+
   {% block script %}
   {% endblock %}
 
   <script type="text/javascript">
-    // activate bootstrap tooltips
-      $('a[rel=tooltip]').tooltip();
+    /**
+     * Provides requestAnimationFrame in a cross browser way.
+     * @author paulirish / http://paulirish.com/
+     */
+    if (!window.requestAnimationFrame) {
+      window.requestAnimationFrame = ( function() {
+        return window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame ||
+          window.oRequestAnimationFrame ||
+          window.msRequestAnimationFrame ||
+          function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
+            window.setTimeout( callback, 1000 / 60 );
+          };
+      } )();
+    }
 
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';

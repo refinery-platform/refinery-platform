@@ -1,0 +1,38 @@
+<div
+  class="panel-group"
+  id="tool-info-display"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">
+        <div
+          role="button"
+          data-toggle="collapse"
+          data-parent="#tool-info-display"
+          ng-click="$ctrl.isToolInfoCollapsed = !$ctrl.isToolInfoCollapsed"
+          aria-expanded="true"
+          aria-controls="{{ $ctrl.tool.name }}">
+            <i
+              ng-class="$ctrl.isToolInfoCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              aria-hidden="true"></i>
+            Description
+        </div>
+      </h4>
+    </div>
+    <div
+      id="tool-launch-body"
+      class="panel-collapse"
+      uib-collapse="$ctrl.isToolInfoCollapsed"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-body">
+        <i class="{{$ctrl.tool.tool_type|toolTypeIcon}}" aria-hidden="true"></i>
+        {{ $ctrl.tool.tool_type }}:
+        {{ $ctrl.tool.description }}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,94 +1,157 @@
-'use strict';
+(function () {
+  'use strict';
 
-function IsaTabImportCtrl (
-  $log, $rootScope, $timeout, $window, isaTabImportApi
-) {
-  this.$log = $log;
-  this.$rootScope = $rootScope;
-  this.$timeout = $timeout;
-  this.$window = $window;
-  this.isaTabImportApi = isaTabImportApi;
-}
+  angular
+    .module('refineryDataSetImport')
+    .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
-Object.defineProperty(
-  IsaTabImportCtrl.prototype,
-  'file', {
-    enumerable: true,
-    get: function () {
-      return this._file;
-    },
-    set: function (value) {
-      this._file = value;
-      this.setImportOption(value);
-    }
-  }
-);
-
-Object.defineProperty(
-  IsaTabImportCtrl.prototype,
-  'urlToFile', {
-    enumerable: true,
-    get: function () {
-      return this._urlToFile;
-    },
-    set: function (value) {
-      this._urlToFile = value;
-      this.setImportOption(value);
-    }
-  }
-);
-
-IsaTabImportCtrl.prototype.setImportOption = function (value) {
-  if (value) {
-    this.importOption = 'isaTab';
-  } else {
-    this.importOption = undefined;
-  }
-};
-
-IsaTabImportCtrl.prototype.checkImportOption = function () {
-  return !this.importOption || this.importOption === 'isaTab';
-};
-
-IsaTabImportCtrl.prototype.clearFile = function () {
-  this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
-};
-
-IsaTabImportCtrl.prototype.startImport = function () {
-  var self = this;
-
-  this.isImporting = true;
-
-  var formData = new FormData();
-  formData.append('isa_tab_file', this.file);
-  formData.append('isa_tab_url', this.urlToFile);
-
-  return this.isaTabImportApi
-    .create({}, formData)
-    .$promise
-    .then(function (response) {
-      self.importedDataSetUuid = response.data.new_data_set_uuid;
-      self.isSuccessfullyImported = true;
-      self.$timeout(function () {
-        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
-      }, 2500);
-    })
-    .catch(function (error) {
-      self.isErrored = true;
-      self.$log.error(error);
-    })
-    .finally(function () {
-      self.isImporting = false;
-    });
-};
-
-angular
-  .module('refineryDataSetImport')
-  .controller('IsaTabImportCtrl', [
+  IsaTabImportCtrl.$inject = [
+    '$location',
     '$log',
     '$rootScope',
+    '$scope',
     '$timeout',
+    '$uibModal',
     '$window',
+    'fileUploadStatusService',
     'isaTabImportApi',
-    IsaTabImportCtrl
-  ]);
+    'settings'
+  ];
+
+  function IsaTabImportCtrl (
+    $location,
+    $log,
+    $rootScope,
+    $scope,
+    $timeout,
+    $uibModal,
+    $window,
+    fileUploadStatusService,
+    isaTabImportApi,
+    settings
+  ) {
+    var vm = this;
+    vm.fileStatus = 'none';
+
+    this.$log = $log;
+    this.$rootScope = $rootScope;
+    this.$timeout = $timeout;
+    this.$window = $window;
+    this.$uibModal = $uibModal;
+    this.fileUploadStatusService = fileUploadStatusService;
+    this.isaTabImportApi = isaTabImportApi;
+    this.settings = settings;
+    this.showFileUpload = false;
+    this.dataSetUUID = $location.search().data_set_uuid;
+    this.isMetaDataRevision = !!this.dataSetUUID;
+    this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
+
+    // Helper method to exit out of error alert
+    this.closeError = function () {
+      this.isErrored = false;
+    };
+
+    // helper watcher which updates the upload file status from component
+    $scope.$watch(
+      function () {
+        return fileUploadStatusService.fileUploadStatus.status;
+      },
+      function (fileStatus) {
+        vm.fileStatus = fileStatus;
+      }
+    );
+  }
+
+  Object.defineProperty(
+    IsaTabImportCtrl.prototype,
+    'file', {
+      enumerable: true,
+      get: function () {
+        return this._file;
+      },
+      set: function (value) {
+        this._file = value;
+        this.setImportOption(value);
+      }
+    }
+  );
+
+  Object.defineProperty(
+    IsaTabImportCtrl.prototype,
+    'urlToFile', {
+      enumerable: true,
+      get: function () {
+        return this._urlToFile;
+      },
+      set: function (value) {
+        this._urlToFile = value;
+        this.setImportOption(value);
+      }
+    }
+  );
+
+  IsaTabImportCtrl.prototype.setImportOption = function (value) {
+    if (value) {
+      this.importOption = 'isaTab';
+    } else {
+      this.importOption = undefined;
+    }
+  };
+
+  IsaTabImportCtrl.prototype.checkImportOption = function () {
+    return !this.importOption || this.importOption === 'isaTab';
+  };
+
+  IsaTabImportCtrl.prototype.clearFile = function () {
+    this.showFileUpload = false;
+    this.fileUploadStatusService.setFileUploadStatus('none');
+    this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
+  };
+
+  IsaTabImportCtrl.prototype.confirmImport = function () {
+    var self = this;
+    if (self.isMetaDataRevision) {
+      var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
+      modalInstance.result.then(function () { self.startImport(); });
+    } else {
+      self.startImport();
+    }
+  };
+
+  IsaTabImportCtrl.prototype.startImport = function () {
+    var self = this;
+    this.isImporting = true;
+
+    var formData = new FormData();
+    formData.append('isa_tab_file', this.file);
+    formData.append('isa_tab_url', this.urlToFile);
+
+    // collect Cognito identity ID if deployed on AWS and credentials are available
+    if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
+      formData.append('identity_id', AWS.config.credentials.identityId);
+    }
+
+    var queryParams = {};
+    if (this.isMetaDataRevision) {
+      queryParams = { data_set_uuid: this.dataSetUUID };
+    }
+    return this.isaTabImportApi
+      .create(queryParams, formData)
+      .$promise
+      .then(function (response) {
+        self.importedDataSetUuid = response.data.new_data_set_uuid;
+        self.isSuccessfullyImported = true;
+        self.$timeout(function () {
+          self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+        }, 2500);
+      })
+      .catch(function (error) {
+        self.isErrored = true;
+        self.errorMessage = error.data;
+        self.$log.error(error);
+      })
+      .finally(function () {
+        self.isImporting = false;
+      });
+  };
+})();

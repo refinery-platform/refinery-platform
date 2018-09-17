@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "value_type": {
+          "type": "string",
+          "enum": [
+            "INTEGER",
+            "FLOAT"
+          ]
+        },
+        "default_value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "value_type": {
+          "type": "string",
+          "enum": [
+            "STRING"
+          ]
+        },
+        "default_value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "value_type": {
+          "type": "string",
+          "enum": [
+            "BOOLEAN"
+          ]
+        },
+        "default_value": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "value_type": {
+          "type": "string",
+          "enum": [
+            "GENOME_BUILD",
+            "ATTRIBUTE",
+            "FILE"
+          ]
+        },
+        "default_value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "required": [
+      "name",
+      "description",
+      "value_type",
+      "default_value"
+  ]
+}

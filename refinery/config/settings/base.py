@@ -1,12 +1,15 @@
+from datetime import timedelta
 import json
 import logging
 import os
-import yaml
-
-import djcelery
 import subprocess
+import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
+from django.core.files.storage import FileSystemStorage
+
+import djcelery
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +25,7 @@ tutorial_settings_file_path = os.path.join(
     'refinery/config/tutorial_steps.json'
 )
 
-override_path = os.path.join(BASE_DIR,
-                             'refinery/config/override-config.yaml')
+override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -32,7 +34,6 @@ try:
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
     raise ImproperlyConfigured(error_msg)
-
 
 # load tutorial_steps.json
 try:
@@ -69,7 +70,7 @@ djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
 # (convert JSON list of lists to tuple of tuples)
-ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
+ADMINS = tuple(map(tuple, get_setting("ADMINS")))
 
 # A tuple in the same format as ADMINS that specifies who should get broken
 # link notifications when BrokenLinkEmailsMiddleware is enabled
@@ -108,6 +109,8 @@ if not os.path.isabs(MEDIA_ROOT):
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = get_setting("MEDIA_URL")
 
+DEFAULT_FILE_STORAGE = 'file_store.utils.SymlinkedFileSystemStorage'
+
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
@@ -136,23 +139,37 @@ STATICFILES_FINDERS = (
 # Make sure to set this to a random string in production
 SECRET_KEY = get_setting("SECRET_KEY")
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    # 'django.template.loaders.eggs.Loader',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, "refinery/templates"),
+            # Put strings here, like "/home/html/django_templates" or
+            # "C:/www/django/templates".
+            # Always use forward slashes, even on Windows.
+            # Don't forget to use absolute paths, not relative paths.
+        ],
+        'OPTIONS': {
+            'loaders': (
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                # 'django.template.loaders.eggs.Loader',
+            ),
+            'context_processors': [
+                'core.context_processors.extra_context',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    "core.context_processors.extra_context",
-    "django.core.context_processors.request",
-)
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -161,29 +178,21 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'core.middleware.DatabaseFailureMiddleware',
+    'cuser.middleware.CuserMiddleware',
 )
 
 ROOT_URLCONF = 'config.urls'
 
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, "refinery/templates"),
-    # Put strings here, like "/home/html/django_templates" or
-    # "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
-
-# NOTE: the order of INSTALLED_APPS matters in some instances. For example:
-# `core` needs to proceed `django.contrib.auth` here due to an
-# auth.post_migrate signal depending on a core.post_migrate signal being
-# run prior
+# NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
-    'core',
+    'django.contrib.sites',
+    'registration',  # docs: should be immediately above 'django.contrib.auth'
     'django.contrib.auth',
+    'core',
+    'data_set_manager',
+    'guardian',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
@@ -199,21 +208,19 @@ INSTALLED_APPS = (
     'djcelery',  # django-celery
     # NG: added for API
     "tastypie",
-    'guardian',
     'djangular',
     'galaxy_connector',
     'analysis_manager',
-    'workflow_manager',
     'file_store',
-    'file_server',
-    'visualization_manager',
-    'data_set_manager',
     'annotation_server',
-    'registration',
+    'tool_manager',
     'flatblocks',
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
+    'django_docker_engine',
+    'revproxy',
+    'cuser',
 )
 
 # NG: added for django-guardian
@@ -227,7 +234,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'root': {
         'level': 'DEBUG',
         'handlers': ['console'],
@@ -251,71 +258,42 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level': get_setting("LOG_LEVEL"),
+            'level': get_setting("REFINERY_LOG_LEVEL"),
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['console', 'mail_admins'],
+        'django': {
+            'level': 'WARNING',
+            'handlers': ['mail_admins'],
+        },
+        'boto3': {
+            'level': 'INFO',
+        },
+        'botocore': {
+            'level': 'INFO',
+        },
+        'docker': {
             'level': 'ERROR',
-            'propagate': True,
         },
-        'django.db.backends': {
+        'easyprocess': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
         },
-        'analysis_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+        'factory': {
+            'level': 'ERROR',
         },
-        'annotation_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+        'revproxy': {
+            'level': 'ERROR',
         },
-        'core': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
+        'httpstream': {  # dependency of py2neo
+            'level': 'INFO',
         },
-        'data_set_manager': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
+        'pysolr': {
+            'level': 'INFO',
         },
-        'file_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'file_store': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'galaxy_connector': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'isa_tab_parser': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'visualization_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'workflow_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+        'requests': {
+            'level': 'ERROR',
         },
     },
 }
@@ -335,11 +313,37 @@ SERVER_EMAIL = get_setting("SERVER_EMAIL")
 # so managers and admins know Refinery is emailing them
 EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# for external functions called in Celery tasks
+CELERYD_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+                     '%(funcName)s() - %(message)s'
+CELERYD_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+                          '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
+CELERY_ACCEPT_CONTENT = ['pickle']
+CELERYBEAT_SCHEDULE = {
+    'collect_site_statistics': {
+        'task': 'core.tasks.collect_site_statistics',
+        'schedule': timedelta(days=1),
+        'options': {
+            'expires': 30,  # seconds
+        }
+    },
+    'django_docker_cleanup': {
+        'task': 'tool_manager.tasks.django_docker_cleanup',
+        'schedule': timedelta(seconds=30),
+        'options': {
+            'expires': 20,  # seconds
+        }
+    },
+}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
+# keep chunked uploads outside the file_store directory
+CHUNKED_UPLOAD_STORAGE_CLASS = FileSystemStorage
 
 # === Refinery Settings ===
 
@@ -367,8 +371,19 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
 
-# relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
-FILE_STORE_DIR = 'file_store'
+# relative to MEDIA_ROOT
+FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
+# absolute path to the file store root dir
+FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
+FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
+# for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
+FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
+# move uploaded files into file store quickly instead of copying
+FILE_UPLOAD_TEMP_DIR = get_setting('FILE_UPLOAD_TEMP_DIR',
+                                   default=FILE_STORE_TEMP_DIR)
+# always keep uploaded files on disk
+FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
+                                          default=0)
 
 # optional dictionary for translating file URLs into locally accessible file
 # system paths (and vice versa) by substituting 'pattern' for 'replacement'
@@ -388,6 +403,9 @@ REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = get_setting(
 
 HAYSTACK_CONNECTIONS = {
     'default': {
+        # Haystack requires a default, but there's less risk of confusion
+        # for us if the core is explicit on each call.
+        # So: Leave this in, but it's just a placeholder.
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': REFINERY_SOLR_BASE_URL + 'default',
         'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex',
@@ -460,7 +478,6 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
 """
 # external tool status settings
-INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
 """
 
@@ -579,12 +596,57 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
-ANONYMOUS_USER_ID = -1
-
-SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
-
 SATORI_DEMO_ML_USER_ID = get_setting(
     "SATORI_DEMO_ML_USER_ID", local_settings, -1)
 
 SATORI_DEMO_SCC_USER_ID = get_setting(
     "SATORI_DEMO_SCC_USER_ID", local_settings, -1)
+
+ANONYMOUS_USER_NAME = "AnonymousUser"
+
+SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
+
+AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
+
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
+
+# Required for pre-Django 1.9 TransactionTestCases utilizing
+# `serialized_rollback` to function properly.
+# https://code.djangoproject.com/ticket/23727#comment:13
+TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
+                            'django.contrib.auth']
+
+# To avoid Port conflicts between LiveServerTestCases
+# https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
+os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
+
+DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
+DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
+# Time in seconds to wait before killing unused visualization
+DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
+DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
+
+REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
+
+# HTML-safe item to be displayed to the right of the `About` link in the navbar
+REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
+
+USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
+USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
+
+MEDIA_BUCKET = ''  # a placeholder for use in context processor
+UPLOAD_BUCKET = ''  # a placeholder for use in context processor
+
+TASTYPIE_DEFAULT_FORMATS = ['json']
+
+# temporary feature toggle for using S3 as user data file storage backend
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+
+# ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
+ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
+
+MIGRATION_MODULES = {
+    'chunked_upload': 'dependency_migrations.chunked_upload'
+}
+REFINERY_VISUALIZATION_REGISTRY = \
+    "https://github.com/refinery-platform/visualization-tools/"

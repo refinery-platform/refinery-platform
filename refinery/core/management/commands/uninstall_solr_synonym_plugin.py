@@ -1,8 +1,7 @@
 import logging
-import time
 import os
 import sys
-from optparse import make_option
+import time
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -15,8 +14,9 @@ class Command(BaseCommand):
     wrapper for removing a Solr plugin.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument('name')
+        parser.add_argument(
             '-n',
             '--name',
             action='store',
@@ -24,8 +24,7 @@ class Command(BaseCommand):
             type='string',
             help='Name of the JAR file to be uninstalled'
                  'e.g. myLib.jar'
-        ),
-    )
+        )
 
     def handle(self, *args, **options):
         if settings.SOLR_SYNONYMS:

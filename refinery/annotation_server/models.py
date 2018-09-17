@@ -2,7 +2,6 @@ import logging
 
 from django.db import models
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -54,8 +53,8 @@ def species_to_taxon_id(species_name):
     for item in query_list:
         query_set.add(item.taxon_id)
 
-    for id in query_set:
-        item = Taxon.objects.get(taxon_id=id, type='scientific name')
+    for taxon_id in query_set:
+        item = Taxon.objects.get(taxon_id=taxon_id, type='scientific name')
         ret_list.append((item.name, item.taxon_id))
 
     return ret_list
@@ -90,9 +89,9 @@ def species_to_genome_build(species_name):
     for item in query_list:
         query_set.add(item.taxon_id)
 
-    for id in query_set:
+    for taxon_id in query_set:
         try:
-            org = Taxon.objects.get(taxon_id=id, type='scientific name')
+            org = Taxon.objects.get(taxon_id=taxon_id, type='scientific name')
             default_gb = GenomeBuild.objects.get(
                 default_build=True, species=org).name
             ret_list.append((org.name, default_gb))

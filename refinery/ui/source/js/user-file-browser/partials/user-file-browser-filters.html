@@ -1,0 +1,76 @@
+<div ng-if="$ctrl.attributeFilters">
+  <div class="panel-group data-set-filters" id="attribute-filter"
+    role="tablist"
+    aria-multiselectable="true">
+    <div class="m-t-1 p-b-1-2">
+      <input ng-model="search" ng-init="search = ''" style="width: 100%;" placeholder="search...">
+    </div>
+    <div
+      ng-repeat="attributeName in $ctrl.orderColumns track by $index"
+      ng-init="attributeIndex = $index; order = '-count'">
+      <div class="panel panel-default" ng-if="$ctrl.attributeFilters[attributeName]">
+        <div class="panel-heading" role="tab">
+          <h4 class="panel-title">
+              <span ng-click="$ctrl.togglePanel(attributeName)">
+                <i class="fa fa-caret-down fa-pull-left" ng-hide="!$ctrl.isDown(attributeName, search)"></i>
+                <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.isDown(attributeName, search)"></i>
+                {{ attributeName }} &nbsp; ({{ $ctrl.attributeFilters[attributeName].facetObj.length }})
+              </span>
+
+              <span ng-hide="!$ctrl.isDown(attributeName, search)">
+                <button
+                  ng-click="order = 'name'"
+                  ng-hide="order == 'name'"
+                  class="btn btn-xs">
+                  <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
+                </button>
+                <button
+                  ng-click="order = '-count'"
+                  ng-hide="order == '-count'"
+                  class="btn btn-xs">
+                  <i class="fa fa-sort-numeric-desc" aria-hidden="true"></i>
+                </button>
+              </span>
+
+          </h4>
+        </div>
+        <div id="{{attributeName | replaceWhiteSpaceWithHyphen}}"
+            ng-hide="!$ctrl.isDown(attributeName, search)"
+            class="panel-collapse collapse in"
+            role="tabpanel"
+            aria-labelledby="{{ attributeName }}">
+            <div class="panel-body">
+              <div ng-repeat="field in $ctrl.attributeFilters[attributeName]
+              .facetObj | orderBy: order track by $index">
+                <div ng-show="field.name.toLowerCase().includes(search.toLowerCase())" class="checkbox container">
+                    <div class="row">
+                      <div class="col-xs-1">
+                        <input
+                          type="checkbox"
+                          name="optionsCheckboxes"
+                          ng-click="$ctrl.filterUpdate(field.assocAttribute, field.name)"
+                          ng-checked="$ctrl.filterIsSet(field.assocAttribute, field.name)"
+                          id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
+                      </div>
+                      <div class="col-xs-8">
+                        <label for="{{ field.name | replaceWhiteSpaceWithHyphen
+                          }}-{{ $index }}">
+                          <span ng-bind-html="field.name | highlight:search"></span>
+                        </label>
+                      </div>
+                      <div class="col-xs-3">
+                        <label for="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
+                          <span class="text-right pull-right">
+                            {{ field.count }}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

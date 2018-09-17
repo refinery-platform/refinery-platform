@@ -1,0 +1,27 @@
+{
+  "name": "Test LIST Visualization HiGlass",
+  "tool_type": "VISUALIZATION",
+  "annotation": {
+    "extra_directories": ["/refinery-data"],
+    "image_name": "scottx611x/refinery-higlass-docker:v0.1.0",
+    "description": "This visualization does really cool things... with Higlass",
+    "parameters": [],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [
+            {"name": "COOLER"},
+            {"name": "HITILE"},
+            {"name": "BIGWIG"},
+            {"name": "BEDGRAPH"}
+          ],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}

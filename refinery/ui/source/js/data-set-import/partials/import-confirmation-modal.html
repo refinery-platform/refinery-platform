@@ -1,0 +1,15 @@
+<div class="modal-header">
+  <button type="button" class="close" data-dismiss="modal"  ng-click="$ctrl.cancel()">&times;</button>
+  <h3>Potential loss of data files</h3>
+</div>
+<div class="modal-body alert-warning">
+  <p>
+    If data files that were uploaded prior to this metadata revision aren't
+    referenced in the newly revised metadata file <b>they will be deleted</b>.
+  </p>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" ng-click="$ctrl.cancel()">Cancel</button>
+  <button class="btn btn-danger" ng-click="$ctrl.confirm()">Submit Metadata
+    Revision</button>
+</div>

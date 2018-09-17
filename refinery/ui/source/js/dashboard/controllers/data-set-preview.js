@@ -3,6 +3,8 @@
 function DataSetPreviewCtrl (
   $log,
   $q,
+  $scope,
+  $window,
   _,
   $uibModal,
   pubSub,
@@ -12,11 +14,11 @@ function DataSetPreviewCtrl (
   studyService,
   dataSetAssayService,
   dataSetService,
-  sharingService,
   citationService,
   analysisService,
   dashboardDataSetPreviewService,
   dashboardExpandablePanelService,
+  dataSetPermsService,
   dataSetTakeOwnershipService,
   dashboardDataSetsReloadService,
   filesize,
@@ -25,6 +27,7 @@ function DataSetPreviewCtrl (
 ) {
   this.$log = $log;
   this.$q = $q;
+  this.$window = $window;
   this._ = _;
   this.$uibModal = $uibModal;
   this.pubSub = pubSub;
@@ -34,11 +37,11 @@ function DataSetPreviewCtrl (
   this.studyService = studyService;
   this.assayService = dataSetAssayService;
   this.dataSetService = dataSetService;
-  this.sharingService = sharingService;
   this.citationService = citationService;
   this.analysisService = analysisService;
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+  this.dataSetPermsService = dataSetPermsService;
   this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.permissionService = permissionService;
@@ -60,6 +63,9 @@ function DataSetPreviewCtrl (
   this.descLength = this.settings.dashboard.preview.defaultLengthDescription;
 
   this.maxAnalyses = this.settings.dashboard.preview.maxAnalyses;
+
+  // used to check perms regarding the import into own space button
+  this.userPerms = 'none';
 }
 
 Object.defineProperty(
@@ -205,6 +211,14 @@ DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
       } else {
         this.studies = data.objects;
       }
+      // remove unnamed protocols
+      var filteredProtocols = [];
+      for (var i = 0; i < this.studies.protocols.length; i++) {
+        if (this.studies.protocols[i].name) {
+          filteredProtocols.push(this.studies.protocols[i]);
+        }
+      }
+      angular.copy(filteredProtocols, this.studies.protocols);
     }.bind(this));
 };
 
@@ -300,6 +314,7 @@ DataSetPreviewCtrl.prototype.loadCitation = function (
  * @param   {String}  dataSetUuid  UUID if data set to be previewed.
  */
 DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
+  var that = this;
   this.importDataSetStarted = false;
   this.loading = true;
   this.permissionsLoading = true;
@@ -310,6 +325,12 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
   var assays = this.getAssay(dataSetUuid);
   var analyses = this.getAnalysis(dataSetUuid);
   var permissions;
+
+  if (dataSetUuid) {
+    this.dataSetPermsService.getDataSetSharing(dataSetUuid).then(function (response) {
+      that.userPerms = response.user_perms;
+    });
+  }
 
   permissions = this.user.isAuthenticated()
     .then(function (authenticated) {
@@ -346,8 +367,7 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
 DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   var that = this;
   this.$uibModal.open({
-    templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
-    controller: 'PermissionEditorCtrl as modal',
+    component: 'rpPermissionEditorModal',
     resolve: {
       config: function () {
         return {
@@ -359,6 +379,7 @@ DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   }).result.catch(function () {
     // refresh data when user dismisses by clicking on the background
     that.permissionService.getPermissions(that._currentUuid);
+    that.dashboardDataSetsReloadService.reload(true);
   });
 };
 
@@ -414,6 +435,8 @@ angular
   .controller('DataSetPreviewCtrl', [
     '$log',
     '$q',
+    '$scope',
+    '$window',
     '_',
     '$uibModal',
     'pubSub',
@@ -423,11 +446,11 @@ angular
     'studyService',
     'dataSetAssayService',
     'dataSetService',
-    'sharingService',
     'citationService',
     'analysisService',
     'dashboardDataSetPreviewService',
     'dashboardExpandablePanelService',
+    'dataSetPermsService',
     'dataSetTakeOwnershipService',
     'dashboardDataSetsReloadService',
     'filesize',

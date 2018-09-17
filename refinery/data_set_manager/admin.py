@@ -5,6 +5,7 @@ Created on May 11, 2012
 '''
 
 from django.contrib import admin
+
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 
 from data_set_manager import models
@@ -52,8 +53,6 @@ admin.site.register(models.Design)
 admin.site.register(models.Factor)
 admin.site.register(models.Assay)
 admin.site.register(models.Protocol)
-admin.site.register(models.ProtocolReference)
-admin.site.register(models.ProtocolReferenceParameter)
 admin.site.register(models.Node, NodeAdmin)
 admin.site.register(models.Attribute)
 admin.site.register(models.AttributeOrder)

@@ -1,0 +1,72 @@
+<div ng-switch on="$ctrl.analysesGlobalLoadingFlag">
+  <div ng-switch-when="EMPTY">
+    <p>
+      No analyses performed.
+    </p>
+  </div>
+  <div ng-switch-when="LOADING">
+    <span class="refinery-spinner analyses-view"></span>
+    &nbsp;<em>Retrieving recent analyses.</em>
+  </div>
+  <div ng-switch-default>
+    <ul id="analyses-popover" class="list-unstyled"
+      ng-repeat ="analysis in $ctrl.analysesGlobalList track by $index">
+      <li class="row">
+        <div ng-switch on="analysis.status">
+          <div ng-switch-when="UNKNOWN">
+            <div class="col-sm-2">
+              <i class="{{analysis.status | analysisStatusIcon}}
+              analyses-status"></i>
+              &nbsp;
+            </div>
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
+               class="analysis-running-percentage">
+              &nbsp;
+            </div>
+            <div class="col-sm-10 analyses-global-text">
+              {{ analysis.name }}
+            </div>
+          </div>
+          <div ng-switch-when="RUNNING">
+            <div class="col-sm-1">
+               <i class="{{$ctrl.analysesGlobalDetail[analysis
+                 .uuid]|analysisMonitorRunningStatusBtn}}"></i>
+                &nbsp;
+            </div>
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
+              class="col-sm-1 p-l-0">
+              {{ $ctrl.analysesGlobalDetail[analysis
+                .uuid]|analysisMonitorRunningStatusPercent }}%
+            </div>
+            <div class="col-sm-10">
+              <a class="analyses-popover-links"
+                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses/">
+                {{ analysis.name }}
+              </a>
+            </div>
+          </div>
+          <div ng-switch-default>
+            <div class="col-sm-1">
+              <i class="{{analysis.status | analysisStatusIcon}} analyses-status"></i>
+              &nbsp;
+            </div>
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
+              class="col-sm-1">
+              &nbsp;
+            </div>
+            <div
+              ng-class="{'col-sm-10': $ctrl.analysesRunningGlobalList.length,
+                        'col-sm-11': !$ctrl.analysesRunningGlobalList.length}"'>
+              <div>
+                <a class="analyses-popover-links"
+                  ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+                  {{ analysis.name }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>

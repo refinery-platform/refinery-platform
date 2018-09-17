@@ -1,12 +1,14 @@
-import process_isatab
+from __future__ import absolute_import
+
+from . import process_isatab
 
 
 class Command(process_isatab.Command):
-    help = "Takes the directory of an ISA-Tab file as input, parses, and"
-    help = "%s inputs it into the database\n" % help
-    help = "%s\nUsage: python manage.py process_arrayexpress_isatab" % help
-    help = "%s <base_isatab_directory> [base_pre_isa_dir=" % help
-    help = "%s<base_pre_isatab_directory> is_public=True]\n" % help
+    help = ("Takes the directory of an ISA-Tab file as input, parses, and"
+            " inputs it into the database\n"
+            "\nUsage: python manage.py process_arrayexpress_isatab"
+            " <base_isatab_directory> [base_pre_isa_dir="
+            "<base_pre_isatab_directory> is_public=True]\n")
 
     def __init__(self, filename=None):
         super(Command, self).__init__()

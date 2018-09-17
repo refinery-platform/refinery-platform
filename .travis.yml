@@ -1,66 +1,96 @@
+sudo: required
+
 language: python
+addons:
+  apt:
+    packages:
+      - xvfb
+cache:
+  directories:
+    - /home/travis/.cache/pip
+    - /home/travis/.cypress/Cypress
+
 python:
   - 2.7
-addons:
-  # sauce_connect: true
-  # username and access_key provided as environment variables in travis config
+
 services:
   - postgresql
   - neo4j
+  - docker
+
 install:
+  - node --version
+  - NODE_VERSION=6.11.0
+  - nvm install $NODE_VERSION
+  - nvm use $NODE_VERSION
+  - node --version
+
+  - npm --version
+  - npm install -g npm@3.10.10
+  - npm --version
+
   - pip install -r requirements.txt --quiet
+
 env:
-  - DJANGO_SETTINGS_MODULE=config.settings.dev REDUCE_TEST_OUTPUT=true PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+  global:
+    # These env vars are available to every build
+    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+    - DJANGO_SETTINGS_MODULE=config.settings.prod
+    # CYPRESS_RECORD_KEY:
+    - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
+
 before_script:
+  # Vagrant is not used on travis: This user is just for the database.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
+
+  - sudo mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
+  - sudo chown $USER /data
+
   - cd refinery
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
-  - python manage.py migrate --noinput
-  - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet
+  - python manage.py migrate --noinput --fake-initial
+  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
   - cd ui
-  - npm install --progress false --quiet
+  - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet
   - cd ../
+
+  # Required for cypress tests; TODO: Move to puppet.
+  # TODO: Start up solr (and neo4j?)
+  - python manage.py loaddata guest.json
+  - python manage.py activate_user guest
+  - python manage.py add_users_to_public_group
+  - pushd ui && grunt make && popd
+  - python manage.py collectstatic --noinput -v 0
+  - python manage.py runserver --insecure --settings config.settings.dev 2>&1 | grep -v 200 &
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
-  - flake8 --exclude=migrations,ui ..
+  # TODO: Not the same behavior as pre-commit hook.
+  # https://github.com/refinery-platform/refinery-platform/issues/1851
+  - flake8 ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui
-  - grunt
-  - popd
+  - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
 
-  - echo 'travis_fold:start:selenium'
-  # NOTE: Redirect runserver output since it's polluting logs
-  - python manage.py runserver > /dev/null 2>&1 &
-  - pushd ../selenium
-  # NOTE: Sauce Connect needs SAUCE_USERNAME and SAUCE_ACCESS_KEY
-  # (https://docs.travis-ci.com/user/sauce-connect/),
-  # while Pytest looks for SAUCELABS_USERNAME and SAUCELABS_API_KEY
-  # (http://pytest-selenium.readthedocs.io/en/latest/user_guide.html#sauce-labs).
-  # This has been recognized as a point of confusion, but there is no plan to change anything.
-  # https://github.com/pytest-dev/pytest-selenium/issues/53
-  - export SAUCELABS_USERNAME=$SAUCE_USERNAME SAUCELABS_API_KEY=$SAUCE_ACCESS_KEY
-  - printenv | sort | grep SAUCE | perl -pne 's/=(...).+/=$1.../' # Debug helper
-  - export BASE_URL=http://localhost:8000 CREDS_YML=guest_creds.yml UPLOAD=gff3.csv
-  - pytest --driver SauceLabs --capability browserName Firefox --capability tunnelIdentifier $TRAVIS_JOB_NUMBER -r fE
-  - popd
-  - echo 'travis_fold:end:selenium'
-
-  # If Django tests run first, the selenium test is truncated from the Travis log.
   - echo 'travis_fold:start:django-tests'
   - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
 
+  - echo 'travis_fold:start:cypress'
+  - pushd ui && node_modules/.bin/cypress run --record && popd
+  - echo 'travis_fold:end:cypress'
+
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
+
 after_success:
+  - echo 'travis_fold:start:codecov'
   - codecov
   - npm run codecov
+  - echo 'travis_fold:end:codecov'
 notifications:
   slack:
     secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=

@@ -14,8 +14,8 @@ angular
             method: 'GET'
           },
           params: {
-            limit: 'limit',
-            offset: 'offset'
+            limit: 0,
+            offset: 0
           }
         }
       );

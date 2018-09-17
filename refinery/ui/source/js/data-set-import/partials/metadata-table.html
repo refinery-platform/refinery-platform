@@ -1,464 +1,581 @@
 <div id="metadata-table-form">
-  <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
-    <h3>Provide Metadata File</h3>
+  <div class="refinery-subheader m-t-1">
+    <h1> Before You Get Started </h1>
   </div>
-  <div id="dataUploadTutorialStep4">
   <p>
-    <a
-      href="/static/sample-files/refinery-sample-metadata.tsv"
-      target="_blank"
-      refinery-tooltip
-      refinery-tooltip-container="body"
-      refinery-tooltip-placement="right"
-      title="Download sample file, refinery-sample-metadata.tsv">
-      <i class="fa fa-download"> </i>
-      Download an example tabular metadata file.
-    </a>
-    The first row needs to contain column headers.
-  </p>
-  <p>
-    Choose delimiter and then select tabular metadata table.
-  </p>
-
-  <div class="relative">
-    <div
-      class="refinery-max z-1 refinery-spinner-bg"
-      ng-if="metadataTable.isImporting">
-      <div class="refinery-spinner-center">
-        <div class="refinery-spinner"></div>
-      </div>
-    </div>
-
-    <div
-      class="refinery-max z-1 refinery-bg-success text-success"
-      ng-if="metadataTable.isSuccessfullyImported">
-      <div class="text-centered">
-        <i class="fa fa-check" aria-hidden="true"></i>
-        Data set has been successfully imported. You will be redirected shortly.
-        Otherwise click <a ng-href="/data_sets/{{ metadataTable.importedDataSetUuid }}/">here</a>.
-      </div>
-    </div>
-
-    <div
-      class="refinery-max z-1 refinery-bg-danger text-danger"
-      ng-if="metadataTable.isErrored">
-      <div class="text-centered">
-        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        <p>
-          Import of this data set failed. Please ensure that the structure
-          of your metadata file matches that of the example metadata file.
-        </p>
-        <p>
-          <a class="pointer" ng-click="metadataTable.closeError()">
-         Return to Tabular Metadata Form
-          </a>
-        </p>
-      </div>
-    </div>
-
-    <ul class="list-inline">
-      <li class="min-width-200">
-        <label class="block label-block label-text-left">
-        <span class="label-text label-left">
-          Tab separation:
-        </span>
-        <input
-          type="radio"
-          value="tab"
-          ng-model="metadataTable.separator"
-          ng-change="metadataTable.setParser()"
-          ng-disabled="!!metadataTable.importOption">
-        </label>
-      </li>
-      <li class="min-width-200">
-        <label class="block label-block label-text-left">
-        <span class="label-text label-left">
-          Comma separation:
-        </span>
-        <input
-          type="radio"
-          value="comma"
-          ng-model="metadataTable.separator"
-          ng-change="metadataTable.setParser()"
-          ng-disabled="!!metadataTable.importOption">
-        </label>
-      </li>
-
-      <li class="min-width-200 align-bottom">
-        <label class="block label-block label-text-left">
-        <span class="label-text label-left">
-          Custom separation:
-        </span>
-        <input
-          type="radio"
-          value="custom"
-          ng-model="metadataTable.separator"
-          ng-change="metadataTable.setParser()"
-          ng-disabled="!!metadataTable.importOption">
-        <input
-          type="text"
-          class="m-l-1"
-          placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
-          ng-model="metadataTable.customSeparator"
-          ng-change="metadataTable.setParser()"
-          ng-disabled="!!metadataTable.importOption">
-        </label>
-      </li>
-    </ul>
-
-    <div class="text-muted m-t-1-2 m-b-1-2">and</div>
-
-    <label class="block label-block label-text-left">
-      <span class="label-text label-left min-width-200">Select file:</span>
-      <input
-        name="tabular_file"
-        type="file"
-        ng-disabled="!metadataTable.isSeparatorOk"
-        file-model="metadataTable.file"
-        clear-file-input="metadataTable"
-        clear-file-input-model="metadataTable.file">
-      <button
-        class="icon-only"
-        ng-if="metadataTable.file"
-        ng-click="metadataTable.clearFile()">
-        <i
-          class="fa fa-times-circle fa-lg refinery-warning"
-          aria-hidden="true"
-          title="Clear selected file"
+    Before uploading a data set, format the metadata file and data files:
+    <ol>
+      <li>
+        Metadata file (
+        <a
+          href="{{ sampleMetadataUrl }}"
+          target="_blank"
           refinery-tooltip
           refinery-tooltip-container="body"
-          refinery-tooltip-placement="top"
-          refinery-tooltip-delay-show="750"
-          refinery-tooltip-delay-hide="150"
-          refinery-tooltip-hide-on-click="true">
-        </i>
-      </button>
-      <span class="text-warning" ng-if="!metadataTable.file">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-        Please specify the custom separator <strong>prior</strong> to file selection.
-      </span>
-      <span class="text-warning"
-        ng-if="metadataTable.file && metadataTable.whiteSpaceStripFlag">
-        <i class="fa fa-warning" aria-hidden="true"></i>
-        Leading and/or trailing whitespaces were detected and removed.
-      </span>
-    </label>
+          refinery-tooltip-placement="right"
+          title="Download sample file, refinery-sample-metadata.tsv">
+          <i class="fa fa-download"> </i>
+          Download an example tabular metadata file.
+        </a>
+        ):
+        <ul class="nested-list">
+          <li>
+            Must contain at least three columns: <strong>sample
+            identifier</strong>, <strong>file name</strong>, and <strong>species
+            name/species identifier</strong>
+          </li>
+          <li>
+            Must contain column headers in the first row of the table
+          </li>
+          <li>
+            Can have additional columns used to characterize data
+          </li>
+          <li>
+            Can have the columns ordered arbitrarily
+          </li>
+          <li>
+            Can not have column headers named the following reserved words:
+            <br>
+            <em>assay_uuid, django_ct, django_id, file_uuid, genome_build,
+              id, is_annotation, name, species, study_uuid, or type
+            </em>
+          </li>
+        </ul>
+      </li>
+      <li>
+        Data referenced in the file name column of the metadata file should
+        either be located:
+        <ul class="nested-list">
+          <li>
+            on your computer for upload to this site through your
+        browser
+          </li>
+          <li>
+            on a web server accessible through public URLs
+          </li>
+        </ul>
+      </li>
+    </ol>
+   </p>
+  <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
+    <h1 ng-show="!metadataTable.isMetaDataRevision">Provide Metadata File</h1>
+    <h1 ng-show="metadataTable.isMetaDataRevision">Provide Revised Metadata File</h1>
+  </div>
+  <div id="dataUploadTutorialStep4">
+    <p>Choose delimiter and then select tabular metadata table.</p>
 
-    <div ng-if="metadataTable.file">
-      <div class="refinery-subheader">
-        <h4>Preview (5 rows):</h4>
-      </div>
+    <div class="relative">
       <div
-        class="gridStyle"
-        ui-grid="metadataTable.gridOptions"
-        ui-grid-resize-columns>
+        class="refinery-max z-1 refinery-spinner-bg"
+        ng-if="metadataTable.isImporting">
+        <div class="refinery-spinner-center">
+          <h2>
+            Data set is uploading.
+          </h2>
+          <div class="refinery-spinner"></div>
+        </div>
       </div>
 
-      <div class="refinery-subheader m-t-1">
-        <h3>Configure Metadata Import</h3>
+      <div
+        class="refinery-max z-1 refinery-bg-success text-success"
+        ng-if="metadataTable.isSuccessfullyImported">
+        <div class="text-centered">
+          <i class="fa fa-check" aria-hidden="true"></i>
+          Data set has been successfully imported. You will be redirected shortly.
+          Otherwise click <a ng-href="/data_sets/{{ metadataTable.importedDataSetUuid }}/">here</a>.
+        </div>
       </div>
 
-      <div ng-form="importMetadataTableForm">
+      <div
+        class="refinery-max z-1 refinery-bg-danger text-danger"
+        ng-if="metadataTable.isErrored">
+        <div class="text-centered">
+          <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+          <p ng-show="metadataTable.isMetaDataRevision">Metadata revision of this data set failed.</p>
+          <p ng-show="!metadataTable.isMetaDataRevision">Import of this data set failed.</p>
+          <p ng-show="metadataTable.importErrorMessage">{{ metadataTable.importErrorMessage }}</p>
+          <p ng-show="!metadataTable.importErrorMessage">Please ensure that the structure of your metadata file matches that of the example metadata file</p>
+          <p>
+            <a class="pointer" ng-click="metadataTable.closeError()">
+           Return to Tabular Metadata Form
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <ul class="list-inline">
+        <li class="min-width-200">
+          <label class="block label-block label-text-left">
+          <span class="label-text label-left">
+            Tab separation:
+          </span>
+          <input
+            type="radio"
+            value="tab"
+            ng-model="metadataTable.separator"
+            ng-change="metadataTable.setParser()"
+            ng-disabled="!!metadataTable.importOption">
+          </label>
+        </li>
+        <li class="min-width-200">
+          <label class="block label-block label-text-left">
+          <span class="label-text label-left">
+            Comma separation:
+          </span>
+          <input
+            type="radio"
+            value="comma"
+            ng-model="metadataTable.separator"
+            ng-change="metadataTable.setParser()"
+            ng-disabled="!!metadataTable.importOption">
+          </label>
+        </li>
+
+        <li class="min-width-200 align-bottom">
+          <label class="block label-block label-text-left">
+          <span class="label-text label-left">
+            Custom separation:
+          </span>
+          <input
+            type="radio"
+            value="custom"
+            ng-model="metadataTable.separator"
+            ng-change="metadataTable.setParser()"
+            ng-disabled="!!metadataTable.importOption">
+          <input
+            type="text"
+            class="m-l-1"
+            placeholder="E.g. &quot;;&quot;, &quot;|&quot;, &quot;$&quot;, etc."
+            ng-model="metadataTable.customSeparator"
+            ng-change="metadataTable.setParser()"
+            ng-disabled="!!metadataTable.importOption">
+          </label>
+        </li>
+      </ul>
+
+      <div class="text-muted m-t-1-2 m-b-1-2">and</div>
+
+      <label class="block label-block label-text-left">
+        <span class="label-text label-left min-width-200">Select file:</span>
+        <input
+          name="tabular_file"
+          type="file"
+          ng-disabled="!metadataTable.isSeparatorOk"
+          file-model="metadataTable.file"
+          clear-file-input="metadataTable"
+          clear-file-input-model="metadataTable.file">
+        <button
+          class="icon-only"
+          ng-if="metadataTable.file"
+          ng-click="metadataTable.clearFile()">
+          <i
+            class="fa fa-times-circle fa-lg refinery-warning"
+            aria-hidden="true"
+            title="Clear selected file"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="top"
+            refinery-tooltip-delay-show="750"
+            refinery-tooltip-delay-hide="150"
+            refinery-tooltip-hide-on-click="true">
+          </i>
+        </button>
+        <span class="text-warning" ng-if="!metadataTable.file">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          Please specify the custom separator <strong>prior</strong> to file selection.
+        </span>
+        <span class="text-warning"
+          ng-if="metadataTable.file && metadataTable.whiteSpaceStripFlag">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          Leading and/or trailing whitespaces were detected and removed.
+        </span>
+      </label>
+
+      <div ng-if="metadataTable.file">
         <div class="refinery-subheader m-t-1">
-          <h4>
-            Required
-          </h4>
+          <h2>Preview of Meta Data File(First 5 rows):</h2>
         </div>
-        <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-           <strong>Title</strong>
-          </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <input
-              type="text"
-              class="width-95"
-              name="title"
-              required
-              ng-minlength="3"
-              ng-maxlength="50"
-              ng-model="metadataTable.title"/>
-          </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            Update the title of the data set to be imported.
-            This will be shown in the data set browser.
-          </div>
+        <div
+          class="gridStyle"
+          ui-grid="metadataTable.gridOptions"
+          ui-grid-resize-columns>
         </div>
 
-        <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-           <strong>Sample Identifier</strong>
-          </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <select
-              class="select-height refinery-base width-95"
-              name="source_column_index"
-              required
-              multiple
-              size="{{ metadataTable.metadataHeader.length || 10 }}"
-              ng-model="metadataTable.sourceColumnIndex"
-              ng-options="heading for heading in metadataTable.metadataHeader">
-            </select>
-          </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            Columns to be used for source grouping. Values in the
-            selected columns will be concatenated to create an identifier for
-            the "source" of the data. Each unique value will be treated as
-            a separate source idenifier. If necessary, up to three columns
-            can be selected and concatenated to create unique source names.
-            <br>At least one column needs to be selected.</br>
-          </div>
+        <div class="refinery-subheader m-t-1">
+          <h1>Configure Metadata Import</h1>
         </div>
 
-        <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <strong>Data File Column</strong>
-          </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <select
-              class="width-95"
-              required
-              ng-model="metadataTable.dataFileColumn"
-              ng-options="heading for heading in metadataTable.metadataHeader
-               track by heading">
-            </select>
-          </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            Column that contains the path to or the URL of a data file.
-            If URLs are provided, they have to be publicly accessible.
-          </div>
-        </div>
-
-        <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <strong>Species Column</strong>
-          </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <select
-              name="species_column"
-              class="width-95"
-              required
-              ng-model="metadataTable.speciesColumn"
-              ng-options="heading for heading in metadataTable.metadataHeader">
-            </select>
-          </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            Column containing species names or identifiers,
-            e.g. "Human", "Homo sapiens", or "H. sapiens".
-          </div>
-        </div>
-
-        <div>
+        <div ng-form="importMetadataTableForm">
           <div class="refinery-subheader m-t-1">
-            <h4>Publishing</h4>
+            <h2>
+              Required
+            </h2>
           </div>
           <div class="row m-t-1-4 m-b-1-4">
             <div class="col-sm-6 col-md-3 col-lg-2">
-              URL Shortcut
+             <strong>Title</strong>
             </div>
             <div class="col-sm-6 col-md-3 col-lg-2">
               <input
                 type="text"
                 class="width-95"
-                name="slug"
-                ng-model="metadataTable.slug"
-                ng-pattern="urlShortcutRegex">
+                name="title"
+                required
+                ng-minlength="3"
+                ng-maxlength="50"
+                ng-model="metadataTable.title"/>
             </div>
             <div class="col-sm-12 col-md-6 col-lg-8">
-              Shortcut name to access the data set via a direct URL.
-              Can only contain alphanumeric characters and "_". A data set
-              with the shortcut <em>my_experiment</em> would be accessible under
-              <em>http://example.com/data_sets/my_experiment</em>.
+              Update the title of the data set to be imported.
+              <a
+                popover-placement="right"
+                uib-popover="This will be shown in the data set browser."
+                popover-title="Title"
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true"
+                tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
             </div>
           </div>
 
           <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            Make Public
+            <div class="col-sm-6 col-md-3 col-lg-2">
+             <strong>Sample Identifier</strong>
+            </div>
+            <div class="col-sm-6 col-md-3 col-lg-2">
+              <select
+                class="select-height refinery-base width-95"
+                name="source_column_index"
+                required
+                multiple
+                size="{{ metadataTable.metadataHeader.length || 10 }}"
+                ng-model="metadataTable.sourceColumnIndex"
+                ng-options="heading for heading in metadataTable.metadataHeader">
+              </select>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-8">
+              Select a column containing the sample identifier or multiple columns
+              that will be concatenated to form an identifier.
+              <a
+                popover-placement="right"
+                uib-popover="Values in the selected columns will be
+                concatenated to create an identifier for the 'source' of the
+                data. Each unique value will be treated as a separate source
+                identifier. If necessary, up to three columns can be selected
+                and concatenated to create unique source names. At least one
+                column needs to be selected."
+                popover-title="Sample Identifier"
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true"
+                tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
+            </div>
           </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <input
-              type="checkbox"
-              name="is_public"
-              ng-model="metadataTable.makePublic"/>
+
+          <div class="row m-t-1-4 m-b-1-4">
+            <div class="col-sm-6 col-md-3 col-lg-2">
+              <strong>Data File Column</strong>
+            </div>
+            <div class="col-sm-6 col-md-3 col-lg-2">
+              <select
+                class="width-95"
+                required
+                ng-model="metadataTable.dataFileColumn"
+                ng-options="heading for heading in metadataTable.metadataHeader
+                 track by heading">
+              </select>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-8">
+              Column that contains the path to or the URL of a data file.
+              <a
+                popover-placement="right"
+                uib-popover="File names must not contain a path. If URLs are
+                provided, they have to be publicly accessible."
+                popover-title="Data File Column"
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true"
+                tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
+            </div>
           </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            If selected, the data set will be made publicly
-            viewable when the import has completed. 
-            <br>Use this feature with care.</br>
+
+          <div class="row m-t-1-4 m-b-1-4">
+            <div class="col-sm-6 col-md-3 col-lg-2">
+              <strong>Species Column</strong>
+            </div>
+            <div class="col-sm-6 col-md-3 col-lg-2">
+              <select
+                name="species_column"
+                class="width-95"
+                required
+                ng-model="metadataTable.speciesColumn"
+                ng-options="heading for heading in metadataTable.metadataHeader">
+              </select>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-8">
+              Column containing species names or identifiers.
+              <a
+                popover-placement="right"
+                uib-popover-html="'Acceptable identifiers are defined by the
+                <a target=_blank href=https://www.ncbi.nlm.nih.gov/taxonomy>
+                NCBI Taxonomy database.</a> For example, for human samples Human,
+                Homo sapiens, or H. sapiens can be used.'"
+                popover-title="Species Column"
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true"
+                tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
+            </div>
           </div>
-        </div>
+
+          <div>
+            <div
+              class="refinery-subheader m-t-1">
+              <span
+                role="button"
+                ng-click="isAdvancedCollapsed = !isAdvancedCollapsed">
+                <i
+                ng-class="isAdvancedCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+                class="fa-pull-left"
+                aria-hidden="true"></i>
+                <h1>Advanced</h1>
+              </span>
+            </div>
+            <div uib-collapse="isAdvancedCollapsed">
+              <div class="row m-t-1-4 m-b-1-4">
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  Auxiliary File Column
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  <select
+                    name="aux_file_column"
+                    class="width-95"
+                    ng-model="metadataTable.auxFileColumn"
+                    ng-options="heading for heading in metadataTable.metadataHeader">
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-8">
+                  Column that contains the path to or URL of an auxiliary file
+                  associated with the data file.
+                  <a
+                    popover-placement="right"
+                    uib-popover="For example, for visualization, this could be
+                    a BigWig file for a WIG data file or a BAM index file for a
+                     BAM data file. If URLs are provided, they have to be
+                     publicly accessible."
+                    popover-title="Auxiliary File Column"
+                    popover-trigger="'outsideClick'"
+                    popover-append-to-body="true"
+                    tabindex="0">
+                      <i class="fa fa-question-circle info-icon icon-only"></i>
+                  </a>
+                </div>
+              </div>
+
+              <div class="row m-t-1-4 m-b-1-4">
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  Annotation Column
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  <select
+                    name="annotation_column"
+                    class="width-95"
+                    ng-model="metadataTable.annotationColumn"
+                    ng-options="heading for heading in metadataTable.metadataHeader">
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-8">
+                  Indicates the data file in this row should be
+                  treated as an annotation file.
+                  <a
+                    popover-placement="right"
+                    uib-popover="Column containing either 'true' or 'false' to
+                    indicate whether the data file in this row should be
+                    treated as an annotation file rather than a data file."
+                    popover-title="Annotation Column"
+                    popover-trigger="'outsideClick'"
+                    popover-append-to-body="true"
+                    tabindex="0">
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
+                  </a>
+                </div>
+              </div>
+
+              <div class="row m-t-1-4 m-b-1-4">
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  Genome Build Column
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  <select
+                    name="genome_build_column"
+                    class="width-95"
+                    ng-model="metadataTable.genomeBuildColumn"
+                    ng-options="heading for heading in metadataTable.metadataHeader">
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-8">
+                  Column containing genome build identifiers such as "hg19" or "mm10".
+                </div>
+              </div>
+
+                <div class="row m-t-1-4 m-b-1-4">
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  Import Now
+                </div>
+                <div class="col-sm-6 col-md-3 col-lg-2">
+                  <input
+                    type="checkbox"
+                    name="data_file_permanent"
+                    ng-model="metadataTable.dataFilePermanent"/>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-8">
+                  Data files will be imported into the system upon creation
+                  of the data set.
+                  <a
+                    popover-placement="right"
+                    uib-popover="If selected, data files located on remote
+                    servers (referenced by URL) or located on the file system
+                    of the server (referenced by an absolute file system path)
+                    will be imported into the system upon creation of the data
+                    set. If not selected, such files will only be imported
+                    into the system when used for analysis."
+                    popover-title="Import Now"
+                    popover-trigger="'outsideClick'"
+                    popover-append-to-body="true"
+                    tabindex="0">
+                      <i class="fa fa-question-circle info-icon icon-only"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
           <div class="refinery-subheader m-t-1">
-            <h4>Advanced</h4>
+             <h1>Complete Submission</h1>
           </div>
           <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Auxiliary File Column
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <select
-                name="aux_file_column"
-                class="width-95"
-                ng-model="metadataTable.auxFileColumn"
-                ng-options="heading for heading in metadataTable.metadataHeader">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Column that contains the path to or URL of an auxiliary file
-              associated with the data file. For example, for visualization,
-              this could be a BigWig file for a WIG data file or a BAM index file
-              for a BAM data file. If URLs are provided, they have
-              to be publicly accessible.
+            <div class="col-sm-12 col-md-12 col-lg-12">
+              <div class="m-t-1 m-b-1">
+                Does the <strong>Data File Column</strong> refer to local files?
+                <label class="p-l-1-2">
+                  <input
+                    type="radio"
+                    ng-value="false"
+                    ng-model="metadataTable.showFileUpload"
+                    checked>
+                  No
+                </label>
+                <label class="p-l-1-2">
+                  <input
+                    type="radio"
+                    ng-value="true"
+                    ng-model="metadataTable.showFileUpload">
+                  Yes
+                </label>
+                <a
+                  popover-placement="right"
+                  uib-popover-html="'Select <strong>Yes</strong> if the
+                  <strong>Data File Column</strong> contains paths to local
+                  files which now need to be uploaded. Select
+                  <strong>No</strong> if the <strong>Data File Column</strong>
+                  contains URLs of remote files already uploaded elsewhere.'"
+                  popover-title="Upload Local Data Files"
+                  popover-trigger="'outsideClick'"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                      <i class="fa fa-question-circle info-icon icon-only"></i>
+                  </a>
+              </div>
+              <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
+                <div class="p-b-1">
+                   <button
+                      class="refinery-base btn btn-default btn-sm"
+                      ng-click="metadataTable.checkFiles()"
+                      ng-disabled="!metadataTable.dataFileColumn">
+                      Check Data Files
+                    </button>
+                    <a
+                    popover-placement="right"
+                    uib-popover="Use this button to check that you have
+                    successfully uploaded all of your data files."
+                    popover-title="Check Data Files"
+                    popover-trigger="'outsideClick'"
+                    popover-append-to-body="true"
+                    tabindex="0">
+                        <i class="fa fa-question-circle info-icon icon-only"></i>
+                    </a>
+                  </div>
+                <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
+                <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
+              </div>
             </div>
           </div>
-
           <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Base Path
+            <div class="col-sm-12 col-md-12 col-lg-12">
+              <button
+                class="refinery-base btn btn-primary"
+                ng-click="metadataTable.confirmImport()"
+                ng-disabled="importMetadataTableForm.$invalid ||
+                metadataTable.areFilesUploading() ||
+                metadataTable.areFilesInQueue()">
+                Submit
+              </button>
+              <span class="m-l-1">
+                <span class="text-warning"
+                  ng-if="metadataTable.areFilesInQueue()">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  All data files have not been uploaded.
+                </span>
+                <span
+                  ng-messages="importMetadataTableForm.title.$error"
+                  role="alert"
+                  class="text-danger">
+                  <div ng-message="required">
+                    <i class="fa fa-warning" aria-hidden="true"></i>
+                    Required: Enter a title.
+                  </div>
+                  <div ng-message="minlength">
+                    <i class="fa fa-warning" aria-hidden="true"></i>
+                    Error: Title is too short.
+                  </div>
+                  <div ng-message="maxlength">
+                    <i class="fa fa-warning" aria-hidden="true"></i>
+                    Error: Title is too long.
+                  </div>
+                </span>
+                <span
+                  ng-messages="importMetadataTableForm.source_column_index.$error"
+                  role="alert"
+                  class="text-danger">
+                  <div ng-message="required">
+                    <i class="fa fa-warning" aria-hidden="true"></i>
+                    Required: Select a Sample Identifier.
+                  </div>
+                </span>
+                <span
+                  ng-messages="importMetadataTableForm.slug.$error"
+                  role="alert"
+                  class="text-danger">
+                  <div ng-message="pattern">
+                    <i class="fa fa-warning" aria-hidden="true"></i>
+                    Invalid URL shortcut, can only contain alphanumeric
+                    characters and "_".
+                  </div>
+                </span>
+              </span>
             </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <input
-                type="text"
-                class="width-95"
-                name="base_path"
-                ng-model="metadataTable.basePath">
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Base path of your data file paths if using relative locations.
-            </div>
-          </div>
-
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Annotation Column
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <select
-                name="annotation_column"
-                class="width-95"
-                ng-model="metadataTable.annotationColumn"
-                ng-options="heading for heading in metadataTable.metadataHeader">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Column containing either "true" or "false" to indicate whether the data file in
-              this row should be treated as an annotation file rather than a data file.
-            </div>
-          </div>
-
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Genome Build Column
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <select
-                name="genome_build_column"
-                class="width-95"
-                ng-model="metadataTable.genomeBuildColumn"
-                ng-options="heading for heading in metadataTable.metadataHeader">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Column containing genome build identifiers such as "hg19" or "mm10".
-            </div>
-          </div>
-
-            <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Import Now
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <input
-                type="checkbox"
-                name="data_file_permanent"
-                ng-model="metadataTable.dataFilePermanent"/>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              If selected, data files located on remote servers (referenced by
-              URL) or located on the file system of the server (referenced by
-              an absolute file system path) will be
-              imported into the system upon creation of the data set. If not
-              selected, such files will only be imported into the system if
-              selected for analysis.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="m-t-1 m-b-1">
-        <rp-file-upload></rp-file-upload>
-      </div>
-
-      <div>
-        <div class="refinery-subheader m-t-1">
-           <h3>Upload Data Set</h3>
-        </div>
-        <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-12 col-md-6 col-lg-3">
-            <button
-              class="refinery-base btn btn-default"
-              ng-click="metadataTable.checkFiles()"
-              ng-disabled="!metadataTable.dataFileColumn">
-              Check Availability of Data Files
-            </button>
-            <button
-              class="refinery-base btn btn-primary"
-              ng-click="metadataTable.startImport()"
-              ng-disabled="importMetadataTableForm.$invalid ||
-              metadataTable.areFilesUploading()">
-              Upload Data Set
-            </button>
-            </div>
-          <div class="col-sm-12 col-md-6 col-lg-4">
-            <span class="text-warning"
-              ng-if="metadataTable.areFilesInQueue()">
-              <i class="fa fa-warning" aria-hidden="true"></i>
-              All data files have not been uploaded.
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.title.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="required">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Required: Enter a title.
-              </div>
-              <div ng-message="minlength">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Error: Title is too short.
-              </div>
-              <div ng-message="maxlength">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Error: Title is too long.
-              </div>
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.source_column_index.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="required">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Required: Select a Sample Identifier.
-              </div>
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.slug.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="pattern">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Invalid URL shortcut, can only contain alphanumeric
-                characters and "_".
-            </span>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>

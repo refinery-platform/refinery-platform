@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load markup %}
 
-{% load static %}
+{% load static from staticfiles %}
 {% block head_html %}
 	<!-- Le styles -->
     {% for css_file in REFINERY_CSS %}
@@ -74,12 +74,14 @@
 		<p>
 			<label class="radio">
                 <input type="radio" name="optionsRadios" id="cb_layout_kind_refinery" value="1"
-                       onclick="workflowVisualizationModule.reload_workflow('{% url 'download_workflow' workflow.uuid %}')"
+                       onclick="workflowVisualizationModule.reload_workflow(
+                         '{% url 'workflow-graph' workflow.uuid %}')"
                        checked> Refinery
 			</label>
 			<label class="radio">
                 <input type="radio" name="optionsRadios" id="cb_layout_kind_galaxy"
-                       onclick="workflowVisualizationModule.reload_workflow('{% url 'download_workflow' workflow.uuid %}')"
+                       onclick="workflowVisualizationModule.reload_workflow(
+                         '{% url 'workflow-graph' workflow.uuid %}')"
                        value="0"> Galaxy
 			</label>
 		</p>
@@ -97,7 +99,7 @@
 		<div class="refinery-subheader">
 			<h4>Workflow Id</h4>
 		</div>
-		<p>{{ workflow.internal_id }} (<a href="{% url 'download_workflow' workflow.uuid %}">Download</a>)</p>
+		<p>{{ workflow.internal_id }} (<a href="{% url 'workflow-graph' workflow.uuid %}">Download</a>)</p>
 
 		<div class="refinery-header">
 			<span class="refinery-header-left">
@@ -146,6 +148,6 @@
 <script src="{% static "vendor/d3-tip/index.js" %}"></script>
 <script type="text/javascript" src="{% static "js/refinery/core/workflow_visualization.js" %}"></script>
 <script>
-    workflowVisualizationModule.runWorkflowVisualization("{% url 'download_workflow' workflow.uuid %}");
+    workflowVisualizationModule.runWorkflowVisualization("{% url 'workflow-graph' workflow.uuid %}");
 </script>
 {% endblock %}

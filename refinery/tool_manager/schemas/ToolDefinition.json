@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "oneOf":[
+    {
+      "required": [
+        "name",
+        "description",
+        "file_relationship",
+        "parameters"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "file_relationship": {
+          "$ref": "FileRelationship.json#"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "GalaxyParameter.json#"
+          }
+        },
+        "tool_type":{
+          "type": "string",
+          "enum": ["WORKFLOW"]
+        }
+      }
+    },
+    {
+      "required": [
+        "name",
+        "description",
+        "file_relationship",
+        "parameters",
+        "extra_directories",
+        "image_name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "file_relationship": {
+          "$ref": "FileRelationship.json#"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "Parameter.json#"
+          }
+        },
+        "tool_type":{
+          "type": "string",
+          "enum": ["VISUALIZATION"]
+        },
+        "extra_directories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image_name": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

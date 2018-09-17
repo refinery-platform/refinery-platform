@@ -56,7 +56,7 @@ a.spinnable {
   }
 }
 
-@background-image-url: '/static/images/bgnoise.png';
+@background-image-url: '../images/bgnoise.png';
 @background-gradient: rgba( 255, 0, 0, 0.5 );
 @background-gradient-highlight: lighter(red, 10%);
 
@@ -65,6 +65,11 @@ body {
   background-image: url(@background-image-url);
   margin-top: @navbar-height * 2.2;
   line-height: 20px;
+}
+
+// override bootstrap default popover font
+.popover {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .refinery-base.btn.btn-default {
@@ -203,6 +208,7 @@ border: none;
 .popover {
   color: #000000;
   text-align: left;
+  z-index: 1060;
 }
 
 .popover-title {
@@ -227,68 +233,36 @@ border: none;
 }
 
 //Global analyses status icon/popover
-#analyses-popover {
-  .popover {
-    position: absolute;
-    display: block;
-    top: 20px !important;
-    right: 0 !important;
-    max-width: 450px;
-    z-index: 1010;
-    padding: 1px;
-    text-align: left;
-  }
+.global-analysis-popover {
+  position: absolute;
+  display: block;
+  top: 20px !important;
+  right: 0 !important;
+  max-width: 450px;
+  padding: 1px;
+  text-align: left;
+
  .popover.left .arrow:after, .arrow {
-      display: none;
-    }
+   display: none;
+ }
 }
 
 #global-analysis-status-run-div {
   cursor:pointer;
 }
 
-.analyses-global-text-icon {
-  display: inline-block;
-  float:left;
-  text-align: left;
-  width: 25px;
-}
-
-.analyses-global-text {
-  display: inline-block;
-  width: 375px;
-}
-
-.analysis-running-percentage {
-  display: inline-block;
-  width: 25px;
-  max-width: 25px;
-  text-align: center;
-}
-
 ul#analyses-popover {
   font-size: .9em;
-  list-style-type: none;
-  margin: 0 0 10px 0;
-  padding: 0px;
-  li {
-    padding: 0;
-    margin: 0;
-    width: 450px;
-  }
+  padding: 0;
 }
 
-a#analyses-popover-links {
+a.analyses-popover-links {
   color: #136382;
   font-weight: normal;
 }
 
-a#analyses-popover-links:hover, a:focus {
+a.analyses-popover-links:hover, a:focus {
   color:#09303f;
-}
-
-.tooltip-inner {
-    max-width: 275px;
 }
 
 .fa-check-circle.analyses-status {
@@ -301,6 +275,10 @@ a#analyses-popover-links:hover, a:focus {
 
 .fa-question-circle.analyses-status {
   color: #708090;
+}
+
+.fa-cog.analyses-status {
+  color: @gray-darker;
 }
 
 //Analyses Tab View Css
@@ -387,6 +365,7 @@ a.close.analysis-alert {
 
 #collapse-analysis-run {
   cursor: pointer;
+  text-decoration: none;
 }
 
 .analysis-cancel-col {
@@ -566,8 +545,14 @@ a.analysis-header {
   width: 100%;
 }
 
+@media (max-width: @screen-sm-min) {
 
-@media (max-width: @navbar-collapse-width) {
+  #navbar-right {
+    a:hover {
+      text-decoration: none;
+      color: @blue-active;
+    }
+  }
 
   .refinery-base.navbar-default {
 
@@ -720,6 +705,17 @@ a.analysis-header {
     font-size: @base-font-size * 1.15;
   }
 
+  &-tabs .nav-tabs div.linked {
+    background-color: transparent;
+    border: none;
+    margin-right: 0px;
+    padding-top: 2px;
+    padding-bottom: 4px;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: @base-font-size * 1.15;
+  }
+
   &-tabs .nav-tabs li.active {
     background-color: @white;
     border-top: 5px solid @gray;
@@ -732,7 +728,15 @@ a.analysis-header {
     border-radius: 0px;
   }
 
+  &-tabs .nav-tabs li.active div.linked:hover {
+    border-radius: 0px;
+  }
+
   &-tabs .nav-tabs li a:hover {
+    border-radius: 0px;
+  }
+
+  &-tabs .nav-tabs li div.linked:hover {
     border-radius: 0px;
   }
 
@@ -742,6 +746,14 @@ a.analysis-header {
     padding-top: 4px;
     padding-bottom: 2px;
   }
+
+  &-tabs .nav-tabs li.active div.linked:hover {
+    background-color: transparent;
+    border: none;
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+
 
   .navbar-search {
     display: block;
@@ -822,6 +834,64 @@ a.analysis-header {
   }
 }
 
+// Generic panel set, similar to dashboard
+.refinery-panel-set {
+  position: relative;
+  width: auto;
+  overflow-x: hidden;
+
+  .refinery-panel {
+    position: relative;
+    margin: 0 0 5px 0;
+    padding: 0;
+
+    .refinery-panel-content {
+      position: relative;
+      margin: 0 10px;
+      padding: 5px 0;
+    }
+  }
+
+  .refinery-header {
+    position: relative;
+    margin: 0;
+    padding: 5px 5px 5px 10px;
+    border-bottom: 1px solid darken(@gray-lighter, 10%);
+    background-color: @gray-lighter;
+
+    h3 a {
+      color: inherit;
+    }
+
+    h3 a i,
+    h3 a .link-hint {
+      text-decoration: none;
+    }
+
+    .link-hint {
+      font-weight: normal;
+      font-size: 0.8em;
+      color: @gray-light;
+    }
+  }
+
+  .btn {
+    position: relative;
+    padding: 2px 10px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: @text-color;
+    text-overflow: ellipsis;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+
+  .priority-button {
+    background-color: #286090;
+    border-color: #204d74;
+    color: #fff;
+  }
+}
+
 .refinery-header {
   display: block;
   border-bottom: 1px solid @gray-lighter;
@@ -867,6 +937,14 @@ a.analysis-header {
   padding-bottom: -10px;
   margin-bottom: 5px;
   text-transform: uppercase;
+}
+
+.refinery-subheader h1 {
+  display: inline;
+  font-size: @base-font-size * 1.5;
+  color: @gray-light;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .refinery-subheader h2 {
@@ -1004,7 +1082,7 @@ a.analysis-header {
   right: 0;
 
   &.refinery-spinner-bg {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(211,211,211, 0.8);
   }
 
   .refinery-spinner-center {
@@ -1031,7 +1109,7 @@ a.analysis-header {
 }
 
 .no-animation .refinery-spinner {
-  background: url(/static/images/spinner.gif) center center no-repeat;
+  background: url("../images/spinner.gif") center center no-repeat;
   animation: none;
   -webkit-animation: none;
 }
@@ -1083,7 +1161,6 @@ button.icon-only {
 .icon-only:focus,
 .no-underline:focus {
   outline: none;
-  text-decoration: none;
 }
 
 .text-align-center {
@@ -1248,12 +1325,26 @@ ul.badge-list {
     }
   }
 }
-@media (max-width: 400px) {
-  body {
-    margin-top: @navbar-height * 3.2;
+
+// Resolves space issue for the share and config buttons
+@media (max-width: 700px) {
+   #dashboard-icon-text {
+    display: none;
+  }
+  #login-icon-text {
+    display: none;
+  }
+  #login-name-icon-text {
+    display: none;
+  }
+  #logout-icon-text {
+    display: none;
+  }
+
+  #help-icon-text {
+    display: none;
   }
 }
-
 /*
  * Handy classes to control basic margin and padding according to the base em
  *
@@ -1464,29 +1555,6 @@ ul.badge-list {
 
 .active-group {
   background-color: darken(@gray-lighter, 5%);
-}
-
-.fastqc-box {
-  color: rgba(0, 0, 0, 1);
-  fill: yellow;
-  stroke: rgba(0, 0, 0, 1);
-}
-
-.fastqc-box-axis line, .fastqc-box-axis path {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
-}
-
-.fastqc-chart-drawspace {
-  position: relative;
-  height: 100%;
-  width: 100%;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
 }
 
 .horizontal-list li {
@@ -1755,8 +1823,12 @@ body.is-screenshot-ready {
   vertical-align: bottom;
 }
 
+.align-center {
+  vertical-align: middle;
+}
+
 .info-icon {
-  color: #009CDE;
+  color: @gray-light;
 }
 
 .igv_button{
@@ -1837,4 +1909,124 @@ h1, h2, h3, h4, h5, h5,
 
 .flex-g-2 {
   flex-grow: 2;
+}
+
+#metadata-table-form {
+  .nested-list {
+    margin-left: 20px;
+  }
+}
+
+ul.paragraph {
+  list-style: none;
+  padding-left: 0;
+
+  li {
+    float: left;
+  }
+}
+
+.form-validation-error {
+  border: solid 1px rgba(246, 36, 0, 1);
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(246, 36, 0, 1);
+}
+
+.fa.fa-question-circle {
+  &:hover {
+    color: @blue-active;
+  }
+}
+
+
+.grid_data_set_total {
+  border: none;
+}
+
+a.modal-close {
+  color: @gray-lighterish;
+  &:hover {
+    color: @gray-light;
+  }
+}
+
+.refinery-label {
+  padding-right: 1em;
+  color: @gray-light;
+}
+
+
+.reinvite-icon {
+  .fa-stack-right-corner {
+    font-size: .7em;
+    position: absolute;
+    top: 6px;
+  }
+}
+
+/* CHANGING BREAKPOINT OF BOOTSTRAP 3 NAVIGATION BAR*/
+// temp solution until the dashboard is implement with new navbar -jm
+@media (max-width: 1170px) {
+  .navbar-header {
+    float: none;
+  }
+  .navbar-toggle {
+    display: block;
+    background-color: #464646;
+    border: none;
+    padding: 6px 10px 6px 10px;
+    margin-top: 8px;
+    .icon-bar {
+      background-color: @white !important;
+    }
+  }
+  .navbar-collapse {
+    border-top: 1px solid transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .navbar-collapse.collapse {
+    display: none!important;
+  }
+  .navbar-collapse.collapse.in {
+    display: block!important;
+  }
+  .navbar-nav {
+    float: none!important;
+    margin: 7.5px -15px;
+  }
+  .navbar-nav>li {
+    float: none;
+  }
+  .navbar-nav>li>a {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: @white;
+  }
+  .navbar-form {
+    padding: 10px 15px;
+    margin-top: 8px;
+    margin-right: -15px;
+    margin-bottom: 8px;
+    margin-left: -15px;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 1px 0 rgba(255, 255, 255, .1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 1px 0 rgba(255, 255, 255, .1);
+    width:auto;
+    float:none!important;
+  }
+}
+
+// for anchors with btn classes, can't use ng-disabled
+.disabledLink {
+  color: #ccc;
+  pointer-events:none;
+}
+
+.banned {
+  cursor: not-allowed !important;
+}
+
+.no-decoration-link {
+  text-decoration: none !important;
 }

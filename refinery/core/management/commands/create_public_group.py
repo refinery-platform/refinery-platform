@@ -1,8 +1,9 @@
 import sys
+
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
-from django.db import connection, transaction
+from django.db import connection
 
 from core.models import ExtendedGroup
 
@@ -22,8 +23,7 @@ class Command(BaseCommand):
 
 
 def create_public_group():
-    """Create public group
-    """
+    """Create public group"""
     sys.stdout.write(
         "Creating public group '{}' for Refinery. Edit "
         "'REFINERY_PUBLIC_GROUP_NAME' in your settings to choose another "
@@ -62,10 +62,9 @@ def create_public_group():
         # creation of the public group we need to set the sequence for the
         # group ids to the public group id (this is not updated automatically
         # when the id is set explicitly)
-        cursor = connection.cursor()
-        cursor.execute("SELECT setval(\'auth_group_id_seq\', %s )",
-                       (settings.REFINERY_PUBLIC_GROUP_ID,))
-        transaction.commit_unless_managed()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT setval(\'auth_group_id_seq\', %s )",
+                           (settings.REFINERY_PUBLIC_GROUP_ID,))
         sys.stdout.write("Successfully created group '{}'.".format(
             settings.REFINERY_PUBLIC_GROUP_NAME)
         )

@@ -1,22 +1,28 @@
-'use strict';
+(function () {
+  'use strict';
 
-function resetGridService () {
-  var vm = this;
-  vm.resetGridFlag = false;
-  // param keeps current filter params
-  vm.refreshGridFlag = false;
+  angular.module('refineryFileBrowser')
+    .service('resetGridService', resetGridService);
 
-  vm.setResetGridFlag = function (state) {
-    vm.resetGridFlag = state;
-  };
+  function resetGridService () {
+    var vm = this;
+    vm.resetGridFlag = false;
+    // param keeps current filter params
+    vm.refreshGridFlag = false;
+    vm.setRefreshGridFlag = setRefreshGridFlag;
+    vm.setResetGridFlag = setResetGridFlag;
 
-  vm.setRefreshGridFlag = function (state) {
-    vm.refreshGridFlag = state;
-  };
-}
+    /*
+     *-----------------------
+     * Method Definitions
+     * ----------------------
+     */
+    function setRefreshGridFlag (state) {
+      vm.refreshGridFlag = state;
+    }
 
-angular.module('refineryFileBrowser')
-  .service('resetGridService', [
-    resetGridService
-  ]
-);
+    function setResetGridFlag (state) {
+      vm.resetGridFlag = state;
+    }
+  }
+})();

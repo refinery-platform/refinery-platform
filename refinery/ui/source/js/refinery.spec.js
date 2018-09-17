@@ -55,32 +55,16 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('focusOn')).toEqual(true);
     });
 
+    it('should have "mockParams" as a dependency', function () {
+      expect(hasModule('mockParams')).toEqual(true);
+    });
+
     it('should have "replaceWhiteSpaceWithHyphen" as a dependency', function () {
       expect(hasModule('replaceWhiteSpaceWithHyphen')).toEqual(true);
     });
 
     it('should have "refineryRouter" as a dependency', function () {
       expect(hasModule('refineryRouter')).toEqual(true);
-    });
-
-    it('should have "refineryWorkflows" as a dependency', function () {
-      expect(hasModule('refineryWorkflows')).toEqual(true);
-    });
-
-    it('should have "refineryNodeMapping" as a dependency', function () {
-      expect(hasModule('refineryNodeMapping')).toEqual(true);
-    });
-
-    it('should have "refineryAnalysisLaunch" as a dependency', function () {
-      expect(hasModule('refineryAnalysisLaunch')).toEqual(true);
-    });
-
-    it('should have "refineryNodeRelationship" as a dependency', function () {
-      expect(hasModule('refineryNodeRelationship')).toEqual(true);
-    });
-
-    it('should have "refineryDataSetExplorer" as a dependency', function () {
-      expect(hasModule('refineryDataSetExplorer')).toEqual(true);
     });
 
     it('should have "refineryStatistics" as a dependency', function () {
@@ -111,10 +95,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryCollaboration')).toEqual(true);
     });
 
-    it('should have "refineryChart" as a dependency', function () {
-      expect(hasModule('refineryChart')).toEqual(true);
-    });
-
     it('should have "refineryFileBrowser" as a dependency', function () {
       expect(hasModule('refineryFileBrowser')).toEqual(true);
     });
@@ -123,12 +103,12 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryDataSetAbout')).toEqual(true);
     });
 
-    it('should have "refineryIGV" as a dependency', function () {
-      expect(hasModule('refineryIGV')).toEqual(true);
+    it('should have "refineryToolLaunch" as a dependency', function () {
+      expect(hasModule('refineryToolLaunch')).toEqual(true);
     });
 
-    it('should have "refineryVisualization" as a dependency', function () {
-      expect(hasModule('refineryVisualization')).toEqual(true);
+    it('should have "refineryUserFileBrowser" as a dependency', function () {
+      expect(hasModule('refineryUserFileBrowser')).toEqual(true);
     });
 
     // Just a negative control to make sure that the test actually works.

@@ -19,20 +19,20 @@ describe('ListGraph.directive: unit tests', function () {
     ) {
       $compile = _$compile_;
       $rootScope = _$rootScope_;
-    });
 
-    $scope = $rootScope.$new();
+      $scope = $rootScope.$new();
 
-    directiveEl = $compile(
-      angular.element('<list-graph graph="graph"></list-graph>')
-    )($scope);
+      directiveEl = $compile(
+        angular.element('<list-graph graph="graph"></list-graph>')
+      )($scope);
 
-    $scope.$digest();
-  });
-
-  describe('DOM', function () {
-    it('should replace custom element with template', function () {
-      expect(directiveEl.hasClass('vis-wrapper')).toBe(true);
+      $scope.$digest();
     });
   });
+
+  // describe('DOM', function () {
+  it('should replace custom element with template', function () {
+    expect(directiveEl.hasClass('vis-wrapper')).toBe(true);
+  });
+  // });
 });

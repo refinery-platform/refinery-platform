@@ -1,15 +1,18 @@
 'use strict';
 
-function rpDataSetAboutDetails () {
+function rpDataSetAboutDetails ($window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/data-set-about/partials/details.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/data-set-about/partials/details.html');
+    }
   };
 }
 
 angular
   .module('refineryDataSetAbout')
   .directive('rpDataSetAboutDetails', [
+    '$window',
     rpDataSetAboutDetails
   ]
 );

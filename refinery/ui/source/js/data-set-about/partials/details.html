@@ -1,139 +1,519 @@
-<div class="refinery-header">
-  <span class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.name }}</h3>
-  </span>
+<div class="refinery-header row">
+  <div class="refinery-header-left">
+    <h3>
+      {{ ADCtrl.dataSet.accession }}<span ng-if="ADCtrl.dataSet.title &&
+      ADCtrl.dataSet.accession">:</span> {{ ADCtrl.dataSet.title }}
+    </h3>
+    <span ng-if="ADCtrl.dataSet.is_owner">
+      <a
+        ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
+        data-target=" #dataSetTitle">
+         <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+      </a>
+    </span>
+  </div>
+  <div
+    id="dataSetAccession"
+    uib-collapse="ADCtrl.isCollapsed.title">
+    <div class="vertical-align p-t-1-2">
+      <form
+        ng-submit="ADCtrl.updateDataSet(
+        'accession', ADCtrl.editedDataSet.accession
+        )"
+        name="dataSetAccessionForm"
+        class="p-r-1-2 col-md-4">
+        <div class="form-group" ng-class='{"has-warning":!dataSetAccessionForm.$valid}'>
+          <label class="control-label" for="dataSetAccessionInput">
+            Edit Accession
+          </label>
+          <input
+            autofocus
+            type="text"
+            id="dataSetAccessionInput"
+            name="dataSetAccession"
+            class="form-control"
+            ng-model="ADCtrl.editedDataSet.accession"
+            ng-minlength="3"
+            ng-maxlength="32"
+            required>
+        </div>
+      </form>
+
+      <button
+        type="button"
+        class="btn btn-default btn-xs"
+        ng-click="ADCtrl.cancel('accession')">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-xs btn-primary"
+        ng-click="ADCtrl.updateDataSet(
+        'accession', ADCtrl.editedDataSet.accession)"
+        ng-disabled="!dataSetAccessionForm.$valid ||
+        ADCtrl.editedDataSet.accession == ADCtrl.dataSet.accession">
+        Save
+      </button>
+
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetAccessionForm.dataSetAccession.$error.minlength ||
+        dataSetAccessionForm.dataSetAccession.$error.required">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Accession must be <strong>at least</strong> 3 characters long.
+      </span>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetAccessionForm.dataSetAccession.$error.maxlength">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Accession must be less than 32 characters long.
+      </span>
+    </div>
+  </div>
+
+  <div
+    id="dataSetTitle"
+    uib-collapse="ADCtrl.isCollapsed.title">
+    <div class="vertical-align p-t-1-2">
+      <form
+        ng-submit="ADCtrl.updateDataSet('title', ADCtrl.editedDataSet.title)"
+        name="dataSetTitleForm"
+        class="p-r-1-2 col-md-4">
+        <div class="form-group" ng-class='{"has-warning":!dataSetTitleForm.$valid}'>
+          <label class="control-label" for="dataSetTitleInput">
+            Edit Title
+          </label>
+          <input
+            autofocus
+            type="text"
+            id="dataSetTitleInput"
+            name="dataSetTitle"
+            class="form-control"
+            ng-model="ADCtrl.editedDataSet.title"
+            ng-minlength="3"
+            ng-maxlength="250"
+            required>
+          </div>
+        </form>
+
+      <button
+        type="button"
+        class="btn btn-default btn-xs"
+        ng-click="ADCtrl.cancel('title')">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-xs btn-primary"
+        ng-click="ADCtrl.updateDataSet('title', ADCtrl.editedDataSet.title)"
+        ng-disabled="!dataSetTitleForm.$valid ||
+        ADCtrl.editedDataSet.title == ADCtrl.dataSet.title">
+        Save
+      </button>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetTitleForm.dataSetTitle.$error.minlength ||
+        dataSetTitleForm.dataSetTitle.$error.required">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Title must be <strong>at least</strong> 3 characters long.
+      </span>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetTitleForm.dataSetTitle.$error.maxlength">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Title must be less than 250 characters long.
+      </span>
+    </div>
+  </div>
 </div>
 
-<div>
-  <div class="refinery-subheader">
-    <h4>Summary</h4>
+<div class="refinery-subheader">
+  <h4>Summary</h4>
+  <span ng-if="ADCtrl.dataSet.is_owner">
+    <a
+      ng-click="ADCtrl.isCollapsed.summary = !ADCtrl.isCollapsed.summary"
+      data-target=" #dataSetSummary">
+       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+    </a>
+  </span>
+</div>
+<div ng-if="ADCtrl.dataSet.summary.length > 0">
+    {{ ADCtrl.dataSet.summary }}
   </div>
-  <p>
-    <div ng-if="ADCtrl.dataSet.summary">
-      {{ dataSet.summary }}
-    </div>
-    <div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
-       None provided.
-    </div>
-  </p>
+<div ng-if="!ADCtrl.dataSet.summary" class="emphasized">
+     None provided.
+  </div>
+<div id="dataSetSummary" uib-collapse="ADCtrl.isCollapsed.summary">
+  <div class="vertical-align p-t-1-2">
+    <form
+      ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.editedDataSet.summary)"
+      name="dataSetSummaryForm"
+      class="p-r-1-2 col-md-4">
+      <div class="form-group" ng-class='{"has-warning":!dataSetSummaryForm.$valid}'>
+        <label class="control-label" for="dataSetSummaryInput">
+          Edit Summary
+        </label>
+        <textarea
+          autofocus
+          id="dataSetSummaryInput"
+          name="dataSetSummary"
+          class="form-control"
+          ng-model="ADCtrl.editedDataSet.summary"
+          ng-minlength="3"
+          ng-maxlength="1000"
+          required>
+        </textarea>
+      </div>
+    </form>
+
+    <button
+      type="button"
+      class="btn btn-default btn-xs"
+      ng-click="ADCtrl.cancel('summary')">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-xs btn-primary"
+      ng-click="ADCtrl.updateDataSet('summary', ADCtrl.editedDataSet.summary)"
+      ng-disabled="!dataSetSummaryForm.$valid ||
+      ADCtrl.editedDataSet.summary == ADCtrl.dataSet.summary">
+      Save
+    </button>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSummaryForm.dataSetSummary.$error.minlength ||
+      dataSetSummaryForm.dataSetSummary.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Summary must be <strong>at least</strong> 3 characters long.
+    </span>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSummaryForm.dataSetSummary.$error.maxlength">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Summary must be less than 1000 characters long.
+    </span>
+  </div>
+</div>
 
   <div class="refinery-subheader">
     <h4>Description</h4>
+    <span ng-if="ADCtrl.dataSet.is_owner">
+     <a
+      ng-click="ADCtrl.isCollapsed.description = !ADCtrl.isCollapsed.description"
+      data-target=" #dataSetDescription">
+       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+    </a>
+    </span>
   </div>
-  <p>
-     <div ng-if="ADCtrl.dataSet.description">
-      {{ dataSet.description }}
-    </div>
-    <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
-       None provided.
-    </div>
-  </p>
+  <div ng-if="ADCtrl.dataSet.description">
+    {{ ADCtrl.dataSet.description }}
+  </div>
+  <div ng-if="!ADCtrl.dataSet.description" class="emphasized">
+     None provided.
+  </div>
 
-  <div class="refinery-subheader">
-    <h4>Shortcut Name</h4>
+<div id="dataSetDescription" uib-collapse="ADCtrl.isCollapsed.description">
+  <div class="vertical-align p-t-1-2">
+    <form
+      ng-submit="ADCtrl.updateDataSet('description', ADCtrl.editedDataSet.description)"
+      name="dataSetDescriptionForm"
+      class="p-r-1-2 col-md-4">
+      <div class="form-group" ng-class='{"has-warning":!dataSetDescriptionForm.$valid}'>
+        <label class="control-label" for="dataSetDescriptionInput">
+          Edit Description
+        </label>
+        <textarea
+          autofocus
+          id="dataSetDescriptionInput"
+          name="dataSetDescription"
+          class="form-control"
+          ng-model="ADCtrl.editedDataSet.description"
+          ng-minlength="3"
+          ng-maxlength="5000"
+          required>
+        </textarea>
+      </div>
+    </form>
+
+    <button
+      type="button"
+      class="btn btn-default btn-xs"
+      ng-click="ADCtrl.cancel('description')">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-xs btn-primary"
+      ng-click="ADCtrl.updateDataSet('description', ADCtrl.editedDataSet.description)"
+      ng-disabled="!dataSetDescriptionForm.$valid ||
+      ADCtrl.editedDataSet.description == ADCtrl.dataSet.description">
+      Save
+    </button>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetDescriptionForm.dataSetDescription.$error.minlength ||
+      dataSetDescriptioForm.dataSetDescription.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Description must be <strong> at least</strong> 3 characters long.
+    </span>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetDescriptionForm.dataSetDescription.$error.maxlength">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Description must be less than 5000 characters long.
+    </span>
   </div>
-  <p>
-    <div ng-if="ADCtrl.dataSet.slug">
-      {{ dataSet.slug }}
-    </div>
-    <div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
-       None provided.
-    </div>
-  </p>
 </div>
 
-<div>
-  <div class="refinery-header">
-    <span class="refinery-header-left">
-        <h3>Studies</h3>
-    </span>
-  </div>
-
-  <div ng-repeat="study in ADCtrl.studies track by $index">
-    <span ng-if="study.identifier">
-      <strong>{{study.identifier}}</strong>
-    </span>
-    <span ng-if="study.title">
-      : {{study.title}}
-    </span>
-
-    <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
-      Assay -
-      <span ng-if="assay.measurement">
-        Measurement: {{ assay.measurement }},
-      </span>
-      <span ng-if="assay.measurement_accession">
-        Measurement Accession: {{ assay.measurement_accession }}
-      </span>
-      <span ng-if="assay.measurement_source">
-        Measurement Source: {{ assay.measurement_source }},
-      </span>
-      <span ng-if="assay.technology">
-        Technology: {{ assay.technology }},
-      </span>
-      <span ng-if="assay.technology_accession">
-        Technology Accession: {{ assay.technology_accession }},
-      </span>
-      <span ng-if="assay.technology_source">
-        Technology Source: {{ assay.technology_source }},
-      </span>
-      <span ng-if="assay.platform">
-        Platform: {{ assay.platform }},
-      </span>
-      <span ng-if="assay.file_name">
-        File name: {{ assay.file_name }}
-      </span>
-    </ul>
-  </div>
-
-  <div class="refinery-header">
-    <span class="refinery-header-left">
-      <h3>Files</h3>
-    </span>
-  </div>
-
-  <span class="refinery-subheader">
-    <h3>Meta Data</h3>
+<div class="refinery-subheader">
+  <h4>Shortcut Name</h4>
+  <span ng-if="ADCtrl.dataSet.is_owner">
+    <a
+      ng-click="ADCtrl.isCollapsed.slug = !ADCtrl.isCollapsed.slug"
+      data-target=" #dataSetSlug">
+       <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+    </a>
   </span>
+</div>
+<div ng-if="ADCtrl.dataSet.slug">
+  {{ ADCtrl.dataSet.slug }}
+</div>
+<div ng-if="!ADCtrl.dataSet.slug" class="emphasized">
+   None provided.
+</div>
+<div id="dataSetSlug" uib-collapse="ADCtrl.isCollapsed.slug">
+  <div class="vertical-align p-t-1-2">
+    <form
+      ng-submit="ADCtrl.updateDataSet('slug', ADCtrl.editedDataSet.slug)"
+      name="dataSetSlugForm"
+      class="p-r-1-2 col-md-4">
+      <div class="form-group" ng-class='{"has-warning":!dataSetSlugForm.$valid}'>
+        <label class="control-label" for="dataSetSlugInput">
+          Edit Shortcut Name
+        </label>
+        <input
+          type="text"
+          autofocus
+          id="dataSetSlugInput"
+          name="dataSetSlug"
+          class="form-control"
+          ng-model="ADCtrl.editedDataSet.slug"
+          ng-minlength="3"
+          ng-maxlength="250"
+          required>
+        </div>
+    </form>
+
+    <button
+      type="button"
+      class="btn btn-default btn-xs"
+      ng-click="ADCtrl.cancel('slug')">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-xs btn-primary"
+      ng-click="ADCtrl.updateDataSet('slug', ADCtrl.editedDataSet.slug)"
+      ng-disabled="!dataSetSlugForm.$valid ||
+      ADCtrl.editedDataSet.slug == ADCtrl.dataSet.slug">
+      Save
+    </button>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSlugForm.dataSetSlug.$error.minlength ||
+      dataSetSlugForm.dataSetSlug.$error.required">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Shortcut name must be <strong>at least</strong> 3 characters long.
+    </span>
+    <span
+      class='p-l-1-2 text-warning'
+      ng-show="dataSetSlugForm.dataSetSlug.$error.maxlength">
+      <i class="fa fa-warning" aria-hidden="true"></i>
+      Shortcut name must be less than 250 characters long.
+    </span>
+  </div>
+</div>
+
+
+<div class="refinery-header m-t-1-2">
+  <span class="refinery-header-left">
+      <h3>Studies</h3>
+  </span>
+</div>
+
+<div ng-repeat="study in ADCtrl.studies track by $index">
+  <span ng-if="study.identifier">
+    <strong>{{study.identifier}}</strong>
+  </span>
+  <span ng-if="study.title">
+    : {{study.title}}
+  </span>
+
+  <ul ng-repeat="assay in ADCtrl.assays[study.uuid] track by $index">
+    Assay -
+    <span ng-if="assay.measurement">
+      Measurement: {{ assay.measurement }},
+    </span>
+    <span ng-if="assay.measurement_accession">
+      Measurement Accession: {{ assay.measurement_accession }},
+    </span>
+    <span ng-if="assay.measurement_source">
+      Measurement Source: {{ assay.measurement_source }},
+    </span>
+    <span ng-if="assay.technology">
+      Technology: {{ assay.technology }},
+    </span>
+    <span ng-if="assay.technology_accession">
+      Technology Accession: {{ assay.technology_accession }},
+    </span>
+    <span ng-if="assay.technology_source">
+      Technology Source: {{ assay.technology_source }},
+    </span>
+    <span ng-if="assay.platform">
+      Platform: {{ assay.platform }},
+    </span>
+    <span ng-if="assay.file_name">
+      File name: {{ assay.file_name | basePathFilter }}
+    </span>
+  </ul>
+</div>
+
+<div class="refinery-header">
+  <span class="refinery-header-left">
+    <h3>Files</h3>
+  </span>
+</div>
+
+<span
+  class="refinery-subheader"
+  ng-if="ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change'">
+  <h3>Metadata</h3>
+</span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
   <p>
-     <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
-      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+     <a href="{{ADCtrl.fileStoreItem.datafile}}">
+      {{ADCtrl.fileStoreItem.datafile | basePathFilter}}
     </a>
       - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
-</div>
-  <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
-    <p>
-      <a href="{{ADCtrl.fileStoreItem.datafile}}">
-      {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
+   <span
+     class="p-l-1"
+     ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+     ng-if="ADCtrl.dataSet.is_owner">
+      <a
+        class="refinery-base btn btn-default"
+        ng-class="{disabledLink: !ADCtrl.dataSet.is_clean}"
+        href="/data_set_manager/import/?data_set_title={{ ADCtrl.dataSet.title }}/#/isa-tab-import?data_set_uuid={{ ADCtrl.dataSet.uuid }}">
+        Revise Metadata
       </a>
-      - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
-    </p>
-  </div>
-  <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
-  <p class="emphasized">Not available.</p>
-  </div>
-
-  <span class="refinery-subheader">
-    <h3>Data Files</h3>
+     </span>
+    <span class="p-l-1-3" ng-if="ADCtrl.dataSet.is_owner">
+      <a
+        popover-placement="right"
+        uib-popover-html="'Redirects to the Data Set Upload page where you
+        can upload revised metadata. <strong>Note:</strong> Once you have
+        run an analysis or visualization on a data set, its metadata can no longer be revised.'"
+        popover-title="Revise Metadata"
+        popover-trigger="'outsideClick'"
+        popover-append-to-body="true">
+          <i class="fa fa-question-circle info-icon icon-only"></i>
+      </a>
   </span>
+</div>
+<div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
   <p>
-    {{ ADCtrl.dataSet.file_count }} files
-    <div ng-if="ADCtrl.dataSet.file_size > 0">
-     - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
-    </div>
-  </p>
-
-  <div class="refinery-header">
-    <span class="refinery-header-left">
-      <h3>History</h3>
-    </span>
-  </div>
-  <p>
-    Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
-    Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
-    Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+    <a href="{{ADCtrl.fileStoreItem.datafile}}">
+    {{ADCtrl.fileStoreItem.datafile | basePathFilter}}
+    </a>
+    - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
 </div>
+<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile)">
+  <p class="emphasized">Not available.</p>
+</div>
+<div ng-if="ADCtrl.dataSet.pre_isa_archive">
+  <span
+     class="p-l-1"
+     ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+     ng-if="ADCtrl.dataSet.is_owner">
+     <a
+      class="refinery-base btn btn-default"
+      ng-class="{disabledLink: !ADCtrl.dataSet.is_clean}"
+      href="/data_set_manager/import/?data_set_title={{ ADCtrl.dataSet.title }}/#/?data_set_uuid={{ ADCtrl.dataSet.uuid }}">
+      Revise Metadata
+    </a>
+  </span>
+  <span class="p-l-1-3" ng-if="ADCtrl.dataSet.is_owner">
+    <a
+      popover-placement="right"
+      uib-popover-html="'Redirects to the Data Set Upload page where you
+      can upload revised metadata. <strong>Note:</strong> Once you have run
+      an analysis or visualization on a data set, its metadata can no longer be revised.'"
+      popover-title="Revise Metadata"
+      popover-trigger="'outsideClick'"
+      popover-append-to-body="true">
+        <i class="fa fa-question-circle info-icon icon-only"></i>
+    </a>
+  </span>
+</div>
 
+<span class="refinery-subheader p-t-1-2">
+  <h3>Data Files</h3>
+</span>
+<p>
+  {{ ADCtrl.dataSet.file_count }} files
+  <span ng-if="ADCtrl.dataSet.file_size > 0">
+   using {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+  </span>
+</p>
+
+<rp-data-set-about-sharing></rp-data-set-about-sharing>
+
+<div class="refinery-header">
+  <span class="refinery-header-left">
+    <h3>History</h3>
+  </span>
+</div>
+<p>
+  Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
+  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date | date:'medium' }}</span>.
+  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
+</p>
+
+<div
+  id="isaTabImportForm"
+  ng-if="(ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change') &&
+  (ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl
+  .fileStoreItem.datafile) && !ADCtrl.dataSet.is_owner && ADCtrl.loggedIn">
+  <button
+    id="isa-import-button"
+    class="refinery-base btn btn-default"
+    ng-click="ADCtrl.importDataSet(ADCtrl.dataSet.uuid)">
+    Import into Own Space
+  </button>
+  <a
+      popover-placement="right"
+      uib-popover-html="'Analyses run on a data set generate derived results
+       that become part of the data set: For this reason you can not
+      run analyses on a data set you do not own. However, you are free to create your own copy of the original data set.'"
+      popover-title="Import this data set into your own space"
+      popover-trigger="'outsideClick'"
+      popover-append-to-body="true"
+      class="p-l-1-3">
+      <i class="fa fa-question-circle info-icon icon-only"></i>
+  </a>
+
+  <span class="text-warning p-l-1" ng-if="ADCtrl.dataSetImportStatus=='RUNNING'">
+    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+    Data set is importing.
+  </span>
+  <span class="text-success p-l-1" ng-if="ADCtrl.dataSetImportStatus=='SUCCESS'">
+    <i class="fa fa-check-square-o" aria-hidden="true"></i>
+    Data set imported.
+  </span>
+  <span class="text-danger p-l-1" ng-if="ADCtrl.dataSetImportStatus=='FAIL'">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+    Data set failed to import.
+  </span>
+</div>

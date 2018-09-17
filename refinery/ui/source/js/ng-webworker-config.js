@@ -2,9 +2,10 @@
 
 angular
   .module('ngWebworker')
-  .config(function (WebworkerProvider) {
+  .config(['WebworkerProvider', function (WebworkerProvider) {
     WebworkerProvider.setHelperPath(
-      '/static/vendor/ng-webworker/src/worker_wrapper.min.js'
+      // if this line is removed getStaticUrl can be converted to a service
+      window.getStaticUrl('vendor/ng-webworker/src/worker_wrapper.min.js')
     );
 
     // Do not use the helper by default. This will anyway be overwritten by the
@@ -13,5 +14,4 @@ angular
 
     // Transfer ownership doesn't work with the worker_wrapper helper.
     WebworkerProvider.setTransferOwnership(true);
-  }
-);
+  }]);

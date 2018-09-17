@@ -1,25 +1,27 @@
 'use strict';
 
 function AboutSharingCtrl (
-  dataSetAboutFactory,
+  dataSetPermsService,
+  userService,
   $scope,
   $location,
   $window,
-  $log
+  $log,
+  _
   ) {
   var vm = this;
-  vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-  vm.ownerName = dataSetAboutFactory.ownerName;
-  vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
+  vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+  vm.groupList = dataSetPermsService.groupList;
+  vm.ownerName = dataSetPermsService.ownerName;
 
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
 
-    dataSetAboutFactory
+    dataSetPermsService
       .getDataSetSharing(dataSetUuid)
       .then(function () {
-        vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-        vm.groupList = dataSetAboutFactory.dataSetSharing.share_list;
+        vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+        vm.groupList = dataSetPermsService.groupList;
         vm.refreshOwnerName(vm.dataSetSharing.owner);
       }, function (error) {
         $log.error(error);
@@ -27,13 +29,14 @@ function AboutSharingCtrl (
   };
 
   vm.refreshOwnerName = function (userUuid) {
-    dataSetAboutFactory
-      .getOwnerName(userUuid)
-      .then(function () {
-        vm.ownerName = dataSetAboutFactory.ownerName;
-      }, function (error) {
-        $log.error(error);
-      });
+    userService.get(userUuid).then(function (response) {
+      if (_.has(response, 'fullName') && response.fullName) {
+        dataSetPermsService.ownerName = response.fullName;
+      } else if (_.has(response, 'userName') && response.userName) {
+        dataSetPermsService.ownerName = response.userName;
+      }
+      vm.ownerName = dataSetPermsService.ownerName;
+    });
   };
 
   vm.refreshDataSetSharing();
@@ -44,11 +47,13 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutSharingCtrl',
   [
-    'dataSetAboutFactory',
+    'dataSetPermsService',
+    'userService',
     '$scope',
     '$location',
     '$window',
     '$log',
+    '_',
     AboutSharingCtrl
   ]);
 

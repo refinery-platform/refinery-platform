@@ -1,0 +1,19 @@
+{
+	"additional_object_property": {
+		"this_can_be_anything": "COFFEE is great"
+	},
+	"parameters": [
+		{
+			"name": "stdout",
+			"description": "Whether or not to write to stdout.",
+			"value_type": "BOOLEAN",
+			"default_value": false
+		},
+		{
+			"name": "exit_code",
+			"description": "The exit_code for this tool step",
+			"value_type": "INTEGER",
+			"default_value": 0
+		}
+	]
+}

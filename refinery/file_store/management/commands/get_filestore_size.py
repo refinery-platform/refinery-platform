@@ -1,12 +1,11 @@
-'''
-Created on Nov 10, 2015
+from __future__ import absolute_import
 
-@author: scott
-'''
 import logging
 from subprocess import check_output
+
 from django.core.management.base import BaseCommand
-from file_store.models import FileStoreItem
+
+from ...models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class Command(BaseCommand):
     Provides user with the Size of the FileStore
     """
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **options):
         # Format the FileStore size from bytes
         def sizeof_fmt(num, suffix='B'):
             for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:

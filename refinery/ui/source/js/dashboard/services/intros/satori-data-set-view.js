@@ -110,7 +110,7 @@ function DashboardIntrosDataSetView (
           '<em>surrogate</em>, showing the data set\'s title, sharing ' +
           'information, and a button to add the data set to the data cart.' +
           '<br/><br/>A click on the title will open the <em>data set summary ' +
-          'page</em> and a click on <span class="fa fa-table"></span> will ' +
+          'page</em> and a click on <span class="fa fa-folder-open-o"></span> will ' +
           'bring you directly to the main data set page.'
       },
       {

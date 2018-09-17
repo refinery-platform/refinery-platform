@@ -1,0 +1,92 @@
+<div class="modal-header">
+  <h3>Permission Editor</h3>
+  <div class="modal-description">
+    <h4>
+      Select groups you would like to access this data set.
+      To share this data set with a new group or add a user
+      to a group, go to <a href="/collaboration"> the collaboration page.</a>
+      <rp-sharing-help-popover></rp-sharing-help-popover>
+    </h4>
+    <p>
+      <strong>Read-meta-only permissions</strong> allows other group members to
+      view the data set's meta data and the results of all analyses executed
+      on the data.
+      <br>
+      <strong>Read-only permissions</strong> allows other group members to view
+      the data set and the results of all analyses executed on the data.
+      <br>
+     <strong>Modify permissions</strong> additionally allows other group
+      members to run analyses on the data that will become part of the data set.
+      <br>
+      <strong>None</strong> revokes all permissions.
+    </p>
+    <p>
+      <em>Note that by sharing this data set with the "Public" group, anyone
+        who visits the site will be able to view this data set.</em>
+    </p>
+  </div>
+</div>
+<div class="modal-body">
+    <div ng-if="modal.permissions.groups.length > 0" ng-cloak>
+        <table class="table table-hover" id="permission-table" >
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>None</th>
+              <th>Read-meta-only</th>
+              <th>Read-only</th>
+              <th>Modify</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="group in modal.permissions.groups track by $index">
+              <td>
+                <a href="/collaboration/#/{{ group.uuid }}">
+                  {{ group.name }}
+                </a>
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="none"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="read_meta"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="read"
+                  ng-model="group.permission">
+              </td>
+              <td ng-if="group.id !== 100">
+                <input
+                  type="radio"
+                  value="edit"
+                  ng-model="group.permission">
+              </td>
+              <td ng-if="group.id === 100">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+</div>
+<div class="modal-footer">
+  <div class="float-left">
+    <div class="refinery-spinner" ng-if="modal.isSaving"></div>
+  </div>
+  <div class="float-right">
+    <button class="refinery-base btn btn-default" ng-click="modal.cancel()">
+        Cancel
+    </button>
+    <button class="btn btn-primary" ng-click="modal.save()"
+            ng-if="modal.permissions.groups.length > 0" ng-cloak>
+        Save
+    </button>
+  </div>
+</div>

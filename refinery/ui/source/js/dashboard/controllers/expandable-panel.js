@@ -5,6 +5,8 @@ function ExpandablePanelCtrl (
   $animateCss,
   $element,
   $log,
+  $timeout,
+  $window,
   $,
   pubSub,
   dashboardExpandablePanelService,
@@ -44,7 +46,12 @@ function ExpandablePanelCtrl (
         $element
           .addClass('full-width')
           .removeAttr('style');
-        pubSub.trigger('expandFinished');
+
+        $window.requestAnimationFrame(function () {
+          $timeout(function () {
+            pubSub.trigger('expandFinished');
+          }, 0);
+        });
       })
       .catch(function (e) {
         $log.error(e);
@@ -73,8 +80,14 @@ function ExpandablePanelCtrl (
         $element
           .removeClass('full-width')
           .removeAttr('style');
-        pubSub.trigger('collapseFinished');
-        dashboardWidthFixerService.trigger('resetter');
+
+
+        $window.requestAnimationFrame(function () {
+          $timeout(function () {
+            pubSub.trigger('collapseFinished');
+            dashboardWidthFixerService.trigger('resetter');
+          }, 0);
+        });
       })
       .catch(function (e) {
         $log.error(e);
@@ -89,6 +102,8 @@ angular
     '$animateCss',
     '$element',
     '$log',
+    '$timeout',
+    '$window',
     '$',
     'pubSub',
     'dashboardExpandablePanelService',

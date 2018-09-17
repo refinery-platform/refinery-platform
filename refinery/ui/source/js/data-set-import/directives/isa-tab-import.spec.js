@@ -10,7 +10,6 @@ describe('DataSetImport.directive.isaTabImport: unit tests', function () {
     module('refineryDataSetImport');
 
     var $compile;
-    // var $controller;
     var $rootScope;
 
     inject(function (

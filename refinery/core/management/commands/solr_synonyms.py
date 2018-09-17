@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 import time
-from optparse import make_option
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -16,27 +15,26 @@ class Command(BaseCommand):
     identifier will be removed.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument('identifier')
+        parser.add_argument('synonyms')
+        parser.add_argument(
             '-i',
             '--id',
             action='store',
             dest='identifier',
-            type='string',
             help='Synonyms identifier. Used for proper updating or deleting.' +
                  'Note: identifiers are caseinsensitive!' +
                  'E.g. "MyFancyAnimalSynonymCollection" or "MeSH"'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '-s',
             '--synonyms',
             action='store',
             dest='synonyms',
-            type='string',
             help='Path to a file containing Solr compatible synonyms.'
                  'E.g. /vagrant/transfer/myFancySynonymCollection.txt'
-        ),
-    )
+        )
 
     def handle(self, *args, **options):
         if not settings.SOLR_SYNONYMS:
@@ -47,7 +45,7 @@ class Command(BaseCommand):
             sys.stderr.write('Identifier file not given')
             exit()
 
-        id = options['identifier'].lower()
+        identifier = options['identifier'].lower()
         update = False
         removal = False if options['synonyms'] else True
 
@@ -67,7 +65,7 @@ class Command(BaseCommand):
                 for line in f:
                     if line[:1] == '#':
                         # Do not carry over existing synonyms of the same ID
-                        if line.rstrip() == '# ID: ' + id:
+                        if line.rstrip() == '# ID: ' + identifier:
                             rewrite = False
                             update = True
                         else:
@@ -81,7 +79,7 @@ class Command(BaseCommand):
             # Add new or updated synonyms
             if options['synonyms']:
                 with open(options['synonyms'], 'r') as f:
-                    tmp.write('# ID: ' + id + '\n')
+                    tmp.write('# ID: ' + identifier + '\n')
                     for line in f:
                         tmp.write(line)
 

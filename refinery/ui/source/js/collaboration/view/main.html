@@ -1,4 +1,4 @@
-<div id="group-collab">
+<div id="group-collab" class="refinery-panel-set">
   <div class="col-md-4">
     <div ng-controller="collaborationTutorialCtrl2">
     <div ng-intro-options="collabIntroOptions"
@@ -15,13 +15,17 @@
       <div class="refinery-header">
         <span class="refinery-header-left">
           <h3>
-            <i class="m-r-1-4 fa
-            fa-users"></i>Groups
-          </h3>
+            <i class="m-r-1-4 fa fa-users"></i>Groups
+          </h3> <rp-sharing-help-popover></rp-sharing-help-popover>
         </span>
         <span class="refinery-header-right">
-          <a ng-href="#/{{collab.activeGroup.uuid}}/" ng-click="collab
-          .openAddGroup()"><i class="fa fa-plus"></i></a>
+          <a
+            ng-href="#/{{collab.activeGroup.uuid}}/"
+            ng-click="collab.openAddGroup()"
+            class="no-underline btn priority-button">
+            <i class="fa fa-plus-circle"></i>
+            Add
+          </a>
         </span>
       </div>
 
@@ -68,8 +72,13 @@
           </h3>
         </span>
         <span ng-if="collab.activeGroup.can_edit" class="refinery-header-right">
-          <a href="#/{{ collab.activeGroup.uuid }}/" ng-click="collab
-          .openEmailInvite()"><i class="fa fa-plus"></i></a>
+          <a
+            href="#/{{ collab.activeGroup.uuid }}/"
+            ng-click="collab.openEmailInvite(collab.activeGroup)"
+            class="no-underline btn priority-button">
+            <i class="fa fa-plus-circle"></i>
+            Invite
+          </a>
         </span>
       </div>
 
@@ -98,7 +107,8 @@
                 <a
                   ng-if="collab.activeGroup.can_edit"
                   ng-href="#/{{collab.activeGroup.uuid}}/"
-                  ng-click="collab.openMemberEditor(member, collab.activeGroup.member_list.length )">
+                  ng-click="collab.openMemberEditor(member, collab
+                  .activeGroup.member_list.length, collab.activeGroup)">
                   <i class="fa fa-cog"></i>
                 </a>
               </td>

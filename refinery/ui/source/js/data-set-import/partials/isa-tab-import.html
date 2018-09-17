@@ -1,10 +1,10 @@
 <div id="isa-tab-import-form">
   <div id="dataUploadTutorialStep6">
-   <div>
-    <p>
-      Please provide <code>.zip</code> archive containing an investigation, study, and assay
-      file.
-    </p>
+    <div>
+      <p>
+        Please provide <code>.zip</code> archive containing an investigation, study, and assay
+        file.
+      </p>
     </div>
 
     <div class="relative">
@@ -31,7 +31,17 @@
         ng-if="isaTabImport.isErrored">
         <div class="text-centered">
           <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-          Oh no! We apologize. Something went terribly wrong. Please call your admin.
+          <span ng-if="isaTabImport.errorMessage">
+             {{ isaTabImport.errorMessage }}
+          </span>
+            <span ng-if="!isaTabImport.errorMessage">
+              Import of this data set failed.
+          </span>
+          <p>
+            <a class="pointer" ng-click="isaTabImport.closeError()">
+              Return to IsaTab Import Form
+            </a>
+          </p>
         </div>
       </div>
 
@@ -48,9 +58,10 @@
         <button
           class="icon-only"
           ng-if="isaTabImport.file"
+          ng-disabled="isaTabImport.fileStatus === 'running'"
           ng-click="isaTabImport.clearFile()">
           <i
-            class="fa fa-times-circle"
+            class="refinery-warning fa fa-times-circle"
             aria-hidden="true"
             title="Clear selected file"
             refinery-tooltip
@@ -77,16 +88,54 @@
           ng-disabled="!!isaTabImport.file">
       </label>
 
+      <div class="refinery-subheader m-t-1">
+        <h1 ng-show="!isaTabImport.isMetaDataRevision">Complete Submission</h1>
+        <h1 ng-show="isaTabImport.isMetaDataRevision">Complete Metadata Revision Submission</h1>
+      </div>
+      <div class="row m-t-1-4 m-b-1-4">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+          <div class="m-t-1 m-b-1">
+            Would you like to upload data files?
+            <label class="p-l-1-2">
+              <input
+                ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile"
+                type="radio"
+                ng-value="false"
+                ng-model="isaTabImport.showFileUpload"
+                checked>
+              No
+            </label>
+            <label class="p-l-1-2">
+              <input
+                ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile"
+                type="radio"
+                ng-value="true"
+                ng-model="isaTabImport.showFileUpload">
+              Yes
+            </label>
+          </div>
+          <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload && isaTabImport.file || isaTabImport.urlToFile">
+            <rp-file-upload is-node-update="false" ng-if="!isaTabImport.useS3"></rp-file-upload>
+            <rp-file-upload-s3 is-node-update="false" ng-if="isaTabImport.useS3"></rp-file-upload-s3>
+          </div>
+        </div>
+      </div>
       <button
         id="isa-import-button"
-        class="block refinery-base btn btn-default"
-        ng-click="isaTabImport.startImport()"
-        ng-if="isaTabImport.file || isaTabImport.urlToFile"
-        ng-disabled="
-          isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
-        ">
+        class="block refinery-base btn btn-default float-left"
+        ng-click="isaTabImport.confirmImport()"
+        ng-disabled="(!isaTabImport.file && !isaTabImport.urlToFile) ||
+        isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
+         || isaTabImport.fileStatus !== 'none'">
         Start Import
       </button>
+      <span class="m-l-1 float-left" ng-if="isaTabImport.showFileUpload">
+        <span class="text-warning"
+          ng-if="isaTabImport.fileStatus==='queuing'">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          All data files have not been uploaded.
+        </span>
+      </span>
     </div>
   </div>
 </div>

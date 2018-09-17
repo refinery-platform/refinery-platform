@@ -3,68 +3,13 @@ class refinery {
 # for better performance
 sysctl { 'vm.swappiness': value => '10' }
 
-# to avoid empty ident name not allowed error when using git
-user { $app_user: comment => $app_user }
+user { $::app_user: ensure => present, }
 
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
   source => "${deployment_root}/ssh-config",
   owner  => $app_user,
   group  => $app_group,
-}
-
-class { 'python':
-  version    => 'system',
-  pip        => true,
-  dev        => true,
-  virtualenv => true,
-  gunicorn   => false,
-}
-
-class venvdeps {
-  package { 'build-essential': }
-  package { 'libncurses5-dev': }
-  package { 'libldap2-dev': }
-  package { 'libsasl2-dev': }
-  package { 'libffi-dev': }  # for SSL modules
-}
-include venvdeps
-
-file { "/home/${app_user}/.virtualenvs":
-  # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
-  ensure => directory,
-  owner  => $app_user,
-  group  => $app_group,
-}
-->
-python::virtualenv { $virtualenv:
-  ensure  => present,
-  owner   => $app_user,
-  group   => $app_group,
-  require => [ Class['venvdeps'], Class['postgresql::lib::devel'] ],
-}
-~>
-python::requirements { $requirements:
-  virtualenv => $virtualenv,
-  owner      => $app_user,
-  group      => $app_group,
-}
-
-package { 'virtualenvwrapper': }
-->
-file_line { "virtualenvwrapper_config":
-  path    => "/home/${app_user}/.profile",
-  line    => "source /etc/bash_completion.d/virtualenvwrapper",
-  require => Python::Virtualenv[$virtualenv],
-}
-->
-file { "virtualenvwrapper_project":
-  # workaround for setvirtualenvproject command not found
-  ensure  => file,
-  path    => "${virtualenv}/.project",
-  content => "${django_root}",
-  owner   => $app_user,
-  group   => $app_group,
 }
 
 file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
@@ -87,13 +32,14 @@ file { "${django_root}/config/config.json":
 }
 ->
 exec { "migrate":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput --fake-initial",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
+  logoutput   => true,
   require     => [
-    Python::Requirements[$requirements],
-    Postgresql::Server::Db["refinery"]
+    Class['::refinery::python'],
+    Class['::refinery::postgresql']
   ],
 }
 ->
@@ -111,7 +57,7 @@ exec { "create_guest":
   user        => $app_user,
   group       => $app_group,
 }
-  ->
+->
 exec { "add_users_to_public_group":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
@@ -130,87 +76,6 @@ exec { "set_up_refinery_site_name":
 file { "/opt":
   ensure => directory,
 }
-
-class solr {
-  $solr_version = "5.3.1"
-  $solr_archive = "solr-${solr_version}.tgz"
-  $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
-
-  package { 'java':
-    name => 'openjdk-7-jdk',
-  }
-  exec { "solr_download":
-    command => "wget ${solr_url} -O ${solr_archive}",
-    cwd     => "/usr/local/src",
-    creates => "/usr/local/src/${solr_archive}",
-    path    => "/usr/bin",
-    timeout => 600,  # downloading can take a long time
-  }
-  ->
-  exec { "solr_extract_installer":
-    command => "tar -xzf ${solr_archive} solr-${solr_version}/bin/install_solr_service.sh --strip-components=2",
-    cwd     => "/usr/local/src",
-    creates => "/usr/local/src/install_solr_service.sh",
-    path    => "/bin",
-  }
-  ->
-  file { "${django_root}/solr/core/conf/solrconfig.xml":
-    ensure  => file,
-    content => template("${django_root}/solr/core/conf/solrconfig.xml.erb"),
-  }
-  ->
-  file { "${django_root}/solr/data_set_manager/conf/solrconfig.xml":
-    ensure  => file,
-    content => template("${django_root}/solr/data_set_manager/conf/solrconfig.xml.erb"),
-  }
-  ->
-  exec { "solr_install":  # also starts the service
-    command => "sudo bash ./install_solr_service.sh ${solr_archive} -u ${app_user}",
-    cwd     => "/usr/local/src",
-    creates => "/opt/solr-${solr_version}",
-    path    => "/usr/bin:/bin",
-    require => [ File["/opt"], Package['java'] ],
-  }
-  ->
-  file_line { "solr_config_home":
-    path  => "/var/solr/solr.in.sh",
-    line  => "SOLR_HOME=${django_root}/solr",
-    match => "^SOLR_HOME",
-  }
-  ->
-  file_line { "solr_config_log":
-    path  => "/var/solr/log4j.properties",
-    line  => "solr.log=${django_root}/log",
-    match => "^solr.log",
-  }
-  ~>
-  service { 'solr':
-    ensure     => running,
-    hasrestart => true,
-  }
-}
-include solr
-
-class solrSynonymAnalyzer {
-  $version = "2.0.0"
-  $url = "https://github.com/refinery-platform/solr-synonyms-analyzer/releases/download/v${version}/hon-lucene-synonyms.jar"
-
-  # Need to remove the old file manually as wget throws a weird
-  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
-  # already exists.
-
-  exec { "solr-synonym-analyzer-download":
-    command => "rm -f ${solr_lib_dir}/hon-lucene-synonyms.jar && wget -P ${solr_lib_dir} ${url}",
-    creates => "${solr_lib_dir}/hon-lucene-synonyms.jar",
-    path    => "/usr/bin:/bin",
-    timeout => 120,  # downloading can take some time
-    notify => Service['solr'],
-    require => Exec['solr_install'],
-  }
-}
-include solrSynonymAnalyzer
-
-
 
 include '::rabbitmq'
 
@@ -239,7 +104,7 @@ class ui {
   }
   ->
   package {
-    'bower': ensure => '1.7.7', provider => 'npm';
+    'bower': ensure => '1.8.2', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
@@ -281,7 +146,7 @@ class ui {
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
-    require     => Python::Requirements[$requirements],
+    require     => Class['::refinery::python'],
   }
 }
 include ui
@@ -301,7 +166,10 @@ file { "${django_root}/supervisord.conf":
 ->
 exec { "supervisord":
   command     => "${virtualenv}/bin/supervisord",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+  environment => [
+    "DJANGO_SETTINGS_MODULE=${::django_settings_module}",
+    "DOCKER_HOST=${::docker_host}"
+  ],
   cwd         => $django_root,
   creates     => "/tmp/supervisord.pid",
   user        => $app_user,

@@ -4,14 +4,31 @@
 {{ block.super }} - Group Invitation
 {% endblock %}
 
-{% block content %}
-<div>
-  {{message}}
+{% block subheader %}
+<div class="page-header">
+	<h1>Group Invitation</h1>
 </div>
+{% endblock %}
 
-<div>
-  Click here to view group information:
-  <br>
-  <a href="http://{{site}}/collaboration/#/{{ext_group.uuid}}/">View group information</a>
-</div>
+{% block content %}
+  <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+    <div class="row">
+      <div class="refinery-header">
+       <span class="refinery-header-left"><h3>Group Invitation</h3></span>
+      </div>
+      <div>
+        <p>{{message}}</p>
+      </div>
+
+      <div>
+        <p>
+          {% if ext_group.uuid %}
+            <a href="{{site}}/collaboration/#/{{ext_group.uuid}}/">View group information</a>
+          {% else %}
+            <a href="{{site}}/collaboration">View your groups</a>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
 {% endblock %}

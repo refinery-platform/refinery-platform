@@ -1,6 +1,6 @@
 'use strict';
 
-function userFactory ($q, $resource, settings) {
+function userFactory ($q, $resource, _, settings) {
   var userService = {};
   var userResource = $resource(
     settings.appRoot + settings.refineryApi + '/users/:uuid/',
@@ -45,17 +45,18 @@ function userFactory ($q, $resource, settings) {
   userService.get = function (uuid) {
     if (store[uuid] === undefined) {
       return getUserData(uuid).then(function (data) {
-        store[uuid] = {
-          affiliation: data.affiliation,
-          email: data.user.email,
-          firstName: data.user.first_name,
-          fullName: (data.user.first_name + ' ' + data.user.last_name).trim(),
-          lastName: data.user.last_name,
-          userId: data.user.id,
-          userName: data.user.username,
-          userProfileUuid: data.uuid
-        };
-
+        if (_.has(data, 'user')) {
+          store[uuid] = {
+            affiliation: data.affiliation,
+            email: data.user.email,
+            firstName: data.user.first_name,
+            fullName: (data.user.first_name + ' ' + data.user.last_name).trim(),
+            lastName: data.user.last_name,
+            userId: data.user.id,
+            userName: data.user.username,
+            userProfileUuid: data.uuid
+          };
+        }
         return store[uuid];
       });
     }
@@ -67,4 +68,4 @@ function userFactory ($q, $resource, settings) {
 
 angular
   .module('refineryApp')
-  .factory('userService', ['$q', '$resource', 'settings', userFactory]);
+  .factory('userService', ['$q', '$resource', '_', 'settings', userFactory]);

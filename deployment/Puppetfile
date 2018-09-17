@@ -3,13 +3,15 @@ forge "https://forgeapi.puppetlabs.com"
 mod 'puppet/nodejs', '2.1.0'
 mod 'puppetlabs-apache', '1.11.0'
 mod 'puppetlabs/apt', '2.3.0'
+mod 'puppetlabs/docker_platform', '2.2.1'
 mod 'puppetlabs/limits', '0.1.0'
 mod 'puppetlabs/lvm', '0.7.0'
-mod 'puppetlabs/postgresql', '4.8.0'
+mod 'puppetlabs/postgresql', '4.9.0'
 mod 'puppetlabs/rabbitmq', '5.6.0'
 mod 'puppetlabs/stdlib', '4.13.1'
+mod 'puppet-archive', '1.3.0'
 mod 'saz/timezone', '3.2.0'
-mod 'stankevich/python', '1.9.1'
+mod 'stankevich/python', '1.9.8'
 mod 'thias/sysctl', '1.0.2'
 
 mod 'refinery/refinery', :path => "refinery-modules/refinery"
