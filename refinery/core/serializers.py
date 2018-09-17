@@ -147,4 +147,4 @@ class EventSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_message(obj):
-        return str(obj)
+        return unicode(obj)
