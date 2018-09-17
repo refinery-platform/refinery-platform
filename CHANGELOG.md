@@ -1,5 +1,10 @@
 # Change Log
 
+## [v1.6.6.2](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.2) (2018-09-10)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6.1...v1.6.6.2)
+
+- This hotfix release resolves a bug in the events api caused by a str conversion.
+
 ## [v1.6.6.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.1) (2018-09-10)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6...v1.6.6.1)
 

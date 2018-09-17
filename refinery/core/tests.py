@@ -1580,8 +1580,8 @@ class EventTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(self.user)
-        self.pre_re = r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
-        self.post_re = r' data set Test DataSet - [0-9a-f-]+$'
+        self.pre_re = u'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
+        self.post_re = u' data set Test DataSet - [0-9a-f-]+$'
 
     def test_data_set_create(self):
         create_dataset_with_necessary_models()
@@ -1589,7 +1589,7 @@ class EventTests(TestCase):
         self.assertEqual(len(events), 1)
         self.assertRegexpMatches(
             str(events[0]),
-            self.pre_re + r'created data set Test DataSet - [0-9a-f-]+$'
+            self.pre_re + u'created data set Test DataSet - [0-9a-f-]+$'
         )
 
     # DataSetPermissionsUpdateTests covers data_set_permissions_change.
@@ -1628,13 +1628,13 @@ class EventTests(TestCase):
         events = Event.objects.all()
         self.assertEqual(len(events), 2)
         self.assertRegexpMatches(
-            str(events[0]),
-            self.pre_re + r'created' + self.post_re
+            unicode(events[0]),
+            self.pre_re + u'created' + self.post_re
         )
         self.assertRegexpMatches(
-            str(events[1]),
+            unicode(events[1]),
             self.pre_re +
-            r'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
+            u'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
             self.post_re
         )
 

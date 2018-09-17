@@ -2330,9 +2330,8 @@ class Event(models.Model):
         )
 
     def render_data_set_create(self):
-        return '{:%x %X}: {} created data set {}'.format(
-            self.date_time, self.user, self.data_set.name
-        )
+        return '{:%x %X}: {} created data set '.format(
+            self.date_time, self.user) + self.data_set.name
 
     # Sub-types for data sets:
     PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
