@@ -50,7 +50,7 @@ function WidthFixerFactory ($q, $timeout, _) {
       deferred.resolve();
     } else {
       // Try 5 more times and increase the waiting time.
-      if (_counter <= 5) {
+      if (_counter <= 20) {
         $timeout(function () {
           fixWidth(_counter)
             .then(deferred.resolve)

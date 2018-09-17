@@ -1,5 +1,6 @@
 <div id="launch-pad"
   class="col-md-4"
+  style="float: left;"
   refinery-expandable-panel>
   <div class="refinery-panel">
     <div class="refinery-header flex-c flex-ac flex-sb">
@@ -98,7 +99,7 @@
               <button
                 class="no-underline btn"
                 ng-click="dashboard.toggleDataSetsExploration()"
-                ng-if="dashboard.explorationEnabled && dashboard.settings.djangoApp.satoriDemo">
+                ng-if="dashboard.explorationEnabled && dashboard.settings.djangoApp.satoriDemo && dashboard.userIsAuthenticated">
                 <i class="fa fa-{{ dashboard.dataSetExploration ? 'arrow-circle-left' : 'compass' }}" title="Explore data sets"></i>
                 {{ dashboard.dataSetExploration ? 'Back Home' : 'Start Exploring' }}
               </button>

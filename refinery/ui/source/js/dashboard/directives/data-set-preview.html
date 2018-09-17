@@ -60,42 +60,6 @@
           Tour
         </button>
         <button
-          class="btn clickable spinnable"
-          title="Import this shared data set into your own space to run analyses"
-          ng-if="!preview.dataSetDetails.is_owner && preview.dataSetDetails.isa_archive && app.settings.djangoApp.userId != undefined"
-          ng-class="{
-            'disabled': preview.importStatus[preview.dataSetUuid].isDataSetReImporting,
-            'btn-success': preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess,
-            'btn-danger': preview.importStatus[preview.dataSetUuid].isDataSetReImportFail
-          }"
-          ng-disabled="preview.importDataSetStarted"
-          ng-click="preview.importDataSet()"
-          refinery-tooltip
-          refinery-tooltip-container="body"
-          refinery-tooltip-placement="top"
-          refinery-tooltip-delay-show="750"
-          refinery-tooltip-delay-hide="150"
-          refinery-tooltip-hide-when="preview.importDataSetStarted">
-          <div
-            class="refinery-spinner-bg"
-            ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImporting">
-            <div class="refinery-spinner"></div>
-          </div>
-          <span ng-if="!preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess &&
-                       !preview.importStatus[preview.dataSetUuid].isDataSetReImportFail">
-            <i class="fa fa-cloud-download" aria-hidden="true"></i>
-            Import into Own Space
-          </span>
-          <span ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess">
-            <i class="fa fa-check" aria-hidden="true"></i>
-            Import successful!
-          </span>
-          <span ng-if="preview.importStatus[preview.dataSetUuid].isDataSetReImportFail">
-            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-            Import failed!
-          </span>
-        </button>
-        <button
           class="btn"
           disabled="disabled"
           ng-if="preview.dataSetDetails.is_owner">

@@ -171,7 +171,7 @@ function VisWrapperCtrl (
     'http://purl.obolibrary.org/obo/MMO_0000000',
     'http://purl.obolibrary.org/obo/MPATH_0',
     // 'http://purl.obolibrary.org/obo/OBI_0000011',
-    // 'http://purl.obolibrary.org/obo/OBI_0000070',
+    'http://purl.obolibrary.org/obo/OBI_0000070',
     'http://purl.obolibrary.org/obo/OBI_0000272',
     'http://purl.obolibrary.org/obo/OBI_0100026', // Organism
     'http://purl.obolibrary.org/obo/PATO_0001236',

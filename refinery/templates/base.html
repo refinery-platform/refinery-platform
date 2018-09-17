@@ -71,6 +71,7 @@
 
 <body
   class="{{ SATORI_DEMO|yesno:"is-screenshot-ready,," }}"
+  style="min-width: 1000px"
   ng-app="{% block ng_app %}refineryApp{% endblock %}"
   ng-controller="AppCtrl as app"
   ng-class="{ 'repo-mode': app.repoMode }"
