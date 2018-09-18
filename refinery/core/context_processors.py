@@ -67,5 +67,6 @@ def extra_context(context):
         "MEDIA_BUCKET": settings.MEDIA_BUCKET,
         "UPLOAD_BUCKET": settings.UPLOAD_BUCKET,
         "REFINERY_DEPLOYMENT_PLATFORM": settings.REFINERY_DEPLOYMENT_PLATFORM,
-        "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS
+        "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS,
+        "GOOGLE_RECAPTCHA_SITE_KEY": settings.GOOGLE_RECAPTCHA_SITE_KEY,
     }
