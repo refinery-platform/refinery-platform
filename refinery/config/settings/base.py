@@ -644,3 +644,8 @@ MIGRATION_MODULES = {
 }
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"
+
+# Note that the defaults for the below two recaptcha settings in
+# config.json.erb are only valid for our development IP (192.168.50.50)
+GOOGLE_RECAPTCHA_SITE_KEY = get_setting("GOOGLE_RECAPTCHA_SITE_KEY")
+GOOGLE_RECAPTCHA_SECRET_KEY = get_setting("GOOGLE_RECAPTCHA_SECRET_KEY")
