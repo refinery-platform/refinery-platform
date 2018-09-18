@@ -928,6 +928,7 @@ class AnalysesViewSet(APIView):
 
 
 class CustomRegistrationView(RegistrationView):
+    success_url = "registration_complete"
 
     def register(self, request):
         """
@@ -977,13 +978,6 @@ class CustomRegistrationView(RegistrationView):
                                      request=request)
         return new_user
 
-    def get_success_url(self, user):
-        """
-        Return the name of the URL to redirect to after successful
-        user registration.
-
-        """
-        return ('registration_complete', (), {})
 
 
 class OpenIDToken(APIView):
