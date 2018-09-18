@@ -101,12 +101,19 @@
 			<p>
         {{ form.spam_filter }}
       </p>
-
+      <script src='https://www.google.com/recaptcha/api.js'></script>
+      {% if recaptcha_error_message %}
+			  <p class="errors">
+          {{ recaptcha_error_message }}
+        </p>
+			{% endif %}
+      <div class="g-recaptcha" data-sitekey={{ GOOGLE_RECAPTCHA_SITE_KEY }}></div>
+      <br>
 			<p class="submit"><input class="refinery-base btn btn-default"
         type="submit"
-        value="Register"></p>
-		</form>
-	</div>
+        value="Register">
+      </p>
+	</form>
 </div>
 {% endblock %}
 
