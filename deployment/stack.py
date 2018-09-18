@@ -132,7 +132,7 @@ def make_template(config, config_yaml):
     )
 
     rds_properties = {
-        "AllocatedStorage": "5",
+        "AllocatedStorage": "10",
         "AutoMinorVersionUpgrade": False,
         "BackupRetentionPeriod": "15",
         "CopyTagsToSnapshot": True,
