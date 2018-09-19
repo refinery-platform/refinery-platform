@@ -539,11 +539,6 @@ class VisualizationTool(Tool):
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
-    def _check_max_running_containers(self):
-        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(self.django_docker_client.list()) >= max_containers:
-            raise VisualizationToolError('Max containers')
-
     def _get_detailed_nodes_dict(self, node_uuid_list,
                                  require_valid_urls=False):
         """
@@ -603,7 +598,6 @@ class VisualizationTool(Tool):
 
     def launch(self):
         """Launch a visualization-based Tool"""
-        self._check_max_running_containers()
         self._check_input_node_limit()
 
         # Pulls docker image if it doesn't exist yet, and launches container

@@ -614,7 +614,6 @@ TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
 # https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
-DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 # Time in seconds to wait before killing unused visualization
 DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60

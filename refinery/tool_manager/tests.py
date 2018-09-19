@@ -3686,15 +3686,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             assertions
         )
 
-    @override_settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1)
-    def test_max_containers(self):
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
-        self.assertNotIn("Max containers", self.post_response.content)
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True, create_unique_name=True)
-        self.assertIn("Max containers", self.post_response.content)
-
     def test__get_launch_parameters(self):
         def assertions(tool):
             self.assertEqual(
