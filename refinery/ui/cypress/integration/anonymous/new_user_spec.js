@@ -2,11 +2,6 @@ describe('New user', function() {
   var username;
   before(function() {
     username = 'cypress_' + Date.now();
-    cy.django_shell(
-        'from django.conf import settings; ' +
-        'settings.GOOGLE_RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; ' +
-        'settings.GOOGLE_RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; '
-    );
   });
 
   it('Account creation works', function() {
