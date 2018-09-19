@@ -647,7 +647,7 @@ REFINERY_VISUALIZATION_REGISTRY = \
 
 # The default GOOGLE_RECAPTCHA values below are only valid for testing/dev
 # environments (They don't actually validate registering users)
-# On will need to follow the instructions here: []() to get proper API keys.
+# One will need to follow the instructions here: []() to get proper API keys.
 GOOGLE_RECAPTCHA_SITE_KEY = get_setting(
     "GOOGLE_RECAPTCHA_SITE_KEY",
     default="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
