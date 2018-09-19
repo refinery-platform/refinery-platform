@@ -188,6 +188,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     parameters = models.ManyToManyField(Parameter)
     image_name = models.CharField(max_length=255, blank=True)
+    mem_reservation_mb = models.IntegerField()
     annotation = models.TextField()
     workflow = models.ForeignKey(Workflow, null=True)
 
@@ -535,6 +536,7 @@ class VisualizationTool(Tool):
     def create_container_spec(self):
         return DockerContainerSpec(
             image_name=self.tool_definition.image_name,
+            mem_reservation_mb=self.tool_definition.mem_reservation_mb,
             container_name=self.container_name,
             labels={self.uuid: ToolDefinition.VISUALIZATION},
             extra_directories=self.tool_definition.get_extra_directories()
