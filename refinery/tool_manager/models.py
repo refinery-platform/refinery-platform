@@ -320,7 +320,8 @@ class Tool(OwnableResource):
             DockerClientSpec(
                 settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
                 input_json_url=get_absolute_url(self.container_input_json_url)
-            )
+            ),
+            mem_limit_mb=settings.DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB
         )
 
     @property

@@ -22,6 +22,7 @@ $ui_app_root = "${django_root}/ui"
 $solr_data_set_manager_data = "${data_dir}/solr/data_set_manager"
 $solr_core_data = "${data_dir}/solr/core"
 $django_docker_engine_data_dir = "${data_dir}/django-docker-engine-data"
+$django_docker_engine_mem_limit_mb = 'TODO: Based on image type'
 
 $deployment_platform = 'aws'
 
