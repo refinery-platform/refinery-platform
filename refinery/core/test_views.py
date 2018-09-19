@@ -1095,12 +1095,6 @@ class EventApiV2Tests(APIV2TestCase):
 
 
 class CustomRegistrationViewTests(TestCase):
-    @override_settings(
-        GOOGLE_RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-    )
-    @override_settings(
-        GOOGLE_RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-    )
     def test_user_registration_successful_recaptcha(self):
         username = "new-test-user"
         password = make_password('password')
@@ -1119,6 +1113,8 @@ class CustomRegistrationViewTests(TestCase):
         self.assertTrue(response.wsgi_request.recaptcha_is_valid)
         self.assertIsNotNone(User.objects.get(username=username))
 
+    @override_settings(GOOGLE_RECAPTCHA_SITE_KEY="invalid_site_key")
+    @override_settings(GOOGLE_RECAPTCHA_SECRET_KEY="invalid_secret_key")
     def test_user_registration_unsuccessful_recaptcha(self):
         username = "new-test-user"
         password = make_password('password')
@@ -1134,6 +1130,7 @@ class CustomRegistrationViewTests(TestCase):
                 "password2": password
             }
         )
+        self.assertEqual(400, response.status_code)
         self.assertFalse(response.wsgi_request.recaptcha_is_valid)
         with self.assertRaises(User.DoesNotExist):
             User.objects.get(username=username)
