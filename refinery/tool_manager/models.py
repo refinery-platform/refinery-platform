@@ -188,7 +188,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     parameters = models.ManyToManyField(Parameter)
     image_name = models.CharField(max_length=255, blank=True)
-    mem_reservation_mb = models.IntegerField()
+    mem_reservation_mb = models.IntegerField(default=10)
     annotation = models.TextField()
     workflow = models.ForeignKey(Workflow, null=True)
 
