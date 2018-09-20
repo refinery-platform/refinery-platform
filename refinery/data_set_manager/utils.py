@@ -44,23 +44,6 @@ def uniquify(seq):
     return set.keys()
 
 
-def _get_node_attributes_recursion(node):
-    attributes = []
-
-    for attribute in node.attribute_set.all():
-        attributes.append({
-            "type": attribute.type,
-            "subtype": attribute.subtype
-        })
-    try:
-        parent = node.parents.all()[0]
-        attributes.extend(_get_node_attributes_recursion(parent))
-    except:
-        pass
-
-    return attributes
-
-
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment
 # graph follow the same sequence of node types
