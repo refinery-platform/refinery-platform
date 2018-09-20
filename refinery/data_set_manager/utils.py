@@ -242,50 +242,6 @@ def _retrieve_nodes(
     return nodes
 
 
-# this method is obsolete - do not use!
-def get_matrix(node_type, study_uuid, assay_uuid=None,
-               ontology_attribute_fields=False):
-    nodes = _retrieve_nodes(study_uuid, assay_uuid, ontology_attribute_fields)
-    results = {}
-    results["meta"] = {}
-    results["data"] = {}
-    results["meta"]["study"] = study_uuid
-    results["meta"]["assay"] = assay_uuid
-    results["meta"]["attributes"] = None
-    results["meta"]["type"] = node_type
-    attribute_count = 0
-
-    for key in nodes:
-        if nodes[key]["type"] == node_type:
-            # copy a subset of the node model attributes
-            results["data"][nodes[key]["uuid"]] = {
-                k: nodes[key].copy()[k] for k in ("name", "file_uuid")}
-            # get the name of the nearest assay node predecessor
-            results["data"][nodes[key]["uuid"]]["assay"] = _get_assay_name(
-                nodes, key)
-            # initialize attribute list
-            results["data"][nodes[key]["uuid"]]["attributes"] = []
-            # save attributes (attribute[1], etc. are based on
-            # Attribute.ALL_FIELDS
-            for attribute in _get_parent_attributes(nodes, key):
-                results["data"][nodes[key]["uuid"]]["attributes"].append(
-                    attribute[3])  # 3 = value
-                if attribute[4] is not None:
-                    results["data"][nodes[key]["uuid"]]["attributes"][-1] += \
-                        " " + attribute[4]  # 4 = value unit
-            # store attribute labels in meta section (only for the first node
-            # -> for all further nodes the assumption is that they have the
-            # same attribute list)
-            if results["meta"]["attributes"] is None:
-                results["meta"]["attributes"] = []
-                for attribute in _get_parent_attributes(nodes, key):
-                    results["meta"]["attributes"].append(
-                        {"type": attribute[1], "subtype": attribute[2]})
-            attribute_count += len(
-                results["data"][nodes[key]["uuid"]]["attributes"])
-    return results
-
-
 def _create_annotated_node_objs(
         bulk_list=[],
         node=None,
