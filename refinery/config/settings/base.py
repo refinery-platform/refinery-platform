@@ -644,3 +644,9 @@ MIGRATION_MODULES = {
 }
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"
+
+# The GOOGLE_RECAPTCHA values below are only valid for testing/dev
+# environments (They don't actually validate registering users)
+# See: https://developers.google.com/recaptcha/docs/faq
+GOOGLE_RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+GOOGLE_RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
