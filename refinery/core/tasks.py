@@ -5,12 +5,10 @@ from django.db.models.fields.related import ForeignKey
 
 from celery.task import task
 
-from data_set_manager.models import Investigation, Study
-from data_set_manager.tasks import annotate_nodes
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file
 
-from .models import DataSet, InvestigationLink, SiteStatistics
+from .models import SiteStatistics
 
 logger = logging.getLogger(__name__)
 
