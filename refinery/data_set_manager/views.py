@@ -39,7 +39,8 @@ from file_store.models import (FileStoreItem, generate_file_source_translator,
 
 from file_store.tasks import download_file, import_file
 
-from .models import Assay, AttributeOrder, Node, Study
+from .models import (AnnotatedNode, Assay, AttributeOrder, Node,
+                     Study)
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer)
 from .single_file_column_parser import process_metadata_table
@@ -1123,6 +1124,16 @@ class NodeViewSet(APIView):
               type: string
               paramType: form
               required: false
+            - name: attribute_name
+              description: solr name for the attribute
+              type: string
+              paramType: form
+              required: false
+            - name: attribute_value
+              description: value for the attribute
+              type: string
+              paramType: form
+              required: false
     ...
     """
     http_method_names = ['patch']
@@ -1140,6 +1151,8 @@ class NodeViewSet(APIView):
     def patch(self, request, uuid):
         node = self.get_object(uuid)
         new_file_uuid = request.data.get('file_uuid')
+        attribute_name = request.data.get('attribute_solr_name')
+        attribute_value = request.data.get('attribute_value')
         data_set = node.study.get_dataset()
 
         if not data_set.is_clean():
@@ -1153,7 +1166,6 @@ class NodeViewSet(APIView):
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
             if new_file_uuid == '':
-
                 try:
                     file_store_item = FileStoreItem.objects.get(
                         uuid=node.file_uuid
@@ -1170,10 +1182,96 @@ class NodeViewSet(APIView):
                 return Response(
                     NodeSerializer(node).data, status=status.HTTP_200_OK
                 )
+            elif attribute_name and attribute_value:
+                # for now only handling non-derived nodes due to the
+                # complexity of figure out where the source node is
+                if not node.is_derived():
+                    # this should be optimized
+                    start_nodes = _get_path_start_nodes(node)
+                    # traverse down start_node path
+                    nodes_to_check = start_nodes
+                    while len(nodes_to_check) > 0:
+                        current_node = nodes_to_check.pop()
+                        _update_node(current_node,
+                                     attribute_name,
+                                     attribute_value)
+                        children_nodes_uuids = current_node.get_children()
+                        if len(children_nodes_uuids) > 0:
+                            for node_uuid in children_nodes_uuids:
+                                try:
+                                    child_node = Node.objects.get(
+                                        uuid=node_uuid
+                                    )
+                                except (Node.DoesNotExist,
+                                        Node.MultipleObjectsReturned) as e:
+                                    logger.error(e)
+                                else:
+                                    if child_node not in nodes_to_check:
+                                        nodes_to_check.append(child_node)
+
+                    # update solr index for everyone
+                    return Response(
+                        NodeSerializer(node).data, status=status.HTTP_200_OK
+                    )
+
             return Response('Currently, you can only remove node files.',
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+
+def _get_path_start_nodes(node):
+    starter_nodes = []
+    check_nodes_uuid = node.get_parents()
+    while len(check_nodes_uuid) > 0:
+        try:
+            current_node = Node.objects.get(uuid=check_nodes_uuid.pop())
+        except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+            logger.error(e)
+        else:
+            parents_uuid = current_node.get_parents()
+            if len(parents_uuid) > 0:
+                check_nodes_uuid.extend(parents_uuid)
+            elif current_node not in starter_nodes:
+                starter_nodes.append(current_node)
+    return starter_nodes
+
+
+def _update_node_attributes(node, name, new_value):
+    annotatedNodes = AnnotatedNode.objects.filter(node=node)
+    if len(annotatedNodes) > 0:
+        attribute_obj = customize_attribute_response([name])[0]
+        # can grab annotatednode_set
+        annotatedNode = annotatedNodes.filter(
+            attribute_type=attribute_obj.get('attribute_type')
+        ).filter(
+            attribute_subtype=attribute_obj.get('display_name').lower()
+        )[0]
+        # ToDo deal with multiple annotated nodes returns vs [0]
+        annotatedNode.attribute.value = new_value
+        annotatedNode.attribute.save()
+        annotatedNode.attribute_value = new_value
+        annotatedNode.save()
+        node.update_solr_index()
+
+
+def _update_node(start_node, name, new_value):
+    # update start_node
+    if not start_node.is_derived():
+        _update_node_attributes(start_node, name, new_value)
+    else:
+        annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
+        attribute_obj = customize_attribute_response([name])[0]
+        filteredAnnotatedNodes = annotatedNodes.filter(
+                attribute_type=attribute_obj.get('attribute_type')
+            ).filter(
+                attribute_subtype=attribute_obj.get('display_name').lower()
+            )
+        if len(annotatedNodes) > 0:
+            for annotatedNode in filteredAnnotatedNodes:
+                annotatedNode.attribute_value = annotatedNode.attribute.value
+                annotatedNode.save()
+                start_node.update_solr_index()
 
 
 def _check_data_set_ownership(user, data_set_uuid):
