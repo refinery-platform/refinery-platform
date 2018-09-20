@@ -242,22 +242,6 @@ def _retrieve_nodes(
     return nodes
 
 
-def get_nodes(node_type, study_uuid, assay_uuid=None,
-              ontology_attribute_fields=False):
-    nodes = _retrieve_nodes(study_uuid, assay_uuid, ontology_attribute_fields)
-    results = {}
-    attribute_count = 0
-    for key in nodes:
-        if nodes[key]["type"] == node_type:
-            results[nodes[key]["uuid"]] = nodes[key].copy()
-            results[nodes[key]["uuid"]]["attributes"] = \
-                _get_parent_attributes(nodes, key)
-            attribute_count += len(results[nodes[key]["uuid"]]["attributes"])
-    logger.info("Nodes: %s   attributes: %s",
-                str(len(results)), str(attribute_count))
-    return results
-
-
 # this method is obsolete - do not use!
 def get_matrix(node_type, study_uuid, assay_uuid=None,
                ontology_attribute_fields=False):
