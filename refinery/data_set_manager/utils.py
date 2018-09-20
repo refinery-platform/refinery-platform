@@ -91,23 +91,6 @@ def _get_node_types_recursion(node):
     return sequence
 
 
-def _get_parent_attributes(nodes, node_id):
-    """Recursively collects attributes from the current node and each parent
-    node until no more parents are available.
-    """
-    attributes = []
-
-    if len(nodes[node_id]["parents"]) == 0:
-        # End of recursion
-        return nodes[node_id]["attributes"]
-
-    for parent_id in nodes[node_id]["parents"]:
-        attributes.extend(_get_parent_attributes(nodes, parent_id))
-
-    attributes.extend(nodes[node_id]["attributes"])
-    return attributes
-
-
 def _get_unique_parent_attributes(nodes, node_id):
     """Recursively collects attributes from the current node and each parent
     node until no more parents are available and make sure that the final list
