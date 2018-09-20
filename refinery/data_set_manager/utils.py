@@ -113,16 +113,6 @@ def _get_unique_parent_attributes(nodes, node_id):
     return attributes
 
 
-def _get_assay_name(result, node):
-    if result[node]["type"] in Node.ASSAYS:
-        return result[node]["name"]
-
-    for parent in result[node]["parents"]:
-        return _get_assay_name(result, parent)
-
-    return None
-
-
 def _retrieve_nodes(
         study_uuid,
         assay_uuid=None,
