@@ -44,34 +44,6 @@ def uniquify(seq):
     return set.keys()
 
 
-# for an assay declaration (= assay file in a study)
-# this method is based on the assumption that all paths through the experiment
-# graph follow the same sequence of node types
-def get_node_attributes(study_uuid, assay_uuid, node=None, node_type=None):
-    """node_type indicates the node type for which the available attributes
-    should be determined. node_type should be in
-    Node.ASSAYS | Node.FILES | Node.SOURCE | Node.SAMPLE | Node.EXTRACT |
-    Node.LABELED_EXTRACT
-    If node is not None, node_type will be ignored and the method will return
-    the attributes for this node (and its node type).
-    """
-    if node is None:
-        try:
-            if assay_uuid is None:
-                node = Node.objects.filter(
-                    Q(study__uuid=study_uuid, assay__uuid__isnull=True),
-                    type=node_type)[0]
-            else:
-                node = Node.objects.filter(
-                    Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-                    Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
-                    type=node_type)[0]
-        except:
-            return None
-    # assumption: we now have a node
-    return _get_node_attributes_recursion(node)
-
-
 def _get_node_attributes_recursion(node):
     attributes = []
 
