@@ -46,17 +46,6 @@ def create_dir(file_path):
             raise
 
 
-def delete_external_file(file_path):
-    """removes a file with the given path (that is outside the file_store)
-    Parameters:
-    file_path: location of the file to delete
-    """
-    try:
-        os.remove(file_path)
-    except OSError:
-        raise
-
-
 def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     """zips up the isatab and pre-isatab files from MAGE-Tab conversion
     Parameters:
