@@ -1,6 +1,7 @@
 resource "aws_s3_bucket" "static_files" {
-  acl    = "public-read"
-  bucket = "${var.bucket_name_base}-static"
+  acl           = "public-read"
+  bucket        = "${var.bucket_name_base}-static"
+  force_destroy = true
 
   cors_rule {
     allowed_headers = ["Authorization"]
@@ -12,7 +13,9 @@ resource "aws_s3_bucket" "static_files" {
 }
 
 resource "aws_s3_bucket" "uploaded_files" {
-  bucket = "${var.bucket_name_base}-upload"
+  acl           = "private"
+  bucket        = "${var.bucket_name_base}-upload"
+  force_destroy = true
 
   cors_rule {
     allowed_headers = ["*"]
