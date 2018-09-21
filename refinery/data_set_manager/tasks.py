@@ -1,5 +1,4 @@
 from datetime import date
-import errno
 import glob
 import logging
 import os
@@ -25,6 +24,7 @@ from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
 from file_store.tasks import FileImportTask
+from file_store.utils import make_dir
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -32,18 +32,6 @@ from .utils import (calculate_checksum, fix_last_column, get_node_types,
                     index_annotated_nodes, update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
-
-
-def create_dir(file_path):
-    """creates a directory if it needs to be created
-    Parameters:
-    file_path: directory to create if necessary
-    """
-    try:
-        os.makedirs(file_path)
-    except OSError, e:
-        if e.errno != errno.EEXIST:
-            raise
 
 
 def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
@@ -87,7 +75,7 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     f.close()
     last_line = lines[-1]
     dir_to_zip = os.path.join(temp_dir, "magetab")
-    create_dir(dir_to_zip)
+    make_dir(dir_to_zip)
     # isolate the links by splitting on '<a href="'
     a_hrefs = string.split(last_line, '<a href="')
     # get the links we want
