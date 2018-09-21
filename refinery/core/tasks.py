@@ -6,7 +6,7 @@ from django.db.models.fields.related import ForeignKey
 from celery.task import task
 
 from file_store.models import FileStoreItem
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 
 from .models import SiteStatistics
 
@@ -29,7 +29,7 @@ def copy_file(original_item_uuid):
     except AttributeError:
         return None
     else:
-        import_file(new_item.uuid, refresh=True)
+        FileImportTask().delay(new_item.uuid).get()
         return new_item.uuid
 
 
