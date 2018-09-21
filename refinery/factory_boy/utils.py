@@ -212,3 +212,104 @@ def create_tool_with_necessary_models(tool_type, user=None):
     if user is not None:
         tool.set_owner(user)
     return tool
+
+
+def create_hg_19_data_set(user=None):
+    dataset_uuid = str(uuid_builtin.uuid4())
+    dataset = DataSetFactory(
+        uuid=dataset_uuid,
+        title="hg-19 - {}".format(dataset_uuid),
+        name="Replica of hg-19 DataSet - {}".format(dataset_uuid),
+        slug=None
+    )
+
+    latest_study = _create_dataset_objects(dataset, False, 1)
+
+    assay_uuid = str(uuid_builtin.uuid4())
+    assay = AssayFactory(uuid=assay_uuid, study=latest_study,
+                         file_name='hg19-metadata-local.txt')
+
+    node_names = ['s5_p42_E2_45min',
+                  's7_EV_E2_45min',
+                  's5_p42_E2_45min.subsample',
+                  's7_EV_E2_45min.subsample']
+
+    for name in node_names:
+        source_name_node = NodeFactory(study=latest_study,
+                                       assay=None,
+                                       file_uuid=None,
+                                       type=Node.SOURCE,
+                                       name=name)
+
+        sample_name_node = NodeFactory(study=latest_study,
+                                       assay=None,
+                                       file_uuid=None,
+                                       type=Node.SAMPLE,
+                                       name=name + '.fastq.gz')
+
+        assay_name_node = NodeFactory(study=latest_study,
+                                      assay=assay,
+                                      file_uuid=None,
+                                      type=Node.ASSAY,
+                                      name=name + '.fastq.gz')
+
+        file_store_item_uuid = str(uuid_builtin.uuid4())
+        FileStoreItemFactory(
+            uuid=file_store_item_uuid,
+            source="/{}.fastq.gz".format(name)
+        )
+
+        node = NodeFactory(
+            study=latest_study,
+            assay=assay,
+            file_uuid=file_store_item_uuid,
+            type=Node.RAW_DATA_FILE,
+            name=name + '.fastq.gz'
+        )
+
+        source_name_node.add_child(sample_name_node)
+        sample_name_node.add_child(assay_name_node)
+        assay_name_node.add_child(node)
+        attribute_organism = AttributeFactory(
+            node=node,
+            type="Characteristics",
+            subtype="organism",
+            value="Human"
+        )
+
+        AnnotatedNodeFactory(assay=assay,
+                             attribute=attribute_organism,
+                             attribute_type=attribute_organism.type,
+                             attribute_subtype=attribute_organism.subtype,
+                             attribute_value=attribute_organism.value,
+                             node=node,
+                             node_file_uuid=node.file_uuid,
+                             node_name=node.name,
+                             node_type=node.type,
+                             node_uuid=node.uuid,
+                             study=latest_study)
+
+        attribute_sample = AttributeFactory(
+            node=node,
+            type="Characteristics",
+            subtype="sample id",
+            value=name
+        )
+
+        AnnotatedNodeFactory(assay=assay,
+                             attribute=attribute_sample,
+                             attribute_type=attribute_sample.type,
+                             attribute_subtype=attribute_sample.subtype,
+                             attribute_value=attribute_sample.value,
+                             node=node,
+                             node_file_uuid=node.file_uuid,
+                             node_name=node.name,
+                             node_type=node.type,
+                             node_uuid=node.uuid,
+                             study=latest_study)
+
+    if user is not None:
+        dataset.set_owner(user)
+        dataset.save()
+
+    return dataset
