@@ -12,7 +12,6 @@ FILE_STORE_DIR setting - main file store directory
 import logging
 import os
 import re
-import urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -25,25 +24,13 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
+from .utils import make_dir
 
 logger = logging.getLogger(__name__)
 
-
-def _mkdir(path):
-    """Create directory given absolute file system path"""
-    # https://stackoverflow.com/a/14364249
-    try:
-        os.makedirs(path)
-    except OSError as exc:
-        if not os.path.isdir(path):
-            raise RuntimeError(str(exc))
-    else:
-        logger.info("Created directory '%s'", path)
-
-
 # create data storage directories
-_mkdir(settings.FILE_STORE_BASE_DIR)
-_mkdir(settings.FILE_STORE_TEMP_DIR)
+make_dir(settings.FILE_STORE_BASE_DIR)
+make_dir(settings.FILE_STORE_TEMP_DIR)
 
 
 def _map_source(source):
@@ -76,9 +63,7 @@ def generate_file_source_translator(username=None, base_path=None,
             return source
 
         # process relative path
-        # if REFINERY_DEPLOYMENT_PLATFORM = 'aws' and REFINERY_S3_USER_DATA
-        # use settings.COGNITO_IDENTITY_POOL_ID
-        if identity_id:
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
             source = "s3://{}/{}/{}".format(
                 settings.UPLOAD_BUCKET, identity_id, source
             )
@@ -353,11 +338,3 @@ def _get_extension_from_string(path):
     if len(file_name_parts) > 2:  # two or more periods in file name
         return '.'.join(file_name_parts[-2:])
     return file_name_parts[-1]  # one period in file name
-
-
-def parse_s3_url(url):
-    """Return a tuple containing S3 bucket name and object key given S3
-    protocol URL (s3://bucket-name/key)
-    """
-    result = urlparse.urlparse(url)
-    return result.netloc, result.path[1:]  # strip leading slash

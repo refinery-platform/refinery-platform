@@ -6,7 +6,30 @@ from django.test import SimpleTestCase
 
 import mock
 
-from .utils import S3MediaStorage, SymlinkedFileSystemStorage
+from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, get_file_size,
+                    parse_s3_url, UNKNOWN_FILE_SIZE)
+
+
+class GetFileSizeTest(SimpleTestCase):
+    def setUp(self):
+        self.test_size = 1000
+
+    @mock.patch('os.path.getsize')
+    def test_absolute_path_file_size(self, getsize_mock):
+        getsize_mock.return_value = self.test_size
+        self.assertEqual(get_file_size('/absolute/path'), self.test_size)
+
+    @mock.patch('os.path.getsize')
+    def test_absolute_path_unknown_file_size(self, getsize_mock):
+        getsize_mock.side_effect = EnvironmentError()
+        self.assertEqual(get_file_size('/absolute/path'), UNKNOWN_FILE_SIZE)
+
+
+class UtilitiesTest(SimpleTestCase):
+    def test_parse_s3_url(self):
+        bucket_name, key = parse_s3_url('s3://bucket-name/key')
+        self.assertEqual(bucket_name, 'bucket-name')
+        self.assertEqual(key, 'key')
 
 
 class S3MediaStorageTest(SimpleTestCase):

@@ -30,7 +30,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, InvestigationLink)
 from core.tests import TestMigrations
 from file_store.models import FileStoreItem, generate_file_source_translator
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 
 from .isa_tab_parser import IsaTabParser, ParserException
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
@@ -1835,7 +1835,8 @@ class MetadataImportTestBase(IsaTabTestBase):
 
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
-        self.import_file_mock = mock.patch.object(import_file, "delay").start()
+        self.file_import_mock = mock.patch.object(FileImportTask,
+                                                  'delay').start()
 
     def tearDown(self):
         mock.patch.stopall()
