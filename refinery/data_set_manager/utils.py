@@ -47,51 +47,6 @@ def uniquify(seq):
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment
 # graph follow the same sequence of node types
-def get_node_attributes(study_uuid, assay_uuid, node=None, node_type=None):
-    """node_type indicates the node type for which the available attributes
-    should be determined. node_type should be in
-    Node.ASSAYS | Node.FILES | Node.SOURCE | Node.SAMPLE | Node.EXTRACT |
-    Node.LABELED_EXTRACT
-    If node is not None, node_type will be ignored and the method will return
-    the attributes for this node (and its node type).
-    """
-    if node is None:
-        try:
-            if assay_uuid is None:
-                node = Node.objects.filter(
-                    Q(study__uuid=study_uuid, assay__uuid__isnull=True),
-                    type=node_type)[0]
-            else:
-                node = Node.objects.filter(
-                    Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-                    Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
-                    type=node_type)[0]
-        except:
-            return None
-    # assumption: we now have a node
-    return _get_node_attributes_recursion(node)
-
-
-def _get_node_attributes_recursion(node):
-    attributes = []
-
-    for attribute in node.attribute_set.all():
-        attributes.append({
-            "type": attribute.type,
-            "subtype": attribute.subtype
-        })
-    try:
-        parent = node.parents.all()[0]
-        attributes.extend(_get_node_attributes_recursion(parent))
-    except:
-        pass
-
-    return attributes
-
-
-# for an assay declaration (= assay file in a study)
-# this method is based on the assumption that all paths through the experiment
-# graph follow the same sequence of node types
 def get_node_types(study_uuid, assay_uuid=None, files_only=False,
                    filter_set=None):
     """filter_set is a set of node types, e.g. ["Sample Name", "Source Name"].
@@ -136,23 +91,6 @@ def _get_node_types_recursion(node):
     return sequence
 
 
-def _get_parent_attributes(nodes, node_id):
-    """Recursively collects attributes from the current node and each parent
-    node until no more parents are available.
-    """
-    attributes = []
-
-    if len(nodes[node_id]["parents"]) == 0:
-        # End of recursion
-        return nodes[node_id]["attributes"]
-
-    for parent_id in nodes[node_id]["parents"]:
-        attributes.extend(_get_parent_attributes(nodes, parent_id))
-
-    attributes.extend(nodes[node_id]["attributes"])
-    return attributes
-
-
 def _get_unique_parent_attributes(nodes, node_id):
     """Recursively collects attributes from the current node and each parent
     node until no more parents are available and make sure that the final list
@@ -173,16 +111,6 @@ def _get_unique_parent_attributes(nodes, node_id):
         attributes[attr[0]] = attr
 
     return attributes
-
-
-def _get_assay_name(result, node):
-    if result[node]["type"] in Node.ASSAYS:
-        return result[node]["name"]
-
-    for parent in result[node]["parents"]:
-        return _get_assay_name(result, parent)
-
-    return None
 
 
 def _retrieve_nodes(
@@ -285,66 +213,6 @@ def _retrieve_nodes(
         nodes[current_id] = current_node
 
     return nodes
-
-
-def get_nodes(node_type, study_uuid, assay_uuid=None,
-              ontology_attribute_fields=False):
-    nodes = _retrieve_nodes(study_uuid, assay_uuid, ontology_attribute_fields)
-    results = {}
-    attribute_count = 0
-    for key in nodes:
-        if nodes[key]["type"] == node_type:
-            results[nodes[key]["uuid"]] = nodes[key].copy()
-            results[nodes[key]["uuid"]]["attributes"] = \
-                _get_parent_attributes(nodes, key)
-            attribute_count += len(results[nodes[key]["uuid"]]["attributes"])
-    logger.info("Nodes: %s   attributes: %s",
-                str(len(results)), str(attribute_count))
-    return results
-
-
-# this method is obsolete - do not use!
-def get_matrix(node_type, study_uuid, assay_uuid=None,
-               ontology_attribute_fields=False):
-    nodes = _retrieve_nodes(study_uuid, assay_uuid, ontology_attribute_fields)
-    results = {}
-    results["meta"] = {}
-    results["data"] = {}
-    results["meta"]["study"] = study_uuid
-    results["meta"]["assay"] = assay_uuid
-    results["meta"]["attributes"] = None
-    results["meta"]["type"] = node_type
-    attribute_count = 0
-
-    for key in nodes:
-        if nodes[key]["type"] == node_type:
-            # copy a subset of the node model attributes
-            results["data"][nodes[key]["uuid"]] = {
-                k: nodes[key].copy()[k] for k in ("name", "file_uuid")}
-            # get the name of the nearest assay node predecessor
-            results["data"][nodes[key]["uuid"]]["assay"] = _get_assay_name(
-                nodes, key)
-            # initialize attribute list
-            results["data"][nodes[key]["uuid"]]["attributes"] = []
-            # save attributes (attribute[1], etc. are based on
-            # Attribute.ALL_FIELDS
-            for attribute in _get_parent_attributes(nodes, key):
-                results["data"][nodes[key]["uuid"]]["attributes"].append(
-                    attribute[3])  # 3 = value
-                if attribute[4] is not None:
-                    results["data"][nodes[key]["uuid"]]["attributes"][-1] += \
-                        " " + attribute[4]  # 4 = value unit
-            # store attribute labels in meta section (only for the first node
-            # -> for all further nodes the assumption is that they have the
-            # same attribute list)
-            if results["meta"]["attributes"] is None:
-                results["meta"]["attributes"] = []
-                for attribute in _get_parent_attributes(nodes, key):
-                    results["meta"]["attributes"].append(
-                        {"type": attribute[1], "subtype": attribute[2]})
-            attribute_count += len(
-                results["data"][nodes[key]["uuid"]]["attributes"])
-    return results
 
 
 def _create_annotated_node_objs(
