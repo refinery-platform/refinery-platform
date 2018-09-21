@@ -3641,15 +3641,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             self.sample_igv_file_url
         )
 
-    def test_HiGlass(self):
-        # TODO: Is this necessary? It's a big image, it's not used on SCC.
-        self._start_visualization(
-            'higlass.json',
-            "https://s3.amazonaws.com/pkerp/public/"
-            "dixon2012-h1hesc-hindiii-allreps-filtered."
-            "1000kb.multires.cool"
-        )
-
     def test__get_launch_parameters(self):
         def assertions(tool):
             self.assertEqual(
