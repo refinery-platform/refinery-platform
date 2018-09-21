@@ -35,9 +35,9 @@ from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (FileStoreItem, generate_file_source_translator,
-                               get_temp_dir, parse_s3_url)
-
-from file_store.tasks import download_file, import_file
+                               get_temp_dir)
+from file_store.tasks import FileImportTask, download_file
+from file_store.utils import parse_s3_url
 
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
                      Study)
@@ -423,7 +423,7 @@ class ProcessISATabView(View):
                         if file_store_item.source.startswith(
                             (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                         ):
-                            import_file.delay(file_store_item.uuid)
+                            FileImportTask().delay(file_store_item.uuid)
 
                 if request.is_ajax():
                     return JsonResponse({
@@ -1092,13 +1092,13 @@ class AddFileToNodeView(APIView):
             file_store_item.source = translated_datafile_source
 
             # Remove the FileStoreItem's import_task_id to treat it as a
-            # brand new import_file task when called below.
+            # brand new file import task when called below.
             # We then have to update its Node's Solr index entry, so the
             # updated file import status is available in the UI.
             file_store_item.import_task_id = ""
             file_store_item.save()
             node.update_solr_index()
-            import_file.delay(file_store_item.uuid)
+            FileImportTask().delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 

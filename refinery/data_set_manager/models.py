@@ -657,10 +657,10 @@ class Node(models.Model):
     def run_generate_auxiliary_node_task(self):
         """
         This method is initiated after a task_success signal is returned
-        from the `import_file` task.
+        from the file import task.
 
         Here we check if the imported FileStoreItem returned from the
-        `import_file` task is in need of the creation of some auxiliary
+        file import task is in need of the creation of some auxiliary
         File/Node. If this is the case, we create auxiliary Node and
         FileStoreItem objects, and then proceed to run the
         generate_auxiliary_file task, and associate said task's id with the

@@ -24,6 +24,7 @@ from requests.exceptions import HTTPError
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
+from file_store.tasks import FileImportTask
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -479,3 +480,37 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
     auxiliary_file_store_item.save()
+
+
+def post_process_file_import(**kwargs):
+    """Updates Solr with state of file import and starts generating auxiliary
+    file if import finished successfully
+    """
+    # allow for the use of uuid as a keyword or positional argument
+    try:
+        file_store_item_uuid = kwargs['kwargs']['item_uuid']
+    except KeyError:
+        file_store_item_uuid = kwargs['args'][0]
+    try:
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
+    except Node.DoesNotExist as exc:
+        logger.error("Could not retrieve Node with file UUID '%s': %s",
+                     file_store_item_uuid, exc)
+    except Node.MultipleObjectsReturned:
+        logger.critical("Multiple Node instance returned with file UUID '%s'",
+                        file_store_item_uuid)
+    else:
+        node.update_solr_index()
+        logger.info("Updated Solr index with file import state for Node '%s'",
+                    node.uuid)
+        if kwargs['state'] == celery.states.SUCCESS:
+            node.run_generate_auxiliary_node_task()
+
+
+@celery.signals.worker_init.connect
+def on_worker_init(sender, **kwargs):
+    # required to connect update_solr_index handler to task_postrun signal
+    # https://github.com/celery/celery/issues/1873#issuecomment-35288899
+    celery.signals.task_postrun.connect(
+        post_process_file_import, sender=sender.app.tasks[FileImportTask.name]
+    )

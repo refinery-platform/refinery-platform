@@ -12,7 +12,7 @@ from django.conf import settings
 from annotation_server.models import Taxon, species_to_taxon_id
 from core.models import DataSet
 from file_store.models import FileStoreItem, generate_file_source_translator
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 
 from .models import Assay, Attribute, Investigation, Node, Study
 from .tasks import create_dataset
@@ -185,7 +185,7 @@ class SingleFileColumnParser:
             hasattr(self.metadata_file, "file") else self.metadata_file.name
         file_store_item = FileStoreItem.objects.create(source=file_source)
         investigation.pre_isarchive_file = file_store_item.uuid
-        import_file.delay(investigation.pre_isarchive_file, refresh=True)
+        FileImportTask().delay(investigation.pre_isarchive_file)
         investigation.save()
 
         # TODO: test if there are fewer columns than required
@@ -273,7 +273,7 @@ class SingleFileColumnParser:
                 if (self.file_permanent or file_store_item.source.startswith(
                         (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
-                    import_file.delay(uuid)
+                    FileImportTask().delay(uuid)
 
         return investigation
 

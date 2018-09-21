@@ -12,8 +12,7 @@ from override_storage import override_storage
 
 from .models import (FileExtension, FileStoreItem, FileType,
                      _get_extension_from_string, _map_source,
-                     generate_file_source_translator, get_temp_dir,
-                     parse_s3_url)
+                     generate_file_source_translator, get_temp_dir)
 
 
 class FileStoreModuleTest(TestCase):
@@ -46,11 +45,6 @@ class FileStoreModuleTest(TestCase):
     def test_get_blank_extension_from_url(self):
         self.assertEqual(_get_extension_from_string('http://example.org/test'),
                          '')
-
-    def test_parse_s3_url(self):
-        bucket_name, key = parse_s3_url('s3://bucket-name/key')
-        self.assertEqual(bucket_name, 'bucket-name')
-        self.assertEqual(key, 'key')
 
     @override_settings(REFINERY_FILE_SOURCE_MAP={})
     def test_mapping_with_empty_file_source_map(self):
@@ -221,8 +215,9 @@ class FileStoreItemLocalFileTest(TestCase):
 
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',
+                   REFINERY_DEPLOYMENT_PLATFORM='vagrant',
                    REFINERY_FILE_SOURCE_MAP={})
-class FileSourceTranslationTest(TestCase):
+class FileSourceTranslationTestVagrant(TestCase):
     def setUp(self):
         self.username = 'guest'
         self.base_path = '/test/'
@@ -265,23 +260,25 @@ class FileSourceTranslationTest(TestCase):
                          os.path.join(settings.REFINERY_DATA_IMPORT_DIR,
                                       self.username, self.rel_path_source))
 
-    @override_settings(UPLOAD_BUCKET='refinery-upload')
-    def test_translate_from_relative_path_with_cognito_identity_id(self):
-        identity_id = 'us-east-1:{}'.format(uuid.uuid4())
-        translate_file_source = generate_file_source_translator(
-            identity_id=identity_id
-        )
-        self.assertEqual(
-            translate_file_source(self.rel_path_source),
-            "s3://{}/{}/{}".format(
-                settings.UPLOAD_BUCKET, identity_id, self.rel_path_source
-            )
-        )
-
     def test_translate_from_relative_path_with_no_args(self):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
+
+
+@override_settings(REFINERY_DEPLOYMENT_PLATFORM='aws',
+                   UPLOAD_BUCKET='refinery-upload')
+class FileSourceTranslationTestAWS(TestCase):
+    def test_translate_from_relative_path_with_cognito_identity_id(self):
+        filename = 'test_file.fastq'
+        identity_id = 'us-east-1:{}'.format(uuid.uuid4())
+        translate_file_source = generate_file_source_translator(
+            identity_id=identity_id
+        )
+        self.assertEqual(translate_file_source(filename),
+                         "s3://{}/{}/{}".format(
+                             settings.UPLOAD_BUCKET, identity_id, filename
+                         ))
 
 
 @override_storage()
