@@ -10,6 +10,7 @@ from django.http import QueryDict
 from django.test import LiveServerTestCase, override_settings
 
 from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_hg_19_data_set,
                                make_analyses_with_single_dataset)
 from guardian.shortcuts import assign_perm
 from mock import ANY
@@ -20,10 +21,12 @@ from core.models import DataSet, InvestigationLink
 from core.test_views import APIV2TestCase
 from file_store.models import FileStoreItem
 
-from .models import AnnotatedNode, Assay, AttributeOrder, Investigation, Study
+from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation,
+                     Node, Study)
 from .tests import MetadataImportTestBase
 from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
                     import_file)
+
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -789,6 +792,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             view=NodeViewSet.as_view()
         )
         self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.hg_19_data_set = create_hg_19_data_set(user=self.user)
         self.node = self.data_set.get_nodes()[0]
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -845,6 +849,61 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         force_authenticate(patch_request, user=self.user)
         patch_response = self.view(patch_request, self.node.uuid)
         self.assertEqual(patch_response.status_code, 405)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_edit_updates_nodes_attributes(self, update_solr_index_mock):
+        new_value = 'mouse'
+        assay = self.hg_19_data_set.get_assays()[0]
+        node = Node.objects.filter(assay=assay).filter(type='Raw Data File')[0]
+        annotated_node = AnnotatedNode.objects.filter(node=node).get(
+            attribute_subtype='organism'
+        )
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(urljoin(self.url_root, node.uuid),
+                                           {"attribute_solr_name": solr_name,
+                                            "attribute_value": new_value})
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, node.uuid)
+        self.assertEqual(annotated_node.attribute.value, new_value)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_edit_updates_attribute_value(self, update_solr_index_mock):
+        new_value = 'zebra'
+        assay = self.hg_19_data_set.get_assays()[0]
+        node = Node.objects.filter(assay=assay).filter(type='Raw Data File')[0]
+        annotated_node = AnnotatedNode.objects.filter(node=node).get(
+            attribute_subtype='organism'
+        )
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": new_value}
+        )
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, node.uuid)
+        annotated_node.refresh_from_db()
+        self.assertEqual(annotated_node.attribute_value, new_value)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_edit_calls_mocker(self, update_solr_index_mock):
+        assay = self.hg_19_data_set.get_assays()[0]
+        node = Node.objects.filter(assay=assay).filter(type='Raw Data File')[0]
+        annotated_node = AnnotatedNode.objects.filter(node=node).get(
+            attribute_subtype='organism'
+        )
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": 'mouse'}
+        )
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, node.uuid)
+        self.assertTrue(update_solr_index_mock.called)
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):
