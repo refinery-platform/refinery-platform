@@ -1613,7 +1613,7 @@ class ToolTests(ToolManagerTestBase):
             start_vis_container=True
         )
         self.assertTrue(self.tool.is_running())
-        self._django_docker_engine_cleanup_wrapper()
+        DockerClientWrapper().purge_inactive(0)
         self.assertFalse(self.tool.is_running())
 
     def test_workflow_is_running(self):
@@ -2801,7 +2801,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self.assertTrue(self.get_response.data[0]["is_running"])
 
-        self._django_docker_engine_cleanup_wrapper()
+        DockerClientWrapper().purge_inactive(0)
 
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 1)
@@ -2846,7 +2846,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertTrue(self.tool.is_running())
 
         # Remove Container
-        self._django_docker_engine_cleanup_wrapper()
+        DockerClientWrapper().purge_inactive(0)
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
