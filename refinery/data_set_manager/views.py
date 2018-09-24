@@ -1136,7 +1136,7 @@ class NodeViewSet(APIView):
               required: false
     ...
     """
-    http_method_names = ['patch']
+    http_method_names = ['get', 'patch']
 
     def get_object(self, uuid):
         try:
@@ -1147,6 +1147,10 @@ class NodeViewSet(APIView):
         except Node.MultipleObjectsReturned as e:
             logger.error(e)
             raise APIException("Multiple objects returned.")
+
+    def get(self, request, uuid, format=None):
+        node = self.get_object(uuid)
+        return Response(NodeSerializer(node).data)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
@@ -1186,8 +1190,19 @@ class NodeViewSet(APIView):
                 # for now only handling non-derived nodes due to the
                 # complexity of figure out where the source node is
                 if not node.is_derived():
-                    # this should be optimized
-                    start_nodes = _get_path_start_nodes(node)
+                    # as looping back grab node info (save db look-up)
+                    start_nodes = []
+                    check_nodes_uuid = node.get_parents()
+                    path_nodes = {}  # avoid checking db, stores nodes in path
+                    while len(check_nodes_uuid) > 0:
+                        current_node = self.get_object(check_nodes_uuid.pop())
+                        parents_uuid = current_node.get_parents()
+                        if len(parents_uuid) > 0:
+                            check_nodes_uuid.extend(parents_uuid)
+                            path_nodes[current_node.uuid] = current_node
+                        elif current_node not in start_nodes:
+                            start_nodes.append(current_node)
+
                     # traverse down start_node path
                     nodes_to_check = start_nodes
                     while len(nodes_to_check) > 0:
@@ -1198,16 +1213,12 @@ class NodeViewSet(APIView):
                         children_nodes_uuids = current_node.get_children()
                         if len(children_nodes_uuids) > 0:
                             for node_uuid in children_nodes_uuids:
-                                try:
-                                    child_node = Node.objects.get(
-                                        uuid=node_uuid
-                                    )
-                                except (Node.DoesNotExist,
-                                        Node.MultipleObjectsReturned) as e:
-                                    logger.error(e)
+                                if node_uuid in path_nodes:
+                                    child_node = path_nodes[node_uuid]
                                 else:
-                                    if child_node not in nodes_to_check:
-                                        nodes_to_check.append(child_node)
+                                    child_node = self.get_object(node_uuid)
+                                if child_node not in nodes_to_check:
+                                    nodes_to_check.append(child_node)
 
                     # update solr index for everyone
                     return Response(
@@ -1220,45 +1231,24 @@ class NodeViewSet(APIView):
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
 
-def _get_path_start_nodes(node):
-    starter_nodes = []
-    check_nodes_uuid = node.get_parents()
-    while len(check_nodes_uuid) > 0:
-        try:
-            current_node = Node.objects.get(uuid=check_nodes_uuid.pop())
-        except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-            logger.error(e)
-        else:
-            parents_uuid = current_node.get_parents()
-            if len(parents_uuid) > 0:
-                check_nodes_uuid.extend(parents_uuid)
-            elif current_node not in starter_nodes:
-                starter_nodes.append(current_node)
-    return starter_nodes
-
-
-def _update_node_attributes(node, name, new_value):
-    annotatedNodes = AnnotatedNode.objects.filter(node=node)
-    if len(annotatedNodes) > 0:
-        attribute_obj = customize_attribute_response([name])[0]
-        # can grab annotatednode_set
-        annotatedNode = annotatedNodes.filter(
-            attribute_type=attribute_obj.get('attribute_type')
-        ).filter(
-            attribute_subtype=attribute_obj.get('display_name').lower()
-        )[0]
-        # ToDo deal with multiple annotated nodes returns vs [0]
-        annotatedNode.attribute.value = new_value
-        annotatedNode.attribute.save()
-        annotatedNode.attribute_value = new_value
-        annotatedNode.save()
-        node.update_solr_index()
-
-
 def _update_node(start_node, name, new_value):
     # update start_node
     if not start_node.is_derived():
-        _update_node_attributes(start_node, name, new_value)
+        annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
+        if len(annotatedNodes) > 0:
+            attribute_obj = customize_attribute_response([name])[0]
+            # can grab annotatednode_set
+            annotatedNode = annotatedNodes.filter(
+                attribute_type=attribute_obj.get('attribute_type')
+            ).filter(
+                attribute_subtype=attribute_obj.get('display_name').lower()
+            )[0]
+            # ToDo deal with multiple annotated nodes returns vs [0]
+            annotatedNode.attribute.value = new_value
+            annotatedNode.attribute.save()
+            annotatedNode.attribute_value = new_value
+            annotatedNode.save()
+            start_node.update_solr_index()
     else:
         annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
         attribute_obj = customize_attribute_response([name])[0]
