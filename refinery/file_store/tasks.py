@@ -127,7 +127,7 @@ class FileImportTask(celery.Task):
                                                                exc))
 
         if source_path.startswith(get_temp_dir()):
-            self.delete_file(source_path)
+            delete_file(source_path)
 
         return file_store_name
 
