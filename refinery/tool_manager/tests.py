@@ -277,9 +277,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
         # Remove any running containers
-        DockerClientWrapper().purge_inactive(0)
-        # Wait, since the purge is asynchronous
-        time.sleep(2)
+        self._purge_and_sleep()
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, nodes):
@@ -496,6 +494,11 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
             *[self.make_node() for i in range(0, 4)]
         )
+
+    def _purge_and_sleep(self):
+        DockerClientWrapper().purge_inactive(0)
+        # Purge is asynchronous, and we had errors on Travis.
+        time.sleep(2)
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
@@ -1616,9 +1619,7 @@ class ToolTests(ToolManagerTestBase):
             start_vis_container=True
         )
         self.assertTrue(self.tool.is_running())
-        DockerClientWrapper().purge_inactive(0)
-        # Wait, since the purge is asynchronous
-        time.sleep(2)
+        self._purge_and_sleep()
         self.assertFalse(self.tool.is_running())
 
     def test_workflow_is_running(self):
@@ -2806,9 +2807,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self.assertTrue(self.get_response.data[0]["is_running"])
 
-        DockerClientWrapper().purge_inactive(0)
-        # Wait, since the purge is asynchronous
-        time.sleep(2)
+        self._purge_and_sleep()
 
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 1)
@@ -2853,9 +2852,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertTrue(self.tool.is_running())
 
         # Remove Container
-        DockerClientWrapper().purge_inactive(0)
-        # Wait, since the purge is asynchronous
-        time.sleep(2)
+        self._purge_and_sleep()
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
