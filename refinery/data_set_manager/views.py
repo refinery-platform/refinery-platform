@@ -1190,19 +1190,8 @@ class NodeViewSet(APIView):
                 # for now only handling non-derived nodes due to the
                 # complexity of figure out where the source node is
                 if not node.is_derived():
-                    # as looping back grab node info (save db look-up)
-                    start_nodes = []
-                    check_nodes_uuid = node.get_parents()
-                    path_nodes = {}  # avoid checking db, stores nodes in path
-                    while len(check_nodes_uuid) > 0:
-                        current_node = self.get_object(check_nodes_uuid.pop())
-                        parents_uuid = current_node.get_parents()
-                        if len(parents_uuid) > 0:
-                            check_nodes_uuid.extend(parents_uuid)
-                            path_nodes[current_node.uuid] = current_node
-                        elif current_node not in start_nodes:
-                            start_nodes.append(current_node)
-
+                    (start_nodes, path_nodes) = \
+                        self.get_start_and_traversed_nodes(node.get_parents())
                     # traverse down start_node path
                     nodes_to_check = start_nodes
                     while len(nodes_to_check) > 0:
@@ -1229,6 +1218,24 @@ class NodeViewSet(APIView):
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+    def get_start_and_traversed_nodes(self,
+                                      children_node_uuids,
+                                      start_nodes=[],
+                                      traversed_nodes={}):
+        if len(children_node_uuids) > 0:
+            current_node = self.get_object(children_node_uuids.pop())
+            parents_uuid = current_node.get_parents()
+            if len(parents_uuid) > 0:
+                children_node_uuids.extend(parents_uuid)
+                traversed_nodes[current_node.uuid] = current_node
+            elif current_node not in start_nodes:
+                start_nodes.append(current_node)
+
+            self.get_start_and_traversed_nodes(children_node_uuids,
+                                               start_nodes,
+                                               traversed_nodes)
+        return (start_nodes, traversed_nodes)
 
 
 def _update_node(start_node, name, new_value):
