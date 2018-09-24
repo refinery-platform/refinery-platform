@@ -2,6 +2,7 @@ import StringIO
 import ast
 import json
 import logging
+import time
 from urlparse import urljoin
 import uuid
 
@@ -277,6 +278,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         FileStoreItem.objects.all().delete()
         # Remove any running containers
         DockerClientWrapper().purge_inactive(0)
+        # Wait, since the purge is asynchronous
+        time.sleep(2)
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, nodes):
@@ -1614,6 +1617,8 @@ class ToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.tool.is_running())
         DockerClientWrapper().purge_inactive(0)
+        # Wait, since the purge is asynchronous
+        time.sleep(2)
         self.assertFalse(self.tool.is_running())
 
     def test_workflow_is_running(self):
@@ -2802,6 +2807,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertTrue(self.get_response.data[0]["is_running"])
 
         DockerClientWrapper().purge_inactive(0)
+        # Wait, since the purge is asynchronous
+        time.sleep(2)
 
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 1)
@@ -2847,6 +2854,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         # Remove Container
         DockerClientWrapper().purge_inactive(0)
+        # Wait, since the purge is asynchronous
+        time.sleep(2)
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
