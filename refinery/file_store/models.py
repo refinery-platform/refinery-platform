@@ -253,13 +253,13 @@ class FileStoreItem(models.Model):
         """
         try:
             return self.datafile.url
-        except ValueError:
+        except ValueError:  # file is not local
             if core.utils.is_absolute_url(self.source):
                 if self.source.startswith('s3://'):
                     return None  # file is in the UPLOAD_BUCKET
                 return self.source
-        logger.error("File not found at '%s'", self.datafile.name)
-        return None
+            else:
+                return None
 
     def get_import_status(self):
         """Return file import task state"""
