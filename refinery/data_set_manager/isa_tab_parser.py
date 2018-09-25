@@ -17,8 +17,9 @@ from zipfile import ZipFile
 
 from django.core.files import File
 
-from file_store.models import FileStoreItem
+import botocore
 
+from file_store.models import FileStoreItem
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
                      ProtocolReferenceParameter, Publication, Study)
@@ -1019,7 +1020,8 @@ class IsaTabParser:
                     file_store_item.datafile.save(
                         os.path.basename(isa_archive), File(isa_archive_obj)
                     )
-            except EnvironmentError as exc:
+            except (EnvironmentError, botocore.exceptions.ClientError,
+                    botocore.exceptions.ParamValidationError) as exc:
                 logger.error(
                     "Failed to save ISA archive '%s' to file store: %s",
                     isa_archive, exc
@@ -1035,7 +1037,8 @@ class IsaTabParser:
                     file_store_item.datafile.save(
                         os.path.basename(isa_archive), File(preisa_archive_obj)
                     )
-            except EnvironmentError as exc:
+            except (EnvironmentError, botocore.exceptions.ClientError,
+                    botocore.exceptions.ParamValidationError) as exc:
                 logger.error(
                     "Failed to save pre ISA archive '%s' to file store: %s",
                     preisa_archive, exc
