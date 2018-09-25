@@ -378,8 +378,8 @@ class ToolManagerTestBase(ToolManagerMocks):
                 if not start_vis_container:
                     run_container_mock.start()
                 self.post_response = self.tools_view(self.post_request)
-                if self.post_response.status_code != 200:
-                    return  # No Tool was created
+                assert self.post_response.status_code == 200, \
+                    self.post_response.content
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
