@@ -77,7 +77,7 @@ script:
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
+  - coverage run manage.py test tool_manager.tests.ToolAPITests.test_relaunch_failure_tool_already_running
   - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'
