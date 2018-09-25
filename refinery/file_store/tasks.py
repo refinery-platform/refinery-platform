@@ -22,6 +22,8 @@ logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 class FileImportTask(celery.Task):
 
+    soft_time_limit = 3600  # 1 hour
+
     def run(self, item_uuid):
         """Download or copy data file for FileStoreItem specified by UUID
         Fail the task in case of errors (http://stackoverflow.com/a/33143545)
@@ -68,7 +70,7 @@ class FileImportTask(celery.Task):
                     file_store_name = self.import_s3_to_path(item.source)
                 else:
                     file_store_name = self.import_url_to_path(item.source)
-        except RuntimeError as exc:
+        except (RuntimeError, celery.exceptions.SoftTimeLimitExceeded) as exc:
             logger.error("File import failed: %s", exc)
             self.update_state(state=celery.states.FAILURE,
                               meta='Failed to import file')
