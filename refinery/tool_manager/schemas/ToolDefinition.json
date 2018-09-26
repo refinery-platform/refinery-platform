@@ -37,7 +37,8 @@
         "file_relationship",
         "parameters",
         "extra_directories",
-        "image_name"
+        "image_name",
+        "mem_reservation_mb"
       ],
       "properties": {
         "name": {
@@ -67,6 +68,9 @@
         },
         "image_name": {
           "type": "string"
+        },
+        "mem_reservation_mb": {
+          "type": "integer"
         }
       }
     }

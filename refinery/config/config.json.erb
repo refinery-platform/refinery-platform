@@ -32,6 +32,7 @@
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
   "DJANGO_DOCKER_ENGINE_DATA_DIR": "<%= @django_docker_engine_data_dir || "/data" %>",
+  "DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB": "<%= @django_docker_engine_mem_limit_mb || 20 %>",
   "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",

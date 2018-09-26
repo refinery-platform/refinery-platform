@@ -23,7 +23,6 @@ import celery
 
 import constants
 from django_docker_engine.docker_utils import DockerClientWrapper
-from docker.errors import NotFound
 from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -66,7 +65,6 @@ from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.serializers import ToolDefinitionSerializer
-from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool,
@@ -265,11 +263,6 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
         self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
 
-        self.django_docker_cleanup_wait_time = 1
-        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = (
-            self.django_docker_cleanup_wait_time
-        )
-
     @mock.patch("django_docker_engine.docker_utils.DockerClientWrapper.pull")
     def load_visualizations(
         self,
@@ -284,8 +277,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
         # Remove any running containers
-        with self.settings(DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE=0):
-            django_docker_cleanup()
+        self._purge_and_sleep()
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, nodes):
@@ -503,10 +495,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             *[self.make_node() for i in range(0, 4)]
         )
 
-    def _django_docker_engine_cleanup_wrapper(self):
-        time.sleep(self.django_docker_cleanup_wait_time * 2)
-        django_docker_cleanup()
-        time.sleep(self.django_docker_cleanup_wait_time * 2)
+    def _purge_and_sleep(self):
+        DockerClientWrapper().purge_inactive(0)
+        # Purge is asynchronous, and we had errors on Travis.
+        time.sleep(2)
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
@@ -1627,7 +1619,7 @@ class ToolTests(ToolManagerTestBase):
             start_vis_container=True
         )
         self.assertTrue(self.tool.is_running())
-        self._django_docker_engine_cleanup_wrapper()
+        self._purge_and_sleep()
         self.assertFalse(self.tool.is_running())
 
     def test_workflow_is_running(self):
@@ -2815,7 +2807,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self.assertTrue(self.get_response.data[0]["is_running"])
 
-        self._django_docker_engine_cleanup_wrapper()
+        self._purge_and_sleep()
 
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 1)
@@ -2860,7 +2852,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertTrue(self.tool.is_running())
 
         # Remove Container
-        self._django_docker_engine_cleanup_wrapper()
+        self._purge_and_sleep()
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
@@ -2919,6 +2911,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_relaunch_failure_tool_already_running(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
+        time.sleep(2)
         assign_perm('core.read_dataset', self.user, self.tool.dataset)
         get_request = self.factory.get(self.tool.relaunch_url)
         force_authenticate(get_request, self.user)
@@ -3654,46 +3647,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             'igv.json',
             self.sample_igv_file_url
         )
-
-    def test_HiGlass(self):
-        self._start_visualization(
-            'higlass.json',
-            "https://s3.amazonaws.com/pkerp/public/"
-            "dixon2012-h1hesc-hindiii-allreps-filtered."
-            "1000kb.multires.cool"
-        )
-
-    def test_docker_cleanup(self):
-        wait_time = 1
-        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
-
-        def assertions(tool):
-            client = DockerClientWrapper()
-            client.lookup_container_url(tool.container_name)
-
-            self.assertTrue(tool.is_running())
-
-            self._django_docker_engine_cleanup_wrapper()
-
-            with self.assertRaises(NotFound):
-                client.lookup_container_url(tool.container_name)
-
-            self.assertFalse(tool.is_running())
-
-        self._start_visualization(
-            'hello_world.json',
-            "https://www.example.com/file.txt",
-            assertions
-        )
-
-    @override_settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1)
-    def test_max_containers(self):
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
-        self.assertNotIn("Max containers", self.post_response.content)
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True, create_unique_name=True)
-        self.assertIn("Max containers", self.post_response.content)
 
     def test__get_launch_parameters(self):
         def assertions(tool):
