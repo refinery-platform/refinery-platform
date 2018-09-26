@@ -19,6 +19,7 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
+import botocore
 import celery
 from django_extensions.db.fields import UUIDField
 
@@ -145,21 +146,16 @@ class FileStoreItem(models.Model):
         else:
             return None
 
-    def get_file_size(self, report_symlinks=False):
-        """Return the size of the file in bytes.
-        report_symlinks: report the size of symlinked files or not
-        returns zero if the file is:
-        - not local
-        - a symlink and report_symlinks=False
+    def get_file_size(self):
+        """Return the size of the file in bytes or zero if the file is not
+        available
         """
-        if self.is_symlinked() and not report_symlinks:
-            return 0
-
         try:
             return self.datafile.size
         except ValueError:  # file is not local
             return 0
-        except OSError as exc:
+        except (OSError, botocore.exceptions.ClientError,
+                botocore.exceptions.ParamValidationError) as exc:
             # file should be there but it is not
             logger.critical("Error getting size for '%s': %s", self, exc)
             return 0
