@@ -2911,7 +2911,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_relaunch_failure_tool_already_running(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
-        self.assertTrue(self.tool.is_running())
+        time.sleep(2)
         assign_perm('core.read_dataset', self.user, self.tool.dataset)
         get_request = self.factory.get(self.tool.relaunch_url)
         force_authenticate(get_request, self.user)

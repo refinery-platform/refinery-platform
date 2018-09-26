@@ -461,8 +461,10 @@ class Tool(OwnableResource):
             self.django_docker_client.lookup_container_url(
                 self.container_name
             )
+            logger.debug("Vis tool is running")
             return True
-        except (ExpectedPortMissing, NotFound, NoPortsOpen):
+        except (ExpectedPortMissing, NotFound, NoPortsOpen) as exc:
+            logger.error("Vis tool is not running: {}", exc)
             return False
 
     def is_visualization(self):
