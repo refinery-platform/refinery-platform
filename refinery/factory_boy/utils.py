@@ -247,6 +247,16 @@ def create_hg_19_data_set(user=None):
                                        type=Node.SAMPLE,
                                        name=name + '.fastq.gz')
 
+        attribute_organism = AttributeFactory(node=sample_name_node,
+                                              type="Characteristics",
+                                              subtype="organism",
+                                              value="Human")
+
+        attribute_sample = AttributeFactory(node=sample_name_node,
+                                            type="Characteristics",
+                                            subtype="sample id",
+                                            value=name)
+
         assay_name_node = NodeFactory(study=latest_study,
                                       assay=assay,
                                       file_uuid=None,
@@ -270,12 +280,6 @@ def create_hg_19_data_set(user=None):
         source_name_node.add_child(sample_name_node)
         sample_name_node.add_child(assay_name_node)
         assay_name_node.add_child(node)
-        attribute_organism = AttributeFactory(
-            node=node,
-            type="Characteristics",
-            subtype="organism",
-            value="Human"
-        )
 
         AnnotatedNodeFactory(assay=assay,
                              attribute=attribute_organism,
@@ -289,13 +293,6 @@ def create_hg_19_data_set(user=None):
                              node_uuid=node.uuid,
                              study=latest_study)
 
-        attribute_sample = AttributeFactory(
-            node=node,
-            type="Characteristics",
-            subtype="sample id",
-            value=name
-        )
-
         AnnotatedNodeFactory(assay=assay,
                              attribute=attribute_sample,
                              attribute_type=attribute_sample.type,
@@ -307,6 +304,274 @@ def create_hg_19_data_set(user=None):
                              node_type=node.type,
                              node_uuid=node.uuid,
                              study=latest_study)
+
+    if user is not None:
+        dataset.set_owner(user)
+        dataset.save()
+
+    return dataset
+
+
+def create_isatab_9909_data_set(user=None):
+    dataset_uuid = str(uuid_builtin.uuid4())
+    dataset = DataSetFactory(
+        uuid=dataset_uuid,
+        title='Comparison of muscle stem cell preplates and myoblasts.',
+        name='Comparison of muscle stem cell preplates and myoblasts.',
+        slug=None
+    )
+
+    latest_study = _create_dataset_objects(dataset, True, 1)
+
+    assay_uuid = str(uuid_builtin.uuid4())
+    assay = AssayFactory(uuid=assay_uuid, study=latest_study,
+                         file_name='hg19-metadata-local.txt')
+
+    qc_1_node = NodeFactory(study=latest_study,
+                            assay=None,
+                            file_uuid=None,
+                            type=Node.SOURCE,
+                            name='QC_1')
+
+    rma_node = NodeFactory(study=latest_study,
+                           assay=None,
+                           file_uuid=None,
+                           type=Node.DATA_TRANSFORMATION,
+                           name='RMA')
+
+    node_names = [{'source': 'myoblast',
+                   'sample': 'Human myoblasts, chip HG-U133A',
+                   'scan': 'ks020802HU133A1a.CEL',
+                   'culture': 'Primary culture',
+                   'markers': 'Desmin;NKH1',
+                   'notes': 'Primary culture of muscle derived cells'},
+                  {'source': 'PP6 muscle stem cells',
+                   'sample': 'PP6, chip HG-U133A',
+                   'scan': 'ks020802HU133A2a.CEL',
+                   'culture': 'Cultured for 24 hours, then multiple '
+                              'preplates',
+                   'markers': None,
+                   'notes': None}]
+    all_attributes = []
+    for name in node_names:
+        loop_attributes = []
+        source_name_node = NodeFactory(study=latest_study,
+                                       assay=None,
+                                       file_uuid=None,
+                                       type=Node.SOURCE,
+                                       name=name.source)
+        loop_attributes.append(AttributeFactory(
+            node=source_name_node,
+            type="Characteristics",
+            subtype='organism part',
+            value='Muscle',
+            value_accession='http://test.site/fma#Muscle',
+            value_source='FMA'
+        ))
+        loop_attributes.append(AttributeFactory(
+            node=source_name_node,
+            type="Characteristics",
+            subtype='organism part',
+            value='Muscle',
+            value_accession='http://test.site/fma#Muscle',
+            value_source='FMA'
+        ))
+        sample_name_node = NodeFactory(study=latest_study,
+                                       assay=None,
+                                       file_uuid=None,
+                                       type=Node.SAMPLE,
+                                       name=name.sample)
+        loop_attributes.append(AttributeFactory(node=sample_name_node,
+                                                type="Characteristics",
+                                                subtype='notes',
+                                                value=name.notes))
+        loop_attributes.append(AttributeFactory(node=sample_name_node,
+                                                type="Characteristics",
+                                                subtype='notes',
+                                                value=name.notes))
+        loop_attributes.append(AttributeFactory(node=sample_name_node,
+                                                type="Characteristics",
+                                                subtype='positive markers',
+                                                value=name.markers))
+        loop_attributes.append(AttributeFactory(node=sample_name_node,
+                                                type="Factor Value",
+                                                subtype='culture medium',
+                                                value=name.culture))
+        extract_name_node = NodeFactory(study=latest_study,
+                                        assay=None,
+                                        file_uuid=None,
+                                        type=Node.EXTRACT,
+                                        name=name.sample)
+        loop_attributes.append(AttributeFactory(node=extract_name_node,
+                                                type='Material Type',
+                                                subtype=None,
+                                                value='total RNA'))
+        labeled_extract_name_node = NodeFactory(study=latest_study,
+                                                assay=None,
+                                                file_uuid=None,
+                                                type=Node.LABELED_EXTRACT,
+                                                name=name.sample)
+        loop_attributes.append(AttributeFactory(node=labeled_extract_name_node,
+                                                type='Label',
+                                                subtype=None,
+                                                value='biotin'))
+        hybrid_assay_name_node = NodeFactory(study=latest_study,
+                                             assay=assay,
+                                             file_uuid=None,
+                                             type=Node.HYBRIDIZATION_ASSAY,
+                                             name=name.sample)
+
+        for ind in range(4):
+            scan_node = NodeFactory(study=latest_study,
+                                    assay=assay,
+                                    file_uuid=None,
+                                    type=Node.SCAN,
+                                    name=name.scan)
+            hybrid_assay_name_node.add_child(scan_node)
+
+        file_store_item_uuid = str(uuid_builtin.uuid4())
+        FileStoreItemFactory(
+            uuid=file_store_item_uuid,
+            source='http://test.site/sites/bioassay_files/{}'.format(name.scan)
+        )
+
+        # 8 annotated nodes a piece
+        node = NodeFactory(
+            study=latest_study,
+            assay=assay,
+            file_uuid=file_store_item_uuid,
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/{}'.format(name.scan)
+        )
+
+        for attribute in loop_attributes:
+            AnnotatedNodeFactory(assay=assay,
+                                 attribute=attribute,
+                                 attribute_type=attribute.type,
+                                 attribute_subtype=attribute.subtype,
+                                 attribute_value=attribute.value,
+                                 node=node,
+                                 node_file_uuid=node.file_uuid,
+                                 node_name=node.name,
+                                 node_type=node.type,
+                                 node_uuid=node.uuid,
+                                 study=latest_study)
+
+        source_name_node.add_child(sample_name_node)
+        sample_name_node.add_child(hybrid_assay_name_node)
+        hybrid_assay_name_node.add_child(node)
+        node.add_child(qc_1_node)
+        node.add_child(rma_node)
+        loop_attributes = []
+
+    file_store_uuid = str(uuid_builtin.uuid4())
+    FileStoreItemFactory(
+        uuid=file_store_uuid,
+        source='http://test.site/sites/gct/9909_GPL96.gct'
+    )
+    derived_array_node = NodeFactory(
+        study=latest_study,
+        assay=assay,
+        file_uuid=file_store_item_uuid,
+        type=Node.DERIVED_ARRAY_DATA_FILE,
+        name='http://test.site/sites/gct/9909_GPL96.gct'
+    )
+    qc_2_node = NodeFactory(study=latest_study,
+                            assay=assay,
+                            file_uuid=None,
+                            type=Node.DATA_TRANSFORMATION,
+                            name='QC_2')
+    file_store_uuid = str(uuid_builtin.uuid4())
+    FileStoreItemFactory(
+        uuid=file_store_uuid,
+        source='http://test.site/sites/9909/GPL96/report_rma/index.html'
+    )
+    qc_child_matrix = NodeFactory(
+        study=latest_study,
+        assay=assay,
+        file_uuid=file_store_uuid,
+        type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
+        name='http://test.site/sites/9909/GPL96/report_rma/index.html')
+    for attribute in all_attributes:
+        AnnotatedNodeFactory(assay=assay,
+                             attribute=attribute,
+                             attribute_type=attribute.type,
+                             attribute_subtype=attribute.subtype,
+                             attribute_value=attribute.value,
+                             node=qc_child_matrix,
+                             node_file_uuid=qc_child_matrix.file_uuid,
+                             node_name=qc_child_matrix.name,
+                             node_type=qc_child_matrix.type,
+                             node_uuid=qc_child_matrix.uuid,
+                             study=latest_study)
+        AnnotatedNodeFactory(assay=assay,
+                             attribute=attribute,
+                             attribute_type=attribute.type,
+                             attribute_subtype=attribute.subtype,
+                             attribute_value=attribute.value,
+                             node=derived_array_node,
+                             node_file_uuid=derived_array_node.file_uuid,
+                             node_name=derived_array_node.name,
+                             node_type=derived_array_node.type,
+                             node_uuid=derived_array_node.uuid,
+                             study=latest_study)
+
+    derived_array_node.add_child(qc_2_node)
+    qc_2_node.add_child(qc_child_matrix)
+
+    pathprint_node = NodeFactory(study=latest_study,
+                                 assay=assay,
+                                 file_uuid=file_store_item_uuid,
+                                 type=Node.DATA_TRANSFORMATION,
+                                 name='pathprint')
+    derived_array_node.add_child(pathprint_node)
+    file_store_uuid = str(uuid_builtin.uuid4())
+    FileStoreItemFactory(
+        uuid=file_store_uuid,
+        source='http://???'
+    )
+    derived_matrix_node = NodeFactory(study=latest_study,
+                                      assay=assay,
+                                      file_uuid=file_store_uuid,
+                                      type=Node.ARRAY_DATA_MATRIX_FILE,
+                                      name=name + '.CEL')
+    pathprint_node.add_child(derived_matrix_node)
+
+    node_names = ['pluriconsensus', 'geo']
+    for name in node_names:
+        # matrix node
+        path_print_node = NodeFactory(study=latest_study,
+                                      assay=assay,
+                                      file_uuid=None,
+                                      type=Node.DATA_TRANSFORMATION,
+                                      name='pathprint_{}'.format(name))
+        file_store_uuid = str(uuid_builtin.uuid4())
+        FileStoreItemFactory(
+            uuid=file_store_uuid,
+            source='http://test.site/sites/9909.GPL96_{}.pdf'.format(name)
+        )
+        final_node = NodeFactory(
+            study=latest_study,
+            assay=assay,
+            file_uuid=file_store_uuid,
+            type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
+            name='http://test.site/sites/9909.GPL96_{}.pdf'.format(name)
+        )
+        for attribute in all_attributes:
+            AnnotatedNodeFactory(assay=assay,
+                                 attribute=attribute,
+                                 attribute_type=attribute.type,
+                                 attribute_subtype=attribute.subtype,
+                                 attribute_value=attribute.value,
+                                 node=final_node,
+                                 node_file_uuid=final_node.file_uuid,
+                                 node_name=final_node.name,
+                                 node_type=final_node.type,
+                                 node_uuid=final_node.uuid,
+                                 study=latest_study)
+
+        derived_matrix_node.add_child(path_print_node)
+        path_print_node.add_child(final_node)
 
     if user is not None:
         dataset.set_owner(user)
