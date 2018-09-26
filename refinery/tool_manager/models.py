@@ -464,7 +464,7 @@ class Tool(OwnableResource):
             logger.debug("Vis tool is running")
             return True
         except (ExpectedPortMissing, NotFound, NoPortsOpen) as exc:
-            logger.error("Vis tool is not running: {}", exc)
+            logger.error("Vis tool is not running: %s", exc)
             return False
 
     def is_visualization(self):
