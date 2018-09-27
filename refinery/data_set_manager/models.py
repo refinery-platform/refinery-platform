@@ -239,7 +239,7 @@ class Investigation(NodeCollection):
             file_store_items.append(self.get_file_store_item())
 
         return (
-            [f for f in file_store_items if f.is_local()] if local_only
+            [f for f in file_store_items if f.datafile] if local_only
             else file_store_items
         )
 
@@ -678,7 +678,7 @@ class Node(models.Model):
         # Check if we pass the logic to generate aux. Files/Nodes
         if (file_store_item and file_store_item.filetype and
                 file_store_item.filetype.used_for_visualization and
-                file_store_item.is_local() and
+                file_store_item.datafile and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 "on_file_import"):
             datafile_path = file_store_item.get_absolute_path()

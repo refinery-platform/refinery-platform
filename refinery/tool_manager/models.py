@@ -803,7 +803,7 @@ class WorkflowTool(Tool):
                 name=file_store_item.datafile.name,
                 step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
-                is_refinery_file=file_store_item.is_local()
+                is_refinery_file=bool(file_store_item.datafile)
             )
 
     def create_analysis_output_node_connections(self):

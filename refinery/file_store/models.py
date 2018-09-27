@@ -152,11 +152,11 @@ class FileStoreItem(models.Model):
         """
         try:
             return self.datafile.size
-        except ValueError:  # file is not local
+        except ValueError:  # no datafile
             return 0
         except (OSError, botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
-            # file should be there but it is not
+            # file is missing
             logger.critical("Error getting size for '%s': %s", self, exc)
             return 0
 
@@ -185,28 +185,6 @@ class FileStoreItem(models.Model):
         else:
             return _get_extension_from_string(self.source)
 
-    def is_symlinked(self):
-        '''Check if the data file is a symlink.
-
-        :returns: True if the datafile is a symlink, False if not.
-
-        '''
-        path = self.get_absolute_path()
-        if path:
-            return os.path.islink(path)
-        else:
-            return False
-
-    def is_local(self):
-        """Check if the datafile is a regular file"""
-        try:
-            return os.path.isfile(self.get_absolute_path())
-        except ValueError:
-            logger.error("'%s' is not a file", self.get_absolute_path())
-        except TypeError:  # no datafile available or file does not exist
-            pass
-        return False
-
     def delete_datafile(self, save_instance=True):
         """Delete datafile on disk and cancel file import"""
         self.terminate_file_import_task()
@@ -226,7 +204,7 @@ class FileStoreItem(models.Model):
         """
         logger.debug("Renaming datafile '%s' to '%s'",
                      self.datafile.name, name)
-        if self.is_local():
+        if self.datafile:
             # obtain a new path based on requested name
             new_relative_path = default_storage.get_name(name)
             new_absolute_path = os.path.join(settings.FILE_STORE_BASE_DIR,
@@ -249,7 +227,7 @@ class FileStoreItem(models.Model):
         """
         try:
             return self.datafile.url
-        except ValueError:  # file is not local
+        except ValueError:  # no datafile
             if core.utils.is_absolute_url(self.source):
                 if self.source.startswith('s3://'):
                     return None  # file is in the UPLOAD_BUCKET
