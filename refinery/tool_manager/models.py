@@ -458,9 +458,10 @@ class Tool(OwnableResource):
             return self.analysis.running()
 
         try:
-            self.django_docker_client.lookup_container_url(
+            contailer_url = self.django_docker_client.lookup_container_url(
                 self.container_name
             )
+            logger.debug('>>>> container_url: {}'.format(contailer_url))
             return True
         except (ExpectedPortMissing, NotFound, NoPortsOpen):
             return False
