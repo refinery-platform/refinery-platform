@@ -207,6 +207,7 @@ def create_tool(tool_launch_configuration, user_instance):
             tool.name.replace(" ", ""),
             tool.uuid
         )
+        logger.debug('>>> tool: {}'.format(tool))
 
     tool.set_owner(user_instance)
     tool.update_file_relationships_with_urls()

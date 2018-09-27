@@ -535,6 +535,10 @@ class VisualizationTool(Tool):
             )
 
     def create_container_spec(self):
+        logger.debug('>>> tool_definition: {}'.format(self.tool_definition))
+        logger.debug('>>> mem_reservation_mb: {}'.format(
+            self.tool_definition.mem_reservation_mb
+        ))
         return DockerContainerSpec(
             image_name=self.tool_definition.image_name,
             mem_reservation_mb=self.tool_definition.mem_reservation_mb,
