@@ -12,6 +12,7 @@ def start_container(visualization_tool):
     """
     logger.debug('>>> pre spec')
     spec = visualization_tool.create_container_spec()
+    logger.debug('>>> spec = {}'.format(spec))
     logger.debug('>>> post spec')
 
     logger.debug('>>> pre django_docker_client.run')
@@ -19,5 +20,8 @@ def start_container(visualization_tool):
         visualization_tool.django_docker_client.run(spec)
     except Exception as e:
         logger.debug('>>> except {}'.format(e))
+        # >>> int() argument must be a string or a number, not 'NoneType'
+        import traceback
+        logger.debug('>>> stack: {}'.format(traceback.format_exc()))
         raise
     logger.debug('>>> post django_docker_client.run')
