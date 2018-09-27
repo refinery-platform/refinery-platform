@@ -1113,8 +1113,10 @@ class CustomRegistrationViewTests(TestCase):
         self.assertTrue(response.wsgi_request.recaptcha_is_valid)
         self.assertIsNotNone(User.objects.get(username=username))
 
-    @override_settings(GOOGLE_RECAPTCHA_SITE_KEY="invalid_site_key")
-    @override_settings(GOOGLE_RECAPTCHA_SECRET_KEY="invalid_secret_key")
+    @override_settings(REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="invalid_site_key")
+    @override_settings(
+        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="invalid_secret_key"
+    )
     def test_user_registration_unsuccessful_recaptcha(self):
         username = "new-test-user"
         password = make_password('password')

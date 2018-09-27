@@ -1013,7 +1013,7 @@ def verify_recaptcha(view_function):
         if request.method == 'POST':
             recaptcha_response = request.POST.get('g-recaptcha-response')
             data = {
-                'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+                'secret': settings.REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY,
                 'response': recaptcha_response
             }
             result = requests.post(
