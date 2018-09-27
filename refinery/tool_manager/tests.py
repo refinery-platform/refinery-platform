@@ -2911,10 +2911,12 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         logger.debug('>>> 1 containers: {}'.format(
             [c.name for c in client.containers.list()]))
 
+        # The above looks good: we can start containers at a low level.
+
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
 
-        for i in range(10):
+        for i in range(20):
             logger.debug('>>> wait {}; containers: {}'.format(
                 i, [c.name for c in client.containers.list()]))
 

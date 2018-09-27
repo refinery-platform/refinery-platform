@@ -104,7 +104,9 @@ class ToolsViewSet(ToolManagerViewSetBase):
             try:
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
+                    logger.debug('>>> pre tool.launch')
                     tool.launch()
+                    logger.debug('>>> post tool.launch')
                     serializer = ToolSerializer(tool)
             except Exception as e:
                 logger.error(e)
