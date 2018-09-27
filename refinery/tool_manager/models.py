@@ -602,11 +602,14 @@ class VisualizationTool(Tool):
 
     def launch(self):
         """Launch a visualization-based Tool"""
+        logger.debug('>>> pre _check_input_node_limit')
         self._check_input_node_limit()
 
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
+        logger.debug('>>> pre start_container.delay')
         start_container.delay(self)
+        logger.debug('>>> post start_container.delay')
 
 
 @receiver(post_save, sender=VisualizationTool)
