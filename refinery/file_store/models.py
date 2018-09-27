@@ -135,17 +135,6 @@ class FileStoreItem(models.Model):
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
-    def get_absolute_path(self):
-        """
-        Construct the absolute path to the data file.
-        :returns: str -- the absolute path to the data file or None if the file
-        does not exist on disk.
-        """
-        if self.datafile and self.datafile.storage.exists(self.datafile.path):
-            return self.datafile.path
-        else:
-            return None
-
     def get_file_size(self):
         """Return the size of the file in bytes or zero if the file is not
         available
