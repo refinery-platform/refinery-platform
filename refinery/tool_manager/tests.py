@@ -2903,8 +2903,21 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
 
     def test_relaunch_failure_tool_already_running(self):
+        import docker
+        client = docker.from_env()
+        logger.debug('>>> 0 containers: {}'.format(
+            [c.name for c in client.containers.list()]))
+        client.containers.run("nginx:alpine", detach=True)
+        logger.debug('>>> 1 containers: {}'.format(
+            [c.name for c in client.containers.list()]))
+
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
+
+        for i in range(10):
+            logger.debug('>>> wait {}; containers: {}'.format(
+                i, [c.name for c in client.containers.list()]))
+
         assign_perm('core.read_dataset', self.user, self.tool.dataset)
         get_request = self.factory.get(self.tool.relaunch_url)
         force_authenticate(get_request, self.user)
