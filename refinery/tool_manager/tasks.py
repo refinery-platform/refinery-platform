@@ -1,7 +1,6 @@
 from celery.task import task
 import docker
 import logging
-import Exception
 
 logger = logging.getLogger(__name__)
 
