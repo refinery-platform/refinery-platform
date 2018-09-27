@@ -5,6 +5,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser, Group, User
 from django.contrib.sites.models import Site
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import CommandError, call_command
 from django.db import connection
@@ -16,6 +17,7 @@ from cuser.middleware import CuserMiddleware
 from guardian.shortcuts import get_objects_for_group
 import mock
 import mockcache as memcache
+from override_storage import override_storage
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import (AnnotatedNode, Assay, Contact,
@@ -795,11 +797,11 @@ class AnalysisTests(TestCase):
             )]
         )
 
+    @override_storage()
     def test_get_refinery_import_task_signatures_inputs_all_local(self):
         # Create and associate an AnalysisNodeConnection with a "local" file
-        file_store_item = FileStoreItemFactory(
-            source="local_analysis_input.txt"
-        )
+        file_store_item = FileStoreItem()
+        file_store_item.datafile.save('test_file.txt', ContentFile(''))
         node = NodeFactory(assay=self.assay, study=self.study,
                            name="Input Node", analysis_uuid=self.analysis.uuid,
                            file_uuid=file_store_item.uuid)
@@ -807,10 +809,9 @@ class AnalysisTests(TestCase):
                                       step=0, filename=self.node_filename,
                                       direction=INPUT_CONNECTION,
                                       is_refinery_file=False)
-        with mock.patch.object(FileStoreItem, "is_local", return_value=True):
-            self.assertEqual(
-                self.analysis.get_refinery_import_task_signatures(), []
-            )
+        self.assertEqual(
+            self.analysis.get_refinery_import_task_signatures(), []
+        )
 
 
 class UtilitiesTest(TestCase):

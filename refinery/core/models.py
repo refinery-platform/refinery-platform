@@ -1522,7 +1522,7 @@ class Analysis(OwnableResource):
         )
 
     def has_all_local_input_files(self):
-        return all(file_store_item.is_local() for file_store_item in
+        return all(file_store_item.datafile for file_store_item in
                    self.get_input_file_store_items())
 
     def _get_input_nodes(self):
@@ -1691,7 +1691,7 @@ class Analysis(OwnableResource):
         return [
             FileImportTask().subtask((file_store_item.uuid,))
             for file_store_item in self.get_input_file_store_items()
-            if not file_store_item.is_local()
+            if not file_store_item.datafile
         ]
 
 

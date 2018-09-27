@@ -31,7 +31,7 @@ def create_analysis(project, dataset, workflow, user_instance):
         analysis=analysis,
         step=0,
         filename="Input filename",
-        is_refinery_file=input_node.get_file_store_item().is_local()
+        is_refinery_file=bool(input_node.get_file_store_item().datafile)
     )
 
     # create Analysis Output
