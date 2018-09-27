@@ -7,7 +7,6 @@ import shutil
 import string
 import subprocess
 import tempfile
-import time
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -16,13 +15,12 @@ from django.db import transaction
 
 import celery
 from celery.task import task
-import pysam
 import requests
 from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import add_data_set_to_neo4j
-from file_store.models import FileExtension, generate_file_source_translator
+from file_store.models import generate_file_source_translator
 from file_store.tasks import FileImportTask
 from file_store.utils import make_dir
 
@@ -381,88 +379,8 @@ def parse_isatab(username, public, path, identity_id=None,
         return data_set_uuid
 
 
-@task()
-def generate_auxiliary_file(auxiliary_node, datafile_path,
-                            parent_node_file_store_item):
-    """
-    Task that will generate an auxiliary file for visualization purposes
-    with specific file generation tasks going on for different FileTypes
-    flagged as: `used_for_visualization`.
-
-    :param auxiliary_node: a Node instance
-    :type auxiliary_node: Node
-    :param datafile_path: relative path to datafile used to generate aux file
-    :type datafile_path: String
-    :param parent_node_file_store_item: FileStoreItem associated with the
-    parent Node
-    :type parent_node_file_store_item: FileStoreItem
-    """
-
-    generate_auxiliary_file.update_state(state=celery.states.STARTED)
-
-    auxiliary_file_store_item = auxiliary_node.get_file_store_item()
-
-    try:
-        start_time = time.time()
-        logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
-
-        # Here we are checking for the FileExtension of the ParentNode's
-        # FileStoreItem because we will create auxiliary files based on what
-        # said value is
-        if parent_node_file_store_item.get_extension().lower() == "bam":
-            generate_bam_index(auxiliary_file_store_item.uuid, datafile_path)
-
-        generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
-
-        logger.debug("Auxiliary file for %s generated in %s "
-                     "seconds." % (datafile_path, time.time() - start_time))
-
-    except Exception as e:
-        logger.error(
-            "Something went wrong while trying to generate the auxiliary file "
-            "for %s. %s" % (datafile_path, e))
-
-        generate_auxiliary_file.update_state(state=celery.states.FAILURE)
-
-        raise celery.exceptions.Ignore()
-
-
-def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
-    """
-    Generate a bam_index file and associate it with the auxiliary
-    FileStoreItem from our generate_auxiliary_file task
-    :param auxiliary_file_store_item_uuid: uuid of FileStoreItem to generate
-    auxiliary file for
-    :type auxiliary_file_store_item_uuid: string
-    :param datafile_path: Full path on disk to the datafile that we want to
-    generate a bam index file for
-    :type datafile_path: string
-    """
-
-    # Try and fetch the bam_index FileExtension
-    # NOTE: that we are not handling the normal errors for an orm.get()s below
-    # because we want the task from which this function is called within to
-    # fail if we can't get what we want.
-    bam_index_file_extension = FileExtension.objects.get(name="bai").name
-    auxiliary_file_store_item = FileStoreItem.objects.get(
-        uuid=auxiliary_file_store_item_uuid)
-
-    # Leverage pysam library to generate bam index file
-    # FIXME: This should be refactored once we don't have a need for
-    # Standalone IGV because this is creating a bam_index file in the same
-    # directory as it's bam file
-    pysam.index(bytes(datafile_path))
-
-    # Map source field of FileStoreItem to path of newly created bam index file
-    auxiliary_file_store_item.source = "{}.{}".format(
-        datafile_path, bam_index_file_extension)
-    auxiliary_file_store_item.save()
-
-
 def post_process_file_import(**kwargs):
-    """Updates Solr with state of file import and starts generating auxiliary
-    file if import finished successfully
-    """
+    """Updates Solr with state of file import"""
     # allow for the use of uuid as a keyword or positional argument
     try:
         file_store_item_uuid = kwargs['kwargs']['item_uuid']
@@ -480,8 +398,6 @@ def post_process_file_import(**kwargs):
         node.update_solr_index()
         logger.info("Updated Solr index with file import state for Node '%s'",
                     node.uuid)
-        if kwargs['state'] == celery.states.SUCCESS:
-            node.run_generate_auxiliary_node_task()
 
 
 @celery.signals.worker_init.connect
