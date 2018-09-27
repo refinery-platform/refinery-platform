@@ -1389,15 +1389,6 @@ class Analysis(OwnableResource):
             else:
                 item.rename_datafile(result.file_name)
 
-            try:
-                node = Node.objects.get(file_uuid=item.uuid)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-                logger.error("Error retrieving Node with file UUID '%s': %s",
-                             exc)
-            else:
-                if node.is_derived():
-                    node.run_generate_auxiliary_node_task()
-
     def attach_derived_nodes_to_dataset(self):
         graph_with_data_transformation_nodes = (
             self._create_data_transformation_nodes(
