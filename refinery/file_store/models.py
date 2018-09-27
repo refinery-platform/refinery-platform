@@ -185,18 +185,6 @@ class FileStoreItem(models.Model):
         else:
             return _get_extension_from_string(self.source)
 
-    def is_symlinked(self):
-        '''Check if the data file is a symlink.
-
-        :returns: True if the datafile is a symlink, False if not.
-
-        '''
-        path = self.get_absolute_path()
-        if path:
-            return os.path.islink(path)
-        else:
-            return False
-
     def is_local(self):
         """Check if the datafile is a regular file"""
         try:
