@@ -59,25 +59,25 @@ before_script:
 
   # Required for cypress tests; TODO: Move to puppet.
   # TODO: Start up solr (and neo4j?)
-  - python manage.py loaddata guest.json
-  - python manage.py activate_user guest
-  - python manage.py add_users_to_public_group
-  - pushd ui && grunt make && popd
-  - python manage.py collectstatic --noinput -v 0
-  - python manage.py runserver --insecure --settings config.settings.dev 2>&1 | grep -v 200 &
+#  - python manage.py loaddata guest.json
+#  - python manage.py activate_user guest
+#  - python manage.py add_users_to_public_group
+#  - pushd ui && grunt make && popd
+#  - python manage.py collectstatic --noinput -v 0
+#  - python manage.py runserver --insecure --settings config.settings.dev 2>&1 | grep -v 200 &
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
-  - flake8 ..
+#  - flake8 ..
 
-  - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt test && popd
-  - echo 'travis_fold:end:grunt'
+#  - echo 'travis_fold:start:grunt'
+#  - pushd ui && grunt test && popd
+#  - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
+  - coverage run manage.py test tool_manager.tests.ToolAPITests.test_relaunch_failure_tool_already_running
   - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'
