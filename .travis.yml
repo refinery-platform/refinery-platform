@@ -80,17 +80,17 @@ script:
   - coverage run manage.py test tool_manager.tests.ToolAPITests.test_relaunch_failure_tool_already_running
   - echo 'travis_fold:end:django-tests'
 
-  - echo 'travis_fold:start:cypress'
-  - pushd ui && node_modules/.bin/cypress run --record && popd
-  - echo 'travis_fold:end:cypress'
-
-  - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
-
-after_success:
-  - echo 'travis_fold:start:codecov'
-  - codecov
-  - npm run codecov
-  - echo 'travis_fold:end:codecov'
-notifications:
-  slack:
-    secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=
+#  - echo 'travis_fold:start:cypress'
+#  - pushd ui && node_modules/.bin/cypress run --record && popd
+#  - echo 'travis_fold:end:cypress'
+#
+#  - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
+#
+#after_success:
+#  - echo 'travis_fold:start:codecov'
+#  - codecov
+#  - npm run codecov
+#  - echo 'travis_fold:end:codecov'
+#notifications:
+#  slack:
+#    secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=
