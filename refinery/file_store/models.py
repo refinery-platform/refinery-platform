@@ -185,16 +185,6 @@ class FileStoreItem(models.Model):
         else:
             return _get_extension_from_string(self.source)
 
-    def is_local(self):
-        """Check if the datafile is a regular file"""
-        try:
-            return os.path.isfile(self.get_absolute_path())
-        except ValueError:
-            logger.error("'%s' is not a file", self.get_absolute_path())
-        except TypeError:  # no datafile available or file does not exist
-            pass
-        return False
-
     def delete_datafile(self, save_instance=True):
         """Delete datafile on disk and cancel file import"""
         self.terminate_file_import_task()
@@ -214,7 +204,7 @@ class FileStoreItem(models.Model):
         """
         logger.debug("Renaming datafile '%s' to '%s'",
                      self.datafile.name, name)
-        if self.is_local():
+        if self.datafile:
             # obtain a new path based on requested name
             new_relative_path = default_storage.get_name(name)
             new_absolute_path = os.path.join(settings.FILE_STORE_BASE_DIR,
