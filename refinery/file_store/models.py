@@ -152,11 +152,11 @@ class FileStoreItem(models.Model):
         """
         try:
             return self.datafile.size
-        except ValueError:  # file is not local
+        except ValueError:  # no datafile
             return 0
         except (OSError, botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
-            # file should be there but it is not
+            # file is missing
             logger.critical("Error getting size for '%s': %s", self, exc)
             return 0
 
@@ -249,7 +249,7 @@ class FileStoreItem(models.Model):
         """
         try:
             return self.datafile.url
-        except ValueError:  # file is not local
+        except ValueError:  # no datafile
             if core.utils.is_absolute_url(self.source):
                 if self.source.startswith('s3://'):
                     return None  # file is in the UPLOAD_BUCKET
