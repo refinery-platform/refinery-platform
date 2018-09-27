@@ -1,10 +1,6 @@
 sudo: required
 
 language: python
-addons:
-  apt:
-    packages:
-      - xvfb
 cache:
   directories:
     - /home/travis/.cache/pip
