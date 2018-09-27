@@ -19,15 +19,15 @@ services:
   - docker
 
 install:
-  - node --version
-  - NODE_VERSION=6.11.0
-  - nvm install $NODE_VERSION
-  - nvm use $NODE_VERSION
-  - node --version
-
-  - npm --version
-  - npm install -g npm@3.10.10
-  - npm --version
+#  - node --version
+#  - NODE_VERSION=6.11.0
+#  - nvm install $NODE_VERSION
+#  - nvm use $NODE_VERSION
+#  - node --version
+#
+#  - npm --version
+#  - npm install -g npm@3.10.10
+#  - npm --version
 
   - pip install -r requirements.txt --quiet
 
@@ -51,11 +51,11 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput --fake-initial
-  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
-  - cd ui
-  - npm install --progress false --quiet || ( cat npm-debug.log && false )
-  - bower install --config.interactive=false --quiet
-  - cd ../
+#  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
+#  - cd ui
+#  - npm install --progress false --quiet || ( cat npm-debug.log && false )
+#  - bower install --config.interactive=false --quiet
+#  - cd ../
 
   # Required for cypress tests; TODO: Move to puppet.
   # TODO: Start up solr (and neo4j?)
