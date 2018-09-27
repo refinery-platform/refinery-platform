@@ -2916,7 +2916,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
 
-        for i in range(20):
+        for i in range(3):
             logger.debug('>>> wait {}; containers: {}'.format(
                 i, [c.name for c in client.containers.list()]))
 
