@@ -21,7 +21,6 @@ from bioblend.galaxy.workflows import WorkflowClient
 import celery
 
 import constants
-from django_docker_engine.docker_utils import DockerClientWrapper
 from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -275,8 +274,6 @@ class ToolManagerTestBase(ToolManagerMocks):
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
-        # Remove any running containers
-        DockerClientWrapper().purge_inactive(0)
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, nodes):
@@ -1489,15 +1486,6 @@ class ToolTests(ToolManagerTestBase):
             "Tool: Test LIST Visualization IGV"
         )
 
-    def test_tool_container_removed_on_deletion(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        with mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper"
-            ".purge_by_label"
-        ) as purge_mock:
-            Tool.objects.get(tool_definition__uuid=self.td.uuid).delete()
-            self.assertTrue(purge_mock.called)
-
     def test_node_uuids_get_populated_with_urls(self):
         vis_tool = self.create_tool(
             ToolDefinition.VISUALIZATION,
@@ -1613,7 +1601,6 @@ class ToolTests(ToolManagerTestBase):
             start_vis_container=True
         )
         self.assertTrue(self.tool.is_running())
-        DockerClientWrapper().purge_inactive(0)
         self.assertFalse(self.tool.is_running())
 
     def test_workflow_is_running(self):
@@ -2801,8 +2788,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self.assertTrue(self.get_response.data[0]["is_running"])
 
-        DockerClientWrapper().purge_inactive(0)
-
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 1)
 
@@ -2846,7 +2831,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertTrue(self.tool.is_running())
 
         # Remove Container
-        DockerClientWrapper().purge_inactive(0)
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
