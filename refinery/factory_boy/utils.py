@@ -304,7 +304,7 @@ def create_isatab_9909_data_set(user=None):
     qc_1_node = NodeFactory(study=latest_study,
                             assay=assay,
                             file_uuid=None,
-                            type=Node.SOURCE,
+                            type=Node.DATA_TRANSFORMATION,
                             name='QC_1')
 
     rma_node = NodeFactory(study=latest_study,
@@ -496,7 +496,7 @@ def create_isatab_9909_data_set(user=None):
         study=latest_study,
         assay=assay,
         file_uuid=file_store_uuid,
-        type=Node.ARRAY_DATA_MATRIX_FILE,
+        type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
         name='http://test.site/sites/9909.GPL96_pathprint.txt'
     )
     pathprint_node.add_child(pathprint_derived_matrix_node)
