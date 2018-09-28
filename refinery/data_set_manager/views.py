@@ -39,7 +39,7 @@ from file_store.models import (FileStoreItem, generate_file_source_translator,
 
 from file_store.tasks import download_file, import_file
 
-from .models import (AnnotatedNode, Assay, AttributeOrder, Node,
+from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
                      Study)
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer)
@@ -1214,7 +1214,8 @@ class NodeViewSet(APIView):
                         NodeSerializer(node).data, status=status.HTTP_200_OK
                     )
 
-            return Response('Currently, you can only remove node files.',
+            return Response('Currently, you can only remove node files or '
+                            'edit non-derived files',
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
@@ -1239,23 +1240,30 @@ class NodeViewSet(APIView):
 
 
 def _update_node(start_node, name, new_value):
-    # update start_node
-    if not start_node.is_derived():
+    # check if node has attribute otherwise update based on attribute value
+    attributes = Attribute.objects.filter(node=start_node)
+    if attributes:
         annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
+        attribute_obj = customize_attribute_response([name])[0]
+        update_attributes = attributes.filter(
+            type=attribute_obj.get('attribute_type')
+        ).filter(
+            subtype=attribute_obj.get('display_name').lower()
+        )
+        if update_attributes:
+            for attribute in update_attributes:
+                attribute.value = new_value
+                attribute.save()
         if len(annotatedNodes) > 0:
-            attribute_obj = customize_attribute_response([name])[0]
-            # can grab annotatednode_set
-            annotatedNode = annotatedNodes.filter(
+            annotatedNodes = annotatedNodes.filter(
                 attribute_type=attribute_obj.get('attribute_type')
             ).filter(
                 attribute_subtype=attribute_obj.get('display_name').lower()
-            )[0]
-            # ToDo deal with multiple annotated nodes returns vs [0]
-            annotatedNode.attribute.value = new_value
-            annotatedNode.attribute.save()
-            annotatedNode.attribute_value = new_value
-            annotatedNode.save()
-            start_node.update_solr_index()
+            )
+            for ann_node in list(annotatedNodes):
+                ann_node.attribute_value = ann_node.attribute.value
+                ann_node.save()
+        start_node.update_solr_index()
     else:
         annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
         attribute_obj = customize_attribute_response([name])[0]
