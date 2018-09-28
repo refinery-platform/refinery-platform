@@ -3,8 +3,9 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-import logging
 import urlparse
+
+from django.conf import settings
 
 from bioblend import galaxy
 import celery
@@ -20,7 +21,8 @@ import tool_manager
 
 from .models import AnalysisStatus
 
-logger = logging.getLogger(__name__)
+logger = celery.utils.log.get_task_logger(__name__)
+logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 RETRY_INTERVAL = 5  # seconds
 
