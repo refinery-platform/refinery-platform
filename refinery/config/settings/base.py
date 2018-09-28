@@ -345,13 +345,6 @@ CELERYBEAT_SCHEDULE = {
             'expires': 30,  # seconds
         }
     },
-    'django_docker_cleanup': {
-        'task': 'tool_manager.tasks.django_docker_cleanup',
-        'schedule': timedelta(seconds=30),
-        'options': {
-            'expires': 20,  # seconds
-        }
-    },
 }
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
@@ -627,11 +620,10 @@ TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
 # https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
-DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
-# Time in seconds to wait before killing unused visualization
-DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
 DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
+DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB = \
+    get_setting("DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB")
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 

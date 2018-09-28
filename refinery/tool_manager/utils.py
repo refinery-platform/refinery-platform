@@ -131,6 +131,7 @@ def create_tool_definition(annotation_data):
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             image_name=annotation["image_name"],
+            mem_reservation_mb=annotation["mem_reservation_mb"],
             **common_tool_definition_params
         )
 
