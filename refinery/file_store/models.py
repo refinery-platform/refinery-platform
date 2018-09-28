@@ -14,7 +14,6 @@ import os
 import re
 
 from django.conf import settings
-from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
@@ -25,7 +24,7 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
-from .utils import make_dir
+from .utils import SymlinkedFileSystemStorage, make_dir, move_file
 
 logger = logging.getLogger(__name__)
 
@@ -186,29 +185,31 @@ class FileStoreItem(models.Model):
             else:
                 logger.info("Deleted datafile '%s'", file_name)
 
-    def rename_datafile(self, name):
+    def rename_datafile(self, new_name):
         """Change name of the data file
-        New name may not be the same as the requested name in case of conflict
-        with an existing file
+        Note: new name may not be the same as the requested name in case of
+        conflict with an existing file or S3 object
         """
-        logger.debug("Renaming datafile '%s' to '%s'",
-                     self.datafile.name, name)
         if self.datafile:
+            logger.debug("Renaming datafile '%s' to '%s'",
+                         self.datafile.name, new_name)
             # obtain a new path based on requested name
-            new_relative_path = default_storage.get_name(name)
-            new_absolute_path = os.path.join(settings.FILE_STORE_BASE_DIR,
-                                             new_relative_path)
-            if _rename_file_on_disk(self.datafile.path, new_absolute_path):
-                self.datafile.name = new_relative_path
-                self.save()
-                return os.path.basename(self.datafile.name)
+            storage = SymlinkedFileSystemStorage()
+            new_file_store_name = storage.get_name(new_name)
+            new_file_store_path = storage.path(new_file_store_name)
+            try:
+                move_file(self.datafile.path, new_file_store_path)
+            except RuntimeError as exc:
+                logger.error("Renaming datafile '%s' failed: %s",
+                             self.datafile.name, exc)
             else:
-                logger.error("Renaming datafile '%s' failed",
-                             self.datafile.name)
-                return None
+                self.datafile.name = new_file_store_name
+                self.save()
         else:
-            logger.error("Datafile does not exist")
-            return None
+            logger.error(
+                "Error renaming datafile of FileStoreItem with UUID '%s': "
+                "datafile is not available", self.uuid
+            )
 
     def get_datafile_url(self):
         """Returns relative or absolute URL of the datafile depending on file
@@ -266,31 +267,6 @@ def _delete_datafile(sender, instance, **kwargs):
     delete() method on the models
     """
     instance.delete_datafile(save_instance=False)
-
-
-def _rename_file_on_disk(current_path, new_path):
-    '''Rename a file using absolute paths, creating intermediate directories if
-    they don't exist.
-
-    :param current_path: Existing absolute file system path.
-    :type current_path: str.
-    :param new_path: New absolute file system path.
-    :type new_path: str.
-    :returns: True if renaming succeeded, False if failed.
-
-    '''
-    try:
-        os.renames(current_path, new_path)
-    except OSError as e:
-        logger.error(
-            "Error renaming file on disk\nOSError: [Errno %s], file name: %s, "
-            "error: %s. Current file name: %s. New file name: %s",
-            e.errno, e.filename, e.strerror, current_path, new_path
-        )
-        return False
-
-    logger.debug("Renamed %s to %s", current_path, new_path)
-    return True
 
 
 def _get_extension_from_string(path):
