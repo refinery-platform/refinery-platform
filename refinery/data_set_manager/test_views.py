@@ -11,6 +11,7 @@ from django.test import LiveServerTestCase, override_settings
 
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_hg_19_data_set,
+                               create_isatab_9909_data_set,
                                make_analyses_with_single_dataset)
 from guardian.shortcuts import assign_perm
 from mock import ANY
@@ -21,7 +22,8 @@ from core.models import DataSet, InvestigationLink
 from core.test_views import APIV2TestCase
 from file_store.models import FileStoreItem
 
-from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation,
+from .models import (Attribute, AnnotatedNode, Assay, AttributeOrder,
+                     Investigation,
                      Node, Study)
 from .tests import MetadataImportTestBase
 from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
@@ -793,6 +795,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.hg_19_data_set = create_hg_19_data_set(user=self.user)
+        self.isatab_9909_data_set = create_isatab_9909_data_set(user=self.user)
         self.node = self.data_set.get_nodes()[0]
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -904,6 +907,161 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         force_authenticate(patch_request, user=self.user)
         self.view(patch_request, node.uuid)
         self.assertTrue(update_solr_index_mock.called)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_return_405_for_derived(self, update_solr_index_mock):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        derived_node = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)[0]
+        annotated_node = AnnotatedNode.objects.filter(
+            node=derived_node
+        ).filter(attribute_subtype='organism')[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, derived_node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": 'mouse'}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, derived_node.uuid)
+        self.assertEqual(patch_response.status_code, 405)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_edit_organism_part(self, update_solr_index_mock):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+            attribute_subtype='organism part'
+        )
+        new_value = 'cell'
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, file_node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": new_value}
+        )
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, file_node.uuid)
+        annotated_node.refresh_from_db()
+        # file node updates
+        self.assertEqual(annotated_node.attribute_value, new_value)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_edit_source_attribute(self, update_solr_index_mock):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+            attribute_subtype='organism part'
+        )
+        new_value = 'cell'
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, file_node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": new_value}
+        )
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, file_node.uuid)
+        annotated_node.refresh_from_db()
+        # source node attribute updated
+        source_node = nodes.filter(type=Node.SOURCE).filter(
+            name='myoblasts'
+        )[0]
+        source_attribute = Attribute.objects.filter(node=source_node).filter(
+            subtype='organism part'
+        )[0]
+        self.assertEqual(source_attribute.value, new_value)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_edit_updates_children_nodes(self, update_solr_index_mock):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+            attribute_subtype='organism part'
+        )
+        new_value = 'cell'
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, file_node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": new_value}
+        )
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, file_node.uuid)
+        annotated_node.refresh_from_db()
+        # derived nodes attribute_values updated, there's six
+        derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)
+        derived_attributes = []
+        for node in derived_array_nodes:
+            ann_node_new = AnnotatedNode.objects.filter(node=node).filter(
+                attribute_subtype='organism part'
+            ).filter(attribute_value=new_value)
+            derived_attributes.extend(ann_node_new)
+        self.assertEqual(len(derived_attributes), 2)
+
+        derived_array_matrix_nodes = nodes.filter(
+            type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE
+        )
+        derived_matrix_attributes = []
+        for node in derived_array_matrix_nodes:
+            ann_node_new = AnnotatedNode.objects.filter(node=node).filter(
+                attribute_subtype='organism part'
+            ).filter(attribute_value=new_value)
+            derived_matrix_attributes.extend(ann_node_new)
+        self.assertEqual(len(derived_matrix_attributes), 4)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_not_edit_non_children_nodes(self, update_solr_index_mock):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+            attribute_subtype='organism part'
+        )
+        old_value = annotated_node.attribute_value
+        new_value = 'cell'
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, file_node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": new_value}
+        )
+        force_authenticate(patch_request, user=self.user)
+        self.view(patch_request, file_node.uuid)
+        annotated_node.refresh_from_db()
+        # derived nodes attribute_values updated, there's 6
+        derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)
+        derived_attributes = []
+        for node in derived_array_nodes:
+            ann_node_old = AnnotatedNode.objects.filter(node=node).filter(
+                attribute_subtype='organism part'
+            ).filter(attribute_value=old_value)
+            derived_attributes.extend(ann_node_old)
+        self.assertEqual(len(derived_attributes), 2)
+
+        derived_array_matrix_nodes = nodes.filter(
+            type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE
+        )
+        derived_matrix_attributes = []
+        for node in derived_array_matrix_nodes:
+            ann_node_old = AnnotatedNode.objects.filter(node=node).filter(
+                attribute_subtype='organism part'
+            ).filter(attribute_value=old_value)
+            derived_matrix_attributes.extend(ann_node_old)
+        self.assertEqual(len(derived_matrix_attributes), 4)
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):
