@@ -1136,7 +1136,7 @@ class NodeViewSet(APIView):
               required: false
     ...
     """
-    http_method_names = ['get', 'patch']
+    http_method_names = ['patch']
 
     def get_object(self, uuid):
         try:
@@ -1147,10 +1147,6 @@ class NodeViewSet(APIView):
         except Node.MultipleObjectsReturned as e:
             logger.error(e)
             raise APIException("Multiple objects returned.")
-
-    def get(self, request, uuid, format=None):
-        node = self.get_object(uuid)
-        return Response(NodeSerializer(node).data)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
@@ -1200,16 +1196,13 @@ class NodeViewSet(APIView):
                                      attribute_name,
                                      attribute_value)
                         children_nodes_uuids = current_node.get_children()
-                        if len(children_nodes_uuids) > 0:
-                            for node_uuid in children_nodes_uuids:
-                                if node_uuid in path_nodes:
-                                    child_node = path_nodes[node_uuid]
-                                else:
-                                    child_node = self.get_object(node_uuid)
-                                if child_node not in nodes_to_check:
-                                    nodes_to_check.append(child_node)
-
-                    # update solr index for everyone
+                        for node_uuid in children_nodes_uuids:
+                            if node_uuid in path_nodes:
+                                child_node = path_nodes[node_uuid]
+                            else:
+                                child_node = self.get_object(node_uuid)
+                            if child_node not in nodes_to_check:
+                                nodes_to_check.append(child_node)
                     return Response(
                         NodeSerializer(node).data, status=status.HTTP_200_OK
                     )
@@ -1220,10 +1213,8 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def get_start_and_traversed_nodes(self,
-                                      children_node_uuids,
-                                      start_nodes=[],
-                                      traversed_nodes={}):
+    def get_start_and_traversed_nodes(self, children_node_uuids,
+                                      start_nodes=[], traversed_nodes={}):
         if len(children_node_uuids) > 0:
             current_node = self.get_object(children_node_uuids.pop())
             parents_uuid = current_node.get_parents()
