@@ -518,14 +518,14 @@ def create_isatab_9909_data_set(user=None):
                                       file_uuid=None,
                                       type=Node.DATA_TRANSFORMATION,
                                       name='pathprint_{}'.format(name))
-        all_attributes.append(AttributeFactory(node=path_print_node,
-                                               type='Comment',
-                                               subtype='Data Record Accession',
-                                               value=''))
-        all_attributes.append(AttributeFactory(node=path_print_node,
-                                               type='Comment',
-                                               subtype='Data Repository',
-                                               value=''))
+        record_attribute = AttributeFactory(node=path_print_node,
+                                            type='Comment',
+                                            subtype='Data Record Accession',
+                                            value='')
+        repository_attribute = AttributeFactory(node=path_print_node,
+                                                type='Comment',
+                                                subtype='Data Repository',
+                                                value='')
         file_store_uuid = str(uuid_builtin.uuid4())
         FileStoreItemFactory(
             uuid=file_store_uuid,
@@ -538,9 +538,13 @@ def create_isatab_9909_data_set(user=None):
             type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
             name='http://test.site/sites/9909.GPL96_{}.pdf'.format(name)
         )
-
         for attribute in all_attributes:
             _create_annotated_node(assay, attribute, final_node, latest_study)
+
+        _create_annotated_node(assay, record_attribute, final_node,
+                               latest_study)
+        _create_annotated_node(assay, repository_attribute, final_node,
+                               latest_study)
 
         pathprint_derived_matrix_node.add_child(path_print_node)
         path_print_node.add_child(final_node)
