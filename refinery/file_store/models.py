@@ -24,7 +24,8 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
-from .utils import SymlinkedFileSystemStorage, make_dir, move_file
+from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, copy_s3_object,
+                    delete_s3_object, make_dir, move_file)
 
 logger = logging.getLogger(__name__)
 
@@ -193,18 +194,34 @@ class FileStoreItem(models.Model):
         if self.datafile:
             logger.debug("Renaming datafile '%s' to '%s'",
                          self.datafile.name, new_name)
-            # obtain a new path based on requested name
-            storage = SymlinkedFileSystemStorage()
-            new_file_store_name = storage.get_name(new_name)
-            new_file_store_path = storage.path(new_file_store_name)
-            try:
-                move_file(self.datafile.path, new_file_store_path)
-            except RuntimeError as exc:
-                logger.error("Renaming datafile '%s' failed: %s",
-                             self.datafile.name, exc)
+            if settings.REFINERY_S3_USER_DATA:
+                storage = S3MediaStorage()
+                new_file_store_name = storage.get_name(new_name)
+                try:
+                    copy_s3_object(self.datafile.storage.bucket_name,
+                                   self.datafile.name,
+                                   self.datafile.storage.bucket_name,
+                                   new_file_store_name)
+                except RuntimeError as exc:
+                    logger.error("Renaming datafile '%s' failed: %s",
+                                 self.datafile.name, exc)
+                else:
+                    delete_s3_object(self.datafile.storage.bucket_name,
+                                     self.datafile.name)
+                    self.datafile.name = new_file_store_name
+                    self.save()
             else:
-                self.datafile.name = new_file_store_name
-                self.save()
+                storage = SymlinkedFileSystemStorage()
+                new_file_store_name = storage.get_name(new_name)
+                new_file_store_path = storage.path(new_file_store_name)
+                try:
+                    move_file(self.datafile.path, new_file_store_path)
+                except RuntimeError as exc:
+                    logger.error("Renaming datafile '%s' failed: %s",
+                                 self.datafile.name, exc)
+                else:
+                    self.datafile.name = new_file_store_name
+                    self.save()
         else:
             logger.error(
                 "Error renaming datafile of FileStoreItem with UUID '%s': "

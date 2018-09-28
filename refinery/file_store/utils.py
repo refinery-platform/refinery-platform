@@ -83,7 +83,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         return self.get_available_name(get_valid_filename(name))
 
 
-def copy_file_object(source, destination, progress_report):
+def copy_file_object(source, destination, progress_report=lambda _: None):
     """Copy a file object and update progress"""
     chunk_size = 10 * 1024 * 1024  # 10MB
     logger.debug("Copying '%s' to '%s'", source.name, destination.name)
@@ -102,7 +102,7 @@ def copy_file_object(source, destination, progress_report):
 
 
 def copy_s3_object(source_bucket, source_key, destination_bucket,
-                   destination_key, progress_report):
+                   destination_key, progress_report=lambda _: None):
     """Copy S3 object and update task progress"""
     s3 = boto3.client('s3')
     logger.debug("Started copying from 's3://%s/%s' to 's3://%s/%s'",
@@ -147,7 +147,8 @@ def delete_s3_object(bucket, key):
         logger.info("Deleted 's3://%s/%s'", bucket, key)
 
 
-def download_file_object(request_response, download_object, progress_report):
+def download_file_object(request_response, download_object,
+                         progress_report=lambda _: None):
     """Download file from request response object to a temporary file and
     report progress"""
     chunk_size = 10 * 1024 * 1024  # 10MB
@@ -166,7 +167,8 @@ def download_file_object(request_response, download_object, progress_report):
                 request_response.url, download_object.name)
 
 
-def download_s3_object(bucket, key, download_object, progress_report):
+def download_s3_object(bucket, key, download_object,
+                       progress_report=lambda _: None):
     """Download object from S3 to a temp file and update task progress"""
     s3 = boto3.client('s3')
     logger.debug("Started downloading from 's3://%s/%s' to '%s'",
@@ -270,7 +272,7 @@ def symlink_file(source_path, link_path):
     logger.info("Created symlink '%s' to '%s'", link_path, source_path)
 
 
-def upload_file_object(source, bucket, key, progress_report):
+def upload_file_object(source, bucket, key, progress_report=lambda _: None):
     """Upload file from source path to S3 bucket and report progress"""
     s3 = boto3.client('s3')
     logger.debug("Started uploading from '%s' to 's3://%s/%s'",
