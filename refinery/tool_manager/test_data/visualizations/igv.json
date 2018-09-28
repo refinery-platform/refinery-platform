@@ -4,6 +4,7 @@
   "annotation": {
     "extra_directories": ["/refinery-data"],
     "image_name": "gehlenborglab/docker_igv_js:v0.0.3",
+    "mem_reservation_mb": 15,
     "description": "This visualization does really cool things... with IGV",
     "parameters": [
       {
