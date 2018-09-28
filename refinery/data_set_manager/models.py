@@ -655,8 +655,7 @@ class Node(models.Model):
             return None
 
     def run_generate_auxiliary_node_task(self):
-        """
-        This method is initiated after a task_success signal is returned
+        """This method is initiated after a task_success signal is returned
         from the file import task.
 
         Here we check if the imported FileStoreItem returned from the
@@ -666,9 +665,7 @@ class Node(models.Model):
         generate_auxiliary_file task, and associate said task's id with the
         newly created FileStoreItems `import_task_id` field so that we can
         monitor the task state.
-
         """
-
         # Check if the Django setting to generate auxiliary file has been
         # set to run when FileStoreItems are imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
@@ -681,18 +678,16 @@ class Node(models.Model):
                 file_store_item.datafile and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 "on_file_import"):
-            datafile_path = file_store_item.get_absolute_path()
-
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
             auxiliary_file_store_item = FileStoreItem.objects.create()
 
             auxiliary_node = self._create_and_associate_auxiliary_node(
-                auxiliary_file_store_item.uuid)
-
+                auxiliary_file_store_item.uuid
+            )
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                auxiliary_node, datafile_path, file_store_item)
-
+                auxiliary_node, file_store_item
+            )
             auxiliary_file_store_item.import_task_id = result.task_id
             auxiliary_file_store_item.save()
 

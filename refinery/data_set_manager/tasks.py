@@ -382,13 +382,10 @@ def parse_isatab(username, public, path, identity_id=None,
 
 
 @task()
-def generate_auxiliary_file(auxiliary_node, datafile_path,
-                            parent_node_file_store_item):
-    """
-    Task that will generate an auxiliary file for visualization purposes
+def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
+    """Task that will generate an auxiliary file for visualization purposes
     with specific file generation tasks going on for different FileTypes
     flagged as: `used_for_visualization`.
-
     :param auxiliary_node: a Node instance
     :type auxiliary_node: Node
     :param datafile_path: relative path to datafile used to generate aux file
@@ -397,11 +394,12 @@ def generate_auxiliary_file(auxiliary_node, datafile_path,
     parent Node
     :type parent_node_file_store_item: FileStoreItem
     """
-
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
-
     auxiliary_file_store_item = auxiliary_node.get_file_store_item()
-
+    try:
+        datafile_path = parent_node_file_store_item.datafile.path
+    except (NotImplementedError, ValueError):
+        datafile_path = None
     try:
         start_time = time.time()
         logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
