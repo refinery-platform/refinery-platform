@@ -1182,30 +1182,32 @@ class NodeViewSet(APIView):
                 return Response(
                     NodeSerializer(node).data, status=status.HTTP_200_OK
                 )
-            elif attribute_name and attribute_value:
-                # for now only handling non-derived nodes due to the
-                # complexity of figure out where the source node is
-                if not node.is_derived():
-                    (start_nodes, path_nodes) = \
-                        self.get_start_and_traversed_nodes(node.get_parents())
-                    # traverse down start_node path
-                    nodes_to_check = start_nodes
-                    while len(nodes_to_check) > 0:
-                        current_node = nodes_to_check.pop()
-                        _update_node(current_node,
-                                     attribute_name,
-                                     attribute_value)
-                        children_nodes_uuids = current_node.get_children()
-                        for node_uuid in children_nodes_uuids:
-                            if node_uuid in path_nodes:
-                                child_node = path_nodes[node_uuid]
-                            else:
-                                child_node = self.get_object(node_uuid)
-                            if child_node not in nodes_to_check:
-                                nodes_to_check.append(child_node)
-                    return Response(
-                        NodeSerializer(node).data, status=status.HTTP_200_OK
-                    )
+            # derived node can have duplicate attribute values
+            elif attribute_name and attribute_value and not node.is_derived():
+                start_nodes, path_nodes = self.get_start_and_traversed_nodes(
+                    node.get_parents()
+                )
+                # start with source/start nodes and traverse down path
+                # over request file node and all other children
+                nodes_to_check = start_nodes
+                while nodes_to_check:
+                    current_node = nodes_to_check.pop()
+                    self.update_node_attribute(current_node,
+                                               attribute_name,
+                                               attribute_value)
+                    children_nodes_uuids = current_node.get_children()
+                    for node_uuid in children_nodes_uuids:
+                        if node_uuid in path_nodes:
+                            child_node = path_nodes[node_uuid]
+                        else:
+                            child_node = self.get_object(node_uuid)
+
+                        if child_node not in nodes_to_check:
+                            nodes_to_check.append(child_node)
+
+                return Response(
+                    NodeSerializer(node).data, status=status.HTTP_200_OK
+                )
 
             return Response('Currently, you can only remove node files or '
                             'edit non-derived files',
@@ -1215,10 +1217,10 @@ class NodeViewSet(APIView):
 
     def get_start_and_traversed_nodes(self, children_node_uuids,
                                       start_nodes=[], traversed_nodes={}):
-        if len(children_node_uuids) > 0:
+        if children_node_uuids:
             current_node = self.get_object(children_node_uuids.pop())
             parents_uuid = current_node.get_parents()
-            if len(parents_uuid) > 0:
+            if parents_uuid:
                 children_node_uuids.extend(parents_uuid)
                 traversed_nodes[current_node.uuid] = current_node
             elif current_node not in start_nodes:
@@ -1229,45 +1231,28 @@ class NodeViewSet(APIView):
                                                traversed_nodes)
         return (start_nodes, traversed_nodes)
 
-
-def _update_node(start_node, name, new_value):
-    # check if node has attribute otherwise update based on attribute value
-    attributes = Attribute.objects.filter(node=start_node)
-    if attributes:
-        annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
-        attribute_obj = customize_attribute_response([name])[0]
-        update_attributes = attributes.filter(
-            type=attribute_obj.get('attribute_type')
-        ).filter(
-            subtype=attribute_obj.get('display_name').lower()
-        )
-        if update_attributes:
-            for attribute in update_attributes:
+    def update_node_attribute(self, node, solr_name, new_value):
+        # update has attribute and annotated_node's attribute_value
+        node_attributes = Attribute.objects.filter(node=node)
+        # splits solr name into type and subtype
+        attribute_obj = customize_attribute_response([solr_name])[0]
+        if node_attributes:
+            attribute_obj = customize_attribute_response([solr_name])[0]
+            for attribute in node_attributes:
                 attribute.value = new_value
                 attribute.save()
-        if len(annotatedNodes) > 0:
-            annotatedNodes = annotatedNodes.filter(
+
+        annotated_nodes = AnnotatedNode.objects.filter(node=node)
+        if annotated_nodes:
+            filtered_annotated_nodes = annotated_nodes.filter(
                 attribute_type=attribute_obj.get('attribute_type')
             ).filter(
                 attribute_subtype=attribute_obj.get('display_name').lower()
             )
-            for ann_node in list(annotatedNodes):
-                ann_node.attribute_value = ann_node.attribute.value
-                ann_node.save()
-        start_node.update_solr_index()
-    else:
-        annotatedNodes = AnnotatedNode.objects.filter(node=start_node)
-        attribute_obj = customize_attribute_response([name])[0]
-        filteredAnnotatedNodes = annotatedNodes.filter(
-                attribute_type=attribute_obj.get('attribute_type')
-            ).filter(
-                attribute_subtype=attribute_obj.get('display_name').lower()
-            )
-        if len(annotatedNodes) > 0:
-            for annotatedNode in filteredAnnotatedNodes:
+            for annotatedNode in filtered_annotated_nodes:
                 annotatedNode.attribute_value = annotatedNode.attribute.value
                 annotatedNode.save()
-                start_node.update_solr_index()
+            node.update_solr_index()
 
 
 def _check_data_set_ownership(user, data_set_uuid):
