@@ -1188,11 +1188,14 @@ class NodeViewSet(APIView):
                 # start with source/start nodes and traverse down path
                 # over request file node and all other children
                 nodes_to_check = start_nodes
+                updated_nodes = []
                 while nodes_to_check:
                     current_node = nodes_to_check.pop()
-                    self.update_node_attribute(current_node,
-                                               attribute_name,
-                                               attribute_value)
+                    if current_node not in updated_nodes:
+                        self.update_node_attribute(current_node,
+                                                   attribute_name,
+                                                   attribute_value)
+                        updated_nodes.append(current_node)
                     children_nodes = current_node.children.all()
                     for child_node in children_nodes:
                         if child_node not in nodes_to_check:
@@ -1241,6 +1244,7 @@ class NodeViewSet(APIView):
             for annotatedNode in filtered_annotated_nodes:
                 annotatedNode.attribute_value = annotatedNode.attribute.value
                 annotatedNode.save()
+
             node.update_solr_index()
 
 

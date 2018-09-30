@@ -23,12 +23,10 @@ from core.test_views import APIV2TestCase
 from file_store.models import FileStoreItem
 
 from .models import (Attribute, AnnotatedNode, Assay, AttributeOrder,
-                     Investigation,
-                     Node, Study)
+                     Investigation, Node, Study)
 from .tests import MetadataImportTestBase
 from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
                     import_file)
-
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -927,7 +925,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.status_code, 405)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
-    def test_patch_edit_organism_part(self, update_solr_index_mock):
+    def test_patch_edit_annotated_node(self, update_solr_index_mock):
         nodes = self.isatab_9909_data_set.get_nodes()
         file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
             name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
@@ -947,7 +945,6 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         force_authenticate(patch_request, user=self.user)
         self.view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
-        # file node updates
         self.assertEqual(annotated_node.attribute_value, new_value)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -1042,7 +1039,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         force_authenticate(patch_request, user=self.user)
         self.view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
-        # derived nodes attribute_values updated, there's 6
+        # derived nodes attribute_values not updated, there's 6
         derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)
         derived_attributes = []
         for node in derived_array_nodes:
