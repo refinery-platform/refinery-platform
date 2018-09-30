@@ -854,8 +854,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_updates_nodes_attributes(self, update_solr_index_mock):
         new_value = 'mouse'
-        assay = self.hg_19_data_set.get_assays()[0]
-        node = Node.objects.filter(assay=assay).filter(type='Raw Data File')[0]
+        node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
         annotated_node = AnnotatedNode.objects.filter(node=node).get(
             attribute_subtype='organism'
         )
@@ -871,8 +870,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_updates_attribute_value(self, update_solr_index_mock):
         new_value = 'zebra'
-        assay = self.hg_19_data_set.get_assays()[0]
-        node = Node.objects.filter(assay=assay).filter(type='Raw Data File')[0]
+        node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
         annotated_node = AnnotatedNode.objects.filter(node=node).get(
             attribute_subtype='organism'
         )
@@ -890,8 +888,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_calls_mocker(self, update_solr_index_mock):
-        assay = self.hg_19_data_set.get_assays()[0]
-        node = Node.objects.filter(assay=assay).filter(type='Raw Data File')[0]
+        node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
         annotated_node = AnnotatedNode.objects.filter(node=node).get(
             attribute_subtype='organism'
         )
@@ -1059,6 +1056,24 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             ).filter(attribute_value=old_value)
             derived_matrix_attributes.extend(ann_node_old)
         self.assertEqual(len(derived_matrix_attributes), 4)
+
+    def test_get_start_nodes_returns_start_nodes_simple_path(self):
+        start_node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.SOURCE
+        )[0]
+        assay_name_node = start_node.children.all()[0].children.all()
+        response_nodes = NodeViewSet().get_start_nodes(list(assay_name_node),
+                                                       [], [])
+        self.assertEqual(len(response_nodes), 1)
+        self.assertEqual(start_node, response_nodes[0])
+
+    def test_get_start_nodes_returns_start_nodes_derived_path(self):
+        end_nodes = self.isatab_9909_data_set.get_nodes().filter(
+            name='http://test.site/sites/9909.GPL96_geo.pdf')
+        response_nodes = NodeViewSet().get_start_nodes(list(end_nodes), [], [])
+        self.assertEqual(len(response_nodes), 2)
+        self.assertEqual(response_nodes[0].type, Node.SOURCE)
+        self.assertEqual(response_nodes[1].type, Node.SOURCE)
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):

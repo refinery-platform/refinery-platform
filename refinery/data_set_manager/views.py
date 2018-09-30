@@ -1184,7 +1184,8 @@ class NodeViewSet(APIView):
                 )
             # derived node can have duplicate attribute values
             elif attribute_name and attribute_value and not node.is_derived():
-                start_nodes = self.get_start_nodes(list(node.parents.all()))
+                start_nodes = self.get_start_nodes(list(node.parents.all()),
+                                                   [], [])
                 # start with source/start nodes and traverse down path
                 # over request file node and all other children
                 nodes_to_check = start_nodes
@@ -1211,16 +1212,19 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def get_start_nodes(self, children_nodes, start_nodes=[]):
+    def get_start_nodes(self, children_nodes, start_nodes=[],
+                        checked_nodes=[]):
         # traverses backwards from a list of nodes to grab all start nodes
         if children_nodes:
             current_node = children_nodes.pop()
             parent_nodes = list(current_node.parents.all())
-            if parent_nodes:
-                children_nodes.extend(parent_nodes)
-            elif current_node not in start_nodes:
+            for parent in parent_nodes:
+                if parent not in checked_nodes:
+                    children_nodes.append(parent)
+                    checked_nodes.append(parent)
+            if not parent_nodes and current_node not in start_nodes:
                 start_nodes.append(current_node)
-            self.get_start_nodes(children_nodes, start_nodes)
+            self.get_start_nodes(children_nodes, start_nodes, checked_nodes)
         return start_nodes
 
     def update_node_attribute(self, node, solr_name, new_value):
