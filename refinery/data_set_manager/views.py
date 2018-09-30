@@ -1184,9 +1184,7 @@ class NodeViewSet(APIView):
                 )
             # derived node can have duplicate attribute values
             elif attribute_name and attribute_value and not node.is_derived():
-                start_nodes, path_nodes = self.get_start_and_traversed_nodes(
-                    node.get_parents()
-                )
+                start_nodes = self.get_start_nodes(list(node.parents.all()))
                 # start with source/start nodes and traverse down path
                 # over request file node and all other children
                 nodes_to_check = start_nodes
@@ -1195,13 +1193,8 @@ class NodeViewSet(APIView):
                     self.update_node_attribute(current_node,
                                                attribute_name,
                                                attribute_value)
-                    children_nodes_uuids = current_node.get_children()
-                    for node_uuid in children_nodes_uuids:
-                        if node_uuid in path_nodes:
-                            child_node = path_nodes[node_uuid]
-                        else:
-                            child_node = self.get_object(node_uuid)
-
+                    children_nodes = current_node.children.all()
+                    for child_node in children_nodes:
                         if child_node not in nodes_to_check:
                             nodes_to_check.append(child_node)
 
@@ -1215,35 +1208,31 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def get_start_and_traversed_nodes(self, children_node_uuids,
-                                      start_nodes=[], traversed_nodes={}):
-        if children_node_uuids:
-            current_node = self.get_object(children_node_uuids.pop())
-            parents_uuid = current_node.get_parents()
-            if parents_uuid:
-                children_node_uuids.extend(parents_uuid)
-                traversed_nodes[current_node.uuid] = current_node
+    def get_start_nodes(self, children_nodes, start_nodes=[]):
+        # traverses backwards from a list of nodes to grab all start nodes
+        if children_nodes:
+            current_node = children_nodes.pop()
+            parent_nodes = list(current_node.parents.all())
+            if parent_nodes:
+                children_nodes.extend(parent_nodes)
             elif current_node not in start_nodes:
                 start_nodes.append(current_node)
-
-            self.get_start_and_traversed_nodes(children_node_uuids,
-                                               start_nodes,
-                                               traversed_nodes)
-        return (start_nodes, traversed_nodes)
+            self.get_start_nodes(children_nodes, start_nodes)
+        return start_nodes
 
     def update_node_attribute(self, node, solr_name, new_value):
         # update has attribute and annotated_node's attribute_value
         node_attributes = Attribute.objects.filter(node=node)
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([solr_name])[0]
-        if node_attributes:
+        if node_attributes.exists():
             attribute_obj = customize_attribute_response([solr_name])[0]
             for attribute in node_attributes:
                 attribute.value = new_value
                 attribute.save()
 
         annotated_nodes = AnnotatedNode.objects.filter(node=node)
-        if annotated_nodes:
+        if annotated_nodes.exists():
             filtered_annotated_nodes = annotated_nodes.filter(
                 attribute_type=attribute_obj.get('attribute_type')
             ).filter(
