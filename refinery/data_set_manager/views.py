@@ -1247,8 +1247,11 @@ class NodeViewSet(APIView):
         attribute_subtype = attribute_obj.get('display_name').lower()
 
         if node_attributes.exists():
-            node_attributes = node_attributes.filter(type=attribute_type)\
-                .filter(subtype=attribute_subtype)
+            node_attributes = node_attributes.filter(
+                type=attribute_type
+            ).filter(
+                subtype=attribute_subtype
+            )
             for attribute in node_attributes:
                 attribute.value = new_value
                 attribute.save()
