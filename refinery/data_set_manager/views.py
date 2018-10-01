@@ -1212,8 +1212,7 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def get_start_nodes(self, children_nodes, start_nodes=[],
-                        checked_nodes=[]):
+    def get_start_nodes(self, children_nodes, start_nodes, checked_nodes):
         # traverses backwards from a list of nodes to grab all start nodes
         if children_nodes:
             current_node = children_nodes.pop()
