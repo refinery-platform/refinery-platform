@@ -22,7 +22,7 @@ from core.models import DataSet, InvestigationLink
 from core.test_views import APIV2TestCase
 from file_store.models import FileStoreItem
 
-from .models import (Attribute, AnnotatedNode, Assay, AttributeOrder,
+from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .tests import MetadataImportTestBase
 from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
