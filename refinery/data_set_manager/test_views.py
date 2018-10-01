@@ -1058,19 +1058,18 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(len(derived_matrix_attributes), 4)
 
     def test_get_start_nodes_returns_start_nodes_simple_path(self):
-        start_node = self.hg_19_data_set.get_nodes().filter(
+        source_node = self.hg_19_data_set.get_nodes().filter(
             type=Node.SOURCE
         )[0]
-        assay_name_node = start_node.children.all()[0].children.all()
-        response_nodes = NodeViewSet().get_start_nodes(list(assay_name_node),
-                                                       [], [])
+        assay_name_node = source_node.children.all()[0].children.all()
+        response_nodes = NodeViewSet().get_root_nodes(list(assay_name_node))
         self.assertEqual(len(response_nodes), 1)
-        self.assertEqual(start_node, response_nodes[0])
+        self.assertEqual(source_node, response_nodes[0])
 
     def test_get_start_nodes_returns_start_nodes_derived_path(self):
         end_nodes = self.isatab_9909_data_set.get_nodes().filter(
             name='http://test.site/sites/9909.GPL96_geo.pdf')
-        response_nodes = NodeViewSet().get_start_nodes(list(end_nodes), [], [])
+        response_nodes = NodeViewSet().get_root_nodes(list(end_nodes))
         self.assertEqual(len(response_nodes), 2)
         self.assertEqual(response_nodes[0].type, Node.SOURCE)
         self.assertEqual(response_nodes[1].type, Node.SOURCE)

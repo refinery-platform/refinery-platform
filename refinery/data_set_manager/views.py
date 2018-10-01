@@ -1184,11 +1184,9 @@ class NodeViewSet(APIView):
                 )
             # derived node can have duplicate attribute values
             elif attribute_name and attribute_value and not node.is_derived():
-                start_nodes = self.get_start_nodes(list(node.parents.all()),
-                                                   [], [])
+                nodes_to_check = self.get_root_nodes(list(node.parents.all()))
                 # start with source/start nodes and traverse down path
                 # over request file node and all other children
-                nodes_to_check = start_nodes
                 updated_nodes = []
                 while nodes_to_check:
                     current_node = nodes_to_check.pop()
@@ -1212,25 +1210,31 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def get_start_nodes(self, children_nodes, start_nodes, checked_nodes):
+    def get_root_nodes(self, parent_nodes, root_nodes=None,
+                       checked_nodes=None):
         """
         traverses backwards from a list of nodes to grab all start nodes
-        :param children_nodes: list, beginning nodes to traverse from
-        :param start_nodes: list, start nodes for all the paths
+        :param parent_nodes: list, beginning nodes to traverse from
+        :param root_nodes: list, start nodes for all the paths
         :param checked_nodes: list, nodes who's parents have been traversed
         :return: start_nodes
         """
-        if children_nodes:
-            current_node = children_nodes.pop()
-            parent_nodes = current_node.parents.all()
-            for parent in parent_nodes:
+        if root_nodes is None:
+            root_nodes = []
+        if checked_nodes is None:
+            checked_nodes = []
+
+        if parent_nodes:
+            current_node = parent_nodes.pop()
+            next_parent_nodes = current_node.parents.all()
+            for parent in next_parent_nodes:
                 if parent not in checked_nodes:
-                    children_nodes.append(parent)
+                    parent_nodes.append(parent)
                     checked_nodes.append(parent)
-            if not parent_nodes and current_node not in start_nodes:
-                start_nodes.append(current_node)
-            self.get_start_nodes(children_nodes, start_nodes, checked_nodes)
-        return start_nodes
+            if not next_parent_nodes and current_node not in root_nodes:
+                root_nodes.append(current_node)
+            self.get_root_nodes(parent_nodes, root_nodes, checked_nodes)
+        return root_nodes
 
     def update_node_attribute(self, node, solr_name, new_value):
         """
