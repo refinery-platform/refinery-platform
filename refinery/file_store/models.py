@@ -198,16 +198,13 @@ class FileStoreItem(models.Model):
                 storage = S3MediaStorage()
                 new_file_store_name = storage.get_name(new_name)
                 try:
-                    copy_s3_object(self.datafile.storage.bucket_name,
-                                   self.datafile.name,
-                                   self.datafile.storage.bucket_name,
-                                   new_file_store_name)
+                    copy_s3_object(storage.bucket_name, self.datafile.name,
+                                   storage.bucket_name, new_file_store_name)
                 except RuntimeError as exc:
                     logger.error("Renaming datafile '%s' failed: %s",
                                  self.datafile.name, exc)
                 else:
-                    delete_s3_object(self.datafile.storage.bucket_name,
-                                     self.datafile.name)
+                    delete_s3_object(storage.bucket_name, self.datafile.name)
                     self.datafile.name = new_file_store_name
                     self.save()
             else:
