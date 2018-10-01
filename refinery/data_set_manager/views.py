@@ -1243,8 +1243,12 @@ class NodeViewSet(APIView):
         node_attributes = Attribute.objects.filter(node=node)
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([solr_name])[0]
+        attribute_type = attribute_obj.get('attribute_type')
+        attribute_subtype = attribute_obj.get('display_name').lower()
+
         if node_attributes.exists():
-            attribute_obj = customize_attribute_response([solr_name])[0]
+            node_attributes = node_attributes.filter(type=attribute_type)\
+                .filter(subtype=attribute_subtype)
             for attribute in node_attributes:
                 attribute.value = new_value
                 attribute.save()
@@ -1252,14 +1256,14 @@ class NodeViewSet(APIView):
         annotated_nodes = AnnotatedNode.objects.filter(node=node)
         if annotated_nodes.exists():
             filtered_annotated_nodes = annotated_nodes.filter(
-                attribute_type=attribute_obj.get('attribute_type')
+                attribute_type=attribute_type
             ).filter(
-                attribute_subtype=attribute_obj.get('display_name').lower()
+                attribute_subtype=attribute_subtype
             )
             for annotatedNode in filtered_annotated_nodes:
                 annotatedNode.attribute_value = annotatedNode.attribute.value
                 annotatedNode.save()
-
+            # annotated nodes requires an index updating
             node.update_solr_index()
 
 
