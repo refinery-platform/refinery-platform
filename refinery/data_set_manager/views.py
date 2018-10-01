@@ -1213,10 +1213,16 @@ class NodeViewSet(APIView):
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
     def get_start_nodes(self, children_nodes, start_nodes, checked_nodes):
-        # traverses backwards from a list of nodes to grab all start nodes
+        """
+        traverses backwards from a list of nodes to grab all start nodes
+        :param children_nodes: list, beginning nodes to traverse from
+        :param start_nodes: list, start nodes for all the paths
+        :param checked_nodes: list, nodes who's parents have been traversed
+        :return: start_nodes
+        """
         if children_nodes:
             current_node = children_nodes.pop()
-            parent_nodes = list(current_node.parents.all())
+            parent_nodes = current_node.parents.all()
             for parent in parent_nodes:
                 if parent not in checked_nodes:
                     children_nodes.append(parent)
@@ -1227,7 +1233,13 @@ class NodeViewSet(APIView):
         return start_nodes
 
     def update_node_attribute(self, node, solr_name, new_value):
-        # update has attribute and annotated_node's attribute_value
+        """
+        updates node and it's annotated node's attribute value
+        :param node: obj, instance of a node object
+        :param solr_name: str, solr_name for the attribute to be updated
+        :param checked_nodes: str, value for attribute's value
+        :return: start_nodes
+        """
         node_attributes = Attribute.objects.filter(node=node)
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([solr_name])[0]
