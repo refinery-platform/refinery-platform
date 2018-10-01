@@ -215,11 +215,12 @@ def create_tool_with_necessary_models(tool_type, user=None):
 
 
 def create_hg_19_data_set(user=None):
-    dataset_uuid = str(uuid_builtin.uuid4())
+    # Generally mocks the hg_19 local data set's study, assay, nodes,
+    # annotated notes, and attributes.
     dataset = DataSetFactory(
-        uuid=dataset_uuid,
-        title="hg-19 - {}".format(dataset_uuid),
-        name="Replica of hg-19 DataSet - {}".format(dataset_uuid),
+        uuid=str(uuid_builtin.uuid4()),
+        title="Replica of hg-19 DataSet",
+        name="Replica of hg-19 DataSet",
         slug=None
     )
     latest_study = _create_dataset_objects(dataset, False, 1)
@@ -290,6 +291,8 @@ def create_hg_19_data_set(user=None):
 
 
 def create_isatab_9909_data_set(user=None):
+    # Generally mocks the isatab 9909 data set's study, assay, nodes,
+    # annotated notes, and attributes.
     dataset = DataSetFactory(
         accession='9909',
         uuid=str(uuid_builtin.uuid4()),
