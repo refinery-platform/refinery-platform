@@ -143,7 +143,7 @@ class FileStoreItem(models.Model):
             return self.datafile.size
         except ValueError:  # no datafile
             return 0
-        except (OSError, botocore.exceptions.ClientError,
+        except (EnvironmentError, botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
             # file is missing
             logger.critical("Error getting size for '%s': %s", self, exc)
@@ -181,7 +181,8 @@ class FileStoreItem(models.Model):
             file_name = self.datafile.name
             try:
                 self.datafile.delete(save=save_instance)
-            except OSError as exc:
+            except (EnvironmentError, botocore.exceptions.ClientError,
+                    botocore.exceptions.ParamValidationError) as exc:
                 logger.error("Error deleting file '%s': %s", file_name, exc)
             else:
                 logger.info("Deleted datafile '%s'", file_name)
