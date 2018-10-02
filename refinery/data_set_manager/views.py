@@ -1151,7 +1151,7 @@ class NodeViewSet(APIView):
     def patch(self, request, uuid):
         node = self.get_object(uuid)
         new_file_uuid = request.data.get('file_uuid')
-        attribute_name = request.data.get('attribute_solr_name')
+        solr_name = request.data.get('attribute_solr_name')
         attribute_value = request.data.get('attribute_value')
         data_set = node.study.get_dataset()
 
@@ -1183,16 +1183,25 @@ class NodeViewSet(APIView):
                     NodeSerializer(node).data, status=status.HTTP_200_OK
                 )
             # derived node can have duplicate attribute values
-            elif attribute_name and attribute_value and not node.is_derived():
-                nodes_to_check = self.get_root_nodes(list(node.parents.all()))
+            elif solr_name and attribute_value and not node.is_derived():
+                # splits solr name into type and subtype
+                attribute_obj = customize_attribute_response([solr_name])[0]
+                root_node, root_attributes = self.find_root_attributes(
+                    [node], attribute_obj
+                )
+
+                for attribute in root_attributes:
+                    attribute.value = attribute_value
+                    attribute.save()
                 # start with source/start nodes and traverse down path
                 # over request file node and all other children
-                updated_nodes = []
+                nodes_to_check = list(root_node.children.all())
+                updated_nodes = [root_node]
                 while nodes_to_check:
                     current_node = nodes_to_check.pop()
                     if current_node not in updated_nodes:
                         self.update_node_attribute(current_node,
-                                                   attribute_name,
+                                                   attribute_obj,
                                                    attribute_value)
                         updated_nodes.append(current_node)
                     children_nodes = current_node.children.all()
@@ -1210,17 +1219,18 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def get_root_nodes(self, parent_nodes, root_nodes=None,
-                       checked_nodes=None):
+    def find_root_attributes(self, parent_nodes, attribute_types,
+                             checked_nodes=None):
         """
-        traverses backwards from a list of nodes to grab all start nodes
+        traverses backwards from a list of nodes to find root attribute's
+        node. Note, mistakes happen where a node will have duplicate
+        attributes, so this will return both.
         :param parent_nodes: list, beginning nodes to traverse from
-        :param root_nodes: list, start nodes for all the paths
+        :param attribute_types: obj, contains attribute type and subtype
         :param checked_nodes: list, nodes who's parents have been traversed
-        :return: start_nodes
+        :return: root node
+        :return: queryset of roots attributes
         """
-        if root_nodes is None:
-            root_nodes = []
         if checked_nodes is None:
             checked_nodes = []
 
@@ -1231,12 +1241,18 @@ class NodeViewSet(APIView):
                 if parent not in checked_nodes:
                     parent_nodes.append(parent)
                     checked_nodes.append(parent)
-            if not next_parent_nodes and current_node not in root_nodes:
-                root_nodes.append(current_node)
-            self.get_root_nodes(parent_nodes, root_nodes, checked_nodes)
-        return root_nodes
+            node_attributes = Attribute.objects.filter(
+                node=current_node,
+                type=attribute_types.get('attribute_type'),
+                subtype=attribute_types.get('display_name').lower()
+            )
+            if node_attributes.exists():
+                return current_node, node_attributes
+            else:
+                return self.find_root_attributes(parent_nodes, attribute_types,
+                                                 checked_nodes)
 
-    def update_node_attribute(self, node, solr_name, new_value):
+    def update_node_attribute(self, node, attribute_types, new_value):
         """
         updates node and it's annotated node's attribute value
         :param node: obj, instance of a node object
@@ -1244,28 +1260,12 @@ class NodeViewSet(APIView):
         :param checked_nodes: str, value for attribute's value
         :return: start_nodes
         """
-        node_attributes = Attribute.objects.filter(node=node)
-        # splits solr name into type and subtype
-        attribute_obj = customize_attribute_response([solr_name])[0]
-        attribute_type = attribute_obj.get('attribute_type')
-        attribute_subtype = attribute_obj.get('display_name').lower()
-
-        if node_attributes.exists():
-            node_attributes = node_attributes.filter(
-                type=attribute_type
-            ).filter(
-                subtype=attribute_subtype
-            )
-            for attribute in node_attributes:
-                attribute.value = new_value
-                attribute.save()
 
         annotated_nodes = AnnotatedNode.objects.filter(node=node)
         if annotated_nodes.exists():
             filtered_annotated_nodes = annotated_nodes.filter(
-                attribute_type=attribute_type
-            ).filter(
-                attribute_subtype=attribute_subtype
+                attribute_type=attribute_types.get('attribute_type'),
+                attribute_subtype=attribute_types.get('display_name').lower()
             )
             for annotatedNode in filtered_annotated_nodes:
                 annotatedNode.attribute_value = annotatedNode.attribute.value
