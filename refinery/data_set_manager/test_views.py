@@ -857,7 +857,9 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def test_patch_edit_updates_nodes_attributes(self, update_solr_index_mock):
         # updates the source attributes (m2m for annotated nodes)
         new_value = 'mouse'
-        node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
         annotated_node = AnnotatedNode.objects.filter(
             node=node, attribute_subtype='organism'
         )[0]
@@ -874,7 +876,9 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def test_patch_edit_updates_attribute_value(self, update_solr_index_mock):
         # updates the hardcoded annotated node's attribute_value
         new_value = 'zebra'
-        node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
         annotated_node = AnnotatedNode.objects.filter(
             node=node, attribute_subtype='organism'
         )[0]
@@ -892,7 +896,9 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_calls_update_solr_index(self, update_solr_index_mock):
-        node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
         annotated_node = AnnotatedNode.objects.filter(
             node=node, attribute_subtype='organism'
         )[0]
