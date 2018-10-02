@@ -16,7 +16,6 @@ $conf_mode = 'dev'
 $django_settings_module = "config.settings.${conf_mode}"
 $ui_app_root = "${django_root}/ui"
 $data_dir = '/data'
-$django_docker_engine_data_dir = "${data_dir}/django-docker-engine-data"
 $django_docker_engine_mem_limit_mb = 20
 $docker_host = "tcp://127.0.0.1:2375"
 
