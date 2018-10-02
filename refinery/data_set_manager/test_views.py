@@ -855,7 +855,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_updates_nodes_attributes(self, update_solr_index_mock):
-        # updates the source attributes (m2m for annotated nodes)
+        # updates the source attributes
         new_value = 'mouse'
         node = self.hg_19_data_set.get_nodes().filter(
             type=Node.RAW_DATA_FILE
