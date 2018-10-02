@@ -1200,9 +1200,9 @@ class NodeViewSet(APIView):
                 while nodes_to_check:
                     current_node = nodes_to_check.pop()
                     if current_node not in updated_nodes:
-                        self.update_node_attribute(current_node,
-                                                   attribute_obj,
-                                                   attribute_value)
+                        self.update_annotated_nodes(current_node,
+                                                    attribute_obj,
+                                                    attribute_value)
                         updated_nodes.append(current_node)
                     children_nodes = current_node.children.all()
                     for child_node in children_nodes:
@@ -1252,15 +1252,14 @@ class NodeViewSet(APIView):
                 return self.find_root_attributes(parent_nodes, attribute_types,
                                                  checked_nodes)
 
-    def update_node_attribute(self, node, attribute_types, new_value):
+    def update_annotated_nodes(self, node, attribute_types, new_value):
         """
         updates node and it's annotated node's attribute value
         :param node: obj, instance of a node object
-        :param solr_name: str, solr_name for the attribute to be updated
-        :param checked_nodes: str, value for attribute's value
+        :param attribute_types: obj, contains attribute type and subtype
+        :param new_value: str, value for attribute's value
         :return: start_nodes
         """
-
         annotated_nodes = AnnotatedNode.objects.filter(node=node)
         if annotated_nodes.exists():
             filtered_annotated_nodes = annotated_nodes.filter(

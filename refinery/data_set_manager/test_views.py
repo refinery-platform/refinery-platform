@@ -1057,22 +1057,26 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             derived_matrix_attributes.extend(ann_node_old)
         self.assertEqual(len(derived_matrix_attributes), 4)
 
-    def test_get_start_nodes_returns_start_nodes_simple_path(self):
-        source_node = self.hg_19_data_set.get_nodes().filter(
-            type=Node.SOURCE
-        )[0]
-        assay_name_node = source_node.children.all()[0].children.all()
-        response_nodes = NodeViewSet().get_root_nodes(list(assay_name_node))
-        self.assertEqual(len(response_nodes), 1)
-        self.assertEqual(source_node, response_nodes[0])
-
-    def test_get_start_nodes_returns_start_nodes_derived_path(self):
-        end_nodes = self.isatab_9909_data_set.get_nodes().filter(
-            name='http://test.site/sites/9909.GPL96_geo.pdf')
-        response_nodes = NodeViewSet().get_root_nodes(list(end_nodes))
-        self.assertEqual(len(response_nodes), 2)
-        self.assertEqual(response_nodes[0].type, Node.SOURCE)
-        self.assertEqual(response_nodes[1].type, Node.SOURCE)
+    def test_find_root_attributes_returns_roots_simple_path(self):
+        nodes = self.hg_19_data_set.get_nodes()
+        source_node = nodes.get(
+            type=Node.SAMPLE, name='s5_p42_E2_45min.fastq.gz'
+        )
+        file_node = nodes.get(
+            type=Node.RAW_DATA_FILE, name='s5_p42_E2_45min.fastq.gz'
+        )
+        attribute_obj = {'attribute_type': 'Characteristics',
+                         'display_name': 'organism'}
+        file_attribute = Attribute.objects.filter(
+            node=source_node,
+            type=attribute_obj.get('attribute_type'),
+            subtype=attribute_obj.get('display_name'),
+            value='Human')[0]
+        root_node, root_attributes = NodeViewSet().find_root_attributes(
+            [file_node], attribute_obj
+        )
+        self.assertEqual(source_node, root_node)
+        self.assertEqual(file_attribute, root_attributes[0])
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):
