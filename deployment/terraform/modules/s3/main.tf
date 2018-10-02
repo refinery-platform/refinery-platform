@@ -24,6 +24,14 @@ resource "aws_s3_bucket" "uploaded_files" {
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
+
+  lifecycle_rule {
+    enabled                                = true
+    abort_incomplete_multipart_upload_days = 1
+    expiration {
+      days = 7
+    }
+  }
 }
 
 resource "aws_s3_bucket" "media_files" {
