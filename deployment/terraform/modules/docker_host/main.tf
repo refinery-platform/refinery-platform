@@ -1,7 +1,8 @@
 resource "aws_security_group" "allow_docker" {
-  name        = "${var.security_group_name}"
+  name        = "${terraform.workspace}-docker"
   description = "Allow connection to docker engine from within VPC"
   vpc_id      = "${var.vpc_id}"
+  tags        = "${var.tags}"
 
   # Allow access on IANA User ports:
   # https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
@@ -20,9 +21,6 @@ resource "aws_security_group" "allow_docker" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags {
-    Name = "${var.security_group_name}"
-  }
 }
 
 resource "aws_instance" "docker_host" {
@@ -33,6 +31,13 @@ resource "aws_instance" "docker_host" {
   root_block_device {
     volume_size = "20"
   }
+  tags                   = "${merge(
+    var.tags, map("Name", "${terraform.workspace} docker host")
+  )}"
+  volume_tags            = "${merge(
+    var.tags, map("Name", "${terraform.workspace} docker host")
+  )}"
+  # systemd config based on https://success.docker.com/article/How_do_I_enable_the_remote_API_for_dockerd
   user_data = <<EOF
 #!/bin/bash
 set -o errexit
@@ -44,10 +49,4 @@ sudo echo -e '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd -H fd:// -H tcp:
 sudo systemctl daemon-reload
 sudo service docker restart
 EOF
-
-  # systemd config based on https://success.docker.com/article/How_do_I_enable_the_remote_API_for_dockerd
-
-  tags {
-    Name = "${terraform.workspace} (terraform docker host)"
-  }
 }
