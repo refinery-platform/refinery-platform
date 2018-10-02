@@ -214,7 +214,7 @@ def create_tool_with_necessary_models(tool_type, user=None):
     return tool
 
 
-def create_hg_19_data_set(user=None):
+def create_mock_hg_19_data_set(user=None):
     # Generally mocks the hg_19 local data set's study, assay, nodes,
     # annotated notes, and attributes.
     dataset = DataSetFactory(
@@ -290,7 +290,7 @@ def create_hg_19_data_set(user=None):
     return dataset
 
 
-def create_isatab_9909_data_set(user=None):
+def create_mock_isatab_9909_data_set(user=None):
     # Generally mocks the isatab 9909 data set's study, assay, nodes,
     # annotated notes, and attributes.
     dataset = DataSetFactory(

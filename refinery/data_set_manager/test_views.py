@@ -10,8 +10,8 @@ from django.http import QueryDict
 from django.test import LiveServerTestCase, override_settings
 
 from factory_boy.utils import (create_dataset_with_necessary_models,
-                               create_hg_19_data_set,
-                               create_isatab_9909_data_set,
+                               create_mock_hg_19_data_set,
+                               create_mock_isatab_9909_data_set,
                                make_analyses_with_single_dataset)
 from guardian.shortcuts import assign_perm
 from mock import ANY
@@ -792,8 +792,10 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             view=NodeViewSet.as_view()
         )
         self.data_set = create_dataset_with_necessary_models(user=self.user)
-        self.hg_19_data_set = create_hg_19_data_set(user=self.user)
-        self.isatab_9909_data_set = create_isatab_9909_data_set(user=self.user)
+        self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user)
+        self.isatab_9909_data_set = create_mock_isatab_9909_data_set(
+            user=self.user
+        )
         self.node = self.data_set.get_nodes()[0]
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -853,11 +855,12 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_updates_nodes_attributes(self, update_solr_index_mock):
+        # updates the source attributes (m2m for annotated nodes)
         new_value = 'mouse'
         node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
-        annotated_node = AnnotatedNode.objects.filter(node=node).get(
-            attribute_subtype='organism'
-        )
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(urljoin(self.url_root, node.uuid),
@@ -869,11 +872,12 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_updates_attribute_value(self, update_solr_index_mock):
+        # updates the hardcoded annotated node's attribute_value
         new_value = 'zebra'
         node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
-        annotated_node = AnnotatedNode.objects.filter(node=node).get(
-            attribute_subtype='organism'
-        )
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(
@@ -887,11 +891,11 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(annotated_node.attribute_value, new_value)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
-    def test_patch_edit_calls_mocker(self, update_solr_index_mock):
+    def test_patch_edit_calls_update_solr_index(self, update_solr_index_mock):
         node = self.hg_19_data_set.get_nodes().filter(type='Raw Data File')[0]
-        annotated_node = AnnotatedNode.objects.filter(node=node).get(
-            attribute_subtype='organism'
-        )
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(
@@ -908,8 +912,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         nodes = self.isatab_9909_data_set.get_nodes()
         derived_node = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)[0]
         annotated_node = AnnotatedNode.objects.filter(
-            node=derived_node
-        ).filter(attribute_subtype='organism')[0]
+            node=derived_node, attribute_subtype='organism'
+        )[0]
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(
@@ -924,13 +928,15 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_annotated_node(self, update_solr_index_mock):
         nodes = self.isatab_9909_data_set.get_nodes()
-        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+        file_node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
             name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
         )[0]
 
-        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+        annotated_node = AnnotatedNode.objects.filter(
+            node=file_node,
             attribute_subtype='organism part'
-        )
+        )[0]
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
@@ -947,13 +953,15 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_source_attribute(self, update_solr_index_mock):
         nodes = self.isatab_9909_data_set.get_nodes()
-        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+        file_node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
             name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
         )[0]
 
-        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+        annotated_node = AnnotatedNode.objects.filter(
+            node=file_node,
             attribute_subtype='organism part'
-        )
+        )[0]
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
@@ -966,23 +974,27 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
         # source node attribute updated
-        source_node = nodes.filter(type=Node.SOURCE).filter(
+        source_node = nodes.filter(
+            type=Node.SOURCE,
             name='myoblasts'
         )[0]
-        source_attribute = Attribute.objects.filter(node=source_node).filter(
+        source_attribute = Attribute.objects.filter(
+            node=source_node,
             subtype='organism part'
         )[0]
         self.assertEqual(source_attribute.value, new_value)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
-    def test_patch_edit_updates_children_nodes(self, update_solr_index_mock):
+    def test_patch_edit_updates_child_nodes(self, update_solr_index_mock):
         nodes = self.isatab_9909_data_set.get_nodes()
-        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+        file_node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
             name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
         )[0]
-        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
+        annotated_node = AnnotatedNode.objects.filter(
+            node=file_node,
             attribute_subtype='organism part'
-        )
+        )[0]
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
@@ -998,9 +1010,11 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)
         derived_attributes = []
         for node in derived_array_nodes:
-            ann_node_new = AnnotatedNode.objects.filter(node=node).filter(
-                attribute_subtype='organism part'
-            ).filter(attribute_value=new_value)
+            ann_node_new = AnnotatedNode.objects.filter(
+                node=node,
+                attribute_subtype='organism part',
+                attribute_value=new_value
+            )
             derived_attributes.extend(ann_node_new)
         self.assertEqual(len(derived_attributes), 2)
 
@@ -1009,21 +1023,24 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         derived_matrix_attributes = []
         for node in derived_array_matrix_nodes:
-            ann_node_new = AnnotatedNode.objects.filter(node=node).filter(
-                attribute_subtype='organism part'
-            ).filter(attribute_value=new_value)
+            ann_node_new = AnnotatedNode.objects.filter(
+                node=node,
+                attribute_subtype='organism part',
+                attribute_value=new_value
+            )
             derived_matrix_attributes.extend(ann_node_new)
         self.assertEqual(len(derived_matrix_attributes), 4)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
-    def test_patch_not_edit_non_children_nodes(self, update_solr_index_mock):
+    def test_patch_not_edit_non_child_nodes(self, update_solr_index_mock):
         nodes = self.isatab_9909_data_set.get_nodes()
-        file_node = nodes.filter(type=Node.ARRAY_DATA_FILE).filter(
+        file_node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
             name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
         )[0]
-        annotated_node = AnnotatedNode.objects.filter(node=file_node).get(
-            attribute_subtype='organism part'
-        )
+        annotated_node = AnnotatedNode.objects.filter(
+            node=file_node, attribute_subtype='organism part'
+        )[0]
         old_value = annotated_node.attribute_value
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
@@ -1040,9 +1057,11 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)
         derived_attributes = []
         for node in derived_array_nodes:
-            ann_node_old = AnnotatedNode.objects.filter(node=node).filter(
-                attribute_subtype='organism part'
-            ).filter(attribute_value=old_value)
+            ann_node_old = AnnotatedNode.objects.filter(
+                node=node,
+                attribute_subtype='organism part',
+                attribute_value=old_value
+            )
             derived_attributes.extend(ann_node_old)
         self.assertEqual(len(derived_attributes), 2)
 
@@ -1051,9 +1070,11 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         derived_matrix_attributes = []
         for node in derived_array_matrix_nodes:
-            ann_node_old = AnnotatedNode.objects.filter(node=node).filter(
-                attribute_subtype='organism part'
-            ).filter(attribute_value=old_value)
+            ann_node_old = AnnotatedNode.objects.filter(
+                node=node,
+                attribute_subtype='organism part',
+                attribute_value=old_value
+            )
             derived_matrix_attributes.extend(ann_node_old)
         self.assertEqual(len(derived_matrix_attributes), 4)
 
