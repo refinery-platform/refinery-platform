@@ -1182,7 +1182,8 @@ class NodeViewSet(APIView):
                 return Response(
                     NodeSerializer(node).data, status=status.HTTP_200_OK
                 )
-            # derived node can have duplicate attribute values
+            # derived node can have multiple attribute sources, some with
+            # the same values
             elif solr_name and attribute_value and not node.is_derived():
                 # splits solr name into type and subtype
                 attribute_obj = customize_attribute_response([solr_name])[0]
