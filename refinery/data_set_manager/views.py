@@ -1190,7 +1190,7 @@ class NodeViewSet(APIView):
                 root_node, root_attributes = self.find_root_attributes(
                     [node], attribute_obj
                 )
-
+                # avoid issues with duplicate attributes for a node
                 for attribute in root_attributes:
                     attribute.value = attribute_value
                     attribute.save()
