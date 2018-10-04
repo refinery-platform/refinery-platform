@@ -10,7 +10,7 @@ resource "aws_subnet" "public_subnet" {
   cidr_block              = "${var.public_cidr_block}"
   availability_zone       = "${var.availability_zone_a}"
   map_public_ip_on_launch = true
-  tags              = "${merge(
+  tags                    = "${merge(
     var.tags, map("Name", "${terraform.workspace} public subnet")
   )}"
 }
