@@ -191,9 +191,7 @@ def make_template(config, config_yaml):
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Monitoring': True,
-            'SecurityGroupIds': [
-                functions.get_att('InstanceSecurityGroup', 'GroupId')
-            ],
+            'SecurityGroupIds': [config['APP_SERVER_SECURITY_GROUP_ID']],
             'Tags': instance_tags,
             'BlockDeviceMappings': [
                 {
@@ -372,73 +370,6 @@ def make_template(config, config_yaml):
         })
     )
 
-    # Security Group for Elastic Load Balancer
-    # (public facing).
-    cft.resources.elbsg = core.Resource(
-        'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery ELB",
-            # Egress Rule defined via
-            # AWS::EC2::SecurityGroupEgress resource,
-            # to avoid circularity (below).
-            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html # noqa: E501
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "443",
-                    "ToPort": "443",
-                    "CidrIp": "0.0.0.0/0",
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
-    cft.resources.elbegress = core.Resource(
-        'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
-        core.Properties({
-            "GroupId": functions.get_att('ELBSecurityGroup', 'GroupId'),
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "DestinationSecurityGroupId": functions.get_att(
-                'InstanceSecurityGroup', 'GroupId'),
-        })
-    )
-
-    # Security Group for EC2- instance.
-    cft.resources.instancesg = core.Resource(
-        'InstanceSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery EC2 Instance",
-            'SecurityGroupEgress':  [],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "22",
-                    "ToPort": "22",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    # "CidrIp": "0.0.0.0/0",
-                    # Only accept connections from the ELB.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'ELBSecurityGroup', 'GroupId'),
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
     # Security Group for RDS instance.
     cft.resources.rdssg = core.Resource(
         'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
@@ -458,8 +389,8 @@ def make_template(config, config_yaml):
                     "ToPort": "5432",
                     # Only accept connections from the
                     # Instance Security Group.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'InstanceSecurityGroup', 'GroupId'),
+                    "SourceSecurityGroupId":
+                        config['APP_SERVER_SECURITY_GROUP_ID'],
                 },
             ],
             'VpcId': config['VPC_ID'],
@@ -513,8 +444,7 @@ def make_template(config, config_yaml):
             'Instances': [functions.ref('WebInstance')],
             'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
-            'SecurityGroups': [
-                functions.get_att('ELBSecurityGroup', 'GroupId')],
+            'SecurityGroups': [config['ELB_SECURITY_GROUP_ID']],
             'Subnets': [config["PUBLIC_SUBNET_ID"]],
             'Tags': load_tags(),
         })
