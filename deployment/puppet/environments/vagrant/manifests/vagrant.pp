@@ -18,6 +18,10 @@ $ui_app_root = "${django_root}/ui"
 $data_dir = '/data'
 $django_docker_engine_data_dir = "${data_dir}/django-docker-engine-data"
 $docker_host = "tcp://127.0.0.1:2375"
+$postgres_version = "10"
+
+$deployment_platform = 'vagrant'
+
 
 # to make logs easier to read
 class { 'timezone':

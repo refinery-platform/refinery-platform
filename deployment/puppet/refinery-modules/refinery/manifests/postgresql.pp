@@ -1,16 +1,8 @@
 class refinery::postgresql {
-
-  if $::deployment_platform == 'aws' {
-    # puppetlabs-postgresql doesn't provide uninstallation functionality
-    # https://forge.puppet.com/puppetlabs/postgresql/changelog#2014-09-03---supported-release-400
-    package { 'postgresql-9.3':
-      ensure => 'absent',
-    }
-  }
-  else {
     class { '::postgresql::globals':
-      version  => '9.3',
+      version  => $::postgres_version,
       encoding => 'UTF8',
+      manage_package_repo => true,
       locale   => 'en_US.utf8',
     }
     ->
@@ -28,5 +20,5 @@ class refinery::postgresql {
       password => '',
       owner    => $::app_user,
     }
-  }
 }
+

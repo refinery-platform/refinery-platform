@@ -65,7 +65,7 @@ class refinery::solr {
       hasrestart => true,
     }
   }
-  include solr
+  include "refinery::solr::solr"
 
   class solrSynonymAnalyzer {
     $version = '2.0.0'
@@ -84,5 +84,5 @@ class refinery::solr {
       require => Exec['solr_install'],
     }
   }
-  include solrSynonymAnalyzer
+  include "refinery::solr::solrsynonymanalyzer"
 }

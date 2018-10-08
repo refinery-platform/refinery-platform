@@ -51,9 +51,9 @@ GALAXY_WARNING_SCRIPT
   config.vm.provision :shell, path: "deployment/bootstrap.sh"
 
   config.vm.provision :puppet do |puppet|
-    puppet.manifests_path = "deployment/manifests"
-    puppet.manifest_file  = "default.pp"
-    puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
+    puppet.environment_path = "deployment/puppet/environments"
+    puppet.environment = "vagrant"
+    puppet.module_path = "deployment/puppet/modules"
     puppet.options = "--hiera_config /vagrant/deployment/hiera.yaml"  # to avoid missing file warning
   end
 

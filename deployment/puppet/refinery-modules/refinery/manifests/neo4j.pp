@@ -56,7 +56,7 @@ class refinery::neo4j {
       hasrestart => true,
     }
   }
-  include neo4jFetch
+  include "refinery::neo4j::neo4jfetch"
 
   class neo4jOntology {
     $neo4j_config = '/etc/neo4j/neo4j-server.properties'
@@ -83,7 +83,7 @@ class refinery::neo4j {
         require => Package['neo4j'],
     }
   }
-  include neo4jOntology
+  include "refinery::neo4j::neo4jOntology"
 
   class owl2neo4j {
     $owl2neo4j_version = "0.6.1"
@@ -100,7 +100,7 @@ class refinery::neo4j {
       timeout => 120,  # downloading can take some time
     }
   }
-  include owl2neo4j
+  include "refinery::neo4j::owl2neo4j"
 
   class neo4jPrePopulatedDB {
     $neo4j_user = "neo4j"
@@ -140,7 +140,7 @@ class refinery::neo4j {
       group        => 'root',
       require      => [
         Package['unzip'],
-        Class['neo4jFetch'],
+        Class['refinery::neo4j::neo4jFetch'],
       ],
     }
     ->
@@ -166,5 +166,5 @@ class refinery::neo4j {
       require     => Exec['migrate'],
     }
   }
-  include neo4jPrePopulatedDB
+  include "refinery::neo4j::neo4jPrePopulatedDB"
 }

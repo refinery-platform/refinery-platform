@@ -149,8 +149,7 @@ class ui {
     require     => Class['::refinery::python'],
   }
 }
-include ui
-
+include 'refinery::ui'
 package { 'memcached': }
 ->
 service { 'memcached':
@@ -175,9 +174,9 @@ exec { "supervisord":
   user        => $app_user,
   group       => $app_group,
   require     => [
-    Class["ui"],
-    Class["solr"],
-    Class["neo4j"],
+    Class["refinery::ui"],
+    Class["refinery::solr"],
+    Class["refinery::neo4j"],
     Class["::rabbitmq"],
     Service["memcached"],
   ],

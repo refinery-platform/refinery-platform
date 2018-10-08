@@ -9,62 +9,22 @@ cache:
   directories:
     - /home/travis/.cache/pip
     - /home/travis/.cypress/Cypress
-
-python:
-  - 2.7
-
-services:
-  - postgresql
-  - neo4j
-  - docker
+    - /home/travis/refinery-platform/deployment/puppet/modules
 
 install:
-  - node --version
-  - NODE_VERSION=6.11.0
-  - nvm install $NODE_VERSION
-  - nvm use $NODE_VERSION
-  - node --version
-
-  - npm --version
-  - npm install -g npm@3.10.10
-  - npm --version
-
-  - pip install -r requirements.txt --quiet
+  - sh deployment/bootstrap.sh
+  - puppet apply --environment_path "deployment/puppet" --environment "travis"
+  - workon refinery-platform
 
 env:
   global:
     # These env vars are available to every build
-    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-    - DJANGO_SETTINGS_MODULE=config.settings.prod
     # CYPRESS_RECORD_KEY:
     - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
 
 before_script:
-  # Vagrant is not used on travis: This user is just for the database.
-  - createuser --createdb --no-superuser --no-createrole vagrant
-  - createdb -O vagrant refinery
-
-  - sudo mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
-  - sudo chown $USER /data
-
   - cd refinery
-# See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
-  - erb config/config.json.erb > config/config.json
-  - python manage.py migrate --noinput --fake-initial
-  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
-  - cd ui
-  - npm install --progress false --quiet || ( cat npm-debug.log && false )
-  - bower install --config.interactive=false --quiet
-  - cd ../
 
-  # Required for cypress tests; TODO: Move to puppet.
-  # TODO: Start up solr (and neo4j?)
-  - python manage.py loaddata guest.json
-  - python manage.py activate_user guest
-  - python manage.py add_users_to_public_group
-  - pushd ui && grunt make && popd
-  - python manage.py collectstatic --noinput -v 0
-  - python manage.py runserver --insecure --settings config.settings.dev 2>&1 | grep -v 200 &
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 

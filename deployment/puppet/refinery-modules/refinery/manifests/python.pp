@@ -2,7 +2,6 @@ class refinery::python {
 
   class { '::python':
     dev        => 'present',
-    gunicorn   => 'absent',
     pip        => 'latest',
     virtualenv => 'present',
   }
@@ -25,28 +24,11 @@ class refinery::python {
   }
   ->
   python::virtualenv { $::virtualenv:
-    ensure  => present,
+    requirements => $::requirements,
     owner   => $::app_user,
     group   => $::app_group,
+    extra_pip_args  => '--no-binary :none:',
     require => Package[$virtualenv_dependencies],
-  }
-
-  python::requirements { $::requirements:
-    virtualenv => $::virtualenv,
-    owner      => $::app_user,
-    group      => $::app_group,
-    # require metaparameter does not actually trigger the installation
-    subscribe  => Python::Virtualenv[$::virtualenv],
-  }
-
-  if $::deployment_platform == 'aws' {
-    python::requirements { $::requirements_aws:
-      virtualenv => $::virtualenv,
-      owner      => $::app_user,
-      group      => $::app_group,
-      # require metaparameter does not actually trigger the installation
-      subscribe  => Python::Virtualenv[$::virtualenv],
-    }
   }
 
   package { 'virtualenvwrapper': }

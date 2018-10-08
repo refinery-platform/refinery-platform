@@ -34,6 +34,7 @@ include refinery::apache2
 include refinery::aws
 include refinery::docker
 include refinery::neo4j
-include refinery::postgresql
+include refinery::postgresql-aws
 include refinery::python
+include refinery::python-aws
 include refinery::solr
