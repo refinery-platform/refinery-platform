@@ -56,8 +56,9 @@ module "vpc" {
 }
 
 module "rds" {
-  source           = "../modules/rds"
-  private_subnet_a = "${module.vpc.private_subnet_a_id}"
-  private_subnet_b = "${module.vpc.private_subnet_b_id}"
-  tags             = "${local.tags}"
+  source               = "../modules/rds"
+  private_subnet_a     = "${module.vpc.private_subnet_a_id}"
+  private_subnet_b     = "${module.vpc.private_subnet_b_id}"
+  resource_name_prefix = "${terraform.workspace}"
+  tags                 = "${local.tags}"
 }
