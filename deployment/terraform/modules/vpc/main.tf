@@ -2,7 +2,7 @@ resource "aws_vpc" "vpc" {
   cidr_block           = "${var.vpc_cidr_block}"
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags                 = "${merge(var.tags, map("Name", terraform.workspace))}"
+  tags                 = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_subnet" "public_subnet" {
@@ -11,7 +11,7 @@ resource "aws_subnet" "public_subnet" {
   availability_zone       = "${var.availability_zone_a}"
   map_public_ip_on_launch = true
   tags                    = "${merge(
-    var.tags, map("Name", "${terraform.workspace} public subnet")
+    var.tags, map("Name", "${var.resource_name_prefix} public subnet")
   )}"
 }
 
@@ -20,7 +20,7 @@ resource "aws_subnet" "private_subnet_a" {
   cidr_block        = "${var.private_cidr_block_a}"
   availability_zone = "${var.availability_zone_a}"
   tags              = "${merge(
-    var.tags, map("Name", "${terraform.workspace} private subnet a")
+    var.tags, map("Name", "${var.resource_name_prefix} private subnet a")
   )}"
 }
 
@@ -34,18 +34,18 @@ resource "aws_subnet" "private_subnet_b" {
   cidr_block        = "${var.private_cidr_block_b}"
   availability_zone = "${var.availability_zone_b}"
   tags              = "${merge(
-    var.tags, map("Name", "${terraform.workspace} private subnet b")
+    var.tags, map("Name", "${var.resource_name_prefix} private subnet b")
   )}"
 }
 
 resource "aws_internet_gateway" "public_gateway" {
   vpc_id = "${aws_vpc.vpc.id}"
-  tags   = "${merge(var.tags, map("Name", terraform.workspace))}"
+  tags   = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_route_table" "public_route_table" {
   vpc_id = "${aws_vpc.vpc.id}"
-  tags   = "${merge(var.tags, map("Name", "${terraform.workspace} public"))}"
+  tags   = "${merge(var.tags, map("Name", "${var.resource_name_prefix} public"))}"
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.public_gateway.id}"
@@ -59,19 +59,19 @@ resource "aws_route_table_association" "public_subnet" {
 
 resource "aws_eip" "docker_nat" {
   vpc  = true
-  tags = "${merge(var.tags, map("Name", terraform.workspace))}"
+  tags = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_nat_gateway" "docker_nat" {
   allocation_id = "${aws_eip.docker_nat.id}"
   subnet_id     = "${aws_subnet.public_subnet.id}"
   depends_on    = ["aws_internet_gateway.public_gateway"]
-  tags = "${merge(var.tags, map("Name", terraform.workspace))}"
+  tags = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_route_table" "private_route_table" {
   vpc_id = "${aws_vpc.vpc.id}"
-  tags   = "${merge(var.tags, map("Name", "${terraform.workspace} nat"))}"
+  tags   = "${merge(var.tags, map("Name", "${var.resource_name_prefix} nat"))}"
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = "${aws_nat_gateway.docker_nat.id}"
@@ -86,7 +86,7 @@ resource "aws_route_table_association" "private_subnet" {
 resource "aws_security_group" "elb" {
   # using standalone security group rule resources to avoid cycle errors
   description = "Refinery: allow HTTP/S ingress and HTTP egress"
-  name        = "${terraform.workspace}-elb"
+  name        = "${var.resource_name_prefix}-elb"
   tags        = "${var.tags}"
   vpc_id      = "${aws_vpc.vpc.id}"
 }
@@ -123,7 +123,7 @@ resource "aws_security_group_rule" "http_egress" {
 
 resource "aws_security_group" "app_server" {
   description = "Refinery: allow HTTP and SSH access to app server instance"
-  name        = "${terraform.workspace}-appserver"
+  name        = "${var.resource_name_prefix}-appserver"
   tags        = "${var.tags}"
   vpc_id      = "${aws_vpc.vpc.id}"
 
