@@ -313,13 +313,16 @@ class OwnableResource(BaseResource):
         if self._meta.verbose_name == 'dataset':
             assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
 
-    def transfer_ownership(self, user, new_owner):
+    def remove_owner(self, user):
         remove_perm("add_%s" % self._meta.verbose_name, user, self)
         remove_perm("read_%s" % self._meta.verbose_name, user, self)
         remove_perm("delete_%s" % self._meta.verbose_name, user, self)
         remove_perm("change_%s" % self._meta.verbose_name, user, self)
         if self._meta.verbose_name == 'dataset':
             remove_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+
+    def transfer_ownership(self, user, new_owner):
+        self.remove_owner(user)
         self.set_owner(new_owner)
 
     def get_owner(self):
@@ -354,7 +357,7 @@ class OwnableResource(BaseResource):
 
 class SharableResource(OwnableResource):
     """Abstract base class for core resources that can be shared
-    (projects, data sets, workflows, workflow engines, etc.)
+    (projects, data sets, workflow)
     IMPORTANT:
     expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
     permissions, where "xxx" is the simple_modelname
@@ -364,9 +367,35 @@ class SharableResource(OwnableResource):
     def __unicode__(self):
         return self.name
 
+    def get_owner(self):
+        owner = None
+
+        content_type_id = ContentType.objects.get_for_model(self).id
+        permission_id = Permission.objects.filter(
+            codename='share_%s' % self._meta.verbose_name
+        )[0].id
+
+        perms = UserObjectPermission.objects.filter(
+            content_type_id=content_type_id,
+            permission_id=permission_id,
+            object_pk=self.id
+        )
+
+        if perms.count() > 0:
+            try:
+                owner = User.objects.get(id=perms[0].user_id)
+            except User.DoesNotExist:
+                pass
+
+        return owner
+
     def set_owner(self, user):
         super(SharableResource, self).set_owner(user)
         assign_perm("share_%s" % self._meta.verbose_name, user, self)
+
+    def remove_owner(self, user):
+        super(SharableResource, self).remove_owner(user)
+        remove_perm("share_%s" % self._meta.verbose_name, user, self)
 
     """
     Sharing something always grants read and add permission
@@ -548,26 +577,6 @@ class DataSet(SharableResource):
 
     def get_investigation_links(self):
         return InvestigationLink.objects.filter(data_set=self)
-
-    def get_owner(self):
-        owner = None
-
-        content_type_id = ContentType.objects.get_for_model(self).id
-        permission_id = Permission.objects.filter(codename='add_dataset')[0].id
-
-        perms = UserObjectPermission.objects.filter(
-            content_type_id=content_type_id,
-            permission_id=permission_id,
-            object_pk=self.id
-        )
-
-        if perms.count() > 0:
-            try:
-                owner = User.objects.get(id=perms[0].user_id)
-            except User.DoesNotExist:
-                pass
-
-        return owner
 
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
