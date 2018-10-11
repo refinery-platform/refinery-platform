@@ -4,6 +4,7 @@ Created on May 29, 2012
 @author: nils
 '''
 import copy
+from collections import OrderedDict
 import csv
 import hashlib
 import json
@@ -12,7 +13,6 @@ import shutil
 import tempfile
 import time
 import urlparse
-from collections import OrderedDict
 
 from django.conf import settings
 from django.db.models import Q
