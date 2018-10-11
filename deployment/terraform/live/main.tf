@@ -53,6 +53,7 @@ module "vpc" {
   private_cidr_block_b = "${var.private_cidr_block_b}"
   availability_zone_a  = "${var.availability_zone_a}"
   availability_zone_b  = "${var.availability_zone_b}"
+  resource_name_prefix = "${terraform.workspace}"
   tags                 = "${local.tags}"
 }
 
