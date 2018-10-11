@@ -901,6 +901,66 @@ class UtilitiesTests(TestCase):
                   'display_name': 'Analysis Group',
                   'internal_name': 'REFINERY_SUBANALYSIS_22_11_s'}])
 
+    def test_customize_attribute_response_removes_duplicates(self):
+        duplicated_attributes = [
+            'REFINERY_FILETYPE_6_3_s',
+            'Title_Characteristics_6_3_s',
+            'REFINERY_TYPE_6_3_s',
+            'REFINERY_SUBANALYSIS_6_3_s',
+            'Month_Characteristics_6_3_s',
+            'REFINERY_NAME_6_3_s',
+            'REFINERY_WORKFLOW_OUTPUT_6_3_s',
+            'REFINERY_ANALYSIS_UUID_6_3_s',
+            'Author_Characteristics_6_3_s',
+            'Year_Characteristics_6_3_s'
+        ] * 2
+
+        prettified_attributes = customize_attribute_response(
+            duplicated_attributes
+        )
+        self.assertListEqual(
+            prettified_attributes,
+            [{'file_ext': 's',
+              'attribute_type': 'Internal',
+              'display_name': 'File Type',
+              'internal_name': 'REFINERY_FILETYPE_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Characteristics',
+              'display_name': 'Title',
+              'internal_name': 'Title_Characteristics_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Internal',
+              'display_name': 'Type',
+              'internal_name': 'REFINERY_TYPE_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Internal',
+              'display_name': 'Analysis Group',
+              'internal_name': 'REFINERY_SUBANALYSIS_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Characteristics',
+              'display_name': 'Month',
+              'internal_name': 'Month_Characteristics_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Internal',
+              'display_name': 'Name',
+              'internal_name': 'REFINERY_NAME_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Internal',
+              'display_name': 'Output Type',
+              'internal_name': 'REFINERY_WORKFLOW_OUTPUT_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Internal',
+              'display_name': 'Analysis',
+              'internal_name': 'REFINERY_ANALYSIS_UUID_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Characteristics',
+              'display_name': 'Author',
+              'internal_name': 'Author_Characteristics_6_3_s'},
+             {'file_ext': 's',
+              'attribute_type': 'Characteristics',
+              'display_name': 'Year',
+              'internal_name': 'Year_Characteristics_6_3_s'}])
+
     def test_initialize_attribute_order_ranks_up(self):
         # Updates a new attribute order ranks
         expect_attribute_order = {
