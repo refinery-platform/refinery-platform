@@ -12,6 +12,7 @@ import shutil
 import tempfile
 import time
 import urlparse
+from collections import OrderedDict
 
 from django.conf import settings
 from django.db.models import Q
@@ -800,9 +801,11 @@ def customize_attribute_response(facet_fields):
         iter(facet_fields)
     except TypeError:
         return facet_fields
-
     attribute_array = []
-    for field in facet_fields:
+
+    # Create a list of unique facet fields while preserving their order
+    unique_facet_fields = list(OrderedDict.fromkeys(facet_fields))
+    for field in unique_facet_fields:
         # For fields with filters, they need to be trimmed
         if '!ex' in field:
             field = field.split("}")[1]
