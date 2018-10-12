@@ -48,12 +48,12 @@ GALAXY_WARNING_SCRIPT
   end
 
   # Install Librarian-puppet and modules before puppet provisioning
-  config.vm.provision :shell, path: "deployment/bootstrap.sh"
+  config.vm.provision :shell, env: {"PUPPET_DIR_PATH" => "/vagrant/deployment/puppet"}, path: "deployment/bootstrap.sh"
 
   config.vm.provision :puppet do |puppet|
-    puppet.environment_path = "deployment/puppet/environments"
-    puppet.environment = "vagrant"
-    puppet.module_path = "deployment/puppet/modules"
+    puppet.manifests_path = "deployment/manifests"
+    puppet.manifest_file  = "vagrant.pp"
+    puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
     puppet.options = "--hiera_config /vagrant/deployment/hiera.yaml"  # to avoid missing file warning
   end
 

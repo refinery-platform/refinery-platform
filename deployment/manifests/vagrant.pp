@@ -29,15 +29,6 @@ class { 'timezone':
   timezone => 'America/New_York',
 }
 
-# On Vagrant, it's okay to activate the 'guest' user.
-exec { 'activate_user':
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-  require     => Exec['create_guest'],
-}
-
 # Django-docker-engine needs a place for ephemeral data.
 # In production, this is a separate EBS mount, so we don't need to create it locally.
 file { $::data_dir:
@@ -57,6 +48,7 @@ file { $::django_docker_engine_data_dir:
 include refinery
 include refinery::apache2
 include refinery::docker
+include refinery::guest_user
 include refinery::neo4j
 include refinery::postgresql
 include refinery::python

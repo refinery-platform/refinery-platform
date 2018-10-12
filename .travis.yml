@@ -1,22 +1,31 @@
 sudo: required
 
-language: python
 cache:
   directories:
     - /home/travis/.cache/pip
     - /home/travis/.cypress/Cypress
-    - /home/travis/refinery-platform/deployment/puppet/modules
-
-install:
-  - sh deployment/bootstrap.sh
-  - puppet apply --environment_path "deployment/puppet" --environment "travis"
-  - workon refinery-platform
+    - $PUPPET_DIR_PATH/modules
 
 env:
   global:
     # These env vars are available to every build
     # CYPRESS_RECORD_KEY:
     - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
+    - PUPPET_DIR_PATH: $TRAVIS_BUILD_DIR/deployment
+
+before_install:
+  # Stop existing postgres already installed on the Travis worker
+  - sudo /etc/init.d/postgresql stop
+
+  # Use the system provided ruby
+  - rvm use system
+
+install:
+  # Install puppet modules and apply puppet manifest
+  - sudo bash deployment/bootstrap.sh
+  - pushd $PUPPET_DIR_PATH
+  - sudo puppet apply --modulepath=$PUPPET_DIR_PATH/modules manifests/travis.pp
+  - popd
 
 before_script:
   - cd refinery

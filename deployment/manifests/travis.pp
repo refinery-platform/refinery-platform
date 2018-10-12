@@ -3,7 +3,7 @@ $app_group = $app_user
 $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
 $site_name = 'Refinery'
 $site_url = '127.0.0.1:8000'
-$project_root = "/${app_user}"
+$project_root = "/home/${app_user}/build/refinery-platform/refinery-platform"
 $deployment_root = "${project_root}/deployment"
 $django_root = "${project_root}/refinery"
 $requirements = "${project_root}/requirements.txt"
@@ -29,8 +29,6 @@ class { 'timezone':
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::apache2
-include refinery::docker
-include refinery::neo4j
+include refinery::guest_user
 include refinery::postgresql
 include refinery::python
-include refinery::solr

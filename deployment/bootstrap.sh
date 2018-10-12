@@ -9,4 +9,4 @@ export DEBIAN_FRONTEND=noninteractive
 /usr/bin/apt-get -q -y install git ruby-dev make puppet
 
 /usr/bin/gem install puppet -v 5.5.6
-/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri && cd /*/deployment/puppet && librarian-puppet install
+/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri && cd $PUPPET_DIR_PATH && librarian-puppet install
