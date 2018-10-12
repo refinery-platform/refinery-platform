@@ -21,3 +21,11 @@ output "rds_db_subnet_group_name" {
 output "s3_bucket_name_base" {
   value = "${local.s3_bucket_name_base}"
 }
+
+output "elb_security_group_id" {
+  value = "${module.vpc.elb_security_group_id}"
+}
+
+output "app_server_security_group_id" {
+  value = "${module.vpc.app_server_security_group_id}"
+}

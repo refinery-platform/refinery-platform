@@ -1,5 +1,5 @@
 resource "aws_security_group" "allow_docker" {
-  name        = "${terraform.workspace}-docker"
+  name        = "${var.resource_name_prefix}-docker"
   description = "Allow connection to docker engine from within VPC"
   vpc_id      = "${var.vpc_id}"
   tags        = "${var.tags}"
@@ -32,10 +32,10 @@ resource "aws_instance" "docker_host" {
     volume_size = "20"
   }
   tags                   = "${merge(
-    var.tags, map("Name", "${terraform.workspace} docker host")
+    var.tags, map("Name", "${var.resource_name_prefix} docker host")
   )}"
   volume_tags            = "${merge(
-    var.tags, map("Name", "${terraform.workspace} docker host")
+    var.tags, map("Name", "${var.resource_name_prefix} docker host")
   )}"
   # systemd config based on https://success.docker.com/article/How_do_I_enable_the_remote_API_for_dockerd
   user_data = <<EOF

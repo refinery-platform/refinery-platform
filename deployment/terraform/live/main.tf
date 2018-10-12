@@ -37,11 +37,12 @@ module "identity_pool" {
 }
 
 module "docker_host" {
-  source            = "../modules/docker_host"
-  vpc_cidr_block    = "${var.vpc_cidr_block}"
-  private_subnet_id = "${module.vpc.private_subnet_a_id}"
-  vpc_id            = "${module.vpc.vpc_id}"
-  tags              = "${local.tags}"
+  source               = "../modules/docker_host"
+  vpc_cidr_block       = "${var.vpc_cidr_block}"
+  private_subnet_id    = "${module.vpc.private_subnet_a_id}"
+  vpc_id               = "${module.vpc.vpc_id}"
+  resource_name_prefix = "${terraform.workspace}"
+  tags                 = "${local.tags}"
 }
 
 module "vpc" {
@@ -52,12 +53,14 @@ module "vpc" {
   private_cidr_block_b = "${var.private_cidr_block_b}"
   availability_zone_a  = "${var.availability_zone_a}"
   availability_zone_b  = "${var.availability_zone_b}"
+  resource_name_prefix = "${terraform.workspace}"
   tags                 = "${local.tags}"
 }
 
 module "rds" {
-  source           = "../modules/rds"
-  private_subnet_a = "${module.vpc.private_subnet_a_id}"
-  private_subnet_b = "${module.vpc.private_subnet_b_id}"
-  tags             = "${local.tags}"
+  source               = "../modules/rds"
+  private_subnet_a     = "${module.vpc.private_subnet_a_id}"
+  private_subnet_b     = "${module.vpc.private_subnet_b_id}"
+  resource_name_prefix = "${terraform.workspace}"
+  tags                 = "${local.tags}"
 }

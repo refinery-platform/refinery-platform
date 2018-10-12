@@ -16,7 +16,7 @@ import sys
 
 import boto3
 from cfn_pyplates import core, functions
-from utils import ensure_s3_bucket, load_config, load_tags, save_s3_config
+from utils import load_config, load_tags, save_s3_config
 
 VERSION = '1.1'
 
@@ -41,7 +41,6 @@ def main():
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
         template = make_template(config, config_yaml)
-        ensure_s3_bucket(config['S3_LOG_BUCKET'])
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
@@ -191,9 +190,7 @@ def make_template(config, config_yaml):
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Monitoring': True,
-            'SecurityGroupIds': [
-                functions.get_att('InstanceSecurityGroup', 'GroupId')
-            ],
+            'SecurityGroupIds': [config['APP_SERVER_SECURITY_GROUP_ID']],
             'Tags': instance_tags,
             'BlockDeviceMappings': [
                 {
@@ -372,73 +369,6 @@ def make_template(config, config_yaml):
         })
     )
 
-    # Security Group for Elastic Load Balancer
-    # (public facing).
-    cft.resources.elbsg = core.Resource(
-        'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery ELB",
-            # Egress Rule defined via
-            # AWS::EC2::SecurityGroupEgress resource,
-            # to avoid circularity (below).
-            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html # noqa: E501
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "443",
-                    "ToPort": "443",
-                    "CidrIp": "0.0.0.0/0",
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
-    cft.resources.elbegress = core.Resource(
-        'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
-        core.Properties({
-            "GroupId": functions.get_att('ELBSecurityGroup', 'GroupId'),
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "DestinationSecurityGroupId": functions.get_att(
-                'InstanceSecurityGroup', 'GroupId'),
-        })
-    )
-
-    # Security Group for EC2- instance.
-    cft.resources.instancesg = core.Resource(
-        'InstanceSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery EC2 Instance",
-            'SecurityGroupEgress':  [],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "22",
-                    "ToPort": "22",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    # "CidrIp": "0.0.0.0/0",
-                    # Only accept connections from the ELB.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'ELBSecurityGroup', 'GroupId'),
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
     # Security Group for RDS instance.
     cft.resources.rdssg = core.Resource(
         'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
@@ -458,8 +388,8 @@ def make_template(config, config_yaml):
                     "ToPort": "5432",
                     # Only accept connections from the
                     # Instance Security Group.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'InstanceSecurityGroup', 'GroupId'),
+                    "SourceSecurityGroupId":
+                        config['APP_SERVER_SECURITY_GROUP_ID'],
                 },
             ],
             'VpcId': config['VPC_ID'],
@@ -513,8 +443,7 @@ def make_template(config, config_yaml):
             'Instances': [functions.ref('WebInstance')],
             'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
-            'SecurityGroups': [
-                functions.get_att('ELBSecurityGroup', 'GroupId')],
+            'SecurityGroups': [config['ELB_SECURITY_GROUP_ID']],
             'Subnets': [config["PUBLIC_SUBNET_ID"]],
             'Tags': load_tags(),
         })
@@ -527,41 +456,6 @@ def make_template(config, config_yaml):
                 "this to be 5 or 60.",
             }
         )
-    )
-
-    # See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy # noqa: E501
-    # for full list of region--principal identifiers.
-    cft.mappings.region = core.Mapping(
-        'Region',
-        {'us-east-1': {'ELBPrincipal': '127311923021'}})
-
-    cft.resources.log_policy = core.Resource(
-        'LogBucketPolicy', 'AWS::S3::BucketPolicy',
-        core.Properties({
-            'Bucket': config['S3_LOG_BUCKET'],
-            'PolicyDocument': {
-                'Statement': [{
-                    "Action": [
-                      "s3:PutObject"
-                    ],
-                    "Effect": "Allow",
-                    "Resource":
-                    functions.join(
-                        "",
-                        "arn:aws:s3:::",
-                        config['S3_LOG_BUCKET'],
-                        "/AWSLogs/",
-                        functions.ref("AWS::AccountId"), "/*"),
-                    "Principal": {
-                      "AWS": [
-                        functions.find_in_map(
-                            'Region',
-                            functions.ref("AWS::Region"), 'ELBPrincipal'),
-                      ]
-                    }
-                }]
-            }
-        })
     )
 
     return cft

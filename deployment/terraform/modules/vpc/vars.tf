@@ -1,3 +1,4 @@
+variable "resource_name_prefix" {}
 variable "vpc_cidr_block" {}
 variable "private_cidr_block_a" {}
 variable "private_cidr_block_b" {}
