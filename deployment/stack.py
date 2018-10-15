@@ -92,12 +92,8 @@ def make_template(config, config_yaml):
         "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
         "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "RDS_ENDPOINT_ADDRESS=",
-        functions.get_att('RDSInstance', 'Endpoint.Address'),
-        "\n",
-        "RDS_ENDPOINT_PORT=",
-        functions.get_att('RDSInstance', 'Endpoint.Port'),
-        "\n",
+        "RDS_ENDPOINT_ADDRESS=", config['RDS_ENDPOINT_ADDRESS'], "\n",
+        "RDS_ENDPOINT_PORT=5432\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "ADMIN=", config['ADMIN'], "\n",
@@ -129,37 +125,6 @@ def make_template(config, config_yaml):
             }
         )
     )
-
-    rds_properties = {
-        "AllocatedStorage": "5",
-        "AutoMinorVersionUpgrade": False,
-        "BackupRetentionPeriod": "15",
-        "CopyTagsToSnapshot": True,
-        "DBInstanceClass": "db.t2.small",       # todo:?
-        "DBInstanceIdentifier": config['RDS_NAME'],
-        "DBSubnetGroupName": config["RDS_DB_SUBNET_GROUP_NAME"],
-        "Engine": "postgres",
-        "EngineVersion": "9.3.14",
-        # "KmsKeyId" ?
-        "MasterUsername": "root",
-        "MasterUserPassword": config['RDS_SUPERUSER_PASSWORD'],
-        "MultiAZ": False,
-        "Port": "5432",
-        "PubliclyAccessible": False,
-        "StorageType": "gp2",
-        "Tags": instance_tags,  # todo: Should be different?
-        "VPCSecurityGroups": [
-            functions.get_att('RDSSecurityGroup', 'GroupId')],
-    }
-
-    if 'RDS_SNAPSHOT' in config:
-        rds_properties['DBSnapshotIdentifier'] = config['RDS_SNAPSHOT']
-
-    cft.resources.rds_instance = core.Resource(
-        'RDSInstance', 'AWS::RDS::DBInstance',
-        core.Properties(rds_properties),
-        core.DeletionPolicy("Snapshot"),
-        )
 
     volume_properties = {
         'Encrypted': True,
@@ -204,7 +169,6 @@ def make_template(config, config_yaml):
             ],
             "SubnetId": config['PUBLIC_SUBNET_ID']
         }),
-        core.DependsOn(['RDSInstance']),
     )
 
     cft.resources.instance_profile = core.Resource(
@@ -366,33 +330,6 @@ def make_template(config, config_yaml):
             'Device': '/dev/xvdr',
             'InstanceId': functions.ref('WebInstance'),
             'VolumeId': functions.ref('RefineryData'),
-        })
-    )
-
-    # Security Group for RDS instance.
-    cft.resources.rdssg = core.Resource(
-        'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery RDS",
-            'SecurityGroupEgress':  [
-                # We would like to remove all egress rules here,
-                # but you can't do that with this version
-                # of CloudFormation.
-                # We decided that the hacky workarounds are
-                # not worth it.
-            ],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "5432",
-                    "ToPort": "5432",
-                    # Only accept connections from the
-                    # Instance Security Group.
-                    "SourceSecurityGroupId":
-                        config['APP_SERVER_SECURITY_GROUP_ID'],
-                },
-            ],
-            'VpcId': config['VPC_ID'],
         })
     )
 
