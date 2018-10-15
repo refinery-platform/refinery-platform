@@ -39,8 +39,7 @@ from file_store.models import (FileStoreItem, generate_file_source_translator,
 
 from file_store.tasks import download_file, import_file
 
-from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
-                     Study)
+from .models import AnnotatedNode, Assay, AttributeOrder, Node, Study
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer)
 from .single_file_column_parser import process_metadata_table
@@ -1187,28 +1186,67 @@ class NodeViewSet(APIView):
             elif solr_name and attribute_value and not node.is_derived():
                 # splits solr name into type and subtype
                 attribute_obj = customize_attribute_response([solr_name])[0]
-                root_node, root_attributes = self.find_root_attributes(
-                    [node], attribute_obj
+
+                annotated_nodes_query = AnnotatedNode.objects.filter(
+                    node=node,
+                    attribute_type=attribute_obj.get('attribute_type'),
+                    attribute_subtype=attribute_obj.get('display_name').lower()
                 )
+
+                # attribute_query = Attribute.objects.select_related('node')
+                # parent_nodes = list(node.parents.all())
+                # checked_nodes = []
+                # root_node = None
+                # root_attributes = None
+                #
+                # while parent_nodes:
+                #     current_node = parent_nodes.pop()
+                #     next_parent_nodes = current_node.parents.all()
+                #     for parent in next_parent_nodes:
+                #         if parent not in checked_nodes:
+                #             parent_nodes.append(parent)
+                #             checked_nodes.append(parent)
+                #     root_attributes = attribute_query.filter(
+                #         node=current_node,
+                #         type=attribute_obj.get('attribute_type'),
+                #         subtype=attribute_obj.get('display_name').lower()
+                #     )
+                #     if root_attributes.exists():
+                #         root_node = current_node
+                #         parent_nodes = []
+                #         break
+
                 # avoid issues with duplicate attributes for a node
-                for attribute in root_attributes:
-                    attribute.value = attribute_value
-                    attribute.save()
+                for ann_node in annotated_nodes_query:
+                    ann_node.attribute.value = attribute_value
+                    ann_node.attribute.save()
+
+                # source attribute node
+                source_annotated_nodes_query = AnnotatedNode.objects.filter(
+                    attribute=annotated_nodes_query[0].attribute
+                )
                 # start with source/start nodes and traverse down path
                 # over request file node and all other children
-                nodes_to_check = list(root_node.children.all())
-                updated_nodes = [root_node]
-                while nodes_to_check:
-                    current_node = nodes_to_check.pop()
-                    if current_node not in updated_nodes:
-                        self.update_annotated_nodes(current_node,
-                                                    attribute_obj,
-                                                    attribute_value)
-                        updated_nodes.append(current_node)
-                    children_nodes = current_node.children.all()
-                    for child_node in children_nodes:
-                        if child_node not in nodes_to_check:
-                            nodes_to_check.append(child_node)
+
+                #
+                # nodes_to_check = list(root_node.children.all())
+                # updated_nodes = [root_node]
+                # while nodes_to_check:
+                #     current_node = nodes_to_check.pop()
+                #     if current_node not in updated_nodes:
+                #         self.update_annotated_nodes(current_node,
+                #                                     attribute_obj,
+                #                                     attribute_value)
+                #         updated_nodes.append(current_node)
+                #     children_nodes = current_node.children.all()
+                #     for child_node in children_nodes:
+                #         if child_node not in nodes_to_check:
+                #             nodes_to_check.append(child_node)
+
+                for ann_node in source_annotated_nodes_query:
+                    ann_node.attribute_value = ann_node.attribute.value
+                    ann_node.save()
+                    ann_node.node.update_solr_index()
 
                 return Response(
                     NodeSerializer(node).data, status=status.HTTP_200_OK
@@ -1220,58 +1258,25 @@ class NodeViewSet(APIView):
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-    def find_root_attributes(self, parent_nodes, attribute_types,
-                             checked_nodes=None):
-        """
-        traverses backwards from a list of nodes to find root attribute's
-        node. Note, mistakes happen where a node will have duplicate
-        attributes, so this will return both.
-        :param parent_nodes: list, beginning nodes to traverse from
-        :param attribute_types: obj, contains attribute type and subtype
-        :param checked_nodes: list, nodes who's parents have been traversed
-        :return: root node
-        :return: queryset of roots attributes
-        """
-        if checked_nodes is None:
-            checked_nodes = []
-
-        if parent_nodes:
-            current_node = parent_nodes.pop()
-            next_parent_nodes = current_node.parents.all()
-            for parent in next_parent_nodes:
-                if parent not in checked_nodes:
-                    parent_nodes.append(parent)
-                    checked_nodes.append(parent)
-            node_attributes = Attribute.objects.filter(
-                node=current_node,
-                type=attribute_types.get('attribute_type'),
-                subtype=attribute_types.get('display_name').lower()
-            )
-            if node_attributes.exists():
-                return current_node, node_attributes
-            else:
-                return self.find_root_attributes(parent_nodes, attribute_types,
-                                                 checked_nodes)
-
-    def update_annotated_nodes(self, node, attribute_types, new_value):
-        """
-        updates node and it's annotated node's attribute value
-        :param node: obj, instance of a node object
-        :param attribute_types: obj, contains attribute type and subtype
-        :param new_value: str, value for attribute's value
-        :return: start_nodes
-        """
-        annotated_nodes = AnnotatedNode.objects.filter(node=node)
-        if annotated_nodes.exists():
-            filtered_annotated_nodes = annotated_nodes.filter(
-                attribute_type=attribute_types.get('attribute_type'),
-                attribute_subtype=attribute_types.get('display_name').lower()
-            )
-            for annotatedNode in filtered_annotated_nodes:
-                annotatedNode.attribute_value = annotatedNode.attribute.value
-                annotatedNode.save()
-            # annotated nodes requires an index updating
-            node.update_solr_index()
+    # def update_annotated_nodes(self, node, attribute_types, new_value):
+    #     """
+    #     updates node and it's annotated node's attribute value
+    #     :param node: obj, instance of a node object
+    #     :param attribute_types: obj, contains attribute type and subtype
+    #     :param new_value: str, value for attribute's value
+    #     :return: start_nodes
+    #     """
+    #     annotated_nodes = AnnotatedNode.objects.filter(node=node)
+    #     if annotated_nodes.exists():
+    #         filtered_annotated_nodes = annotated_nodes.filter(
+    #             attribute_type=attribute_types.get('attribute_type'),
+    #             attribute_subtype=attribute_types.get('display_name').lower()
+    #         )
+    #         for annotatedNode in filtered_annotated_nodes:
+    #             annotatedNode.attribute_value = annotatedNode.attribute.value
+    #             annotatedNode.save()
+    #         # annotated nodes requires an index updating
+    #         node.update_solr_index()
 
 
 def _check_data_set_ownership(user, data_set_uuid):
