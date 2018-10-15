@@ -7,26 +7,33 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from cuser.middleware import CuserMiddleware
+from guardian.shortcuts import get_perms
 import mock
 from override_storage import override_storage
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import (AnnotatedNode, Assay, Investigation,
                                      Node, NodeCollection, Study)
-from factory_boy.django_model_factories import AnalysisNodeConnectionFactory, \
-    FileStoreItemFactory, GalaxyInstanceFactory, NodeFactory
+from factory_boy.django_model_factories import (AnalysisNodeConnectionFactory,
+                                                FileRelationshipFactory,
+                                                FileStoreItemFactory,
+                                                GalaxyInstanceFactory,
+                                                NodeFactory,
+                                                ToolDefinitionFactory,
+                                                ToolFactory)
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models,
                                make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
 from file_store.tasks import FileImportTask
+from tool_manager.models import ToolDefinition
 
 from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
-                     DataSet, Event, ExtendedGroup, InvestigationLink, Project,
-                     SiteStatistics, Tutorials, UserProfile, Workflow,
-                     WorkflowEngine)
+                     DataSet, Event, ExtendedGroup, InvestigationLink,
+                     Project, SiteStatistics, Tutorials, UserProfile,
+                     Workflow, WorkflowEngine)
 from .tasks import collect_site_statistics
 
 
@@ -888,6 +895,106 @@ class EventTests(TestCase):
                 u'display_name': tool.display_name
             }
         )
+
+
+class OwnableResourceTest(TestCase):
+    def setUp(self):
+        self.username = 'TestUser'
+        self.user = User.objects.create_user(
+            self.username, '', self.username
+        )
+        self.data_set = create_dataset_with_necessary_models()
+        self.owned_data_set = create_dataset_with_necessary_models(
+            user=self.user
+        )
+
+        self.tool_def = ToolDefinitionFactory(
+            tool_type=ToolDefinition.WORKFLOW,
+            name='Analysis Test',
+            file_relationship=FileRelationshipFactory()
+        )
+        self.tool = ToolFactory(
+            dataset=self.data_set,
+            tool_definition=self.tool_def
+        )
+        # utility method create_tools calls on the set_owner method for tools
+        self.tool.set_owner(self.user)
+
+    # For tools which are ownable but not sharable
+    def test_get_owner_returns_owner(self):
+        self.assertEqual(self.tool.get_owner(), self.user)
+
+    # For data sets
+    def test_remove_owner_removes(self):
+        self.owned_data_set.remove_owner(self.user)
+        self.assertEqual(self.data_set.get_owner(), None)
+
+    def test_remove_owner_removes_all_perms(self):
+        self.owned_data_set.remove_owner(self.user)
+        user_perms = get_perms(self.user, self.owned_data_set)
+        self.assertEqual(user_perms, [])
+
+    def test_set_owner_data_set_adds_owner(self):
+        self.data_set.set_owner(self.user)
+        self.assertEqual(self.data_set.get_owner(), self.user)
+
+    def test_set_owner_data_sets_add_perms(self):
+        self.data_set.set_owner(self.user)
+        user_perms = get_perms(self.user, self.data_set)
+        self.assertTrue('add_dataset' in user_perms)
+
+    def test_set_owner_data_sets_change_perms(self):
+        self.data_set.set_owner(self.user)
+        user_perms = get_perms(self.user, self.data_set)
+        self.assertTrue('change_dataset' in user_perms)
+
+    def test_set_owner_data_sets_delete_perms(self):
+        self.data_set.set_owner(self.user)
+        user_perms = get_perms(self.user, self.data_set)
+        self.assertTrue('delete_dataset' in user_perms)
+
+    def test_set_owner_data_sets_read_perms(self):
+        self.data_set.set_owner(self.user)
+        user_perms = get_perms(self.user, self.data_set)
+        self.assertTrue('read_dataset' in user_perms)
+
+    def test_set_owner_data_sets_read_meta_perms(self):
+        self.data_set.set_owner(self.user)
+        user_perms = get_perms(self.user, self.data_set)
+        self.assertTrue('read_meta_dataset' in user_perms)
+
+
+class ShareableResourceTest(TestCase):
+    def setUp(self):
+        self.username = 'TestUser'
+        self.user = User.objects.create_user(
+            self.username, '', self.username
+        )
+        self.data_set = create_dataset_with_necessary_models()
+        self.owned_data_set = create_dataset_with_necessary_models(
+            user=self.user
+        )
+
+    def test_get_owner_returns_owner(self):
+        self.assertEqual(self.owned_data_set.get_owner(), self.user)
+
+    def test_remove_owner_removes(self):
+        self.owned_data_set.remove_owner(self.user)
+        self.assertEqual(self.owned_data_set.get_owner(), None)
+
+    def test_remove_owner_removes_share_perms(self):
+        self.owned_data_set.remove_owner(self.user)
+        user_perms = get_perms(self.user, self.owned_data_set)
+        self.assertFalse('share_dataset' in user_perms)
+
+    def test_set_owner_data_set_adds_owner(self):
+        self.data_set.set_owner(self.user)
+        self.assertEqual(self.data_set.get_owner(), self.user)
+
+    def test_set_owner_data_set_adds_share_perms(self):
+        self.data_set.set_owner(self.user)
+        user_perms = get_perms(self.user, self.data_set)
+        self.assertTrue('share_dataset' in user_perms)
 
 
 class SiteStatisticsUnitTests(TestCase):
