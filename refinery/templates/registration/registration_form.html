@@ -101,7 +101,6 @@
 			<p>
         {{ form.spam_filter }}
       </p>
-      <script src='https://www.google.com/recaptcha/api.js'></script>
       {% if recaptcha_error_message %}
 			  <p class="errors">
           {{ recaptcha_error_message }}
@@ -127,4 +126,8 @@ as much as you do.</p>
 
 <p>This account will let you log into the ticket tracker, claim tickets,
 and be exempt from spam filtering.</p>
+{% endblock %}
+
+{% block script %}
+  <script src='https://www.google.com/recaptcha/api.js'></script>
 {% endblock %}
