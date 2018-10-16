@@ -235,11 +235,14 @@
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
         vm.gridApi.edit.on.afterCellEdit(null, function (rowEntity, colDef, newValue, oldValue) {
-          var params = { uuid: rowEntity.uuid };
-          params[colDef.field] = newValue;
+          var params = {
+            uuid: rowEntity.uuid,
+            attribute_solr_name: colDef.field,
+            attribute_value: newValue
+          };
           if (newValue !== oldValue) {
             nodesV2Service.partial_update(params).$promise.then(function () {
-              $log.info('is successful');
+              refreshAssayFiles();
             }, function () {
               rowEntity[colDef.field] = oldValue;
             });
