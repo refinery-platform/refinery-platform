@@ -15,7 +15,6 @@ $solr_lib_dir = "${django_root}/solr/lib"
 $conf_mode = 'dev'
 $django_settings_module = "config.settings.${conf_mode}"
 $ui_app_root = "${django_root}/ui"
-$data_dir = '/data'
 $django_docker_engine_mem_limit_mb = 20
 $docker_host = "tcp://127.0.0.1:2375"
 
@@ -33,20 +32,6 @@ exec { 'activate_user':
   require     => Exec['create_guest'],
 }
 
-# Django-docker-engine needs a place for ephemeral data.
-# In production, this is a separate EBS mount, so we don't need to create it locally.
-file { $::data_dir:
-  ensure => directory,
-  owner  => $app_user,
-  group  => $app_group
-}
-->
-file { $::django_docker_engine_data_dir:
-    ensure => directory,
-    owner  => $app_user,
-    group  => $app_group,
-    mode   => '0755',
-}
 
 # See code in refinery-modules/refinery/...
 include refinery
