@@ -80,7 +80,7 @@
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.dataSet = {};
-    vm.newFilesLoading = false;
+    vm.fileEditsUpdating = false;
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
     vm.getDataUp = getDataUp;
@@ -242,14 +242,14 @@
             attribute_value: newValue
           };
           if (newValue !== oldValue) {
-            vm.newFilesLoading = true;
+            vm.fileEditsUpdating = true;
             nodesV2Service.partial_update(params).$promise.then(function () {
               refreshAssayFiles().then(function () {
-                vm.newFilesLoading = false;
+                vm.fileEditsUpdating = false;
               });
             }, function () {
               rowEntity[colDef.field] = oldValue;
-              vm.newFilesLoading = false;
+              vm.fileEditsUpdating = false;
             });
           }
         });
