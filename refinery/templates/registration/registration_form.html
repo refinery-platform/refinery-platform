@@ -6,114 +6,114 @@
 
 {% block subheader %}
 <div class="page-header">
-	<h1>Sign Up <small>Register for an account</small></h1>
+  <h1>Sign Up <small>Register for an account</small></h1>
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row">
-		<form method="post" action="." class="wide" id="registration-form">
-			{% csrf_token %}
-  			{% if form.errors %}
-  			<div class="alert alert-danger">
+  <div class="row">
+    <form method="post" action="." class="wide" id="registration-form">
+      {% csrf_token %}
+        {% if form.errors %}
+        <div class="alert alert-danger">
           Please correct the errors below.
           {{ form.non_field_errors }}
         </div>
-  			{% endif %}
+        {% endif %}
         <span class="registration_required"> Indicates a required field</span>
         <br>
-  			<div class="refinery-subheader">
-				<h4 class="registration_required">Username</h4>
-			</div>
-			{% if form.username.errors %}
-			<p class="errors">{{ form.username.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.username }}</p>
+        <div class="refinery-subheader">
+        <h4 class="registration_required">Username</h4>
+      </div>
+      {% if form.username.errors %}
+      <p class="errors">{{ form.username.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.username }}</p>
 
             <div class="refinery-subheader">
-				<h4 class="registration_required">First Name</h4>
-			</div>
-			{% if form.first_name.errors %}
-			<p class="errors">{{ form.first_name.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.first_name }}</p>
+        <h4 class="registration_required">First Name</h4>
+      </div>
+      {% if form.first_name.errors %}
+      <p class="errors">{{ form.first_name.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.first_name }}</p>
 
             <div class="refinery-subheader">
-				<h4 class="registration_required">Last Name</h4>
-			</div>
-			{% if form.last_name.errors %}
-			<p class="errors">{{ form.last_name.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.last_name }}</p>
+        <h4 class="registration_required">Last Name</h4>
+      </div>
+      {% if form.last_name.errors %}
+      <p class="errors">{{ form.last_name.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.last_name }}</p>
 
             <div class="refinery-subheader">
-				<h4 class="registration_required">Affiliation</h4>
-			</div>
-			{% if form.affiliation.errors %}
-			<p class="errors">{{ form.affiliation.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.affiliation }}</p>
+        <h4 class="registration_required">Affiliation</h4>
+      </div>
+      {% if form.affiliation.errors %}
+      <p class="errors">{{ form.affiliation.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.affiliation }}</p>
 
-			<div class="refinery-subheader">
-				<h4 class="registration_required">Email Address</h4>
-			</div>
-			{% if form.email.errors %}
-			<p class="errors">{{ form.email.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.email }}</p>
+      <div class="refinery-subheader">
+        <h4 class="registration_required">Email Address</h4>
+      </div>
+      {% if form.email.errors %}
+      <p class="errors">{{ form.email.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.email }}</p>
 
             <div class="refinery-subheader">
-				<h4 class="registration_required">Password</h4>
-			</div>
-			{% if form.password1.errors %}
-			<p class="errors">{{ form.password1.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.password1 }}</p>
+        <h4 class="registration_required">Password</h4>
+      </div>
+      {% if form.password1.errors %}
+      <p class="errors">{{ form.password1.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.password1 }}</p>
 
-			<div class="refinery-subheader">
-				<h4 class="registration_required">Password (again)</h4>
-			</div>
-			{% if form.password2.errors %}
-			<p class="errors">{{ form.password2.errors.as_text }}</p>
-			{% endif %}
-			<p>{{ form.password2 }}</p>
+      <div class="refinery-subheader">
+        <h4 class="registration_required">Password (again)</h4>
+      </div>
+      {% if form.password2.errors %}
+      <p class="errors">{{ form.password2.errors.as_text }}</p>
+      {% endif %}
+      <p>{{ form.password2 }}</p>
 
 
-			{% comment %}
-			<div class="refinery-subheader">
-				<h4>Terms of Service</h4>
-			</div>
-			{% if form.tos.errors %}
-			<p class="errors">{{form.tos.errors.as_text}}</p>
-			{% endif %}
-			<label class="checkbox">
-			{{form.tos}}
-			I have read and agree to the Terms of Service.
-			</label>
-			{% endcomment %}
+      {% comment %}
+      <div class="refinery-subheader">
+        <h4>Terms of Service</h4>
+      </div>
+      {% if form.tos.errors %}
+      <p class="errors">{{form.tos.errors.as_text}}</p>
+      {% endif %}
+      <label class="checkbox">
+      {{form.tos}}
+      I have read and agree to the Terms of Service.
+      </label>
+      {% endcomment %}
 
       {% if form.spam_filter.errors %}
-			  <p class="errors">
+        <p class="errors">
           {{ form.spam_filter.errors.as_text }}
         </p>
-			{% endif %}
-			<p>
+      {% endif %}
+      <p>
         {{ form.spam_filter }}
       </p>
       {% if recaptcha_error_message %}
-			  <p class="errors">
+        <p class="errors">
           {{ recaptcha_error_message }}
         </p>
-			{% endif %}
+      {% endif %}
       <div class="g-recaptcha" data-sitekey={{ REFINERY_GOOGLE_RECAPTCHA_SITE_KEY }}></div>
       <br>
-			<p class="submit"><input class="refinery-base btn btn-default"
+      <p class="submit"><input class="refinery-base btn btn-default"
         type="submit"
         value="Register">
       </p>
-	</form>
-</div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
