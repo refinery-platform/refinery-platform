@@ -1134,5 +1134,5 @@ class CustomRegistrationViewTests(TestCase):
         )
         self.assertEqual(400, response.status_code)
         self.assertFalse(response.wsgi_request.recaptcha_is_valid)
-        with self.assertRaises(User.DoesNotExist):
-            User.objects.get(username=username)
+        self.assertRaises(User.DoesNotExist, User.objects.get,
+                          username=username)
