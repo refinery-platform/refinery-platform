@@ -1084,27 +1084,6 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             derived_matrix_attributes.extend(ann_node_old)
         self.assertEqual(len(derived_matrix_attributes), 4)
 
-    def test_find_root_attributes_returns_roots_simple_path(self):
-        nodes = self.hg_19_data_set.get_nodes()
-        source_node = nodes.get(
-            type=Node.SAMPLE, name='s5_p42_E2_45min.fastq.gz'
-        )
-        file_node = nodes.get(
-            type=Node.RAW_DATA_FILE, name='s5_p42_E2_45min.fastq.gz'
-        )
-        attribute_obj = {'attribute_type': 'Characteristics',
-                         'display_name': 'organism'}
-        file_attribute = Attribute.objects.filter(
-            node=source_node,
-            type=attribute_obj.get('attribute_type'),
-            subtype=attribute_obj.get('display_name'),
-            value='Human')[0]
-        root_node, root_attributes = NodeViewSet().find_root_attributes(
-            [file_node], attribute_obj
-        )
-        self.assertEqual(source_node, root_node)
-        self.assertEqual(file_attribute, root_attributes[0])
-
 
 class ProcessISATabViewTests(MetadataImportTestBase):
     @mock.patch.object(import_file, "delay")
