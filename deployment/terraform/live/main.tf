@@ -12,6 +12,10 @@ provider "aws" {
   region  = "${var.region}"
 }
 
+provider "random" {
+  version = "~> 2.0"
+}
+
 locals {
   s3_bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
   tags                = "${merge(
@@ -21,6 +25,12 @@ locals {
       "terraform", "true"
     )
   )}"
+}
+
+resource "random_string" "rds_master_user_password" {
+  length  = 8
+  upper   = false
+  special = false
 }
 
 module "object_storage" {
@@ -57,10 +67,15 @@ module "vpc" {
   tags                 = "${local.tags}"
 }
 
-module "rds" {
-  source               = "../modules/rds"
-  private_subnet_a     = "${module.vpc.private_subnet_a_id}"
-  private_subnet_b     = "${module.vpc.private_subnet_b_id}"
-  resource_name_prefix = "${terraform.workspace}"
-  tags                 = "${local.tags}"
+module "database" {
+  source                       = "../modules/rds"
+  app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
+  availability_zone            = "${var.availability_zone_a}"
+  master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
+  private_subnet_a             = "${module.vpc.private_subnet_a_id}"
+  private_subnet_b             = "${module.vpc.private_subnet_b_id}"
+  resource_name_prefix         = "${terraform.workspace}"
+  snapshot_id                  = "${var.rds_snapshot_id}"
+  vpc_id                       = "${module.vpc.vpc_id}"
+  tags                         = "${local.tags}"
 }
