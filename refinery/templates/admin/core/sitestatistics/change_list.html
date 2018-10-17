@@ -1,0 +1,26 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script type="module">
+    // Load the Observable runtime and inspector.
+    import {Runtime, Inspector} from "https://unpkg.com/@observablehq/notebook-runtime?module";
+
+    import notebook from "https://api.observablehq.com/@scottx611x/refinery-stats.js";
+    // Load the notebook, observing its cells with a default Inspector
+    // that simply renders the value of each cell into the provided DOM node.
+    Runtime.load(notebook, Inspector.into("#observable"));
+  </script>
+{% endblock %}
+
+{% block content %}
+  <div id="observable"></div>
+  <br><br>
+  {{ block.super }}
+{% endblock %}
+
+
+
+
+
