@@ -87,10 +87,18 @@
     vm.getDataUp = getDataUp;
     vm.gridApi = undefined; // avoids duplicate grid generation
     // Main ui-grid options
+    var editCellTemplate = '<div>' +
+    '<form name="inputForm" class="ui-grid-edit-form ng-pristine ng-valid">' +
+    '<input type="text" ui-grid-editor ' +
+    'ng-model="row.entity[col.colDef.field]"' +
+    'class="ng-pristine ng-untouched ng-valid ng-not-empty"></form> ' +
+    '</div>';
+
     vm.gridOptions = {
       appScopeProvider: vm,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
+      editableCellTemplate: editCellTemplate,
       enableCellEdit: false,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
@@ -375,6 +383,7 @@
     function toggleEditMode () {
       vm.editMode = !vm.editMode;
       vm.gridOptions.enableCellEdit = vm.editMode;
+      vm.gridOptions.enableCellEditOnFocus = vm.editMode;
       resetGridService.setRefreshGridFlag(true);
     }
 
