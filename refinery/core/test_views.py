@@ -25,7 +25,7 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
-                     Workflow, WorkflowEngine, SiteStatistics)
+                     SiteStatistics, Workflow, WorkflowEngine)
 
 
 from .serializers import DataSetSerializer, UserSerializer

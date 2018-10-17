@@ -35,7 +35,7 @@ from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
-from rest_framework.decorators import detail_route, api_view
+from rest_framework.decorators import api_view, detail_route
 from rest_framework.exceptions import APIException
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
