@@ -69,13 +69,6 @@ file { "$solr_core_data":
   group => "$app_user",
   mode => "0755",
 }
-->
-file { $::django_docker_engine_data_dir:
-    ensure => directory,
-    owner => "$app_user",
-    group => "$app_user",
-    mode => "0755",
-}
 
 exec { "generate_superuser_json":
   command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json.new",

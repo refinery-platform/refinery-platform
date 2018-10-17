@@ -621,7 +621,6 @@ TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
-DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
 DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB = \
     get_setting("DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB")
 
@@ -649,3 +648,15 @@ MIGRATION_MODULES = {
 }
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"
+
+# The GOOGLE_RECAPTCHA values below are only valid for testing/dev
+# environments (They don't actually validate registering users)
+# See: https://developers.google.com/recaptcha/docs/faq
+REFINERY_GOOGLE_RECAPTCHA_SITE_KEY = get_setting(
+    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY",
+    default="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+)
+REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY = get_setting(
+    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY",
+    default="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+)
