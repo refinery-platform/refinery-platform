@@ -80,6 +80,7 @@
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.dataSet = {};
+    vm.fileEditsUpdating = false;
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
     vm.getDataUp = getDataUp;
@@ -241,10 +242,14 @@
             attribute_value: newValue
           };
           if (newValue !== oldValue) {
+            vm.fileEditsUpdating = true;
             nodesV2Service.partial_update(params).$promise.then(function () {
-              refreshAssayFiles();
+              refreshAssayFiles().then(function () {
+                vm.fileEditsUpdating = false;
+              });
             }, function () {
               rowEntity[colDef.field] = oldValue;
+              vm.fileEditsUpdating = false;
             });
           }
         });

@@ -39,6 +39,7 @@
       expect(ctrl.lastPage).toEqual(0);
       expect(ctrl.totalPages).toEqual(1);
       expect(ctrl.dataSet).toEqual({});
+      expect(ctrl.fileEditsUpdating).toEqual(false);
     });
 
     it('Data & UI displays variables should exist for views', function () {
