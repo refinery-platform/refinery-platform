@@ -25,7 +25,7 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
-                     Workflow, WorkflowEngine)
+                     Workflow, WorkflowEngine, SiteStatistics)
 
 
 from .serializers import DataSetSerializer, UserSerializer
@@ -1136,3 +1136,47 @@ class CustomRegistrationViewTests(TestCase):
         self.assertFalse(response.wsgi_request.recaptcha_is_valid)
         self.assertRaises(User.DoesNotExist, User.objects.get,
                           username=username)
+
+
+class SiteStatisticsViewTests(TestCase):
+    def setUp(self):
+        # Simulate a day of user activity
+        self.user = User.objects.create_superuser("user", "", "user")
+        self.client.login(username="user", password="user")
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user)
+        self.dataset_b = create_dataset_with_necessary_models(user=self.user)
+        self.site_statistics_a = SiteStatistics.objects.create()
+        self.site_statistics_a.collect()
+
+    def test_is_accessible_by_admins_only(self):
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get("/api/v2/sitestatistics/deltas.csv")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login/?next", response.url)
+
+    @mock.patch.object(SiteStatistics, "get_csv_row")
+    def test_get_deltas_csv(self, get_csv_row_mock):
+        response = self.client.get("/api/v2/sitestatistics/deltas.csv")
+        self.assertIn(
+            ",datasets_shared,datasets_uploaded,groups_created,"
+            "run_date,total_user_logins,total_visualization_launches,"
+            "total_workflow_launches,users_created,unique_user_logins",
+            response.content
+        )
+        get_csv_row_mock.assert_called_with()  # called without any args
+
+        # first entry ignored for deltas
+        self.assertEqual(get_csv_row_mock.call_count, 1)
+
+    @mock.patch.object(SiteStatistics, "get_csv_row")
+    def test_get_totals_csv(self, get_csv_row_mock):
+        response = self.client.get("/api/v2/sitestatistics/totals.csv")
+        self.assertIn(
+            ",datasets_shared,datasets_uploaded,groups_created,"
+            "run_date,total_user_logins,total_visualization_launches,"
+            "total_workflow_launches,users_created,unique_user_logins",
+            response.content
+        )
+        get_csv_row_mock.assert_called_with(aggregates=True)
+        self.assertEqual(get_csv_row_mock.call_count, 2)

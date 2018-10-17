@@ -1052,6 +1052,40 @@ class SiteStatisticsUnitTests(TestCase):
     def test__get_total_user_logins(self):
         self.assertEqual(self.site_statistics._get_total_user_logins(), 4)
 
+    def test_get_csv_row(self):
+        self.assertEqual(
+            self.site_statistics.get_csv_row(),
+            [
+                self.site_statistics.pk,
+                self.site_statistics.datasets_shared,
+                self.site_statistics.datasets_uploaded,
+                self.site_statistics.groups_created,
+                self.site_statistics.run_date.strftime("%Y-%m-%d"),
+                self.site_statistics.total_user_logins,
+                self.site_statistics.total_visualization_launches,
+                self.site_statistics.total_workflow_launches,
+                self.site_statistics.users_created,
+                self.site_statistics.unique_user_logins
+            ]
+        )
+
+    def test_get_csv_row_aggregates(self):
+        self.assertEqual(
+            self.site_statistics.get_csv_row(aggregates=True),
+            [
+                self.site_statistics.pk,
+                self.site_statistics.datasets_shared,
+                self.site_statistics.datasets_uploaded,
+                2,  # Public group + the group we created
+                self.site_statistics.run_date.strftime("%Y-%m-%d"),
+                self.site_statistics.total_user_logins,
+                self.site_statistics.total_visualization_launches,
+                self.site_statistics.total_workflow_launches,
+                self.site_statistics.users_created,
+                self.site_statistics.unique_user_logins
+            ]
+        )
+
 
 class SiteStatisticsIntegrationTests(TestCase):
     def setUp(self):
