@@ -80,6 +80,7 @@
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.dataSet = {};
+    vm.editMode = false;
     vm.fileEditsUpdating = false;
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
@@ -90,7 +91,7 @@
       appScopeProvider: vm,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
-      edit: false,
+      enableCellEdit: false,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
@@ -112,6 +113,7 @@
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
     vm.sortChanged = sortChanged;
+    vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     vm.userPerms = permsService.userPerms;
@@ -366,6 +368,14 @@
             break;
         }
       }
+    }
+
+    // View method which sets the table into an edit mode (note, the ui only
+    // allows owners to edit).
+    function toggleEditMode () {
+      vm.editMode = !vm.editMode;
+      vm.gridOptions.enableCellEdit = vm.editMode;
+      resetGridService.setRefreshGridFlag(true);
     }
 
     // Helper method: toggles the tool related columns, selection & input groups
