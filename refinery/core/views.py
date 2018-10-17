@@ -1115,7 +1115,7 @@ def site_statistics(request, **kwargs):
     for site_statistics_instance in queryset:
         if site_statistics_type == "totals":
             writer.writerow(
-                site_statistics_instance.get_csv_row(with_aggregates=True)
+                site_statistics_instance.get_csv_row(aggregates=True)
             )
         else:
             writer.writerow(site_statistics_instance.get_csv_row())

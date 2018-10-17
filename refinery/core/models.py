@@ -2319,8 +2319,8 @@ class SiteStatistics(models.Model):
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
 
-    def get_csv_row(self, with_aggregates=False):
-        if not with_aggregates:
+    def get_csv_row(self, aggregates=False):
+        if not aggregates:
             return [
                 self.pk, self.datasets_shared, self.datasets_uploaded,
                 self.groups_created, self.run_date.strftime("%Y-%m-%d"),
