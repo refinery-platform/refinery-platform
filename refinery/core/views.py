@@ -16,7 +16,8 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import get_object_or_404, redirect, render_to_response
+from django.shortcuts import (get_object_or_404, redirect, render,
+                              render_to_response)
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
@@ -928,6 +929,7 @@ class AnalysesViewSet(APIView):
 
 
 class CustomRegistrationView(RegistrationView):
+    success_url = "registration_complete"
 
     def register(self, request):
         """
@@ -977,13 +979,16 @@ class CustomRegistrationView(RegistrationView):
                                      request=request)
         return new_user
 
-    def get_success_url(self, user):
-        """
-        Return the name of the URL to redirect to after successful
-        user registration.
-
-        """
-        return ('registration_complete', (), {})
+    def form_valid(self, form):
+        if not self.request.recaptcha_is_valid:
+            return render(
+                self.request, "registration/registration_form.html",
+                {
+                    "form": form,
+                    "recaptcha_error_message": "* Could not verify reCAPTCHA"
+                }, status=400
+            )
+        return super(CustomRegistrationView, self).form_valid(form)
 
 
 class OpenIDToken(APIView):
