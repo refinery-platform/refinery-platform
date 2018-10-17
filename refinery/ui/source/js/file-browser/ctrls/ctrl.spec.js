@@ -60,8 +60,6 @@
         expect(ctrl.editMode).toBe(true);
         ctrl.toggleEditMode();
         expect(ctrl.editMode).toBe(false);
-        ctrl.toggleEditMode();
-        expect(ctrl.editMode).toBe(false);
       });
       it('toggleEditMode updates gridOptions to equal editMode', function () {
         ctrl.toggleEditMode();
