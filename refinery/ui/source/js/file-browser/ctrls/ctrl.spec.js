@@ -55,7 +55,7 @@
       it('toggleEditMode is method', function () {
         expect(angular.isFunction(ctrl.toggleEditMode)).toBe(true);
       });
-      it('toggleEditMode toggles editMode', function () {
+      it('toggleEditMode toggles editMode flag', function () {
         ctrl.toggleEditMode();
         expect(ctrl.editMode).toBe(true);
         ctrl.toggleEditMode();
