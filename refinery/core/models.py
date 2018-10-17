@@ -26,6 +26,7 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
+from django.db.models import Sum
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -2317,6 +2318,33 @@ class SiteStatistics(models.Model):
         return sum(u.login_count for u in UserProfile.objects.all()) - \
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
+
+    def get_csv_row(self, with_aggregates=False):
+        if not with_aggregates:
+            return [
+                self.pk, self.datasets_shared, self.datasets_uploaded,
+                self.groups_created, self.run_date.strftime("%Y-%m-%d"),
+                self.total_user_logins, self.total_visualization_launches,
+                self.total_workflow_launches, self.users_created,
+                self.unique_user_logins
+            ]
+
+        def get_aggregate_sum(field_name):
+            return SiteStatistics.objects.filter(
+                run_date__lte=self.run_date
+            ).aggregate(Sum(field_name)).values()[0]
+
+        return [
+            self.pk, get_aggregate_sum("datasets_shared"),
+            get_aggregate_sum("datasets_uploaded"),
+            get_aggregate_sum("groups_created"),
+            self.run_date.strftime("%Y-%m-%d"),
+            get_aggregate_sum("total_user_logins"),
+            get_aggregate_sum("total_visualization_launches"),
+            get_aggregate_sum("total_workflow_launches"),
+            get_aggregate_sum("users_created"),
+            get_aggregate_sum("unique_user_logins")
+        ]
 
 
 class Event(models.Model):
