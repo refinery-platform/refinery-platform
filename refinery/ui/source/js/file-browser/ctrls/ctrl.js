@@ -370,18 +370,11 @@
       }
     }
 
+    // View method which sets the table into an edit mode (note, the ui only
+    // allows owners to edit).
     function toggleEditMode () {
-      // enable cell edits
-      // set background colors
-      // activate select cells
-      // activate select column
-      if (vm.editMode) {
-        vm.editMode = false;
-        vm.gridOptions.enableCellEdit = false;
-      } else {
-        vm.editMode = true;
-        vm.gridOptions.enableCellEdit = true;
-      }
+      vm.editMode = !vm.editMode;
+      vm.gridOptions.enableCellEdit = vm.editMode;
       resetGridService.setRefreshGridFlag(true);
     }
 

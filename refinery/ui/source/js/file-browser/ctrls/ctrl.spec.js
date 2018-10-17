@@ -4,6 +4,7 @@
   describe('Controller: FileBrowserCtrl', function () {
     var ctrl;
     var permsService;
+    var resetService;
     var scope;
     var toolService;
 
@@ -16,6 +17,7 @@
       dataSetPermsService,
       fileBrowserFactory,
       mockParamsFactory,
+      resetGridService,
       selectedFilterService,
       toolSelectService
     ) {
@@ -24,6 +26,7 @@
         $scope: scope
       });
       permsService = dataSetPermsService;
+      resetService = resetGridService;
       toolService = toolSelectService;
       $window.externalAssayUuid = mockParamsFactory.generateUuid();
     }));
@@ -39,12 +42,32 @@
       expect(ctrl.lastPage).toEqual(0);
       expect(ctrl.totalPages).toEqual(1);
       expect(ctrl.dataSet).toEqual({});
+      expect(ctrl.editMode).toEqual(false);
       expect(ctrl.fileEditsUpdating).toEqual(false);
     });
 
     it('Data & UI displays variables should exist for views', function () {
       expect(ctrl.assayAttributes).toEqual([]);
       expect(ctrl.collapsedToolPanel).toEqual(true);
+    });
+
+    describe('Toggle Edit Mode', function () {
+      it('toggleEditMode is method', function () {
+        expect(angular.isFunction(ctrl.toggleEditMode)).toBe(true);
+      });
+      it('toggleEditMode updates editMode', function () {
+        ctrl.toggleEditMode();
+        expect(ctrl.editMode).toBe(true);
+      });
+      it('toggleEditMode updates gridOptions to equal editMode', function () {
+        ctrl.toggleEditMode();
+        expect(ctrl.gridOptions.enableCellEdit).toBe(ctrl.editMode);
+      });
+      it('toggleEditMode calls on service', function () {
+        var mockRefresh = spyOn(resetService, 'setRefreshGridFlag');
+        ctrl.toggleEditMode();
+        expect(mockRefresh).toHaveBeenCalled();
+      });
     });
 
     describe('Toggle Tool Panel', function () {
