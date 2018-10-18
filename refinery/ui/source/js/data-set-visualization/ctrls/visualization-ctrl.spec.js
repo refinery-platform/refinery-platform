@@ -22,6 +22,18 @@
       expect(ctrl).toBeDefined();
     });
 
+    it('Data Set Visualization Ctrl deleteTool should exist', function () {
+      expect(ctrl.deleteTool).toBeDefined();
+    });
+
+    it('Data Set Visualization Ctrl relaunchTool should exist', function () {
+      expect(ctrl.relaunchTool).toBeDefined();
+    });
+
+    it('Data Set Visualization Ctrl isOwner should exist', function () {
+      expect(ctrl.isOwner).toBeDefined();
+    });
+
     it('Data & UI displays variables should exist for views', function () {
       expect(ctrl.visLoadingFlag).toEqual('LOADING');
       expect(ctrl.visualizations).toEqual([]);
