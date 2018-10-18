@@ -4,7 +4,10 @@ import string
 from urlparse import urljoin
 
 from cuser.middleware import CuserMiddleware
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from django.test import override_settings
+from django.test.testcases import TestCase
 from django.utils.functional import SimpleLazyObject
 
 from guardian.shortcuts import get_groups_with_perms
@@ -1089,3 +1092,47 @@ class EventApiV2Tests(APIV2TestCase):
                 }
             ]
         )
+
+
+class CustomRegistrationViewTests(TestCase):
+    def test_user_registration_successful_recaptcha(self):
+        username = "new-test-user"
+        password = make_password('password')
+        response = self.client.post(
+            "/accounts/register/",
+            data={
+                "username": username,
+                "email": "test@example.com",
+                "first_name": "test",
+                "last_name": "user",
+                "affiliation": "Test Users",
+                "password1": password,
+                "password2": password
+            }
+        )
+        self.assertTrue(response.wsgi_request.recaptcha_is_valid)
+        self.assertIsNotNone(User.objects.get(username=username))
+
+    @override_settings(
+        REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="invalid_site_key",
+        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="invalid_secret_key"
+    )
+    def test_user_registration_unsuccessful_recaptcha(self):
+        username = "new-test-user"
+        password = make_password('password')
+        response = self.client.post(
+            "/accounts/register/",
+            data={
+                "username": username,
+                "email": "test@example.com",
+                "first_name": "test",
+                "last_name": "user",
+                "affiliation": "Test Users",
+                "password1": password,
+                "password2": password
+            }
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertFalse(response.wsgi_request.recaptcha_is_valid)
+        self.assertRaises(User.DoesNotExist, User.objects.get,
+                          username=username)

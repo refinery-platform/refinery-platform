@@ -29,6 +29,7 @@
     'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
+    'nodesV2Service',
     'resetGridService',
     'selectedFilterService',
     'activeNodeService',
@@ -52,6 +53,7 @@
     fileParamService,
     filesLoadingService,
     fileRelationshipService,
+    nodesV2Service,
     resetGridService,
     selectedFilterService,
     activeNodeService,
@@ -78,6 +80,8 @@
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.dataSet = {};
+    vm.editMode = false;
+    vm.fileEditsUpdating = false;
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
     vm.getDataUp = getDataUp;
@@ -87,6 +91,7 @@
       appScopeProvider: vm,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
+      enableCellEdit: false,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
@@ -108,6 +113,7 @@
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
     vm.sortChanged = sortChanged;
+    vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     vm.userPerms = permsService.userPerms;
@@ -121,8 +127,6 @@
     function activate () {
       // Ensure data owner or group permission to modify (run tools)
       refreshDataSetProps();
-      // initialize the dataset and updates ui-grid selection, filters, and url
-      initializeDataOnPageLoad();
     }
 
     // Helper method to keep track when data should be discard or added
@@ -159,6 +163,8 @@
     function refreshDataSetProps () {
       dataSetPropsService.refreshDataSet().then(function () {
         vm.dataSet = dataSetPropsService.dataSet;
+        // initialize the dataset and updates ui-grid selection, filters, and url
+        initializeDataOnPageLoad();
       });
     }
 
@@ -230,6 +236,25 @@
         // Sort events
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
+
+        vm.gridApi.edit.on.afterCellEdit(null, function (rowEntity, colDef, newValue, oldValue) {
+          var params = {
+            uuid: rowEntity.uuid,
+            attribute_solr_name: colDef.field,
+            attribute_value: newValue
+          };
+          if (newValue !== oldValue) {
+            vm.fileEditsUpdating = true;
+            nodesV2Service.partial_update(params).$promise.then(function () {
+              refreshAssayFiles().then(function () {
+                vm.fileEditsUpdating = false;
+              });
+            }, function () {
+              rowEntity[colDef.field] = oldValue;
+              vm.fileEditsUpdating = false;
+            });
+          }
+        });
       }
     }
 
@@ -343,6 +368,14 @@
             break;
         }
       }
+    }
+
+    // View method which sets the table into an edit mode (note, the ui only
+    // allows owners to edit).
+    function toggleEditMode () {
+      vm.editMode = !vm.editMode;
+      vm.gridOptions.enableCellEdit = vm.editMode;
+      resetGridService.setRefreshGridFlag(true);
     }
 
     // Helper method: toggles the tool related columns, selection & input groups

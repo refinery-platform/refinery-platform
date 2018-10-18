@@ -16,7 +16,7 @@ import sys
 
 import boto3
 from cfn_pyplates import core, functions
-from utils import ensure_s3_bucket, load_config, load_tags, save_s3_config
+from utils import load_config, load_tags, save_s3_config
 
 VERSION = '1.1'
 
@@ -41,7 +41,6 @@ def main():
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
         template = make_template(config, config_yaml)
-        ensure_s3_bucket(config['S3_LOG_BUCKET'])
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
@@ -93,12 +92,8 @@ def make_template(config, config_yaml):
         "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
         "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "RDS_ENDPOINT_ADDRESS=",
-        functions.get_att('RDSInstance', 'Endpoint.Address'),
-        "\n",
-        "RDS_ENDPOINT_PORT=",
-        functions.get_att('RDSInstance', 'Endpoint.Port'),
-        "\n",
+        "RDS_ENDPOINT_ADDRESS=", config['RDS_ENDPOINT_ADDRESS'], "\n",
+        "RDS_ENDPOINT_PORT=5432\n",
         "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
         "RDS_ROLE=", config['RDS_ROLE'], "\n",
         "ADMIN=", config['ADMIN'], "\n",
@@ -131,37 +126,6 @@ def make_template(config, config_yaml):
         )
     )
 
-    rds_properties = {
-        "AllocatedStorage": "5",
-        "AutoMinorVersionUpgrade": False,
-        "BackupRetentionPeriod": "15",
-        "CopyTagsToSnapshot": True,
-        "DBInstanceClass": "db.t2.small",       # todo:?
-        "DBInstanceIdentifier": config['RDS_NAME'],
-        "DBSubnetGroupName": config["RDS_DB_SUBNET_GROUP_NAME"],
-        "Engine": "postgres",
-        "EngineVersion": "9.3.14",
-        # "KmsKeyId" ?
-        "MasterUsername": "root",
-        "MasterUserPassword": config['RDS_SUPERUSER_PASSWORD'],
-        "MultiAZ": False,
-        "Port": "5432",
-        "PubliclyAccessible": False,
-        "StorageType": "gp2",
-        "Tags": instance_tags,  # todo: Should be different?
-        "VPCSecurityGroups": [
-            functions.get_att('RDSSecurityGroup', 'GroupId')],
-    }
-
-    if 'RDS_SNAPSHOT' in config:
-        rds_properties['DBSnapshotIdentifier'] = config['RDS_SNAPSHOT']
-
-    cft.resources.rds_instance = core.Resource(
-        'RDSInstance', 'AWS::RDS::DBInstance',
-        core.Properties(rds_properties),
-        core.DeletionPolicy("Snapshot"),
-        )
-
     volume_properties = {
         'Encrypted': True,
         'Size': config['DATA_VOLUME_SIZE'],
@@ -191,9 +155,7 @@ def make_template(config, config_yaml):
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Monitoring': True,
-            'SecurityGroupIds': [
-                functions.get_att('InstanceSecurityGroup', 'GroupId')
-            ],
+            'SecurityGroupIds': [config['APP_SERVER_SECURITY_GROUP_ID']],
             'Tags': instance_tags,
             'BlockDeviceMappings': [
                 {
@@ -207,7 +169,6 @@ def make_template(config, config_yaml):
             ],
             "SubnetId": config['PUBLIC_SUBNET_ID']
         }),
-        core.DependsOn(['RDSInstance']),
     )
 
     cft.resources.instance_profile = core.Resource(
@@ -372,100 +333,6 @@ def make_template(config, config_yaml):
         })
     )
 
-    # Security Group for Elastic Load Balancer
-    # (public facing).
-    cft.resources.elbsg = core.Resource(
-        'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery ELB",
-            # Egress Rule defined via
-            # AWS::EC2::SecurityGroupEgress resource,
-            # to avoid circularity (below).
-            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html # noqa: E501
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "443",
-                    "ToPort": "443",
-                    "CidrIp": "0.0.0.0/0",
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
-    cft.resources.elbegress = core.Resource(
-        'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
-        core.Properties({
-            "GroupId": functions.get_att('ELBSecurityGroup', 'GroupId'),
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "DestinationSecurityGroupId": functions.get_att(
-                'InstanceSecurityGroup', 'GroupId'),
-        })
-    )
-
-    # Security Group for EC2- instance.
-    cft.resources.instancesg = core.Resource(
-        'InstanceSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery EC2 Instance",
-            'SecurityGroupEgress':  [],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "22",
-                    "ToPort": "22",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    # "CidrIp": "0.0.0.0/0",
-                    # Only accept connections from the ELB.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'ELBSecurityGroup', 'GroupId'),
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
-    # Security Group for RDS instance.
-    cft.resources.rdssg = core.Resource(
-        'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery RDS",
-            'SecurityGroupEgress':  [
-                # We would like to remove all egress rules here,
-                # but you can't do that with this version
-                # of CloudFormation.
-                # We decided that the hacky workarounds are
-                # not worth it.
-            ],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "5432",
-                    "ToPort": "5432",
-                    # Only accept connections from the
-                    # Instance Security Group.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'InstanceSecurityGroup', 'GroupId'),
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
     # ELB per
     # http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html
 
@@ -513,8 +380,7 @@ def make_template(config, config_yaml):
             'Instances': [functions.ref('WebInstance')],
             'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
-            'SecurityGroups': [
-                functions.get_att('ELBSecurityGroup', 'GroupId')],
+            'SecurityGroups': [config['ELB_SECURITY_GROUP_ID']],
             'Subnets': [config["PUBLIC_SUBNET_ID"]],
             'Tags': load_tags(),
         })
@@ -527,41 +393,6 @@ def make_template(config, config_yaml):
                 "this to be 5 or 60.",
             }
         )
-    )
-
-    # See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy # noqa: E501
-    # for full list of region--principal identifiers.
-    cft.mappings.region = core.Mapping(
-        'Region',
-        {'us-east-1': {'ELBPrincipal': '127311923021'}})
-
-    cft.resources.log_policy = core.Resource(
-        'LogBucketPolicy', 'AWS::S3::BucketPolicy',
-        core.Properties({
-            'Bucket': config['S3_LOG_BUCKET'],
-            'PolicyDocument': {
-                'Statement': [{
-                    "Action": [
-                      "s3:PutObject"
-                    ],
-                    "Effect": "Allow",
-                    "Resource":
-                    functions.join(
-                        "",
-                        "arn:aws:s3:::",
-                        config['S3_LOG_BUCKET'],
-                        "/AWSLogs/",
-                        functions.ref("AWS::AccountId"), "/*"),
-                    "Principal": {
-                      "AWS": [
-                        functions.find_in_map(
-                            'Region',
-                            functions.ref("AWS::Region"), 'ELBPrincipal'),
-                      ]
-                    }
-                }]
-            }
-        })
     )
 
     return cft

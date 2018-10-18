@@ -1,5 +1,15 @@
 # Change Log
 
+## [v1.6.6.2](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.2) (2018-09-10)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6.1...v1.6.6.2)
+
+- This hotfix release resolves a bug in the events api caused by a str conversion.
+
+## [v1.6.6.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.1) (2018-09-10)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6...v1.6.6.1)
+
+- This is a hotfix release solely to get a larger EC2 instance type for our docker host running our `VisualizationTools`
+
 ## [v1.6.6](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6) (2018-08-30)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.5...v1.6.6)
 
@@ -528,8 +538,6 @@
 - provide list of download URLs for selection [\#326](https://github.com/refinery-platform/refinery-platform/issues/326)
 - Add a Django config for running tests [\#2536](https://github.com/refinery-platform/refinery-platform/pull/2536) ([hackdna](https://github.com/hackdna))
 - Provide additional information when logging a file import error from S3 [\#2444](https://github.com/refinery-platform/refinery-platform/pull/2444) ([hackdna](https://github.com/hackdna))
-- ISA-Tab Upload: Wrong remove color button [\#1727](https://github.com/refinery-platform/refinery-platform/issues/1727)
-- Allow deletion of the empty user data S3 buckets [\#2392](https://github.com/refinery-platform/refinery-platform/pull/2392) ([hackdna](https://github.com/hackdna))
 
 **Fixed bugs:**
 
@@ -562,13 +570,6 @@
 - Hide any users without profiles or a full\_name. [\#2440](https://github.com/refinery-platform/refinery-platform/pull/2440) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/popover fix [\#2439](https://github.com/refinery-platform/refinery-platform/pull/2439) ([jkmarx](https://github.com/jkmarx))
 - Remove flaky tool tip. [\#2438](https://github.com/refinery-platform/refinery-platform/pull/2438) ([jkmarx](https://github.com/jkmarx))
-- Results missing from some successful analyses [\#2426](https://github.com/refinery-platform/refinery-platform/issues/2426)
-- Database migrations fail to apply automatically [\#2420](https://github.com/refinery-platform/refinery-platform/issues/2420)
-- Assertion error in test\_analysis\_deletion [\#2408](https://github.com/refinery-platform/refinery-platform/issues/2408)
-- KeyError when cancelling an Analysis before Galaxy Import stage [\#2397](https://github.com/refinery-platform/refinery-platform/issues/2397)
-- Downloading more files from Galaxy than specified by workflow [\#2293](https://github.com/refinery-platform/refinery-platform/issues/2293)
-- Assign unique name to each Celery worker [\#2404](https://github.com/refinery-platform/refinery-platform/pull/2404) ([hackdna](https://github.com/hackdna))
-- Remove data\_set\_manager test data zip files from .gitignore [\#2395](https://github.com/refinery-platform/refinery-platform/pull/2395) ([hackdna](https://github.com/hackdna))
 
 **Closed issues:**
 
@@ -582,9 +583,6 @@
 - With download url in solr, don't need the per-row api hits in file browser [\#2050](https://github.com/refinery-platform/refinery-platform/issues/2050)
 - Refactor provvis global scope usage [\#1000](https://github.com/refinery-platform/refinery-platform/issues/1000)
 - Decouple access control for data set metadata from access control for data samples [\#486](https://github.com/refinery-platform/refinery-platform/issues/486)
-- Collaboration Permissions - View Meta Data Level [\#2389](https://github.com/refinery-platform/refinery-platform/issues/2389)
-- Remove the `WorkflowFilesDL` model [\#2173](https://github.com/refinery-platform/refinery-platform/issues/2173)
-- Assay Files Refactor/Fix Unit Test [\#1621](https://github.com/refinery-platform/refinery-platform/issues/1621)
 
 **Merged pull requests:**
 
@@ -619,6 +617,33 @@
 - Jkmarx/share modal file browser [\#2421](https://github.com/refinery-platform/refinery-platform/pull/2421) ([jkmarx](https://github.com/jkmarx))
 - Skip indexing for some files [\#2330](https://github.com/refinery-platform/refinery-platform/pull/2330) ([mccalluc](https://github.com/mccalluc))
 - Jkmarx/refactor provvis code [\#2317](https://github.com/refinery-platform/refinery-platform/pull/2317) ([jkmarx](https://github.com/jkmarx))
+
+## [v1.6.1.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.1.1) (2017-12-13)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.1...v1.6.1.1)
+
+**Implemented enhancements:**
+
+- ISA-Tab Upload: Wrong remove color button [\#1727](https://github.com/refinery-platform/refinery-platform/issues/1727)
+- Allow deletion of the empty user data S3 buckets [\#2392](https://github.com/refinery-platform/refinery-platform/pull/2392) ([hackdna](https://github.com/hackdna))
+
+**Fixed bugs:**
+
+- Results missing from some successful analyses [\#2426](https://github.com/refinery-platform/refinery-platform/issues/2426)
+- Database migrations fail to apply automatically [\#2420](https://github.com/refinery-platform/refinery-platform/issues/2420)
+- Assertion error in test\_analysis\_deletion [\#2408](https://github.com/refinery-platform/refinery-platform/issues/2408)
+- KeyError when cancelling an Analysis before Galaxy Import stage [\#2397](https://github.com/refinery-platform/refinery-platform/issues/2397)
+- Downloading more files from Galaxy than specified by workflow [\#2293](https://github.com/refinery-platform/refinery-platform/issues/2293)
+- Assign unique name to each Celery worker [\#2404](https://github.com/refinery-platform/refinery-platform/pull/2404) ([hackdna](https://github.com/hackdna))
+- Remove data\_set\_manager test data zip files from .gitignore [\#2395](https://github.com/refinery-platform/refinery-platform/pull/2395) ([hackdna](https://github.com/hackdna))
+
+**Closed issues:**
+
+- Collaboration Permissions - View Meta Data Level [\#2389](https://github.com/refinery-platform/refinery-platform/issues/2389)
+- Remove the `WorkflowFilesDL` model [\#2173](https://github.com/refinery-platform/refinery-platform/issues/2173)
+- Assay Files Refactor/Fix Unit Test [\#1621](https://github.com/refinery-platform/refinery-platform/issues/1621)
+
+**Merged pull requests:**
+
 - Fix duplicate migration error. [\#2430](https://github.com/refinery-platform/refinery-platform/pull/2430) ([jkmarx](https://github.com/jkmarx))
 - Hotfix 1.6.1.1 [\#2428](https://github.com/refinery-platform/refinery-platform/pull/2428) ([scottx611x](https://github.com/scottx611x))
 - Add UUIDField migrations for django-extensions update [\#2424](https://github.com/refinery-platform/refinery-platform/pull/2424) ([hackdna](https://github.com/hackdna))
@@ -637,14 +662,6 @@
 - Remove unused package django-uuidfield [\#2396](https://github.com/refinery-platform/refinery-platform/pull/2396) ([hackdna](https://github.com/hackdna))
 - Scottx611x/remove workflow files dl model [\#2384](https://github.com/refinery-platform/refinery-platform/pull/2384) ([scottx611x](https://github.com/scottx611x))
 - Add warning color to button. [\#2333](https://github.com/refinery-platform/refinery-platform/pull/2333) ([jkmarx](https://github.com/jkmarx))
-
-
-## [v1.6.1.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.1.1) (2017-12-13)
-[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.1...v1.6.1.1)
-
-**Merged pull requests:**
-
-- Hotfix 1.6.1.1 [\#2428](https://github.com/refinery-platform/refinery-platform/pull/2428) ([scottx611x](https://github.com/scottx611x))
 
 ## [v1.6.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.1) (2017-11-27)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.0...v1.6.1)

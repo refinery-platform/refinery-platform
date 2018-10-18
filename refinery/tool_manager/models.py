@@ -188,6 +188,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     parameters = models.ManyToManyField(Parameter)
     image_name = models.CharField(max_length=255, blank=True)
+    mem_reservation_mb = models.IntegerField(default=10)
     annotation = models.TextField()
     workflow = models.ForeignKey(Workflow, null=True)
 
@@ -318,9 +319,9 @@ class Tool(OwnableResource):
     def django_docker_client(self):
         return DockerClientRunWrapper(
             DockerClientSpec(
-                settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
                 input_json_url=get_absolute_url(self.container_input_json_url)
-            )
+            ),
+            mem_limit_mb=settings.DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB
         )
 
     @property
@@ -545,15 +546,11 @@ class VisualizationTool(Tool):
     def create_container_spec(self):
         return DockerContainerSpec(
             image_name=self.tool_definition.image_name,
+            mem_reservation_mb=self.tool_definition.mem_reservation_mb,
             container_name=self.container_name,
             labels={self.uuid: ToolDefinition.VISUALIZATION},
             extra_directories=self.tool_definition.get_extra_directories()
         )
-
-    def _check_max_running_containers(self):
-        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(self.django_docker_client.list()) >= max_containers:
-            raise VisualizationToolError('Max containers')
 
     def _get_detailed_nodes_dict(self, node_uuid_list,
                                  require_valid_urls=False):
@@ -614,7 +611,6 @@ class VisualizationTool(Tool):
 
     def launch(self):
         """Launch a visualization-based Tool"""
-        self._check_max_running_containers()
         self._check_input_node_limit()
 
         # Pulls docker image if it doesn't exist yet, and launches container
@@ -814,7 +810,7 @@ class WorkflowTool(Tool):
                 name=file_store_item.datafile.name,
                 step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
-                is_refinery_file=file_store_item.is_local()
+                is_refinery_file=bool(file_store_item.datafile)
             )
 
     def create_analysis_output_node_connections(self):

@@ -3,8 +3,9 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-import logging
 import urlparse
+
+from django.conf import settings
 
 from bioblend import galaxy
 import celery
@@ -15,12 +16,13 @@ from celery.task.sets import TaskSet
 import core
 from core.models import Analysis, AnalysisResult, Workflow
 from file_store.models import FileStoreItem, FileExtension
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 import tool_manager
 
 from .models import AnalysisStatus
 
-logger = logging.getLogger(__name__)
+logger = celery.utils.log.get_task_logger(__name__)
+logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 RETRY_INTERVAL = 5  # seconds
 
@@ -522,9 +524,7 @@ def _get_galaxy_download_task_ids(analysis):
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
-                task_id = import_file.subtask(
-                        (file_store_item.uuid, False, file_size)
-                )
+                task_id = FileImportTask().subtask((file_store_item.uuid,))
                 task_id_list.append(task_id)
 
     return task_id_list

@@ -76,10 +76,6 @@ def load_config():
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
 
-    # Optional in `config.yaml`
-    if 'RDS_NAME' not in config:
-        config['RDS_NAME'] = config['STACK_NAME']
-
     with open("aws-config/config.yaml", 'r') as f:
         config_string = f.read()
 
@@ -164,9 +160,10 @@ def report_missing_keys(config):
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['COGNITO_IDENTITY_POOL_ID', 'EC2_INSTANCE_TYPE', 'KEY_NAME',
-                'RDS_SUPERUSER_PASSWORD', 'S3_BUCKET_NAME_BASE', 'SITE_NAME',
-                'SITE_URL', 'STACK_NAME']
+    required = ['APP_SERVER_SECURITY_GROUP_ID', 'COGNITO_IDENTITY_POOL_ID',
+                'EC2_INSTANCE_TYPE', 'ELB_SECURITY_GROUP_ID', 'KEY_NAME',
+                'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
+                'S3_BUCKET_NAME_BASE', 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:

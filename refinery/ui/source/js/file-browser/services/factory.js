@@ -12,6 +12,7 @@
     'assayAttributeService',
     'assayFileService',
     'assayFiltersService',
+    'dataSetPropsService',
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
@@ -25,6 +26,7 @@
     assayAttributeService,
     assayFileService,
     assayFiltersService,
+    dataSetPropsService,
     fileBrowserSettings,
     nodeService,
     selectedFilterService,
@@ -65,7 +67,6 @@
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
-
       assayAttributes.forEach(function (attribute) {
         var columnName = attribute.display_name;
         var columnWidth = columnName.length * 6 + 100;
@@ -75,8 +76,10 @@
           width: columnWidth,
           field: attribute.internal_name,
           cellTooltip: true,
-          enableHiding: false
+          enableHiding: false,
+          cellEditableCondition: dataSetPropsService.dataSet.is_owner
         };
+
         if (columnName === 'Download') {
           // Url requires a custom template for downloading links
           tempCustomColumnNames.push(setCustomUrlColumn(attribute));
@@ -244,7 +247,8 @@
         enableColumnResizing: true,
         pinnedLeft: true,
         cellTemplate: _cellTemplate,
-        visible: isToolSelected
+        visible: isToolSelected,
+        enableCellEdit: false
       };
     }
      /**
@@ -274,7 +278,8 @@
         enableColumnResizing: true,
         pinnedLeft: true,
         cellTemplate: cellTemplate,
-        visible: isToolSelected
+        visible: isToolSelected,
+        enableCellEdit: false
       };
     }
 
@@ -296,7 +301,8 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
-        cellTemplate: _cellTemplate
+        cellTemplate: _cellTemplate,
+        enableCellEdit: false
       };
     }
 

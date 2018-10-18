@@ -1,8 +1,20 @@
 <div id="assay-files-table"
   ui-grid="FBCtrl.gridOptions"
   ui-grid-auto-resize
+  ui-grid-edit
   ui-grid-infinite-scroll
   ui-grid-pinning
   ui-grid-resize-columns
   class="grid">
+  <div ng-show="FBCtrl.fileEditsUpdating">
+    <div class='refinery-max z-1 refinery-spinner-bg'>
+      <h4 class="emphasized refinery-spinner-center">
+        <span
+          class="refinery-spinner refinery-spinner-inline">
+        </span>
+        <strong>Updating data......</strong>
+      </h4>
+    </div>
+  </div>
 </div>
+

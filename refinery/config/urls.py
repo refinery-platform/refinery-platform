@@ -16,6 +16,7 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
+from core.utils import verify_recaptcha
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeResource,
                                   InvestigationResource, NodeResource,
@@ -95,8 +96,11 @@ urlpatterns = patterns(
 
     url(
         r'^accounts/register/$',
-        CustomRegistrationView.as_view(
-            form_class=RegistrationFormWithCustomFields),
+        verify_recaptcha(
+            CustomRegistrationView.as_view(
+                form_class=RegistrationFormWithCustomFields
+            )
+        ),
         name='registration.views.register'
     ),
 
