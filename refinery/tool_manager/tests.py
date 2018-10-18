@@ -247,7 +247,6 @@ class ToolManagerTestBase(ToolManagerMocks):
                 'post': 'create'
             }
         )
-        self.tool_pause_view = ToolsViewSet.as_view({"post": "pause"})
         self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
         self.tool_container_input_data_view = ToolsViewSet.as_view(
             {"get": "container_input_data"}
@@ -3135,52 +3134,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             VisualizationTool.objects.get(uuid=self.tool.uuid)
         )
         self.assertTrue(vis_delete_mock.called)
-
-    def test_vis_tool_pause(self):
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
-        assign_perm('core.read_dataset', self.user, self.tool.dataset)
-        pause_request = self.factory.post(self.tool.pause_url)
-        pause_request.user = self.user
-        pause_response = self.tool_pause_view(pause_request,
-                                              uuid=self.tool.uuid)
-        self.assertEqual(pause_response.status_code, 200)
-        self.assertFalse(self.tool.is_running())
-
-    def test_vis_tool_pause_no_tool_uuid(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        assign_perm('core.read_dataset', self.user, self.tool.dataset)
-        pause_request = self.factory.post(self.tool.pause_url)
-        pause_request.user = self.user
-        pause_response = self.tool_pause_view(pause_request)
-        self.assertEqual(pause_response.status_code, 400)
-
-    def test_vis_tool_pause_unauthorized_user(self):
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
-        pause_request = self.factory.post(self.tool.pause_url)
-        pause_response = self.tool_pause_view(pause_request,
-                                              uuid=self.tool.uuid)
-        self.assertEqual(pause_response.status_code, 403)
-        self.assertTrue(self.tool.is_running())
-
-    def test_vis_tool_pause_no_tool_exists(self):
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
-        pause_request = self.factory.post(self.tool.pause_url)
-        self.tool.delete()
-        pause_response = self.tool_pause_view(pause_request,
-                                              uuid=self.tool.uuid)
-        self.assertEqual(pause_response.status_code, 404)
-
-    def test_vis_tool_pause_tool_not_running(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        assign_perm('core.read_dataset', self.user, self.tool.dataset)
-        pause_request = self.factory.post(self.tool.pause_url)
-        pause_request.user = self.user
-        pause_response = self.tool_pause_view(pause_request,
-                                              uuid=self.tool.uuid)
-        self.assertEqual(pause_response.status_code, 400)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):

@@ -79,7 +79,6 @@ class ToolSerializer(serializers.ModelSerializer):
     owner = JSONField(source="_get_owner_info_as_dict")
     container_url = CharField(source="get_relative_container_url")
     relaunch_url = CharField()  # this maps to Tool.relaunch_url
-    pause_url = CharField()  # this maps to Tool.pause_url
     detail_url = CharField()  # this maps to Tool.detail_url
     dataset = DataSetSerializer()
     tool_definition = ToolDefinitionSerializer()

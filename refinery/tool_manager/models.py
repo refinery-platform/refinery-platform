@@ -333,10 +333,6 @@ class Tool(OwnableResource):
         return self._create_detail_url("relaunch")
 
     @property
-    def pause_url(self):
-        return self._create_detail_url("pause")
-
-    @property
     def container_input_json_url(self):
         """
         Return the url that will expose a Tool's input data (as JSON) on

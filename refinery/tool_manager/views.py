@@ -184,47 +184,6 @@ class ToolsViewSet(ToolManagerViewSetBase):
         tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
         return JsonResponse(tool.get_container_input_dict())
 
-    @detail_route(methods=['post'])
-    def pause(self, request, *args, **kwargs):
-        """
-        Detail route that allows for the removal of a running
-        VisualizationTool's container.
-        """
-        tool_uuid = kwargs.get("uuid")
-        if not tool_uuid:
-            return HttpResponseBadRequest(
-                "Pausing a Tool requires a Tool UUID"
-            )
-        visualization_tool = get_object_or_404(VisualizationTool,
-                                               uuid=tool_uuid)
-
-        if not user_has_access_to_tool(request.user, visualization_tool):
-            return render_vis_tool_error_template(
-                request,
-                visualization_tool.name,
-                "User: {} does not have permission to pause {}: {}".format(
-                    request.user.username,
-                    visualization_tool.name,
-                    visualization_tool.uuid
-                ), status=403
-            )
-        if not visualization_tool.is_running():
-            return HttpResponseBadRequest("Can't pause a Tool that is not "
-                                          "currently running")
-        try:
-            visualization_tool.django_docker_client.purge_by_label(
-                visualization_tool.uuid
-            )
-        except Exception as exc:
-            logger.error(exc)
-            return HttpResponseBadRequest("{} could not be paused: {}".format(
-                visualization_tool.display_name, exc
-            ))
-        else:
-            return HttpResponse("{} paused successfully".format(
-                visualization_tool.display_name
-            ))
-
 
 class AutoRelaunchProxy(Proxy, object):
     """
