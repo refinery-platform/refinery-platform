@@ -20,14 +20,23 @@ class refinery::postgresql {
       manage_recovery_conf => false,
       service_manage       => false,
     }
-    postgresql_psql { $::db_user:
-      # cannot use postgresql::server::role due to a bug
-      # https://tickets.puppetlabs.com/browse/MODULES-5068
-      command     => "CREATE ROLE ${::db_user} LOGIN PASSWORD '${::db_user_password}'",
+
+    # create Django application user role if doesn't exist and update password
+    # cannot use postgresql::server::role due to a bug
+    # https://tickets.puppetlabs.com/browse/MODULES-5068
+    postgresql_psql { "Create role ${::db_user}":
+      command     => "CREATE ROLE ${::db_user} WITH LOGIN PASSWORD '${::db_user_password}'",
       db          => 'postgres',
       environment => join_keys_to_values($rds_settings, '='),
       unless      => "SELECT 1 FROM pg_roles WHERE rolname = '${::db_user}'",
     }
+    ->
+    postgresql_psql { "Update password for role ${::db_user}":
+      command     => "ALTER ROLE ${::db_user} WITH PASSWORD '${::db_user_password}'",
+      db          => 'postgres',
+      environment => join_keys_to_values($rds_settings, '='),
+    }
+
     ::postgresql::server::database { $::db_name:
       owner => $::db_user,
     }
