@@ -1099,25 +1099,20 @@ class UserProfileViewSet(APIView):
 @staff_member_required
 def site_statistics(request, **kwargs):
     site_statistics_type = kwargs.get("type")
+    response = HttpResponse()
 
-    response = HttpResponse(content_type='text')
     writer = csv.writer(response)
-    writer.writerow(
-        ["", "datasets_shared", "datasets_uploaded", "groups_created",
-         "run_date", "total_user_logins", "total_visualization_launches",
-         "total_workflow_launches", "users_created", "unique_user_logins"]
-    )
+    writer.writerow(SiteStatistics.INITIAL_CSV_ROW)
+
     queryset = SiteStatistics.objects.all().order_by("run_date")
 
     if site_statistics_type == "deltas":
         queryset = queryset[1:]
 
     for site_statistics_instance in queryset:
-        if site_statistics_type == "totals":
-            writer.writerow(
-                site_statistics_instance.get_csv_row(aggregates=True)
+        writer.writerow(
+            site_statistics_instance.get_csv_row(
+                aggregates=(site_statistics_type == "totals")
             )
-        else:
-            writer.writerow(site_statistics_instance.get_csv_row())
-
+        )
     return response

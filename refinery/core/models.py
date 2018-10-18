@@ -2251,6 +2251,12 @@ class SiteStatistics(models.Model):
     users_created = models.IntegerField(default=0)
     unique_user_logins = models.IntegerField(default=0)
 
+    INITIAL_CSV_ROW = ["", "datasets_shared", "datasets_uploaded",
+                       "groups_created", "run_date", "total_user_logins",
+                       "total_visualization_launches",
+                       "total_workflow_launches", "users_created",
+                       "unique_user_logins"]
+
     class Meta:
         verbose_name_plural = "site statistics"
 
