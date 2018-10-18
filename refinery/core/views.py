@@ -1102,7 +1102,7 @@ def site_statistics(request, **kwargs):
     response = HttpResponse()
 
     writer = csv.writer(response)
-    writer.writerow(SiteStatistics.INITIAL_CSV_ROW)
+    writer.writerow(SiteStatistics.CSV_COLUMN_HEADERS)
 
     queryset = SiteStatistics.objects.all().order_by("run_date")
 
