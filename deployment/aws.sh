@@ -54,18 +54,6 @@ HOME=/home/ubuntu sh /srv/refinery-platform/deployment/bin/fetch-github-ssh-keys
 # Tag the attached root volume
 sh /srv/refinery-platform/deployment/bin/fix-untagged-volumes
 
-# CloudFormation should have set the endpoint
-# (DNS address and port) for our PostgreSQL RDS.
-# Copy them so that puppet/facter can use it.
-: ${RDS_ENDPOINT_ADDRESS?RDS_ENDPOINT_ADDRESS must be set}
-: ${RDS_ENDPOINT_PORT?RDS_ENDPOINT_PORT must be set}
-
-# FACTER environment variables become facts for puppet;
-# see https://puppetlabs.com/blog/facter-part-1-facter-101
-export FACTER_RDS_HOST=$RDS_ENDPOINT_ADDRESS
-export FACTER_RDS_PORT=$RDS_ENDPOINT_PORT
-export FACTER_RDS_ROLE="$RDS_ROLE"
-
 # Create SMTP credentials and
 # place them in (facter) environment variables.
 . bin/create-smtp-credentials
@@ -77,16 +65,6 @@ export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
 export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"
 export FACTER_SITE_URL="$SITE_URL"
 export FACTER_SITE_NAME="$SITE_NAME"
-
-# Create RDS user and database here, instead of using puppet
-# (because drj couldn't work out how to do it in puppet)
-export FACTER_RDS_ROLE_PASSWORD=password
-# Already set by earlier part of userdata
-export RDS_SUPERUSER_PASSWORD
-export RDS_ENDPOINT_ADDRESS
-export RDS_ENDPOINT_PORT
-PASSWORD=$FACTER_RDS_ROLE_PASSWORD bin/ensure-postgresql-role
-bin/ensure-postgresql-database
 
 sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu
 

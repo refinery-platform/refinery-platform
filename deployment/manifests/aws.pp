@@ -1,5 +1,8 @@
 $app_user = 'ubuntu'
 $app_group = $app_user
+$db_name = 'refinery'
+$db_user = $db_name
+$db_user_password = fqdn_rand_string(8)  # random alphanumeric string of length eight
 $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
 $project_root = '/srv/refinery-platform'
 $deployment_root = "${project_root}/deployment"
