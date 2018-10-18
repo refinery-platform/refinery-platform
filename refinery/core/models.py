@@ -2260,6 +2260,10 @@ class SiteStatistics(models.Model):
     class Meta:
         verbose_name_plural = "site statistics"
 
+    @property
+    def formatted_run_date(self):
+        return self.run_date.strftime("%Y-%m-%d")
+
     def collect(self):
         self.datasets_uploaded = self._get_datasets_uploaded()
         self.datasets_shared = self._get_datasets_shared()
@@ -2326,16 +2330,9 @@ class SiteStatistics(models.Model):
                    SiteStatistics.objects.exclude(id=self.id))
 
     def get_csv_row(self, aggregates=False):
-        if not aggregates:
-            return [
-                self.pk, self.datasets_shared, self.datasets_uploaded,
-                self.groups_created, self.run_date.strftime("%Y-%m-%d"),
-                self.total_user_logins, self.total_visualization_launches,
-                self.total_workflow_launches, self.users_created,
-                self.unique_user_logins
-            ]
-
         def get_aggregate_sum(field_name):
+            if not aggregates:
+                return getattr(self, field_name)
             return SiteStatistics.objects.filter(
                 run_date__lte=self.run_date
             ).aggregate(Sum(field_name)).values()[0]
@@ -2344,7 +2341,7 @@ class SiteStatistics(models.Model):
             self.pk, get_aggregate_sum("datasets_shared"),
             get_aggregate_sum("datasets_uploaded"),
             get_aggregate_sum("groups_created"),
-            self.run_date.strftime("%Y-%m-%d"),
+            self.formatted_run_date,
             get_aggregate_sum("total_user_logins"),
             get_aggregate_sum("total_visualization_launches"),
             get_aggregate_sum("total_workflow_launches"),
