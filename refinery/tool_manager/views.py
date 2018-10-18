@@ -124,7 +124,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
         visualization_tool = get_object_or_404(VisualizationTool,
                                                uuid=tool_uuid)
 
-        if not user_has_access_to_tool(request.user, visualization_tool):
+        if not request.user == visualization_tool.get_owner():
             return render_vis_tool_error_template(
                 request,
                 visualization_tool.name,

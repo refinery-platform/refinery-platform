@@ -3103,7 +3103,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         delete_response = self.tools_view(delete_request)
         self.assertEqual(delete_response.status_code, 400)
 
-    def test_vis_tool_deletion_unauthorized_user(self):
+    def test_vis_tool_deletion_disallows_non_owners(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
         delete_request = self.factory.delete(
             self.tool.get_relative_container_url()
