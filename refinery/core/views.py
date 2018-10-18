@@ -1100,15 +1100,12 @@ class UserProfileViewSet(APIView):
 def site_statistics(request, **kwargs):
     site_statistics_type = kwargs.get("type")
     response = HttpResponse()
-
     writer = csv.writer(response)
     writer.writerow(SiteStatistics.CSV_COLUMN_HEADERS)
 
     queryset = SiteStatistics.objects.all().order_by("run_date")
-
     if site_statistics_type == "deltas":
         queryset = queryset[1:]
-
     for site_statistics_instance in queryset:
         writer.writerow(
             site_statistics_instance.get_csv_row(
