@@ -1158,13 +1158,9 @@ class SiteStatisticsViewTests(TestCase):
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_deltas_csv(self, get_csv_row_mock):
         response = self.client.get("/api/v2/sitestatistics/deltas.csv")
-        self.assertIn(
-            ",datasets_shared,datasets_uploaded,groups_created,"
-            "run_date,total_user_logins,total_visualization_launches,"
-            "total_workflow_launches,users_created,unique_user_logins",
-            response.content
-        )
-        get_csv_row_mock.assert_called_with()  # called without any args
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+                      response.content)
+        get_csv_row_mock.assert_called_with(aggregates=False)
 
         # first entry ignored for deltas
         self.assertEqual(get_csv_row_mock.call_count, 1)
@@ -1172,11 +1168,7 @@ class SiteStatisticsViewTests(TestCase):
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_totals_csv(self, get_csv_row_mock):
         response = self.client.get("/api/v2/sitestatistics/totals.csv")
-        self.assertIn(
-            ",datasets_shared,datasets_uploaded,groups_created,"
-            "run_date,total_user_logins,total_visualization_launches,"
-            "total_workflow_launches,users_created,unique_user_logins",
-            response.content
-        )
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+                      response.content)
         get_csv_row_mock.assert_called_with(aggregates=True)
         self.assertEqual(get_csv_row_mock.call_count, 2)
