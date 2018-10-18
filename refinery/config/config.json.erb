@@ -24,10 +24,10 @@
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "HOST": "<%= @rds_endpoint_address || "localhost" %>",
-        "NAME": "<%= @db_name %>",
+        "NAME": "<%= @db_name || "refinery" %>",
         "PASSWORD": "<%= @db_user_password %>",
         "PORT": "5432",
-        "USER": "<%= @db_user %>"
+        "USER": "<%= @db_user || "vagrant" %>"
     }
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
