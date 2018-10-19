@@ -161,8 +161,8 @@ def report_missing_keys(config):
     """
 
     required = ['APP_SERVER_SECURITY_GROUP_ID', 'COGNITO_IDENTITY_POOL_ID',
-                'EC2_INSTANCE_TYPE', 'ELB_SECURITY_GROUP_ID', 'KEY_NAME',
-                'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
+                'EC2_INSTANCE_TYPE', 'ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER',
+                'KEY_NAME', 'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
                 'S3_BUCKET_NAME_BASE', 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:

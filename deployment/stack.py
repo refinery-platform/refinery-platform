@@ -99,7 +99,7 @@ def make_template(config, config_yaml):
         "ADMIN=", config['ADMIN'], "\n",
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
-        "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
+        "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
         "export FACTER_DOCKER_HOST=", config["REFINERY_DOCKER_HOST"], "\n",
         "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
         "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
@@ -304,23 +304,6 @@ def make_template(config, config_yaml):
                     }
                 }
             ]
-        })
-    )
-
-    cft.resources.smtp_user = core.Resource(
-        'RefinerySMTPUser', 'AWS::IAM::User',
-        core.Properties({
-            'Policies': [{
-                'PolicyName': "SESSendingAccess",
-                'PolicyDocument': {
-                    "Version": "2012-10-17",
-                    "Statement": [{
-                        "Effect": "Allow",
-                        "Action": "ses:SendRawEmail",
-                        "Resource": "*"
-                    }]
-                }
-            }]
         })
     )
 
