@@ -39,6 +39,7 @@ REFINERY_DOCKER_HOST: "<%= tf.docker_hostname %>"
 ELB_SECURITY_GROUP_ID: "<%= tf.elb_security_group_id %>"
 APP_SERVER_SECURITY_GROUP_ID: "<%= tf.app_server_security_group_id %>"
 RDS_ENDPOINT_ADDRESS: "<%= tf.db_hostname %>"
+RDS_SUPERUSER_PASSWORD: ""  # get from Terraform state file
 
 # Prefix for all S3 bucket names (must not be shared among stacks)
 # Constraint: DNS-compliant without periods (".")
@@ -82,12 +83,6 @@ REFINERY_URL_SCHEME: "http"
 USER_FILES_COLUMNS: "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 
 # == Rarely changed ==
-
-# Password for the RDS superuser account
-RDS_SUPERUSER_PASSWORD: "mypassword"
-
-# Name of the PostgreSQL role to create
-RDS_ROLE: "refinery"
 
 #List of github usernames to allow SSH access into the EC2 instance
 #SSH_USERS: <username_0> <username_1> ...
