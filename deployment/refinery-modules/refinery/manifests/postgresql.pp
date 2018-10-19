@@ -20,7 +20,7 @@ class refinery::postgresql {
       manage_recovery_conf => false,
       service_manage       => false,
     }
-
+    ->
     # create Django application user role if doesn't exist and update password
     # cannot use postgresql::server::role due to a bug
     # https://tickets.puppetlabs.com/browse/MODULES-5068
@@ -36,7 +36,7 @@ class refinery::postgresql {
       db          => 'postgres',
       environment => join_keys_to_values($rds_settings, '='),
     }
-
+    ->
     ::postgresql::server::database { $::db_name:
       owner => $::db_user,
     }
