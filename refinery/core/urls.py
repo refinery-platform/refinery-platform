@@ -61,7 +61,8 @@ urlpatterns = patterns(
 
     url(r'^neo4j/annotations/$',
         'neo4j_dataset_annotations', name="neo4j_dataset_annotations"),
-    url(r'^auto_login/$', 'auto_login', name='auto_login')
+    url(r'^auto_login/$', 'auto_login', name='auto_login'),
+    url(r'^sitestatistics/(?P<type>(deltas)|(totals)).csv', site_statistics)
 )
 
 # DRF url routing
@@ -77,6 +78,5 @@ core_router.urls.extend([
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
         AnalysesViewSet.as_view()),
     url(r'^openid_token/$',
-        OpenIDToken.as_view(), name="openid-token"),
-    url(r'^sitestatistics/(?P<type>(deltas)|(totals)).csv', site_statistics)
+        OpenIDToken.as_view(), name="openid-token")
 ])

@@ -1151,13 +1151,13 @@ class SiteStatisticsViewTests(TestCase):
     def test_is_accessible_by_admins_only(self):
         self.user.is_staff = False
         self.user.save()
-        response = self.client.get("/api/v2/sitestatistics/deltas.csv")
+        response = self.client.get("/sitestatistics/deltas.csv")
         self.assertEqual(response.status_code, 302)
         self.assertIn("login/?next", response.url)
 
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_deltas_csv(self, get_csv_row_mock):
-        response = self.client.get("/api/v2/sitestatistics/deltas.csv")
+        response = self.client.get("/sitestatistics/deltas.csv")
         self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=False)
@@ -1167,7 +1167,7 @@ class SiteStatisticsViewTests(TestCase):
 
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_totals_csv(self, get_csv_row_mock):
-        response = self.client.get("/api/v2/sitestatistics/totals.csv")
+        response = self.client.get("/sitestatistics/totals.csv")
         self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=True)
