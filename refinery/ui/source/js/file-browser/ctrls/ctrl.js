@@ -89,10 +89,8 @@
     // Main ui-grid options
     var editCellTemplate = '<div>' +
     '<form name="inputForm" class="ui-grid-edit-form ng-pristine ng-valid"> ' +
-    '<input type="text" ui-grid-editor ' +
-    ' ng-model="row.entity[col.colDef.field]"' +
-    ' class="ng-pristine ng-untouched ng-valid ng-not-empty"> </form> ' +
-    '</div>';
+    '<input type="text" ui-grid-editor ng-model="row.entity[col.colDef.field]"' +
+    ' class="ng-pristine ng-untouched ng-valid ng-not-empty"></form></div>';
 
     vm.gridOptions = {
       appScopeProvider: vm,
