@@ -1,5 +1,7 @@
 $app_user = 'vagrant'
 $app_group = $app_user
+$db_name = 'refinery'
+$db_user = $app_user
 $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
 $site_name = 'Refinery'
 $site_url = '192.168.50.50:8000'
