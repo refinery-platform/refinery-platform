@@ -1,9 +1,11 @@
+import csv
 import logging
 import urllib
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -44,7 +46,7 @@ import xmltodict
 
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology,
+                     ExtendedGroup, Invitation, Ontology, SiteStatistics,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
@@ -1091,3 +1093,22 @@ class UserProfileViewSet(APIView):
         return Response(
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@staff_member_required
+def site_statistics(request, **kwargs):
+    site_statistics_type = kwargs.get("type")
+    response = HttpResponse()
+    writer = csv.writer(response)
+    writer.writerow(SiteStatistics.CSV_COLUMN_HEADERS)
+
+    queryset = SiteStatistics.objects.all().order_by("run_date")
+    if site_statistics_type == "deltas":
+        queryset = queryset[1:]
+    for site_statistics_instance in queryset:
+        writer.writerow(
+            site_statistics_instance.get_csv_row(
+                aggregates=(site_statistics_type == "totals")
+            )
+        )
+    return response
