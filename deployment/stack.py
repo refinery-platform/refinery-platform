@@ -196,8 +196,6 @@ def make_template(config, config_yaml):
                 }]
             },
             'ManagedPolicyArns': [
-                'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess',
                 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
             ],
             'Path': '/',
