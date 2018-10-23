@@ -79,3 +79,8 @@ module "database" {
   vpc_id                       = "${module.vpc.vpc_id}"
   tags                         = "${local.tags}"
 }
+
+module "app_server" {
+  source               = "../modules/ec2"
+  resource_name_prefix = "${terraform.workspace}"
+}

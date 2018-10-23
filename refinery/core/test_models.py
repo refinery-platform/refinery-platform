@@ -1052,6 +1052,31 @@ class SiteStatisticsUnitTests(TestCase):
     def test__get_total_user_logins(self):
         self.assertEqual(self.site_statistics._get_total_user_logins(), 4)
 
+    def test_get_csv_row(self):
+        self.assertEqual(
+            self.site_statistics.get_csv_row(),
+            [self.site_statistics.id, 2, 5, 1,
+             self.site_statistics.formatted_run_date, 4, 1, 1, 3, 2]
+        )
+
+    def test_get_csv_row_aggregates(self):
+        test_group_b = ExtendedGroup.objects.create(name="Test Group B",
+                                                    is_public=True)
+        user_c = User.objects.create_user("user_c", "", "user_c")
+        self.client.login(username="user_c", password="user_c")
+        create_dataset_with_necessary_models(user=user_c)
+        create_dataset_with_necessary_models(user=user_c).share(test_group_b)
+        create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
+        create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
+        site_statistics = SiteStatistics.objects.create()
+        site_statistics.collect()
+
+        self.assertEqual(
+            site_statistics.get_csv_row(aggregates=True),
+            [site_statistics.id, 3, 9, 3,
+             site_statistics.formatted_run_date, 5, 2, 2, 4, 3]
+        )
+
 
 class SiteStatisticsIntegrationTests(TestCase):
     def setUp(self):
