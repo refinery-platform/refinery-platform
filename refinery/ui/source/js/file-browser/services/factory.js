@@ -64,6 +64,14 @@
     * Method Definitions
     * ----------------------
     */
+    function addCellClass (attributeType, grid) {
+      if (attributeType === 'Internal') {
+        if (grid.appScope.editMode) {
+          return 'non-select-cell';
+        }
+      }
+      return null;
+    }
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
@@ -77,7 +85,9 @@
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false,
-          cellEditableCondition: dataSetPropsService.dataSet.is_owner
+          cellEditableCondition: dataSetPropsService.dataSet.is_owner,
+          cellClass: function (grid) {return addCellClass(attribute.attribute_type, grid);},
+          headerCellClass: function (grid) {return addCellClass(attribute.attribute_type, grid);},
         };
 
         if (columnName === 'Download') {
@@ -302,7 +312,9 @@
         enableColumnMenu: false,
         enableColumnResizing: true,
         cellTemplate: _cellTemplate,
-        enableCellEdit: false
+        enableCellEdit: false,
+        cellClass: function (grid) { return addCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addCellClass('Internal', grid);},
       };
     }
 
