@@ -1,6 +1,4 @@
 class refinery::postgresql {
-  $server_version = '9.3'
-
   if $::deployment_platform == 'aws' {
     $rds_settings = {
       'PGUSER'     => 'root',
@@ -9,7 +7,7 @@ class refinery::postgresql {
       'PGPORT'     => '5432',
     }
     class { '::postgresql::globals':
-      version                  => $server_version,
+      version                  => "10.4",
       default_connect_settings => $rds_settings,
     }
     class { '::postgresql::server':
@@ -48,8 +46,16 @@ class refinery::postgresql {
     }
   }
   else {
+    package { 'postgresql-9.3':
+      ensure => purged,
+    }
+    ->
+
     class { '::postgresql::globals':
-      version  => $server_version,
+      # Postgres versioning scheme provides latest point releases when
+      # specifying major version: https://www.postgresql.org/support/versioning/
+      version             => "10",
+      manage_package_repo => true,
     }
     ->
     class { '::postgresql::server':
