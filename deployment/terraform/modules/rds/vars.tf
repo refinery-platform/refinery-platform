@@ -1,4 +1,3 @@
-variable "engine_version" {}
 variable "resource_name_prefix" {}
 variable "private_subnet_a" {}
 variable "private_subnet_b" {}
