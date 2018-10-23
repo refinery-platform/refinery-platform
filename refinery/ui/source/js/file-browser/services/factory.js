@@ -64,14 +64,14 @@
     * Method Definitions
     * ----------------------
     */
-    function addCellClass (attributeType, grid) {
-      if (attributeType === 'Internal') {
-        if (grid.appScope.editMode) {
-          return 'non-select-cell';
-        }
+    // helper method which returns css class for non-editable cells
+    function addNonEditCellClass (attributeType, grid) {
+      if (attributeType === 'Internal' && grid.appScope.editMode) {
+        return 'non-select-cell';
       }
       return null;
     }
+
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
@@ -86,8 +86,12 @@
           cellTooltip: true,
           enableHiding: false,
           cellEditableCondition: dataSetPropsService.dataSet.is_owner,
-          cellClass: function (grid) {return addCellClass(attribute.attribute_type, grid);},
-          headerCellClass: function (grid) {return addCellClass(attribute.attribute_type, grid);},
+          cellClass: function (grid) {
+            return addNonEditCellClass(attribute.attribute_type, grid);
+          },
+          headerCellClass: function (grid) {
+            return addNonEditCellClass(attribute.attribute_type, grid);
+          },
         };
 
         if (columnName === 'Download') {
@@ -313,8 +317,8 @@
         enableColumnResizing: true,
         cellTemplate: _cellTemplate,
         enableCellEdit: false,
-        cellClass: function (grid) { return addCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addCellClass('Internal', grid);},
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 
