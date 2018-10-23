@@ -71,6 +71,7 @@ module "database" {
   source                       = "../modules/rds"
   app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
   availability_zone            = "${var.availability_zone_a}"
+  engine_version               = "${var.engine_version}"
   master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
   private_subnet_a             = "${module.vpc.private_subnet_a_id}"
   private_subnet_b             = "${module.vpc.private_subnet_b_id}"
