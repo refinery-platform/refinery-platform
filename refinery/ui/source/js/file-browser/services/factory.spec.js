@@ -240,7 +240,6 @@
       it('sets url cell template', function () {
         var cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD" node-obj="row.entity">' +
         '</rp-data-file-dropdown>';
-        console.log(response[2]);
         expect(response[2].cellTemplate).toEqual(cellTemplate);
       });
     });
