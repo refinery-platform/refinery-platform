@@ -160,9 +160,10 @@ def report_missing_keys(config):
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['APP_SERVER_SECURITY_GROUP_ID', 'COGNITO_IDENTITY_POOL_ID',
-                'EC2_INSTANCE_TYPE', 'ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER',
-                'KEY_NAME', 'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
+    required = ['APP_SERVER_PROFILE_ID', 'APP_SERVER_SECURITY_GROUP_ID',
+                'COGNITO_IDENTITY_POOL_ID', 'EC2_INSTANCE_TYPE',
+                'ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER', 'KEY_NAME',
+                'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
                 'S3_BUCKET_NAME_BASE', 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:
