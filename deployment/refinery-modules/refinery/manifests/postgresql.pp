@@ -12,6 +12,7 @@ class refinery::postgresql {
     }
     class { '::postgresql::globals':
       version                  => $server_version,
+      manage_package_repo      => true,
       default_connect_settings => $rds_settings,
     }
     class { '::postgresql::server':
