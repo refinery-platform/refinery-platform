@@ -17,7 +17,6 @@ addons:
       - postgresql-client-10
 
 services:
-  - postgresql
   - neo4j
 install:
   - node --version
