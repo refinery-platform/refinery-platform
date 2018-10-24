@@ -30,10 +30,12 @@
     describe('getAssayFiles', function () {
       var assayFiles;
 
-      beforeEach(inject(function ($q,
-                                  $rootScope,
-                                  assayFileService,
-                                  nodeService) {
+      beforeEach(inject(function (
+        $q,
+        $rootScope,
+        assayFileService,
+        nodeService
+      ) {
         assayFiles = {
           nodes: [
             {
@@ -123,9 +125,11 @@
     });
 
     describe('getAssayAttributeOrder', function () {
-      beforeEach(inject(function ($rootScope,
-                                  $q,
-                                  assayAttributeService) {
+      beforeEach(inject(function (
+        $rootScope,
+        $q,
+        assayAttributeService
+      ) {
         rootScope = $rootScope;
         assayAttribute = [
           {

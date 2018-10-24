@@ -65,7 +65,7 @@
     * ----------------------
     */
 
-    // helper method which whether a cell is editable
+    // helper method which returns  whether a cell is editable
     function isCellEditable (attributeType) {
       if (!dataSetPropsService.dataSet.is_owner) {
         return false;
