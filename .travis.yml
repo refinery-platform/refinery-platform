@@ -47,9 +47,6 @@ before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
 
-  - sudo mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
-  - sudo chown $USER /data
-
   - cd refinery
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
