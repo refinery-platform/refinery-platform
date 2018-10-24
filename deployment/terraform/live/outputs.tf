@@ -33,3 +33,7 @@ output "db_hostname" {
 output "iam_smtp_user" {
   value = "${module.app_server.iam_smtp_user}"
 }
+
+output "app_server_profile_id" {
+  value = "${module.app_server.instance_profile_id}"
+}
