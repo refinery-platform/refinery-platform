@@ -67,18 +67,18 @@ module "vpc" {
   tags                 = "${local.tags}"
 }
 
-module "database" {
-  source                       = "../modules/rds"
-  app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
-  availability_zone            = "${var.availability_zone_a}"
-  master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
-  private_subnet_a             = "${module.vpc.private_subnet_a_id}"
-  private_subnet_b             = "${module.vpc.private_subnet_b_id}"
-  resource_name_prefix         = "${terraform.workspace}"
-  snapshot_id                  = "${var.rds_snapshot_id}"
-  vpc_id                       = "${module.vpc.vpc_id}"
-  tags                         = "${local.tags}"
-}
+//module "database" {
+//  source                       = "../modules/rds"
+//  app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
+//  availability_zone            = "${var.availability_zone_a}"
+//  master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
+//  private_subnet_a             = "${module.vpc.private_subnet_a_id}"
+//  private_subnet_b             = "${module.vpc.private_subnet_b_id}"
+//  resource_name_prefix         = "${terraform.workspace}"
+//  snapshot_id                  = "${var.rds_snapshot_id}"
+//  vpc_id                       = "${module.vpc.vpc_id}"
+//  tags                         = "${local.tags}"
+//}
 
 module "app_server" {
   source               = "../modules/ec2"
@@ -86,5 +86,10 @@ module "app_server" {
   upload_bucket_name   = "${module.object_storage.upload_bucket_name}"
   media_bucket_name    = "${module.object_storage.media_bucket_name}"
   identity_pool_id     = "${module.identity_pool.identity_pool_id}"
+  instance_type        = "${var.app_server_instance_type}"
+  key_pair_name        = "${var.app_server_key_pair_name}"
+  security_group_id    = "${module.vpc.app_server_security_group_id}"
+  subnet_id            = "${module.vpc.public_subnet_id}"
   resource_name_prefix = "${terraform.workspace}"
+  tags                 = "${local.tags}"
 }

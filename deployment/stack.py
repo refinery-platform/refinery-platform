@@ -69,11 +69,6 @@ def make_template(config, config_yaml):
     instance_tags.append({'Key': 'Name',
                          'Value': stack_name})
 
-    # This tag is variable and can be specified by
-    # template Parameter.
-    instance_tags.append({'Key': functions.ref('SnapshotSchedulerTag'),
-                         'Value': 'default'})
-
     config['tags'] = instance_tags
 
     config_uri = save_s3_config(config)
@@ -113,26 +108,11 @@ def make_template(config, config_yaml):
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 
-    # This parameter tags the EC2 instances, and is intended to be used
-    # with the AWS Reference Implementation EBS Snapshot Scheduler:
-    # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
-    cft.parameters.add(
-        core.Parameter('SnapshotSchedulerTag', 'String', {
-                'Default': 'scheduler:ebs-snapshot',
-                'Description':
-                "Tag added to EC2 Instances so that "
-                "the EBS Snapshot Scheduler will recognise them.",
-            }
-        )
-    )
-
     volume_properties = {
         'Encrypted': True,
         'Size': config['DATA_VOLUME_SIZE'],
         'Tags': load_tags(),
-        'AvailabilityZone': functions.get_att(
-            'WebInstance', 'AvailabilityZone'
-        ),
+        'AvailabilityZone': config['APP_SERVER_INSTANCE_AZ'],
         'VolumeType': config['DATA_VOLUME_TYPE'],
     }
 
@@ -146,36 +126,11 @@ def make_template(config, config_yaml):
         core.DeletionPolicy("Snapshot"),
     )
 
-    cft.resources.ec2_instance = core.Resource(
-        'WebInstance', 'AWS::EC2::Instance',
-        core.Properties({
-            'ImageId': 'ami-d05e75b8',
-            'InstanceType': config['EC2_INSTANCE_TYPE'],
-            'UserData': functions.base64(user_data_script),
-            'KeyName': config['KEY_NAME'],
-            'IamInstanceProfile': config['APP_SERVER_PROFILE_ID'],
-            'Monitoring': True,
-            'SecurityGroupIds': [config['APP_SERVER_SECURITY_GROUP_ID']],
-            'Tags': instance_tags,
-            'BlockDeviceMappings': [
-                {
-                    'DeviceName': '/dev/sda1',
-                    'Ebs': {
-                        # Was 8G; HiGlass is 2.5G; Must be an integer
-                        'VolumeSize': '11',
-                        'VolumeType': 'gp2',
-                    }
-                }
-            ],
-            "SubnetId": config['PUBLIC_SUBNET_ID']
-        }),
-    )
-
     cft.resources.mount = core.Resource(
         'RefineryVolume', 'AWS::EC2::VolumeAttachment',
         core.Properties({
             'Device': '/dev/xvdr',
-            'InstanceId': functions.ref('WebInstance'),
+            'InstanceId': config['APP_SERVER_INSTANCE_ID'],
             'VolumeId': functions.ref('RefineryData'),
         })
     )
@@ -224,7 +179,7 @@ def make_template(config, config_yaml):
                 'Timeout': '5',
                 'UnhealthyThreshold': '4'
             },
-            'Instances': [functions.ref('WebInstance')],
+            'Instances': [config['APP_SERVER_INSTANCE_ID']],
             'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
             'SecurityGroups': [config['ELB_SECURITY_GROUP_ID']],

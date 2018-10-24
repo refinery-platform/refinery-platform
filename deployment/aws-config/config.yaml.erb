@@ -37,11 +37,11 @@ VPC_ID: "<%= tf.vpc_id %>"
 PUBLIC_SUBNET_ID: "<%= tf.public_subnet_id %>"
 REFINERY_DOCKER_HOST: "<%= tf.docker_hostname %>"
 ELB_SECURITY_GROUP_ID: "<%= tf.elb_security_group_id %>"
-APP_SERVER_SECURITY_GROUP_ID: "<%= tf.app_server_security_group_id %>"
-APP_SERVER_PROFILE_ID: "<%= tf.app_server_profile_id %>"
 RDS_ENDPOINT_ADDRESS: "<%= tf.db_hostname %>"
 RDS_SUPERUSER_PASSWORD: ""  # get from Terraform state file
 IAM_SMTP_USER: "<%= tf.iam_smtp_user %>"
+APP_SERVER_INSTANCE_ID: "<%= tf.app_server_instance_id"
+APP_SERVER_INSTANCE_AZ: "<%= tf.app_server_instance_az"
 
 # Prefix for all S3 bucket names (must not be shared among stacks)
 # Constraint: DNS-compliant without periods (".")
@@ -88,9 +88,6 @@ USER_FILES_COLUMNS: "name,filetype,sample_name,organism,technology,genotype,cell
 
 #List of github usernames to allow SSH access into the EC2 instance
 #SSH_USERS: <username_0> <username_1> ...
-
-# Type of the EC2 instance
-EC2_INSTANCE_TYPE: "m3.medium"
 
 # == Not changeable ==
 

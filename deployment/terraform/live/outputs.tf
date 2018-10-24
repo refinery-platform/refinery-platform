@@ -22,18 +22,18 @@ output "elb_security_group_id" {
   value = "${module.vpc.elb_security_group_id}"
 }
 
-output "app_server_security_group_id" {
-  value = "${module.vpc.app_server_security_group_id}"
-}
-
-output "db_hostname" {
-  value = "${module.database.instance_hostname}"
-}
+//output "db_hostname" {
+//  value = "${module.database.instance_hostname}"
+//}
 
 output "iam_smtp_user" {
   value = "${module.app_server.iam_smtp_user}"
 }
 
-output "app_server_profile_id" {
-  value = "${module.app_server.instance_profile_id}"
+output "app_server_instance_id" {
+  value = "${module.app_server.instance_id}"
+}
+
+output "app_server_instance_az" {
+  value = "${module.app_server.instance_az}"
 }

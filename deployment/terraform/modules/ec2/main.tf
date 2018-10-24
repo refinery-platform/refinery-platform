@@ -127,3 +127,30 @@ resource "aws_iam_instance_profile" "app_server" {
   name = "${var.resource_name_prefix}-refinery-appserver-profile"
   role = "${aws_iam_role.app_server.name}"
 }
+
+resource "aws_instance" "app_server" {
+  ami                    = "ami-d05e75b8"
+  instance_type          = "${var.instance_type}"
+  key_name               = "${var.key_pair_name}"
+  monitoring             = true
+  vpc_security_group_ids = ["${var.security_group_id}"]
+  subnet_id              = "${var.subnet_id}"
+  user_data              = ""
+  iam_instance_profile   = "${aws_iam_instance_profile.app_server.name}"
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11  # originally 8G but HiGlass is 2.5G (must be an integer)
+  }
+  # scheduler:ebs-snapshot tag is used with the EBS Snapshot Scheduler:
+  # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
+  tags                   = "${merge(
+    var.tags,
+    map(
+      "Name", "${var.resource_name_prefix} app server",
+      "scheduler:ebs-snapshot", "default"
+    )
+  )}"
+  volume_tags            = "${merge(
+    var.tags, map("Name", "${var.resource_name_prefix} app server")
+  )}"
+}
