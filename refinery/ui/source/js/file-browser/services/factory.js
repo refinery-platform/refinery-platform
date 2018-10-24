@@ -84,6 +84,16 @@
       return null;
     }
 
+    // helper method to check if cell is derived
+    function isCellDerived (row) {
+      for (var cellName in row) {
+        if (cellName.includes('REFINERY_TYPE') && row[cellName].includes('Derived')) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
@@ -97,8 +107,13 @@
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false,
-          cellEditableCondition: isCellEditable(attribute.attribute_type),
-          cellClass: function (grid) {
+          cellEditableCondition: function (scope) {
+            return !isCellDerived(scope.row.entity) && isCellEditable(attribute.attribute_type);
+          },
+          cellClass: function (grid, row) {
+            if (isCellDerived(row.entity)) {
+              return 'non-select-cell';
+            }
             return addNonEditCellClass(attribute.attribute_type, grid);
           },
           headerCellClass: function (grid) {
