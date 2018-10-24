@@ -82,5 +82,9 @@ module "database" {
 
 module "app_server" {
   source               = "../modules/ec2"
+  static_bucket_name   = "${module.object_storage.static_bucket_name}"
+  upload_bucket_name   = "${module.object_storage.upload_bucket_name}"
+  media_bucket_name    = "${module.object_storage.media_bucket_name}"
+  identity_pool_id     = "${module.identity_pool.identity_pool_id}"
   resource_name_prefix = "${terraform.workspace}"
 }

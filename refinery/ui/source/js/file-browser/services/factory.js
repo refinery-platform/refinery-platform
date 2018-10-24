@@ -67,13 +67,8 @@
 
     // helper method which returns  whether a cell is editable
     function isCellEditable (attributeType) {
-      if (!dataSetPropsService.dataSet.is_owner) {
-        return false;
-      }
-      if (attributeType === 'Factors' || attributeType === 'Characteristics') {
-        return true;
-      }
-      return false;
+      return dataSetPropsService.dataSet.is_owner &&
+        ['Factors', 'Characteristics'].includes(attributeType);
     }
 
     // helper method which returns css class for non-editable cells

@@ -153,7 +153,7 @@ def make_template(config, config_yaml):
             'InstanceType': config['EC2_INSTANCE_TYPE'],
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
-            'IamInstanceProfile': functions.ref('WebInstanceProfile'),
+            'IamInstanceProfile': config['APP_SERVER_PROFILE_ID'],
             'Monitoring': True,
             'SecurityGroupIds': [config['APP_SERVER_SECURITY_GROUP_ID']],
             'Tags': instance_tags,
@@ -169,142 +169,6 @@ def make_template(config, config_yaml):
             ],
             "SubnetId": config['PUBLIC_SUBNET_ID']
         }),
-    )
-
-    cft.resources.instance_profile = core.Resource(
-        'WebInstanceProfile', 'AWS::IAM::InstanceProfile',
-        core.Properties({
-            'Path': '/',
-            'Roles': [
-              functions.ref('WebInstanceRole')
-            ]
-        })
-    )
-
-    cft.resources.web_role = core.Resource(
-        'WebInstanceRole', 'AWS::IAM::Role',
-        core.Properties({
-            # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-templateexamples
-            "AssumeRolePolicyDocument": {
-                "Version": "2012-10-17",
-                "Statement": [{
-                    "Effect": "Allow",
-                    "Principal": {
-                        "Service": ["ec2.amazonaws.com"]
-                    },
-                    "Action": ["sts:AssumeRole"]
-                }]
-            },
-            'ManagedPolicyArns': [
-                'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonS3FullAccess'
-            ],
-            'Path': '/',
-            'Policies': [
-                {
-                    'PolicyName': "CreateAccessKey",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "iam:CreateAccessKey"
-                                ],
-                                "Resource": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    },
-                },
-                {
-                    'PolicyName': "CreateSnapshot",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "ec2:CreateSnapshot"
-                                ],
-                                "Resource": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    'PolicyName': "CreateDBSnapshot",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "rds:CreateDBSnapshot"
-                                ],
-                                "Resource": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    'PolicyName': "CreateTags",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "ec2:CreateTags"
-                                ],
-                                "Resource": "*"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "PolicyName": "CognitoAccess",
-                    "PolicyDocument": {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "cognito-identity:ListIdentityPools",
-                                ],
-                                "Resource": "arn:aws:cognito-identity:*"
-                            },
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "cognito-identity:"
-                                    "GetOpenIdTokenForDeveloperIdentity"
-                                ],
-                                "Resource": {
-                                    "Fn::Sub": [
-                                        "arn:aws:cognito-identity:"
-                                        "${AWS::Region}:${AWS::AccountId}:"
-                                        "identitypool/${PoolId}",
-                                        {
-                                            "PoolId":
-                                                config[
-                                                    'COGNITO_IDENTITY_POOL_ID'
-                                                ]
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                }
-            ]
-        })
     )
 
     cft.resources.mount = core.Resource(
@@ -367,6 +231,7 @@ def make_template(config, config_yaml):
             'Subnets': [config["PUBLIC_SUBNET_ID"]],
             'Tags': load_tags(),
         })
+
     cft.parameters.add(
         core.Parameter('LogInterval', 'Number', {
                 'Default': 60,

@@ -1,8 +1,21 @@
 resource "aws_s3_bucket" "static_files" {
-  acl           = "public-read"
   bucket        = "${var.bucket_name_base}-static"
   force_destroy = true
   tags          = "${var.tags}"
+
+  policy        = <<EOF
+{
+  "Version":"2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::${var.bucket_name_base}-static/*"
+    }
+  ]
+}
+EOF
 
   cors_rule {
     allowed_headers = ["Authorization"]
@@ -37,9 +50,22 @@ resource "aws_s3_bucket" "uploaded_files" {
 }
 
 resource "aws_s3_bucket" "media_files" {
-  acl    = "public-read"
   bucket = "${var.bucket_name_base}-media"
   tags   = "${var.tags}"
+
+  policy = <<EOF
+{
+  "Version":"2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::${var.bucket_name_base}-media/*"
+    }
+  ]
+}
+EOF
 }
 
 data "aws_elb_service_account" "main" {}
