@@ -64,9 +64,21 @@
     * Method Definitions
     * ----------------------
     */
+
+    // helper method which whether a cell is editable
+    function isCellEditable (attributeType) {
+      if (!dataSetPropsService.dataSet.is_owner) {
+        return false;
+      }
+      if (attributeType === 'Factors' || attributeType === 'Characteristics') {
+        return true;
+      }
+      return false;
+    }
+
     // helper method which returns css class for non-editable cells
     function addNonEditCellClass (attributeType, grid) {
-      if (attributeType === 'Internal' && grid.appScope.editMode) {
+      if (!isCellEditable(attributeType) && grid.appScope.editMode) {
         return 'non-select-cell';
       }
       return null;
@@ -85,7 +97,7 @@
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false,
-          cellEditableCondition: dataSetPropsService.dataSet.is_owner,
+          cellEditableCondition: isCellEditable(attribute.attribute_type),
           cellClass: function (grid) {
             return addNonEditCellClass(attribute.attribute_type, grid);
           },
@@ -262,7 +274,9 @@
         pinnedLeft: true,
         cellTemplate: _cellTemplate,
         visible: isToolSelected,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
      /**
@@ -293,7 +307,9 @@
         pinnedLeft: true,
         cellTemplate: cellTemplate,
         visible: isToolSelected,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 
@@ -316,7 +332,7 @@
         enableColumnMenu: false,
         enableColumnResizing: true,
         cellTemplate: _cellTemplate,
-        enableCellEdit: false,
+        cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
         headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
