@@ -38,9 +38,11 @@ env:
     - DJANGO_SETTINGS_MODULE=config.settings.prod
     # CYPRESS_RECORD_KEY:
     - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
-    - PGPORT=5433
 
 before_script:
+  # Use default postgres port
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/10/main/postgresql.conf
+
   # Vagrant is not used on travis: This user is just for the database.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
