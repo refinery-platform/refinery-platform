@@ -19,8 +19,6 @@ addons:
 services:
   - postgresql
   - neo4j
-  - docker
-
 install:
   - node --version
   - NODE_VERSION=6.11.0
