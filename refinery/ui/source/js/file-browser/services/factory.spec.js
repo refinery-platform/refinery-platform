@@ -176,33 +176,71 @@
     describe('createColumnDefs', function () {
       var tempAssayAttributes = [
         { display_name: 'Attribute1',
-          internal_name: '_Attribute1_s'
+          internal_name: '_Attribute1_s',
+          attribute_type: 'Factor'
         },
         { display_name: 'Analysis Group',
-          internal_name: 'Analysis Group'
+          internal_name: 'Analysis Group',
+          attribute_type: 'Internal'
         },
-        { display_name: 'Url',
-          internal_name: 'Url'
+        { display_name: 'Download',
+          internal_name: 'Url',
+          attribute_type: 'Internal'
         }
       ];
+      var response = [];
+
+      beforeEach(inject(function () {
+        angular.copy(tempAssayAttributes, factory.assayAttributes);
+        response = factory.createColumnDefs();
+      }));
+
 
       it('createColumnDefs is a method', function () {
         expect(angular.isFunction(factory.createColumnDefs)).toBe(true);
       });
 
       it('returns an array of same length', function () {
-        angular.copy(tempAssayAttributes, factory.assayAttributes);
-        var response = factory.createColumnDefs();
         expect(response.length).toEqual(tempAssayAttributes.length);
+      });
+
+      it('sets correct name', function () {
+        expect(response[0].name).toEqual(tempAssayAttributes[0].display_name);
+        expect(response[1].name).toEqual(tempAssayAttributes[1].display_name);
+      });
+
+      it('sets custom url name', function () {
+        expect(response[2].name).toEqual(tempAssayAttributes[2].internal_name);
+      });
+
+      it('sets correct field', function () {
+        expect(response[0].field).toEqual(tempAssayAttributes[0].internal_name);
+        expect(response[1].field).toEqual(tempAssayAttributes[1].internal_name);
+      });
+
+      it('sets custom url field', function () {
+        expect(response[2].field).toEqual(tempAssayAttributes[2].internal_name);
       });
 
       it('returns corrent template for analysis group', function () {
         var analysisGroupTemplate = '<div class="ngCellText ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">{{COL_FIELD |' +
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
-        angular.copy(tempAssayAttributes, factory.assayAttributes);
-        var response = factory.createColumnDefs();
         expect(response[1].cellTemplate).toContain(analysisGroupTemplate);
+      });
+
+      it('sets cellClass to a function', function () {
+        expect(angular.isFunction(response[0].cellClass)).toBe(true);
+      });
+
+      it('sets headerCellClass to a function', function () {
+        expect(angular.isFunction(response[0].headerCellClass)).toBe(true);
+      });
+
+      it('sets url cell template', function () {
+        var cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD" node-obj="row.entity">' +
+        '</rp-data-file-dropdown>';
+        expect(response[2].cellTemplate).toEqual(cellTemplate);
       });
     });
 
