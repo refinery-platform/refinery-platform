@@ -42,6 +42,8 @@ before_script:
   # See: https://github.com/travis-ci/travis-ci/issues/8537#issuecomment-416467506
   # Use default postgres port
   - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/10/main/postgresql.conf
+  # Use postgres 9.6 auth config:
+  - sudo cp /etc/postgresql/{9.6,10}/main/pg_hba.conf
   - sudo service postgresql restart
 
   # Vagrant is not used on travis: This user is just for the database.
