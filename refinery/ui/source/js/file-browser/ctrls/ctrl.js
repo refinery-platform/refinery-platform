@@ -87,10 +87,16 @@
     vm.getDataUp = getDataUp;
     vm.gridApi = undefined; // avoids duplicate grid generation
     // Main ui-grid options
+    var editCellTemplate = '<div>' +
+    '<form name="inputForm" class="ui-grid-edit-form ng-pristine ng-valid"> ' +
+    '<input type="text" ui-grid-editor ng-model="row.entity[col.colDef.field]"' +
+    ' class="ng-pristine ng-untouched ng-valid ng-not-empty"></form></div>';
+
     vm.gridOptions = {
       appScopeProvider: vm,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
+      editableCellTemplate: editCellTemplate,
       enableCellEdit: false,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
@@ -237,7 +243,18 @@
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
 
+        // Catches event when user clicks on cell to edit.
+        vm.gridApi.edit.on.beginCellEdit(null, function (rowEntity, colDef) {
+          // need to add class manually due to how rows are generated
+          var colId = vm.gridApi.grid.getColumn(colDef.name).uid;
+          angular.element('.ui-grid-header-cell.ui-grid-col' +
+            colId).addClass('select-highlight');
+        });
+        // Catches event when user finishes editing (clicks away from cell)
         vm.gridApi.edit.on.afterCellEdit(null, function (rowEntity, colDef, newValue, oldValue) {
+          var colId = vm.gridApi.grid.getColumn(colDef.name).uid;
+          angular.element('.ui-grid-header-cell.ui-grid-col' +
+            colId).removeClass('select-highlight');
           var params = {
             uuid: rowEntity.uuid,
             attribute_solr_name: colDef.field,
@@ -375,6 +392,7 @@
     function toggleEditMode () {
       vm.editMode = !vm.editMode;
       vm.gridOptions.enableCellEdit = vm.editMode;
+      vm.gridOptions.enableCellEditOnFocus = vm.editMode;
       resetGridService.setRefreshGridFlag(true);
     }
 
