@@ -39,7 +39,8 @@ from file_store.models import (FileStoreItem, generate_file_source_translator,
 from file_store.tasks import FileImportTask, download_file
 from file_store.utils import parse_s3_url
 
-from .models import AnnotatedNode, Assay, AttributeOrder, Node, Study
+from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
+                     Study)
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer)
 from .single_file_column_parser import process_metadata_table
@@ -1194,7 +1195,13 @@ class NodeViewSet(APIView):
                     )
                 )
 
-                if attribute_type not in ['Factors, Characteristics']:
+                attribute_editable_types = [Attribute.MATERIAL_TYPE,
+                                            Attribute.CHARACTERISTICS,
+                                            Attribute.FACTOR_VALUE,
+                                            Attribute.LABEL,
+                                            Attribute.COMMENT]
+
+                if attribute_type not in attribute_editable_types:
                     return HttpResponseBadRequest('Attribute is not an '
                                                   'editable type')
 
