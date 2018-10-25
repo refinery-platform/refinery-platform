@@ -284,12 +284,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "workflows": workflows,
             "isatab_archive": investigation.get_file_store_item(),
             "pre_isatab_archive": investigation.get_file_store_item(),
-            "attribute_edit_types": '{},{},{},{},{}'.format(
-                Attribute.MATERIAL_TYPE,
-                Attribute.CHARACTERISTICS,
-                Attribute.FACTOR_VALUE,
-                Attribute.LABEL,
-                Attribute.COMMENT
+            "attribute_edit_types": '{}'.format(
+                Attribute.get_editable_types().join(',')
             )
         },
         context_instance=RequestContext(request))

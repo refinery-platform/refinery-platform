@@ -814,15 +814,9 @@ def customize_attribute_response(facet_fields):
         if len(field_name) > 1:
             customized_field['file_ext'] = field_name[-1]
 
-        attribute_edit_types = [Attribute.MATERIAL_TYPE,
-                                Attribute.CHARACTERISTICS,
-                                Attribute.FACTOR_VALUE,
-                                Attribute.LABEL,
-                                Attribute.COMMENT]
-
         field_edit_type = ''
         field_normalized = field.replace('_', ' ')
-        for edit_type in attribute_edit_types:
+        for edit_type in Attribute.get_editable_types():
             if edit_type in field_normalized:
                 field_edit_type = edit_type
                 break

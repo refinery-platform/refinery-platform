@@ -780,6 +780,13 @@ class Attribute(models.Model):
             unicode(self.value)
         )
 
+    def get_editable_types(self):
+        """
+        Return a list of the attribute's editable type
+        """
+        return [self.MATERIAL_TYPE, self.CHARACTERISTICS, self.FACTOR_VALUE,
+                self.LABEL, self.COMMENT]
+
 
 # non-ISA Tab
 class AttributeDefinition(models.Model):
