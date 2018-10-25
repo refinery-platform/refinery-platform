@@ -74,6 +74,7 @@ module "database" {
   master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
   private_subnet_a             = "${module.vpc.private_subnet_a_id}"
   private_subnet_b             = "${module.vpc.private_subnet_b_id}"
+  rds_engine_version           = "${var.rds_engine_version}"
   resource_name_prefix         = "${terraform.workspace}"
   snapshot_id                  = "${var.rds_snapshot_id}"
   vpc_id                       = "${module.vpc.vpc_id}"
