@@ -39,7 +39,7 @@ from file_store.models import (FileStoreItem, generate_file_source_translator,
 from file_store.tasks import FileImportTask, download_file
 from file_store.utils import parse_s3_url
 
-from .models import Assay, AttributeOrder, Node, Study
+from .models import AnnotatedNode, Assay, AttributeOrder, Node, Study
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer)
 from .single_file_column_parser import process_metadata_table
@@ -1123,6 +1123,16 @@ class NodeViewSet(APIView):
               type: string
               paramType: form
               required: false
+            - name: attribute_name
+              description: solr name for the attribute
+              type: string
+              paramType: form
+              required: false
+            - name: attribute_value
+              description: value for the attribute
+              type: string
+              paramType: form
+              required: false
     ...
     """
     http_method_names = ['patch']
@@ -1140,6 +1150,8 @@ class NodeViewSet(APIView):
     def patch(self, request, uuid):
         node = self.get_object(uuid)
         new_file_uuid = request.data.get('file_uuid')
+        solr_name = request.data.get('attribute_solr_name')
+        attribute_value = request.data.get('attribute_value')
         data_set = node.study.get_dataset()
 
         if not data_set.is_clean():
@@ -1153,7 +1165,6 @@ class NodeViewSet(APIView):
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
             if new_file_uuid == '':
-
                 try:
                     file_store_item = FileStoreItem.objects.get(
                         uuid=node.file_uuid
@@ -1170,7 +1181,41 @@ class NodeViewSet(APIView):
                 return Response(
                     NodeSerializer(node).data, status=status.HTTP_200_OK
                 )
-            return Response('Currently, you can only remove node files.',
+            # derived node can have multiple attribute sources
+            elif solr_name and attribute_value and not node.is_derived():
+                # splits solr name into type and subtype
+                attribute_obj = customize_attribute_response([solr_name])[0]
+                annotated_nodes_query = AnnotatedNode.objects.filter(
+                    node=node,
+                    attribute_type=attribute_obj.get('attribute_type'),
+                    attribute_subtype__icontains=attribute_obj.get(
+                        'display_name'
+                    )
+                )
+
+                # update the source attribute
+                try:
+                    source_attribute = annotated_nodes_query[0].attribute
+                except:
+                    return HttpResponseBadRequest('No associated attributes.')
+
+                source_attribute.value = attribute_value
+                source_attribute.save()
+                # update all the hard coded annotated nodes attribute_value
+                children_annotated_nodes_query = AnnotatedNode.objects.filter(
+                    attribute=source_attribute
+                )
+                for ann_node in children_annotated_nodes_query:
+                    ann_node.attribute_value = source_attribute.value
+                    ann_node.save()
+                    ann_node.node.update_solr_index()
+
+                return Response(
+                    NodeSerializer(node).data, status=status.HTTP_200_OK
+                )
+
+            return Response('Currently, you can only remove node files or '
+                            'edit non-derived files',
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)

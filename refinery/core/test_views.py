@@ -4,7 +4,10 @@ import string
 from urlparse import urljoin
 
 from cuser.middleware import CuserMiddleware
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from django.test import override_settings
+from django.test.testcases import TestCase
 from django.utils.functional import SimpleLazyObject
 
 from guardian.shortcuts import get_groups_with_perms
@@ -22,7 +25,7 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
-                     Workflow, WorkflowEngine)
+                     SiteStatistics, Workflow, WorkflowEngine)
 
 
 from .serializers import DataSetSerializer, UserSerializer
@@ -1089,3 +1092,83 @@ class EventApiV2Tests(APIV2TestCase):
                 }
             ]
         )
+
+
+class CustomRegistrationViewTests(TestCase):
+    def test_user_registration_successful_recaptcha(self):
+        username = "new-test-user"
+        password = make_password('password')
+        response = self.client.post(
+            "/accounts/register/",
+            data={
+                "username": username,
+                "email": "test@example.com",
+                "first_name": "test",
+                "last_name": "user",
+                "affiliation": "Test Users",
+                "password1": password,
+                "password2": password
+            }
+        )
+        self.assertTrue(response.wsgi_request.recaptcha_is_valid)
+        self.assertIsNotNone(User.objects.get(username=username))
+
+    @override_settings(
+        REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="invalid_site_key",
+        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="invalid_secret_key"
+    )
+    def test_user_registration_unsuccessful_recaptcha(self):
+        username = "new-test-user"
+        password = make_password('password')
+        response = self.client.post(
+            "/accounts/register/",
+            data={
+                "username": username,
+                "email": "test@example.com",
+                "first_name": "test",
+                "last_name": "user",
+                "affiliation": "Test Users",
+                "password1": password,
+                "password2": password
+            }
+        )
+        self.assertEqual(400, response.status_code)
+        self.assertFalse(response.wsgi_request.recaptcha_is_valid)
+        self.assertRaises(User.DoesNotExist, User.objects.get,
+                          username=username)
+
+
+class SiteStatisticsViewTests(TestCase):
+    def setUp(self):
+        # Simulate a day of user activity
+        self.user = User.objects.create_superuser("user", "", "user")
+        self.client.login(username="user", password="user")
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user)
+        self.dataset_b = create_dataset_with_necessary_models(user=self.user)
+        self.site_statistics_a = SiteStatistics.objects.create()
+        self.site_statistics_a.collect()
+
+    def test_is_accessible_by_admins_only(self):
+        self.user.is_staff = False
+        self.user.save()
+        response = self.client.get("/sitestatistics/deltas.csv")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login/?next", response.url)
+
+    @mock.patch.object(SiteStatistics, "get_csv_row")
+    def test_get_deltas_csv(self, get_csv_row_mock):
+        response = self.client.get("/sitestatistics/deltas.csv")
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+                      response.content)
+        get_csv_row_mock.assert_called_with(aggregates=False)
+
+        # first entry ignored for deltas
+        self.assertEqual(get_csv_row_mock.call_count, 1)
+
+    @mock.patch.object(SiteStatistics, "get_csv_row")
+    def test_get_totals_csv(self, get_csv_row_mock):
+        response = self.client.get("/sitestatistics/totals.csv")
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+                      response.content)
+        get_csv_row_mock.assert_called_with(aggregates=True)
+        self.assertEqual(get_csv_row_mock.call_count, 2)

@@ -1,5 +1,8 @@
 $app_user = 'ubuntu'
 $app_group = $app_user
+$db_name = 'refinery'
+$db_user = $db_name
+$db_user_password = fqdn_rand_string(8)  # random alphanumeric string of length eight
 $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
 $project_root = '/srv/refinery-platform'
 $deployment_root = "${project_root}/deployment"
@@ -21,7 +24,6 @@ $ui_app_root = "${django_root}/ui"
 # solr is in the /data volume on AWS:
 $solr_data_set_manager_data = "${data_dir}/solr/data_set_manager"
 $solr_core_data = "${data_dir}/solr/core"
-$django_docker_engine_data_dir = "${data_dir}/django-docker-engine-data"
 $django_docker_engine_mem_limit_mb = 3584
 # Based on t2.medium (specified in docker_host/main.tf).
 # 0.5GB is probably more than enough for everything non-docker.

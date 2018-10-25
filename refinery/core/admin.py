@@ -151,7 +151,7 @@ class SiteProfileAdmin(GuardedModelAdmin):
 
 
 class SiteStatisticsAdmin(AdminFieldPopulator):
-    pass
+    change_list_template = "admin/core/sitestatistics/change_list.html"
 
 
 class EventAdmin(AdminFieldPopulator):

@@ -23,15 +23,14 @@
   "DATABASES": {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "HOST": "<%= @rds_host %>",
-        "NAME": "refinery",
-        "PASSWORD": "<%= @rds_role_password %>",
-        "PORT": "<%= @rds_port %>",
-        "USER": "<%= @rds_role || "vagrant" %>"
+        "HOST": "<%= @rds_endpoint_address || "localhost" %>",
+        "NAME": "<%= @db_name || "refinery" %>",
+        "PASSWORD": "<%= @db_user_password %>",
+        "PORT": "5432",
+        "USER": "<%= @db_user || "vagrant" %>"
     }
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
-  "DJANGO_DOCKER_ENGINE_DATA_DIR": "<%= @django_docker_engine_data_dir || "/data" %>",
   "DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB": <%= @django_docker_engine_mem_limit_mb || 20 %>,
   "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,

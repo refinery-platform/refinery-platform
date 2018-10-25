@@ -4,12 +4,10 @@
 # The configuration is stored in two files: config.yaml and tags.yaml
 #
 # Neither of these files exist to begin with but `config.yaml` is required
-# Copy `config.yaml.template` to `config.yaml` and edit
 
-# RDS_SNAPSHOT and DATA_SNAPSHOT are only used when restoring a Refinery Platform stack
-# from the EBS and RDS snapshots of a previously created stack
-# If you don't specify these then fresh RDS instances and data volumes will be created
-# RDS_SNAPSHOT: refinery-web-XXX
+# DATA_SNAPSHOT is only used when restoring a Refinery Platform stack from the
+# EBS snapshot of a previously created stack
+# If you don't specify this then fresh data volume will be created
 # DATA_SNAPSHOT: snap-XXX
 
 # The password for the Django admin account.
@@ -37,10 +35,13 @@ STACK_NAME: "<%= tf.s3_bucket_name_base %>"
 COGNITO_IDENTITY_POOL_ID: "<%= tf.identity_pool_id %>"
 VPC_ID: "<%= tf.vpc_id %>"
 PUBLIC_SUBNET_ID: "<%= tf.public_subnet_id %>"
-RDS_DB_SUBNET_GROUP_NAME: "<%= tf.rds_db_subnet_group_name %>"
 REFINERY_DOCKER_HOST: "<%= tf.docker_hostname %>"
 ELB_SECURITY_GROUP_ID: "<%= tf.elb_security_group_id %>"
 APP_SERVER_SECURITY_GROUP_ID: "<%= tf.app_server_security_group_id %>"
+APP_SERVER_PROFILE_ID: "<%= tf.app_server_profile_id %>"
+RDS_ENDPOINT_ADDRESS: "<%= tf.db_hostname %>"
+RDS_SUPERUSER_PASSWORD: ""  # get from Terraform state file
+IAM_SMTP_USER: "<%= tf.iam_smtp_user %>"
 
 # Prefix for all S3 bucket names (must not be shared among stacks)
 # Constraint: DNS-compliant without periods (".")
@@ -69,9 +70,6 @@ DATA_VOLUME_TYPE: "st1"
 # The name of the EC2 key pair to use for SSH (must already exist in the AWS account)
 KEY_NAME: "id_rsa"
 
-# The name of the RDS instance (if not set, the stack name will be used by default)
-# RDS_NAME: rds-refinery-default
-
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM: '<a href="http://example.org/">Sample Entry</a>'
 
@@ -79,18 +77,14 @@ REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
 REFINERY_WELCOME_EMAIL_SUBJECT: "Welcome to Refinery"
 
 REFINERY_GOOGLE_ANALYTICS_ID: ""
+REFINERY_GOOGLE_RECAPTCHA_SITE_KEY: ""
+REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY: ""
 
 REFINERY_URL_SCHEME: "http"
 
 USER_FILES_COLUMNS: "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 
 # == Rarely changed ==
-
-# Password for the RDS superuser account
-RDS_SUPERUSER_PASSWORD: "mypassword"
-
-# Name of the PostgreSQL role to create
-RDS_ROLE: "refinery"
 
 #List of github usernames to allow SSH access into the EC2 instance
 #SSH_USERS: <username_0> <username_1> ...

@@ -64,6 +64,31 @@
     * Method Definitions
     * ----------------------
     */
+
+    // helper method which returns  whether a cell is editable
+    function isCellEditable (attributeType) {
+      return dataSetPropsService.dataSet.is_owner &&
+        ['Factors', 'Characteristics'].includes(attributeType);
+    }
+
+    // helper method which returns css class for non-editable cells
+    function addNonEditCellClass (attributeType, grid) {
+      if (!isCellEditable(attributeType) && grid.appScope.editMode) {
+        return 'non-select-cell';
+      }
+      return null;
+    }
+
+    // helper method to check if cell is derived
+    function isCellDerived (row) {
+      for (var cellName in row) {
+        if (cellName.includes('REFINERY_TYPE') && row[cellName].includes('Derived')) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
@@ -77,7 +102,18 @@
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false,
-          cellEditableCondition: dataSetPropsService.dataSet.is_owner
+          cellEditableCondition: function (scope) {
+            return !isCellDerived(scope.row.entity) && isCellEditable(attribute.attribute_type);
+          },
+          cellClass: function (grid, row) {
+            if (isCellDerived(row.entity)) {
+              return 'non-select-cell';
+            }
+            return addNonEditCellClass(attribute.attribute_type, grid);
+          },
+          headerCellClass: function (grid) {
+            return addNonEditCellClass(attribute.attribute_type, grid);
+          },
         };
 
         if (columnName === 'Download') {
@@ -248,7 +284,9 @@
         pinnedLeft: true,
         cellTemplate: _cellTemplate,
         visible: isToolSelected,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
      /**
@@ -279,7 +317,9 @@
         pinnedLeft: true,
         cellTemplate: cellTemplate,
         visible: isToolSelected,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 
@@ -302,7 +342,9 @@
         enableColumnMenu: false,
         enableColumnResizing: true,
         cellTemplate: _cellTemplate,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 

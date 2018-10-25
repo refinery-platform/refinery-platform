@@ -44,4 +44,3 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ('uuid', 'file_uuid')
