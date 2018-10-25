@@ -932,6 +932,23 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.status_code, 405)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_return_405_non_edit_attributes(self,
+                                                  update_solr_index_mock):
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format('REFINERY_NAME',
+                                             'Internal')
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, node.uuid),
+            {"attribute_solr_name": solr_name,
+             "attribute_value": 'New Name'}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, node.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_edit_annotated_node(self, update_solr_index_mock):
         nodes = self.isatab_9909_data_set.get_nodes()
         file_node = nodes.filter(

@@ -16,6 +16,7 @@
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
+    'settings',
     'toolSelectService'
   ];
 
@@ -30,6 +31,7 @@
     fileBrowserSettings,
     nodeService,
     selectedFilterService,
+    settings,
     toolSelectService
     ) {
     // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
@@ -67,8 +69,9 @@
 
     // helper method which returns  whether a cell is editable
     function isCellEditable (attributeType) {
+      console.log(attributeType);
       return dataSetPropsService.dataSet.is_owner &&
-        ['Factors', 'Characteristics'].includes(attributeType);
+        settings.djangoApp.attributeEditTypes.split(',').includes(attributeType);
     }
 
     // helper method which returns css class for non-editable cells
