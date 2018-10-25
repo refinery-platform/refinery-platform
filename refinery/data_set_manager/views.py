@@ -1185,13 +1185,18 @@ class NodeViewSet(APIView):
             elif solr_name and attribute_value and not node.is_derived():
                 # splits solr name into type and subtype
                 attribute_obj = customize_attribute_response([solr_name])[0]
+                attribute_type = attribute_obj.get('attribute_type')
                 annotated_nodes_query = AnnotatedNode.objects.filter(
                     node=node,
-                    attribute_type=attribute_obj.get('attribute_type'),
+                    attribute_type=attribute_type,
                     attribute_subtype__icontains=attribute_obj.get(
                         'display_name'
                     )
                 )
+
+                if attribute_type not in ['Factors, Characteristics']:
+                    return HttpResponseBadRequest('Attribute is not an '
+                                                  'editable type')
 
                 # update the source attribute
                 try:
