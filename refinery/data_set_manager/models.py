@@ -736,6 +736,9 @@ class Attribute(models.Model):
     LABEL = "Label"
     COMMENT = "Comment"
 
+    editable_types = [MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL,
+                      COMMENT]
+
     TYPES = {MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL, COMMENT}
 
     ALL_FIELDS = [
@@ -779,13 +782,6 @@ class Attribute(models.Model):
             " = " +
             unicode(self.value)
         )
-
-    def get_editable_types(self):
-        """
-        Return a list of the attribute's editable type
-        """
-        return [self.MATERIAL_TYPE, self.CHARACTERISTICS, self.FACTOR_VALUE,
-                self.LABEL, self.COMMENT]
 
 
 # non-ISA Tab

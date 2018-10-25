@@ -816,7 +816,7 @@ def customize_attribute_response(facet_fields):
 
         field_edit_type = ''
         field_normalized = field.replace('_', ' ')
-        for edit_type in Attribute.get_editable_types():
+        for edit_type in Attribute.editable_types:
             if edit_type in field_normalized:
                 field_edit_type = edit_type
                 break

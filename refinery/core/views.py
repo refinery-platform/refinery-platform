@@ -285,7 +285,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "isatab_archive": investigation.get_file_store_item(),
             "pre_isatab_archive": investigation.get_file_store_item(),
             "attribute_edit_types": '{}'.format(
-                Attribute.get_editable_types().join(',')
+                Attribute.editable_types.join(',')
             )
         },
         context_instance=RequestContext(request))
