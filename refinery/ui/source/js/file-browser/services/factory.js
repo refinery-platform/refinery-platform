@@ -69,7 +69,6 @@
 
     // helper method which returns  whether a cell is editable
     function isCellEditable (attributeType) {
-      console.log(attributeType);
       return dataSetPropsService.dataSet.is_owner &&
         settings.djangoApp.attributeEditTypes.split(',').includes(attributeType);
     }
