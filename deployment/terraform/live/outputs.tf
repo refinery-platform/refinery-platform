@@ -22,9 +22,9 @@ output "elb_security_group_id" {
   value = "${module.vpc.elb_security_group_id}"
 }
 
-//output "db_hostname" {
-//  value = "${module.database.instance_hostname}"
-//}
+output "db_hostname" {
+  value = "${module.database.instance_hostname}"
+}
 
 output "iam_smtp_user" {
   value = "${module.app_server.iam_smtp_user}"
