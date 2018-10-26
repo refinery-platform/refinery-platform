@@ -39,7 +39,8 @@ from file_store.models import (FileStoreItem, generate_file_source_translator,
 from file_store.tasks import FileImportTask, download_file
 from file_store.utils import parse_s3_url
 
-from .models import AnnotatedNode, Assay, AttributeOrder, Node, Study
+from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
+                     Study)
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer)
 from .single_file_column_parser import process_metadata_table
@@ -1185,13 +1186,18 @@ class NodeViewSet(APIView):
             elif solr_name and attribute_value and not node.is_derived():
                 # splits solr name into type and subtype
                 attribute_obj = customize_attribute_response([solr_name])[0]
+                attribute_type = attribute_obj.get('attribute_type')
                 annotated_nodes_query = AnnotatedNode.objects.filter(
                     node=node,
-                    attribute_type=attribute_obj.get('attribute_type'),
+                    attribute_type=attribute_type,
                     attribute_subtype__icontains=attribute_obj.get(
                         'display_name'
                     )
                 )
+
+                if attribute_type not in Attribute.editable_types:
+                    return HttpResponseBadRequest('Attribute is not an '
+                                                  'editable type')
 
                 # update the source attribute
                 try:

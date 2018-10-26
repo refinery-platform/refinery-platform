@@ -736,6 +736,9 @@ class Attribute(models.Model):
     LABEL = "Label"
     COMMENT = "Comment"
 
+    editable_types = [MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL,
+                      COMMENT]
+
     TYPES = {MATERIAL_TYPE, CHARACTERISTICS, FACTOR_VALUE, LABEL, COMMENT}
 
     ALL_FIELDS = [
