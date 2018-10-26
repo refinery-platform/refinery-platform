@@ -111,9 +111,11 @@
           <span class="p-l-1-3" ng-if="FBCtrl.dataSet.is_owner">
             <a
               popover-placement="right"
-              uib-popover-html="'Redirects to the Data Set Upload page where you
-              can upload revised metadata. <strong>Note:</strong> Once you have
-              run an analysis or visualization on a data set, its metadata can no longer be revised.'"
+              uib-popover-html="'<em>Modify</em> allows direct editing of
+              individual metadata values (only for Raw Data Files).
+              <em>'Upload'</em> allows the re-uploading of revised metadata
+              files. <strong>Note:</strong>: Metadata can no longer be edited once an
+              analysis or visualization has been run on a data set.'"
               popover-title="Revise Metadata"
               popover-trigger="'outsideClick'"
               popover-append-to-body="true">
