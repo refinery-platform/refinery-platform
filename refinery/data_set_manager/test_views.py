@@ -932,7 +932,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.status_code, 405)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
-    def test_patch_return_405_non_edit_attributes(self,
+    def test_patch_return_400_non_edit_attributes(self,
                                                   update_solr_index_mock):
         node = self.hg_19_data_set.get_nodes().filter(
             type=Node.RAW_DATA_FILE
