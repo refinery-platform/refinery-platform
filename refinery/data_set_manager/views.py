@@ -1195,7 +1195,7 @@ class NodeViewSet(APIView):
                     )
                 )
 
-                if attribute_type not in Attribute.get_editable_types:
+                if attribute_type not in Attribute.editable_types:
                     return HttpResponseBadRequest('Attribute is not an '
                                                   'editable type')
 
