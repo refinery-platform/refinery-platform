@@ -51,9 +51,6 @@ SSH_USERS=$(jq -r '"" + .SSH_USERS' < /home/ubuntu/s3-config)
 # Deliberately field split to get several users.
 HOME=/home/ubuntu sh /srv/refinery-platform/deployment/bin/fetch-github-ssh-keys $SSH_USERS
 
-# Tag the attached root volume
-sh /srv/refinery-platform/deployment/bin/fix-untagged-volumes
-
 # Create SMTP credentials and
 # place them in (facter) environment variables.
 . bin/create-smtp-credentials
