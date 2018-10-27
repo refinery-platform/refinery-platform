@@ -1136,7 +1136,7 @@ class NodeViewSet(APIView):
               required: false
     ...
     """
-    http_method_names = ['patch']
+    http_method_names = ['get', 'patch']
 
     def get_object(self, uuid):
         try:
@@ -1147,6 +1147,52 @@ class NodeViewSet(APIView):
         except Node.MultipleObjectsReturned as e:
             logger.error(e)
             raise APIException("Multiple objects returned.")
+
+    def get(self, request, uuid):
+        # filter nodes by attributes' info
+        attribute_solr_name = request.query_params.get(
+            'related_attribute_nodes'
+        )
+        # ToDo check perms
+        # Only supporting attribute related nodes retrieval
+        node = self.get_object(uuid)
+        if not attribute_solr_name:
+            return HttpResponseBadRequest('Require attribute solr name to '
+                                          'retrieve related nodes.')
+
+        data_set = node.study.get_dataset()
+        if not data_set.get_owner() == request.user:
+            return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        # splits solr name into type and subtype
+        attribute_obj = customize_attribute_response([attribute_solr_name])[0]
+        attribute_type = attribute_obj.get('attribute_type')
+        # get node's annotated node to get the source attribute
+        annotated_nodes_query = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_type=attribute_type,
+            attribute_subtype__icontains=attribute_obj.get(
+                'display_name'
+            )
+        )
+        try:
+            source_attribute = annotated_nodes_query[0].attribute
+        except:
+            return HttpResponseBadRequest('No associated attributes.')
+
+        children_annotated_nodes_query = AnnotatedNode.objects.filter(
+            attribute=source_attribute
+        )
+
+        # from children annotated nodes get all the related file nodes
+        related_nodes = []
+        for ann_node in children_annotated_nodes_query:
+            if not ann_node.node == node:
+                related_nodes.append(ann_node.node.uuid)
+
+        return Response(
+                related_nodes, status=status.HTTP_200_OK
+            )
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
