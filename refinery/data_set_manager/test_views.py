@@ -7,6 +7,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import QueryDict
+from django.db.models import Q
 from django.test import LiveServerTestCase, override_settings
 
 from factory_boy.utils import (create_dataset_with_necessary_models,
@@ -798,16 +799,76 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         self.node = self.data_set.get_nodes()[0]
 
-    @mock.patch('data_set_manager.models.Node.update_solr_index')
-    def test_patch_remove_data_file_200_status(self, mock_index):
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.node.uuid)
-        self.assertTrue(mock_index.called)
-        self.assertEqual(patch_response.status_code, 200)
+    def test_get_returns_400(self):
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
+        get_request = self.factory.get(urljoin(self.url_root, self.node.uuid))
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request, node.uuid)
+        self.assertEqual(get_response.status_code, 400)
+
+    def test_get_returns_401_non_owners(self):
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        get_request = self.factory.get(urljoin(self.url_root, self.node.uuid),
+                                       {'related_attribute_nodes': solr_name})
+        guest_user = User.objects.create_user('guest_user',
+                                              'not_owner@fake.com',
+                                              self.password)
+        force_authenticate(get_request, user=guest_user)
+        get_response = self.view(get_request, node.uuid)
+        self.assertEqual(get_response.status_code, 401)
+
+    def test_get_returns_empty_list_for_hg19(self):
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        get_request = self.factory.get(urljoin(self.url_root, node.uuid),
+                                       {'related_attribute_nodes': solr_name})
+
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request, node.uuid)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.data, [])
+
+    def test_get_returns_derived_nodes_for_isa9909(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        file_node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=file_node,
+            attribute_subtype='organism part'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        get_request = self.factory.get(urljoin(self.url_root, file_node.uuid),
+                                       {'related_attribute_nodes': solr_name})
+
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request, file_node.uuid)
+        self.assertEqual(get_response.status_code, 200)
+
+        derived_nodes = Node.objects.filter(
+            Q(type=Node.DERIVED_ARRAY_DATA_FILE) |
+            Q(type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE),
+            assay=file_node.assay
+        ).values_list('uuid', flat=True)
+        self.assertItemsEqual(get_response.data, derived_nodes)
 
     @mock.patch('core.models.DataSet.is_clean')
     def test_patch_not_clean_400_status(self, mock_clean):

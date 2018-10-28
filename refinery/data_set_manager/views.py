@@ -1153,7 +1153,6 @@ class NodeViewSet(APIView):
         attribute_solr_name = request.query_params.get(
             'related_attribute_nodes'
         )
-        # ToDo check perms
         # Only supporting attribute related nodes retrieval
         node = self.get_object(uuid)
         if not attribute_solr_name:
@@ -1183,7 +1182,6 @@ class NodeViewSet(APIView):
         children_annotated_nodes_query = AnnotatedNode.objects.filter(
             attribute=source_attribute
         )
-
         # from children annotated nodes get all the related file nodes
         related_nodes = []
         for ann_node in children_annotated_nodes_query:
