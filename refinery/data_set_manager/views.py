@@ -1165,11 +1165,10 @@ class NodeViewSet(APIView):
 
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([attribute_solr_name])[0]
-        attribute_type = attribute_obj.get('attribute_type')
         # get node's annotated node to get the source attribute
         annotated_nodes_query = AnnotatedNode.objects.filter(
             node=node,
-            attribute_type=attribute_type,
+            attribute_type=attribute_obj.get('attribute_type'),
             attribute_subtype__icontains=attribute_obj.get(
                 'display_name'
             )
