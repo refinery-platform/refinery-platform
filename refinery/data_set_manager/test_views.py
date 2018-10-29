@@ -7,7 +7,6 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import QueryDict
-from django.db.models import Q
 from django.test import LiveServerTestCase, override_settings
 
 from factory_boy.utils import (create_dataset_with_necessary_models,
@@ -799,7 +798,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         self.node = self.data_set.get_nodes()[0]
 
-    def test_get_returns_400(self):
+    def test_get_uuid_returns_400(self):
         node = self.hg_19_data_set.get_nodes().filter(
             type=Node.RAW_DATA_FILE
         )[0]
@@ -826,7 +825,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_response = self.view(get_request, node.uuid)
         self.assertEqual(get_response.status_code, 401)
 
-    def test_get_returns_empty_list_for_hg19(self):
+    def test_get_returns_empty_list_for_dataset_without_related_nodes(self):
         node = self.hg_19_data_set.get_nodes().filter(
             type=Node.RAW_DATA_FILE
         )[0]
@@ -843,7 +842,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data, [])
 
-    def test_get_returns_derived_nodes_for_isa9909(self):
+    def test_get_returns_derived_nodes_for_dataset_with_related_nodes(self):
         nodes = self.isatab_9909_data_set.get_nodes()
         file_node = nodes.filter(
             type=Node.ARRAY_DATA_FILE,
@@ -863,12 +862,20 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_response = self.view(get_request, file_node.uuid)
         self.assertEqual(get_response.status_code, 200)
 
-        derived_nodes = Node.objects.filter(
-            Q(type=Node.DERIVED_ARRAY_DATA_FILE) |
-            Q(type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE),
-            assay=file_node.assay
-        ).values_list('uuid', flat=True)
-        self.assertItemsEqual(get_response.data, derived_nodes)
+        derived_nodes_uuid = [node.uuid for node in Node.objects.filter(
+            assay=file_node.assay) if node.is_derived()]
+        self.assertItemsEqual(get_response.data, derived_nodes_uuid)
+
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
+    def test_patch_remove_data_file_200_status(self, mock_index):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.node.uuid),
+            {"file_uuid": ''}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.node.uuid)
+        self.assertTrue(mock_index.called)
+        self.assertEqual(patch_response.status_code, 200)
 
     @mock.patch('core.models.DataSet.is_clean')
     def test_patch_not_clean_400_status(self, mock_clean):
