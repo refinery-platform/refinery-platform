@@ -108,7 +108,7 @@
             return !isCellDerived(scope.row.entity) && isCellEditable(attribute.attribute_type);
           },
           cellClass: function (grid, row) {
-            if (isCellDerived(row.entity)) {
+            if (isCellDerived(row.entity) && grid.appScope.editMode) {
               return 'non-select-cell';
             }
             return addNonEditCellClass(attribute.attribute_type, grid);

@@ -249,6 +249,17 @@
           var colId = vm.gridApi.grid.getColumn(colDef.name).uid;
           angular.element('.ui-grid-header-cell.ui-grid-col' +
             colId).addClass('select-highlight');
+          var params = {
+            uuid: rowEntity.uuid,
+            related_attribute_nodes: colDef.field
+          };
+           // grab derived node uuids
+          nodesV2Service.query(params).$promise.then(function (response) {
+            console.log(response);
+          }, function (error) {
+            $log.error(error);
+          });
+          // update css
         });
         // Catches event when user finishes editing (clicks away from cell)
         vm.gridApi.edit.on.afterCellEdit(null, function (rowEntity, colDef, newValue, oldValue) {
