@@ -10,21 +10,8 @@ set -x
 
 env
 
-# Normally supplied as input, but use a default if not.
-GIT_BRANCH=${GIT_BRANCH:-develop}
-
 printf '%s' "${CONFIG_YAML}" | base64 -d > /home/ubuntu/config.yaml
 printf '%s' "${CONFIG_JSON}" | base64 -d > /home/ubuntu/config.json
-
-# Fetch the source code repo (from github),
-# and switch to the desired commit/branch.
-mkdir /srv/refinery-platform
-chown ubuntu:ubuntu /srv/refinery-platform
-sudo su -c '
-  git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform
-  cd /srv/refinery-platform
-  git checkout '"$GIT_BRANCH"'
-' ubuntu
 
 ln -s /home/ubuntu/config.yaml /srv/refinery-platform/refinery/config/override-config.yaml
 

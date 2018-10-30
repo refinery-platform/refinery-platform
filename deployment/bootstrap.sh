@@ -2,6 +2,7 @@
 
 # initial configuration for Vagrant box
 
+# https://serverfault.com/a/670688
 export DEBIAN_FRONTEND=noninteractive
 
 /usr/bin/apt-get clean && /usr/bin/apt-get -qq update

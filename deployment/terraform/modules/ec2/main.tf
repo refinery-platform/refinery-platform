@@ -128,6 +128,10 @@ resource "aws_iam_instance_profile" "app_server" {
   role = "${aws_iam_role.app_server.name}"
 }
 
+data "external" "git" {
+  program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
+}
+
 resource "aws_instance" "app_server" {
   ami                    = "ami-d05e75b8"
   instance_type          = "${var.instance_type}"
@@ -155,8 +159,13 @@ resource "aws_instance" "app_server" {
   user_data              = <<EOF
 #!/bin/sh
 
+# https://serverfault.com/a/670688
+export DEBIAN_FRONTEND=noninteractive
+
+# print commands and their expanded arguments
 set -x
 
+# install dependencies
 /usr/bin/apt-get clean && /usr/bin/apt-get -qq update
 /usr/bin/apt-get -qq -y install git jq puppet ruby-dev
 
@@ -165,7 +174,10 @@ for USERNAME in ${join(" ", var.ssh_users)}; do
     curl -s https://api.github.com/users/"$USERNAME"/keys | jq -r '.[].key'
 done >> /home/ubuntu/.ssh/authorized_keys
 
-# clone repo
+# clone Refinery Platform repo
+mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
+su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
+su -c 'cd /srv/refinery-platform && git checkout ${data.external.git.result["commit"]}' ubuntu
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD=${var.django_admin_password}

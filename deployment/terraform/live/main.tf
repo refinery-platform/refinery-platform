@@ -12,6 +12,10 @@ provider "aws" {
   region  = "${var.region}"
 }
 
+provider "external" {
+  version = "~> 1.0"
+}
+
 provider "random" {
   version = "~> 2.0"
 }
