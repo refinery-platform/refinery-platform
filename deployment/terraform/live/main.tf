@@ -33,6 +33,12 @@ resource "random_string" "rds_master_user_password" {
   special = false
 }
 
+resource "random_string" "django_admin_password" {
+  length  = 8
+  upper   = false
+  special = false
+}
+
 module "object_storage" {
   source           = "../modules/s3"
   bucket_name_base = "${local.s3_bucket_name_base}"
@@ -92,4 +98,6 @@ module "app_server" {
   subnet_id            = "${module.vpc.public_subnet_id}"
   resource_name_prefix = "${terraform.workspace}"
   tags                 = "${local.tags}"
+  ssh_users            = "${var.app_server_ssh_users}"
+  django_admin_password = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
 }

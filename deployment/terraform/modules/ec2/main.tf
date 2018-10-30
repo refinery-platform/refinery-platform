@@ -135,7 +135,6 @@ resource "aws_instance" "app_server" {
   monitoring             = true
   vpc_security_group_ids = ["${var.security_group_id}"]
   subnet_id              = "${var.subnet_id}"
-  user_data              = ""
   iam_instance_profile   = "${aws_iam_instance_profile.app_server.name}"
   root_block_device {
     volume_type = "gp2"
@@ -153,4 +152,30 @@ resource "aws_instance" "app_server" {
   volume_tags            = "${merge(
     var.tags, map("Name", "${var.resource_name_prefix} app server")
   )}"
+  user_data              = <<EOF
+#!/bin/sh
+
+set -x
+
+/usr/bin/apt-get clean && /usr/bin/apt-get -qq update
+/usr/bin/apt-get -qq -y install git jq puppet ruby-dev
+
+# add extra SSH keys from Github
+for USERNAME in ${join(" ", var.ssh_users)}; do
+    curl -s https://api.github.com/users/"$USERNAME"/keys | jq -r '.[].key'
+done >> /home/ubuntu/.ssh/authorized_keys
+
+# clone repo
+
+# assign Puppet variables
+export FACTER_ADMIN_PASSWORD=${var.django_admin_password}
+export FACTER_AWS_REGION=${data.aws_region.current.name}
+
+# configure librarian-puppet
+
+# run puppet
+
+EOF
 }
+
+# use a template_file for loading aws.sh vs sending env vars?

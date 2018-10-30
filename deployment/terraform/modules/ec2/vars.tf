@@ -12,3 +12,7 @@ variable "tags" {
   type        = "map"
   description = "Resource tags"
 }
+variable "ssh_users" {
+  type = "list"
+}
+variable "django_admin_password" {}
