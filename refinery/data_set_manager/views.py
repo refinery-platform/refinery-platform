@@ -1212,73 +1212,73 @@ class NodeViewSet(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if data_set.get_owner() == request.user:
-            # to remove the data file, we need to delete it and update index,
-            #  the file store item uuid should remain
-            if new_file_uuid == '':
-                try:
-                    file_store_item = FileStoreItem.objects.get(
-                        uuid=node.file_uuid
-                    )
-                except (FileStoreItem.DoesNotExist,
-                        FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error(e)
-                    return Response('Missing file store item.',
-                                    status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    file_store_item.delete_datafile()
+        if not data_set.get_owner() == request.user:
+            return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-                node.update_solr_index()
-                return Response(
-                    NodeSerializer(node).data, status=status.HTTP_200_OK
+        # to remove the data file, we need to delete it and update index,
+        #  the file store item uuid should remain
+        if new_file_uuid == '':
+            try:
+                file_store_item = FileStoreItem.objects.get(
+                    uuid=node.file_uuid
                 )
-            # derived node can have multiple attribute sources
-            elif solr_name and attribute_value and not node.is_derived():
-                # splits solr name into type and subtype
-                attribute_obj = customize_attribute_response([solr_name])[0]
-                attribute_subtype = attribute_obj.get('display_name')
-                attribute_type = attribute_obj.get('attribute_type')
-                # some attributes don't have a subtype, so display_name will be
-                # the first word of the attribute type
-                if attribute_subtype in attribute_type:
-                    attribute_subtype = None
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+                return Response('Missing file store item.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                file_store_item.delete_datafile()
 
-                if attribute_type not in Attribute.editable_types:
-                    return HttpResponseBadRequest('Attribute is not an '
-                                                  'editable type')
+            node.update_solr_index()
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
+            )
+        # derived node can have multiple attribute sources
+        elif solr_name and attribute_value and not node.is_derived():
+            # splits solr name into type and subtype
+            attribute_obj = customize_attribute_response([solr_name])[0]
+            attribute_subtype = attribute_obj.get('display_name')
+            attribute_type = attribute_obj.get('attribute_type')
+            # some attributes don't have a subtype, so display_name will be
+            # the first word of the attribute type
+            if attribute_subtype in attribute_type:
+                attribute_subtype = None
 
-                # get node's annotated node to get the source attribute
-                annotated_nodes_query = AnnotatedNode.objects.filter(
-                    node=node,
-                    attribute_type=attribute_type,
-                    attribute_subtype__iexact=attribute_subtype
-                )
-                # update the source attribute
-                try:
-                    source_attribute = annotated_nodes_query[0].attribute
-                except:
-                    return HttpResponseBadRequest('No associated attributes.')
+            if attribute_type not in Attribute.editable_types:
+                return HttpResponseBadRequest('Attribute is not an '
+                                              'editable type')
 
-                source_attribute.value = attribute_value
-                source_attribute.save()
-                # update all the hard coded annotated nodes attribute_value
-                children_annotated_nodes_query = AnnotatedNode.objects.filter(
-                    attribute=source_attribute
-                )
-                for ann_node in children_annotated_nodes_query:
-                    ann_node.attribute_value = source_attribute.value
-                    ann_node.save()
-                    ann_node.node.update_solr_index()
+            # get node's annotated node to get the source attribute
+            annotated_nodes_query = AnnotatedNode.objects.filter(
+                node=node,
+                attribute_type=attribute_type,
+                attribute_subtype__iexact=attribute_subtype
+            )
+            # update the source attribute
+            try:
+                source_attribute = annotated_nodes_query[0].attribute
+            except:
+                return HttpResponseBadRequest('No associated attributes.')
 
-                return Response(
-                    NodeSerializer(node).data, status=status.HTTP_200_OK
-                )
+            source_attribute.value = attribute_value
+            source_attribute.save()
+            # update all the hard coded annotated nodes attribute_value
+            children_annotated_nodes_query = AnnotatedNode.objects.filter(
+                attribute=source_attribute
+            )
+            for ann_node in children_annotated_nodes_query:
+                ann_node.attribute_value = source_attribute.value
+                ann_node.save()
+                ann_node.node.update_solr_index()
 
-            return Response('Currently, you can only remove node files or '
-                            'edit non-derived files',
-                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
+            )
 
-        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+        return Response('Currently, you can only remove node files or '
+                        'edit non-derived files',
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 def _check_data_set_ownership(user, data_set_uuid):
