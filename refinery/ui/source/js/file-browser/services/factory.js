@@ -108,10 +108,11 @@
             return !isCellDerived(scope.row.entity) && isCellEditable(attribute.attribute_type);
           },
           cellClass: function (grid, row) {
+            var rowUidClass = 'ui-grid-row' + row.uid;
             if (isCellDerived(row.entity) && grid.appScope.editMode) {
-              return 'non-select-cell';
+              return rowUidClass + ' non-select-cell';
             }
-            return addNonEditCellClass(attribute.attribute_type, grid);
+            return rowUidClass + ' ' + addNonEditCellClass(attribute.attribute_type, grid);
           },
           headerCellClass: function (grid) {
             return addNonEditCellClass(attribute.attribute_type, grid);

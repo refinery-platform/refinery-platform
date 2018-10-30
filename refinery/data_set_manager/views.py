@@ -1165,6 +1165,12 @@ class NodeViewSet(APIView):
 
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([attribute_solr_name])[0]
+        attribute_subtype = attribute_obj.get('display_name')
+        attribute_type = attribute_obj.get('attribute_type')
+        # some attributes don't have a subtype, so display_name will be a
+        # the first word of the attribute type
+        if attribute_subtype in attribute_type:
+            attribute_subtype = None
         # get node's annotated node to get the source attribute
         annotated_node = AnnotatedNode.objects.filter(
             node=node,
@@ -1230,19 +1236,23 @@ class NodeViewSet(APIView):
             elif solr_name and attribute_value and not node.is_derived():
                 # splits solr name into type and subtype
                 attribute_obj = customize_attribute_response([solr_name])[0]
+                attribute_subtype = attribute_obj.get('display_name')
                 attribute_type = attribute_obj.get('attribute_type')
-                annotated_nodes_query = AnnotatedNode.objects.filter(
-                    node=node,
-                    attribute_type=attribute_type,
-                    attribute_subtype__icontains=attribute_obj.get(
-                        'display_name'
-                    )
-                )
+                # some attributes don't have a subtype, so display_name will be
+                # the first word of the attribute type
+                if attribute_subtype in attribute_type:
+                    attribute_subtype = None
 
                 if attribute_type not in Attribute.editable_types:
                     return HttpResponseBadRequest('Attribute is not an '
                                                   'editable type')
 
+                # get node's annotated node to get the source attribute
+                annotated_nodes_query = AnnotatedNode.objects.filter(
+                    node=node,
+                    attribute_type=attribute_type,
+                    attribute_subtype__iexact=attribute_subtype
+                )
                 # update the source attribute
                 try:
                     source_attribute = annotated_nodes_query[0].attribute
