@@ -689,7 +689,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
-        is_owner = request.user.has_perm('core.share_dataset', ds)
+        is_owner = ds.get_owner() == request.user
 
         try:
             user_uuid = request.user.profile.uuid
