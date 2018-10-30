@@ -15,4 +15,6 @@ variable "tags" {
 variable "ssh_users" {
   type = "list"
 }
+variable "git_commit" {}
 variable "django_admin_password" {}
+variable "django_default_from_email" {}

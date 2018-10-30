@@ -22,7 +22,6 @@ cd /srv/refinery-platform/deployment
 . bin/create-smtp-credentials
 
 export FACTER_ADMIN="$ADMIN"
-export FACTER_DEFAULT_FROM_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_SERVER_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
 export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"

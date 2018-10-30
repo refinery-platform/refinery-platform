@@ -20,6 +20,10 @@ provider "random" {
   version = "~> 2.0"
 }
 
+data "external" "git" {
+  program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
+}
+
 locals {
   s3_bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
   tags                = "${merge(
@@ -91,17 +95,19 @@ module "database" {
 }
 
 module "app_server" {
-  source               = "../modules/ec2"
-  static_bucket_name   = "${module.object_storage.static_bucket_name}"
-  upload_bucket_name   = "${module.object_storage.upload_bucket_name}"
-  media_bucket_name    = "${module.object_storage.media_bucket_name}"
-  identity_pool_id     = "${module.identity_pool.identity_pool_id}"
-  instance_type        = "${var.app_server_instance_type}"
-  key_pair_name        = "${var.app_server_key_pair_name}"
-  security_group_id    = "${module.vpc.app_server_security_group_id}"
-  subnet_id            = "${module.vpc.public_subnet_id}"
-  resource_name_prefix = "${terraform.workspace}"
-  tags                 = "${local.tags}"
-  ssh_users            = "${var.app_server_ssh_users}"
-  django_admin_password = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
+  source                    = "../modules/ec2"
+  static_bucket_name        = "${module.object_storage.static_bucket_name}"
+  upload_bucket_name        = "${module.object_storage.upload_bucket_name}"
+  media_bucket_name         = "${module.object_storage.media_bucket_name}"
+  identity_pool_id          = "${module.identity_pool.identity_pool_id}"
+  instance_type             = "${var.app_server_instance_type}"
+  key_pair_name             = "${var.app_server_key_pair_name}"
+  security_group_id         = "${module.vpc.app_server_security_group_id}"
+  subnet_id                 = "${module.vpc.public_subnet_id}"
+  resource_name_prefix      = "${terraform.workspace}"
+  tags                      = "${local.tags}"
+  ssh_users                 = "${var.app_server_ssh_users}"
+  git_commit                = "${var.git_commit != "" ? var.git_commit : data.external.git.result["commit"]}"
+  django_admin_password     = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
+  django_default_from_email = "${var.django_default_from_email}"
 }

@@ -128,10 +128,6 @@ resource "aws_iam_instance_profile" "app_server" {
   role = "${aws_iam_role.app_server.name}"
 }
 
-data "external" "git" {
-  program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
-}
-
 resource "aws_instance" "app_server" {
   ami                    = "ami-d05e75b8"
   instance_type          = "${var.instance_type}"
@@ -177,11 +173,12 @@ done >> /home/ubuntu/.ssh/authorized_keys
 # clone Refinery Platform repo
 mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
 su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
-su -c 'cd /srv/refinery-platform && git checkout ${data.external.git.result["commit"]}' ubuntu
+su -c 'cd /srv/refinery-platform && git checkout ${var.git_commit}' ubuntu
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD=${var.django_admin_password}
 export FACTER_AWS_REGION=${data.aws_region.current.name}
+export FACTER_DEFAULT_FROM_EMAIL=${var.django_default_from_email}
 
 # configure librarian-puppet
 
