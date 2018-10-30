@@ -1156,8 +1156,8 @@ class NodeViewSet(APIView):
         # Only supporting attribute related nodes retrieval
         node = self.get_object(uuid)
         if not attribute_solr_name:
-            return HttpResponseBadRequest('Require attribute solr name to '
-                                          'retrieve related nodes.')
+            return HttpResponseBadRequest("Attribute's solr_name is required "
+                                          "to retrieve related nodes.")
 
         data_set = node.study.get_dataset()
         if not data_set.get_owner() == request.user:
@@ -1166,24 +1166,25 @@ class NodeViewSet(APIView):
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([attribute_solr_name])[0]
         # get node's annotated node to get the source attribute
-        annotated_nodes_query = AnnotatedNode.objects.filter(
+        annotated_node = AnnotatedNode.objects.filter(
             node=node,
             attribute_type=attribute_obj.get('attribute_type'),
-            attribute_subtype__icontains=attribute_obj.get(
+            attribute_subtype__iexact=attribute_obj.get(
                 'display_name'
             )
-        )
-        try:
-            source_attribute = annotated_nodes_query[0].attribute
-        except:
+        ).first()
+
+        if annotated_node is not None:
+            source_attribute = annotated_node.attribute
+        else:
             return HttpResponseBadRequest('No associated attributes.')
 
-        children_annotated_nodes_query = AnnotatedNode.objects.filter(
+        children_annotated_nodes = AnnotatedNode.objects.filter(
             attribute=source_attribute
         )
         # from children annotated nodes get all the related file nodes
         related_nodes = []
-        for ann_node in children_annotated_nodes_query:
+        for ann_node in children_annotated_nodes:
             if not ann_node.node == node:
                 related_nodes.append(ann_node.node.uuid)
 
