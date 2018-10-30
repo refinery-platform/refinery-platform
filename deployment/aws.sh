@@ -14,7 +14,7 @@ env
 GIT_BRANCH=${GIT_BRANCH:-develop}
 
 /usr/bin/apt-get -q -y install htop
-/usr/bin/apt-get -q -y install awscli jq postgresql-client-9.3
+/usr/bin/apt-get -q -y install awscli jq postgresql-client-10
 
 printf '%s' "${CONFIG_YAML}" | base64 -d > /home/ubuntu/config.yaml
 printf '%s' "${CONFIG_JSON}" | base64 -d > /home/ubuntu/config.json
