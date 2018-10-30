@@ -817,6 +817,13 @@ def customize_attribute_response(facet_fields):
         if len(field_name) > 1:
             customized_field['file_ext'] = field_name[-1]
 
+        field_edit_type = ''
+        field_normalized = field.replace('_', ' ')
+        for edit_type in Attribute.editable_types:
+            if edit_type in field_normalized:
+                field_edit_type = edit_type
+                break
+
         if 'REFINERY_SUBANALYSIS' in field:
             customized_field['display_name'] = 'Analysis Group'
             customized_field['attribute_type'] = 'Internal'
@@ -829,21 +836,12 @@ def customize_attribute_response(facet_fields):
         elif 'REFINERY' in field:
             customized_field['display_name'] = field_name[1].title()
             customized_field['attribute_type'] = 'Internal'
-        elif 'Comment' in field:
-            index = field_name.index('Comment')
-            field_name = ' '.join(field_name[0:index])
+        elif field_edit_type:
+            index = field_name.index(field_edit_type.split(' ')[0])
+            # some attributes don't have a name hence the default 1
+            field_name = ' '.join(field_name[0:index or 1])
             customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Comment'
-        elif 'Factor' in field:
-            index = field_name.index('Factor')
-            field_name = ' '.join(field_name[0:index])
-            customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Factor Value'
-        elif 'Characteristics' in field:
-            index = field_name.index('Characteristics')
-            field_name = ' '.join(field_name[0:index])
-            customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Characteristics'
+            customized_field['attribute_type'] = field_edit_type
         # For uuid fields
         elif len(field_name) == 1:
             customized_field['display_name'] = \
