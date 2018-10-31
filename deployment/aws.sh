@@ -23,8 +23,6 @@ cd /srv/refinery-platform/deployment
 
 export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
 export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"
-export FACTER_SITE_URL="$SITE_URL"
-export FACTER_SITE_NAME="$SITE_NAME"
 
 sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu
 

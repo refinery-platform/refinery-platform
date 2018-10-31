@@ -65,10 +65,6 @@ def make_template(config, config_yaml):
 
     config['tags'] = instance_tags
 
-    tls_rewrite = "false"
-    if 'TLS_CERTIFICATE' in config:
-        tls_rewrite = "true"
-
     # The userdata script is executed via CloudInit
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script, and the aws.sh script
@@ -77,7 +73,6 @@ def make_template(config, config_yaml):
     "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
     "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
     "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
-    "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 

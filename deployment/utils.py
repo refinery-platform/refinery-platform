@@ -63,9 +63,6 @@ def load_config():
 
     # Generate some special keys that are optional to specify.
     generated_config = {}
-    if 'ADMIN_PASSWORD' not in config:
-        generated_config['ADMIN_PASSWORD'] = random_password(8)
-
     config_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-config"
     generated_config['S3_CONFIG_BUCKET'] = config_bucket_name
     log_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-log"
@@ -117,11 +114,8 @@ def report_missing_keys(config):
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['APP_SERVER_PROFILE_ID', 'APP_SERVER_SECURITY_GROUP_ID',
-                'COGNITO_IDENTITY_POOL_ID', 'EC2_INSTANCE_TYPE',
-                'ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER', 'KEY_NAME',
-                'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
-                'S3_BUCKET_NAME_BASE', 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
+    required = ['ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER',
+                'S3_BUCKET_NAME_BASE', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:
@@ -131,22 +125,3 @@ def report_missing_keys(config):
             bad))
         raise RuntimeError
     return True
-
-
-def random_alnum(n):
-    """Random alphanumeric (digits and lowercase) string of length `n`"""
-
-    import string
-
-    return ''.join(
-        random.choice(string.ascii_lowercase + string.digits)
-        for _ in range(n))
-
-
-def random_password(n):
-    """Generate a random password using `n` bytes of randomness"""
-
-    import binascii
-
-    password = binascii.b2a_hex(os.urandom(n))
-    return password

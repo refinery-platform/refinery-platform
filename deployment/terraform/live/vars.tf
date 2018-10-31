@@ -1,3 +1,18 @@
+# Notes
+#
+# To add a CIDR block to your VPC, the following rules apply:
+# The CIDR block must not be the same or larger than the CIDR range of a route
+# in any of the VPC route tables. For example, if you have a route with a
+# destination of 10.0.0.0/24 to a virtual private gateway, you cannot associate
+# a CIDR block of the same range or larger. However, you can associate a CIDR
+# block of 10.0.0.0/25 or smaller.
+# https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
+#
+# Email addresses for Django settings
+# to successfully send email these addresses must be verified for Amazon SES
+# and the AWS account should be out of the sandbox
+# http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html
+
 variable "region" {
   description = "The AWS region to use"
   default     = "us-east-1"
@@ -10,17 +25,6 @@ variable "availability_zone_a" {
 variable "availability_zone_b" {
   default = "us-east-1b"
 }
-
-
-# https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
-#
-# To add a CIDR block to your VPC, the following rules apply:
-# ...
-# The CIDR block must not be the same or larger than the CIDR range of a route
-# in any of the VPC route tables. For example, if you have a route with a
-# destination of 10.0.0.0/24 to a virtual private gateway, you cannot associate
-# a CIDR block of the same range or larger. However, you can associate a CIDR
-# block of 10.0.0.0/25 or smaller.
 
 variable "vpc_cidr_block" {
   type    = "string"
