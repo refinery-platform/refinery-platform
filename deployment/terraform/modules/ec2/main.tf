@@ -180,6 +180,7 @@ export FACTER_ADMIN_PASSWORD=${var.django_admin_password}
 export FACTER_AWS_REGION=${data.aws_region.current.name}
 export FACTER_DEFAULT_FROM_EMAIL=${var.django_default_from_email}
 export FACTER_SERVER_EMAIL=${var.django_server_email}
+export FACTER_COGNITO_IDENTITY_POOL_ID=${var.identity_pool_id}
 export FACTER_RDS_ENDPOINT_ADDRESS=${var.rds_endpoint_address}
 export FACTER_RDS_SUPERUSER_PASSWORD=${var.rds_superuser_password}
 export FACTER_ADMIN=${var.django_admin_email}
