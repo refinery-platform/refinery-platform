@@ -110,4 +110,5 @@ module "app_server" {
   git_commit                = "${var.git_commit != "" ? var.git_commit : data.external.git.result["commit"]}"
   django_admin_password     = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
   django_default_from_email = "${var.django_default_from_email}"
+  django_server_email       = "${var.django_server_email}"
 }

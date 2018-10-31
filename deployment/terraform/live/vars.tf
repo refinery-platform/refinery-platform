@@ -86,3 +86,8 @@ variable "django_default_from_email" {
   description = "Default email address to use for various automated correspondence from the site manager(s)"
   default     = "webmaster@localhost"
 }
+
+variable "django_server_email" {
+  description = "The email address that error messages come from"
+  default     = "root@localhost"
+}

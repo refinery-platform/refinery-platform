@@ -179,12 +179,12 @@ su -c 'cd /srv/refinery-platform && git checkout ${var.git_commit}' ubuntu
 export FACTER_ADMIN_PASSWORD=${var.django_admin_password}
 export FACTER_AWS_REGION=${data.aws_region.current.name}
 export FACTER_DEFAULT_FROM_EMAIL=${var.django_default_from_email}
+export FACTER_SERVER_EMAIL=${var.django_server_email}
+
+env
 
 # configure librarian-puppet
 
 # run puppet
-
 EOF
 }
-
-# use a template_file for loading aws.sh vs sending env vars?

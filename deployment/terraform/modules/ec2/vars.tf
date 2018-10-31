@@ -18,3 +18,4 @@ variable "ssh_users" {
 variable "git_commit" {}
 variable "django_admin_password" {}
 variable "django_default_from_email" {}
+variable "django_server_email" {}

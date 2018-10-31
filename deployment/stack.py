@@ -81,30 +81,27 @@ def make_template(config, config_yaml):
     # The userdata script is executed via CloudInit
     # It's made by concatenating a block of parameter variables,
     # with the bootstrap.sh script, and the aws.sh script
-    user_data_script = functions.join(
-        "",
-        "#!/bin/sh\n",
-        "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
-        "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
-        "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "export FACTER_RDS_ENDPOINT_ADDRESS=", config['RDS_ENDPOINT_ADDRESS'],
-        "\n",
-        "export FACTER_RDS_SUPERUSER_PASSWORD=",
-        config['RDS_SUPERUSER_PASSWORD'], "\n",
-        "ADMIN=", config['ADMIN'], "\n",
-        "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
-        "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
-        "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
-        "export FACTER_DOCKER_HOST=", config["REFINERY_DOCKER_HOST"], "\n",
-        "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
-        "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
-        "SITE_URL=", config['SITE_URL'], "\n",
-        # May contain spaces, but can't contain "'"
-        "SITE_NAME='", config['SITE_NAME'], "'\n",
-        "GIT_BRANCH=", commit, "\n",
-        "\n",
-        open('bootstrap.sh').read(),
-        open('aws.sh').read())
+    "",
+    "#!/bin/sh\n",
+    "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
+    "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
+    "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
+    "export FACTER_RDS_ENDPOINT_ADDRESS=", config['RDS_ENDPOINT_ADDRESS'],
+    "\n",
+    "export FACTER_RDS_SUPERUSER_PASSWORD=",
+    config['RDS_SUPERUSER_PASSWORD'], "\n",
+    "ADMIN=", config['ADMIN'], "\n",
+    "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
+    "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
+    "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
+    "export FACTER_DOCKER_HOST=", config["REFINERY_DOCKER_HOST"], "\n",
+    "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
+    "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
+    "SITE_URL=", config['SITE_URL'], "\n",
+    # May contain spaces, but can't contain "'"
+    "SITE_NAME='", config['SITE_NAME'], "'\n",
+    "GIT_BRANCH=", commit, "\n",
+    "\n"
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 
