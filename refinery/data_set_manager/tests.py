@@ -639,7 +639,7 @@ class UtilitiesTests(TestCase):
     def test_get_owner_from_invalid_assay(self):
         # invalid uuid
         response = get_owner_from_assay(self.invalid_uuid)
-        self.assertEqual(response, 'Error: Invalid uuid')
+        self.assertEqual(response, None)
 
     def test_format_solr_response_valid(self):
         # valid input, expected response from solr

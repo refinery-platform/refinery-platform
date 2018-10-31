@@ -730,13 +730,23 @@ def get_owner_from_assay(uuid):
     except (Study.DoesNotExist,
             Study.MultipleObjectsReturned) as e:
         logger.error(e)
-        return "Error: Invalid uuid"
+        return None
 
-    investigation_link = core.models.InvestigationLink.objects.get(
+    try:
+        investigation_link = core.models.InvestigationLink.objects.get(
             investigation=investigation_key)
-    owner = core.models.DataSet.objects.get(
-            investigationlink=investigation_link).get_owner()
+    except (core.models.InvestigationLink.DoesNotExist,
+            core.models.InvestigationLink.MultipleObjectsReturned) as e:
+        logger.error(e)
+        return None
 
+    try:
+        owner = core.models.DataSet.objects.get(
+                investigationlink=investigation_link).get_owner()
+    except (core.models.DataSet.DoesNotExist,
+            core.models.DataSet.MultipleObjectsReturned) as e:
+        logger.error(e)
+        return None
     return owner
 
 
