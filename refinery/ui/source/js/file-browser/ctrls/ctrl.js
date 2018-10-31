@@ -253,7 +253,7 @@
             uuid: rowEntity.uuid,
             related_attribute_nodes: colDef.field
           };
-           // grab relate node uuids (nodes which will be effected by update)
+           // grab related node uuids (nodes which will be effected by update)
           nodesV2Service.query(params).$promise.then(function (relatedNodeUuids) {
             var rows = vm.gridApi.grid.rows;
             for (var index in rows) {

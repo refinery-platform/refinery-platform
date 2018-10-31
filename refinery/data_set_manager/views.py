@@ -1149,6 +1149,8 @@ class NodeViewSet(APIView):
             raise APIException("Multiple objects returned.")
 
     def get_first_annotated_node_from_solr_name(self, solr_name, node):
+        # Helper method which get a node's first annotated node based on
+        # solr_name
         # splits solr name into type and subtype
         attribute_obj = customize_attribute_response([solr_name])[0]
         attribute_subtype = attribute_obj.get('display_name')
@@ -1157,7 +1159,6 @@ class NodeViewSet(APIView):
         # the first word of the attribute type
         if attribute_subtype in attribute_type:
             attribute_subtype = None
-        # get node's annotated node to get the source attribute
         return AnnotatedNode.objects.filter(
             node=node,
             attribute_type=attribute_type,
@@ -1244,7 +1245,7 @@ class NodeViewSet(APIView):
             if attribute_type not in Attribute.editable_types:
                 return HttpResponseBadRequest('Attribute is not an '
                                               'editable type')
-
+            # from annotated node, we can grab source attribute
             annotated_node = self.get_first_annotated_node_from_solr_name(
                 solr_name, node
             )
