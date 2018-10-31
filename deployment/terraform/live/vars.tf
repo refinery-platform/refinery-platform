@@ -88,6 +88,11 @@ variable "django_default_from_email" {
 }
 
 variable "django_server_email" {
-  description = "The email address that error messages come from"
+  description = "Email address that error messages come from"
   default     = "root@localhost"
+}
+
+variable "django_admin_email" {
+  description = "Email address for code error notifications (full exception information)"
+  default     = ""
 }

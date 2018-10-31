@@ -110,6 +110,7 @@ module "app_server" {
   django_admin_password     = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
   django_default_from_email = "${var.django_default_from_email}"
   django_server_email       = "${var.django_server_email}"
+  django_admin_email        = "${var.django_admin_email}"
   rds_endpoint_address      = "${module.database.instance_hostname}"
   rds_superuser_password    = "${local.rds_master_user_password}"
   resource_name_prefix      = "${terraform.workspace}"

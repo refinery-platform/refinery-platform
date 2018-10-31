@@ -173,7 +173,7 @@ done >> /home/ubuntu/.ssh/authorized_keys
 # clone Refinery Platform repo
 mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
 su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
-su -c 'cd /srv/refinery-platform && git checkout ${var.git_commit}' ubuntu
+su -c 'cd /srv/refinery-platform && git checkout -q ${var.git_commit}' ubuntu
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD=${var.django_admin_password}
@@ -182,8 +182,7 @@ export FACTER_DEFAULT_FROM_EMAIL=${var.django_default_from_email}
 export FACTER_SERVER_EMAIL=${var.django_server_email}
 export FACTER_RDS_ENDPOINT_ADDRESS=${var.rds_endpoint_address}
 export FACTER_RDS_SUPERUSER_PASSWORD=${var.rds_superuser_password}
-
-env
+export FACTER_ADMIN=${var.django_admin_email}
 
 # configure librarian-puppet
 

@@ -85,7 +85,6 @@ def make_template(config, config_yaml):
     "#!/bin/sh\n",
     "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
     "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
-    "ADMIN=", config['ADMIN'], "\n",
     "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
     "export FACTER_DOCKER_HOST=", config["REFINERY_DOCKER_HOST"], "\n",
     "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",

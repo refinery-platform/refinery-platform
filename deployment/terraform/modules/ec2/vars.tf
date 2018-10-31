@@ -21,3 +21,4 @@ variable "django_default_from_email" {}
 variable "django_server_email" {}
 variable "rds_endpoint_address" {}
 variable "rds_superuser_password" {}
+variable "django_admin_email" {}
