@@ -724,20 +724,20 @@ def search_solr(encoded_params, core):
 
 def get_owner_from_assay(uuid):
     # Returns the owner from an assay_uuid. Ownership is passed from dataset
-
     try:
-        investigation_key = Study.objects.get(assay__uuid=uuid).investigation
+        study = Study.objects.get(assay__uuid=uuid)
     except (Study.DoesNotExist,
             Study.MultipleObjectsReturned) as e:
         logger.error(e)
-        return "Error: Invalid uuid"
+        return None
 
-    investigation_link = core.models.InvestigationLink.objects.get(
-            investigation=investigation_key)
-    owner = core.models.DataSet.objects.get(
-            investigationlink=investigation_link).get_owner()
+    try:
+        data_set = study.get_dataset()
+    except RuntimeError as e:
+        logger.error(e)
+        return None
 
-    return owner
+    return data_set.get_owner()
 
 
 def format_solr_response(solr_response):
