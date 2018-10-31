@@ -113,6 +113,7 @@ module "app_server" {
   django_admin_email        = "${var.django_admin_email}"
   rds_endpoint_address      = "${module.database.instance_hostname}"
   rds_superuser_password    = "${local.rds_master_user_password}"
+  docker_host               = "${module.docker_host.docker_hostname}"
   resource_name_prefix      = "${terraform.workspace}"
   tags                      = "${local.tags}"
 }

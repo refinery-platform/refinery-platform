@@ -10,20 +10,12 @@ output "public_subnet_id" {
   value = "${module.vpc.public_subnet_id}"
 }
 
-output "docker_hostname" {
-  value = "${module.docker_host.docker_hostname}"
-}
-
 output "s3_bucket_name_base" {
   value = "${local.s3_bucket_name_base}"
 }
 
 output "elb_security_group_id" {
   value = "${module.vpc.elb_security_group_id}"
-}
-
-output "db_hostname" {
-  value = "${module.database.instance_hostname}"
 }
 
 output "iam_smtp_user" {
