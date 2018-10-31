@@ -184,6 +184,8 @@ export FACTER_RDS_ENDPOINT_ADDRESS=${var.rds_endpoint_address}
 export FACTER_RDS_SUPERUSER_PASSWORD=${var.rds_superuser_password}
 export FACTER_ADMIN=${var.django_admin_email}
 export FACTER_DOCKER_HOST=${var.docker_host}
+export FACTER_SITE_NAME=${var.site_name}
+export FACTER_SITE_URL=${var.site_domain}
 
 # configure librarian-puppet
 

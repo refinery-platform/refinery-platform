@@ -96,3 +96,13 @@ variable "django_admin_email" {
   description = "Email address for code error notifications (full exception information)"
   default     = ""
 }
+
+variable "site_name" {
+  description = "Name of the site (cannot contain apostrophes)"
+  default = "Refinery Platform"
+}
+
+variable "site_domain" {
+  description = "Host name of the site"
+  default = "www.example.org"
+}

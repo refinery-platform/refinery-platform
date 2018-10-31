@@ -79,10 +79,6 @@ def make_template(config, config_yaml):
     "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
     "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
     "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
-    "SITE_URL=", config['SITE_URL'], "\n",
-    # May contain spaces, but can't contain "'"
-    "SITE_NAME='", config['SITE_NAME'], "'\n",
-    "\n"
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 

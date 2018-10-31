@@ -114,6 +114,8 @@ module "app_server" {
   rds_endpoint_address      = "${module.database.instance_hostname}"
   rds_superuser_password    = "${local.rds_master_user_password}"
   docker_host               = "${module.docker_host.docker_hostname}"
+  site_name                 = "${var.site_name}"
+  site_domain               = "${var.site_domain}"
   resource_name_prefix      = "${terraform.workspace}"
   tags                      = "${local.tags}"
 }
