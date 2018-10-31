@@ -24,17 +24,6 @@ data "external" "git" {
   program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
 }
 
-locals {
-  s3_bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
-  tags                = "${merge(
-    var.tags,
-    map(
-      "product", "refinery",
-      "terraform", "true"
-    )
-  )}"
-}
-
 resource "random_string" "rds_master_user_password" {
   length  = 8
   upper   = false
@@ -45,6 +34,18 @@ resource "random_string" "django_admin_password" {
   length  = 8
   upper   = false
   special = false
+}
+
+locals {
+  s3_bucket_name_base      = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
+  rds_master_user_password = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
+  tags                     = "${merge(
+    var.tags,
+    map(
+      "product", "refinery",
+      "terraform", "true"
+    )
+  )}"
 }
 
 module "object_storage" {
@@ -85,7 +86,7 @@ module "database" {
   source                       = "../modules/rds"
   app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
   availability_zone            = "${var.availability_zone_a}"
-  master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
+  master_user_password         = "${local.rds_master_user_password}"
   private_subnet_a             = "${module.vpc.private_subnet_a_id}"
   private_subnet_b             = "${module.vpc.private_subnet_b_id}"
   resource_name_prefix         = "${terraform.workspace}"
@@ -104,11 +105,13 @@ module "app_server" {
   key_pair_name             = "${var.app_server_key_pair_name}"
   security_group_id         = "${module.vpc.app_server_security_group_id}"
   subnet_id                 = "${module.vpc.public_subnet_id}"
-  resource_name_prefix      = "${terraform.workspace}"
-  tags                      = "${local.tags}"
   ssh_users                 = "${var.app_server_ssh_users}"
   git_commit                = "${var.git_commit != "" ? var.git_commit : data.external.git.result["commit"]}"
   django_admin_password     = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
   django_default_from_email = "${var.django_default_from_email}"
   django_server_email       = "${var.django_server_email}"
+  rds_endpoint_address      = "${module.database.instance_hostname}"
+  rds_superuser_password    = "${local.rds_master_user_password}"
+  resource_name_prefix      = "${terraform.workspace}"
+  tags                      = "${local.tags}"
 }
