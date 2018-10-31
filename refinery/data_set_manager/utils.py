@@ -1044,3 +1044,21 @@ def get_solr_response_json(node_uuids):
         'data_set_manager'
     )
     return format_solr_response(solr_response)
+
+
+def get_first_annotated_node_from_solr_name(solr_name, node):
+    # Helper method which get a node's first annotated node based on
+    # solr_name
+    # splits solr name into type and subtype
+    attribute_obj = customize_attribute_response([solr_name])[0]
+    attribute_subtype = attribute_obj.get('display_name')
+    attribute_type = attribute_obj.get('attribute_type')
+    # some attributes don't have a subtype, so display_name will be a
+    # the first word of the attribute type
+    if attribute_subtype in attribute_type:
+        attribute_subtype = None
+    return AnnotatedNode.objects.filter(
+        node=node,
+        attribute_type=attribute_type,
+        attribute_subtype__iexact=attribute_subtype
+    ).first()
