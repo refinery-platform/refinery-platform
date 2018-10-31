@@ -249,12 +249,30 @@
           var colId = vm.gridApi.grid.getColumn(colDef.name).uid;
           angular.element('.ui-grid-header-cell.ui-grid-col' +
             colId).addClass('select-highlight');
+          var params = {
+            uuid: rowEntity.uuid,
+            related_attribute_nodes: colDef.field
+          };
+           // grab related node uuids (nodes which will be effected by update)
+          nodesV2Service.query(params).$promise.then(function (relatedNodeUuids) {
+            var rows = vm.gridApi.grid.rows;
+            for (var index in rows) {
+              if (relatedNodeUuids.includes(rows[index].entity.uuid)) {
+                angular.element('.ui-grid-cell.ui-grid-row' + rows[index].uid +
+                  '.ui-grid-col' + colId).addClass('warning-border');
+              }
+            }
+          }, function (error) {
+            $log.error(error);
+          });
         });
         // Catches event when user finishes editing (clicks away from cell)
         vm.gridApi.edit.on.afterCellEdit(null, function (rowEntity, colDef, newValue, oldValue) {
           var colId = vm.gridApi.grid.getColumn(colDef.name).uid;
           angular.element('.ui-grid-header-cell.ui-grid-col' +
             colId).removeClass('select-highlight');
+          angular.element('.ui-grid-col' + colId).removeClass('warning-border');
+
           var params = {
             uuid: rowEntity.uuid,
             attribute_solr_name: colDef.field,

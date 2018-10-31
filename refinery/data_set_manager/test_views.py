@@ -861,9 +861,11 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request, file_node.uuid)
         self.assertEqual(get_response.status_code, 200)
-
-        derived_nodes_uuid = [node.uuid for node in Node.objects.filter(
-            assay=file_node.assay) if node.is_derived()]
+        assay_nodes = Node.objects.filter(assay=file_node.assay).exclude(
+            id=file_node.id
+        )
+        derived_nodes_uuid = [node.uuid for node in assay_nodes if
+                              node.is_derived()]
         self.assertItemsEqual(get_response.data, derived_nodes_uuid)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')

@@ -47,9 +47,9 @@ from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (
     customize_attribute_response, format_solr_response,
-    generate_solr_params_for_assay, get_owner_from_assay,
-    initialize_attribute_order_ranks, is_field_in_hidden_list, search_solr,
-    update_attribute_order_ranks
+    generate_solr_params_for_assay, get_first_annotated_node_from_solr_name,
+    get_owner_from_assay, initialize_attribute_order_ranks,
+    is_field_in_hidden_list, search_solr, update_attribute_order_ranks
 )
 
 logger = logging.getLogger(__name__)
@@ -1163,16 +1163,9 @@ class NodeViewSet(APIView):
         if not data_set.get_owner() == request.user:
             return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        # splits solr name into type and subtype
-        attribute_obj = customize_attribute_response([attribute_solr_name])[0]
-        # get node's annotated node to get the source attribute
-        annotated_node = AnnotatedNode.objects.filter(
-            node=node,
-            attribute_type=attribute_obj.get('attribute_type'),
-            attribute_subtype__iexact=attribute_obj.get(
-                'display_name'
-            )
-        ).first()
+        annotated_node = get_first_annotated_node_from_solr_name(
+            attribute_solr_name, node
+        )
 
         if annotated_node is not None:
             source_attribute = annotated_node.attribute
@@ -1181,15 +1174,13 @@ class NodeViewSet(APIView):
 
         children_annotated_nodes = AnnotatedNode.objects.filter(
             attribute=source_attribute
-        )
+        ).exclude(node=node)
         # from children annotated nodes get all the related file nodes
-        related_nodes = []
-        for ann_node in children_annotated_nodes:
-            if not ann_node.node == node:
-                related_nodes.append(ann_node.node.uuid)
+        related_node_uuids = [ann_node.node.uuid for ann_node in
+                              children_annotated_nodes]
 
         return Response(
-                related_nodes, status=status.HTTP_200_OK
+                related_node_uuids, status=status.HTTP_200_OK
             )
 
     def patch(self, request, uuid):
@@ -1206,69 +1197,65 @@ class NodeViewSet(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if data_set.get_owner() == request.user:
-            # to remove the data file, we need to delete it and update index,
-            #  the file store item uuid should remain
-            if new_file_uuid == '':
-                try:
-                    file_store_item = FileStoreItem.objects.get(
-                        uuid=node.file_uuid
-                    )
-                except (FileStoreItem.DoesNotExist,
-                        FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error(e)
-                    return Response('Missing file store item.',
-                                    status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    file_store_item.delete_datafile()
+        if not data_set.get_owner() == request.user:
+            return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-                node.update_solr_index()
-                return Response(
-                    NodeSerializer(node).data, status=status.HTTP_200_OK
+        # to remove the data file, we need to delete it and update index,
+        #  the file store item uuid should remain
+        if new_file_uuid == '':
+            try:
+                file_store_item = FileStoreItem.objects.get(
+                    uuid=node.file_uuid
                 )
-            # derived node can have multiple attribute sources
-            elif solr_name and attribute_value and not node.is_derived():
-                # splits solr name into type and subtype
-                attribute_obj = customize_attribute_response([solr_name])[0]
-                attribute_type = attribute_obj.get('attribute_type')
-                annotated_nodes_query = AnnotatedNode.objects.filter(
-                    node=node,
-                    attribute_type=attribute_type,
-                    attribute_subtype__icontains=attribute_obj.get(
-                        'display_name'
-                    )
-                )
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+                return Response('Missing file store item.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                file_store_item.delete_datafile()
 
-                if attribute_type not in Attribute.editable_types:
-                    return HttpResponseBadRequest('Attribute is not an '
-                                                  'editable type')
+            node.update_solr_index()
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
+            )
+        # derived node can have multiple attribute sources
+        elif solr_name and attribute_value and not node.is_derived():
+            # splits solr name into type and subtype
+            attribute_type = customize_attribute_response([solr_name])[0].get(
+                'attribute_type'
+            )
+            if attribute_type not in Attribute.editable_types:
+                return HttpResponseBadRequest('Attribute is not an '
+                                              'editable type')
+            # from annotated node, we can grab source attribute
+            annotated_node = get_first_annotated_node_from_solr_name(
+                solr_name, node
+            )
+            # update the source attribute
+            if annotated_node is not None:
+                source_attribute = annotated_node.attribute
+            else:
+                return HttpResponseBadRequest('No associated attributes.')
 
-                # update the source attribute
-                try:
-                    source_attribute = annotated_nodes_query[0].attribute
-                except:
-                    return HttpResponseBadRequest('No associated attributes.')
+            source_attribute.value = attribute_value
+            source_attribute.save()
+            # update all the hard coded annotated nodes attribute_value
+            children_annotated_nodes_query = AnnotatedNode.objects.filter(
+                attribute=source_attribute
+            )
+            for ann_node in children_annotated_nodes_query:
+                ann_node.attribute_value = source_attribute.value
+                ann_node.save()
+                ann_node.node.update_solr_index()
 
-                source_attribute.value = attribute_value
-                source_attribute.save()
-                # update all the hard coded annotated nodes attribute_value
-                children_annotated_nodes_query = AnnotatedNode.objects.filter(
-                    attribute=source_attribute
-                )
-                for ann_node in children_annotated_nodes_query:
-                    ann_node.attribute_value = source_attribute.value
-                    ann_node.save()
-                    ann_node.node.update_solr_index()
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
+            )
 
-                return Response(
-                    NodeSerializer(node).data, status=status.HTTP_200_OK
-                )
-
-            return Response('Currently, you can only remove node files or '
-                            'edit non-derived files',
-                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+        return Response('Currently, you can only remove node files or '
+                        'edit non-derived files',
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 def _check_data_set_ownership(user, data_set_uuid):
