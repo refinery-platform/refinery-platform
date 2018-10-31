@@ -10,7 +10,7 @@
 ## Installing and Launching for Development
 
 ### Prerequisites
-* Install [Git][gi] (2.17.1+), [Vagrant][va] (2.2.0+) and [Virtualbox][vb] (5.2.20+)
+* Install [Git][gi] (2.19.0+), [Vagrant][va] (2.2.0+) and [Virtualbox][vb] (5.2.20+)
 * [Add SSH key to your GitHub account](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
 * Note: this procedure has only been tested on local development machines running OS X 10.10+
 
