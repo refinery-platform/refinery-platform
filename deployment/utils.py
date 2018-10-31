@@ -97,47 +97,6 @@ def _load_config_file(filename):
     return {}
 
 
-def ensure_s3_bucket(bucket_name):
-    """Ensure that the S3 bucket exists, creating it if necessary"""
-
-    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
-    s3 = boto3.resource('s3')
-
-    # Does nothing if already created, which is what we want.
-    s3.create_bucket(Bucket=bucket_name)
-
-    bucket_tags = s3.BucketTagging(bucket_name)
-    bucket_tags.put(Tagging={'TagSet': load_tags()})
-
-    return bucket_name
-
-
-def save_s3_config(config):
-    """Save the config as an S3 object in an S3 bucket
-    The config must have an 'S3_CONFIG_BUCKET' key, which is used for the name
-    of the S3 bucket
-
-    A URI in the form s3://bucket/key is returned
-    this URI refers to the S3 object that is created
-    """
-
-    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
-    s3 = boto3.resource('s3')
-
-    bucket_name = config['S3_CONFIG_BUCKET']
-    ensure_s3_bucket(bucket_name)
-
-    object_name = "refinery-config.json"
-
-    s3_uri = "s3://{}/{}".format(bucket_name, object_name)
-    config['S3_CONFIG_URI'] = s3_uri
-
-    # Store config as JSON in S3 object.
-    s3_object = s3.Object(bucket_name, object_name)
-    s3_object.put(Body=json.dumps(config, indent=2))
-    return s3_uri
-
-
 def report_obsolete_keys(config):
     """
     Report obsolete keys that are no longer used.

@@ -21,8 +21,6 @@ cd /srv/refinery-platform/deployment
 # place them in (facter) environment variables.
 . bin/create-smtp-credentials
 
-export FACTER_ADMIN="$ADMIN"
-export FACTER_SERVER_EMAIL="$DEFAULT_FROM_EMAIL"
 export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
 export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"
 export FACTER_SITE_URL="$SITE_URL"

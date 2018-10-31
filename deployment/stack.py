@@ -16,7 +16,7 @@ import sys
 
 import boto3
 from cfn_pyplates import core, functions
-from utils import load_config, load_tags, save_s3_config
+from utils import load_config, load_tags
 
 VERSION = '1.1'
 
@@ -56,11 +56,6 @@ def make_template(config, config_yaml):
 
     stack_name = config['STACK_NAME']
 
-    # We discover the current git branch/commit so that the deployment script
-    # can use it to clone the same commit
-    commit = os.popen("""git rev-parse HEAD""").read().rstrip()
-    assert commit
-
     assert "'" not in config['SITE_NAME']
 
     instance_tags = load_tags()
@@ -70,9 +65,6 @@ def make_template(config, config_yaml):
                          'Value': stack_name})
 
     config['tags'] = instance_tags
-
-    config_uri = save_s3_config(config)
-    sys.stdout.write("Configuration saved to {}\n".format(config_uri))
 
     tls_rewrite = "false"
     if 'TLS_CERTIFICATE' in config:
@@ -87,11 +79,9 @@ def make_template(config, config_yaml):
     "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
     "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
     "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
-    "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
     "SITE_URL=", config['SITE_URL'], "\n",
     # May contain spaces, but can't contain "'"
     "SITE_NAME='", config['SITE_NAME'], "'\n",
-    "GIT_BRANCH=", commit, "\n",
     "\n"
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
