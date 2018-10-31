@@ -725,12 +725,13 @@ def search_solr(encoded_params, core):
 def get_owner_from_assay(uuid):
     # Returns the owner from an assay_uuid. Ownership is passed from dataset
 
+    owner = None
+
     try:
         investigation_key = Study.objects.get(assay__uuid=uuid).investigation
     except (Study.DoesNotExist,
             Study.MultipleObjectsReturned) as e:
         logger.error(e)
-        return None
 
     try:
         investigation_link = core.models.InvestigationLink.objects.get(
@@ -738,7 +739,6 @@ def get_owner_from_assay(uuid):
     except (core.models.InvestigationLink.DoesNotExist,
             core.models.InvestigationLink.MultipleObjectsReturned) as e:
         logger.error(e)
-        return None
 
     try:
         owner = core.models.DataSet.objects.get(
@@ -746,7 +746,7 @@ def get_owner_from_assay(uuid):
     except (core.models.DataSet.DoesNotExist,
             core.models.DataSet.MultipleObjectsReturned) as e:
         logger.error(e)
-        return None
+
     return owner
 
 
