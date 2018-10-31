@@ -106,3 +106,8 @@ variable "site_domain" {
   description = "Host name of the site"
   default = "www.example.org"
 }
+
+variable "tls" {
+  description = "Whether or not to use TLS to serve the site (true or false)"
+  default = "true"
+}

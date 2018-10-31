@@ -187,6 +187,7 @@ export FACTER_ADMIN=${var.django_admin_email}
 export FACTER_DOCKER_HOST=${var.docker_host}
 export FACTER_SITE_NAME=${var.site_name}
 export FACTER_SITE_URL=${var.site_domain}
+export FACTER_TLS_REWRITE=${var.tls}
 
 # configure librarian-puppet
 

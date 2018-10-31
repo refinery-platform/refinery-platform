@@ -25,3 +25,4 @@ variable "django_admin_email" {}
 variable "docker_host" {}
 variable "site_name" {}
 variable "site_domain" {}
+variable "tls" {}

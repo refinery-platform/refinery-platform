@@ -116,6 +116,7 @@ module "app_server" {
   docker_host               = "${module.docker_host.docker_hostname}"
   site_name                 = "${var.site_name}"
   site_domain               = "${var.site_domain}"
+  tls                       = "${var.tls}"
   resource_name_prefix      = "${terraform.workspace}"
   tags                      = "${local.tags}"
 }
