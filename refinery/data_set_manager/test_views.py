@@ -1217,7 +1217,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             attribute_subtype=None,
             attribute_type='Material Type'
         )[0]
-        solr_name = '{}_652_326_s'.format(annotated_node.attribute_type)
+        solr_name = '{}_652_326_s'.format('Material_Type')
         view_set = NodeViewSet()
         view_set.request = self.factory.get(self.url_root)
         response = view_set.get_first_annotated_node_from_solr_name(
@@ -1237,8 +1237,9 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             attribute_subtype='culture medium',
             attribute_type='Factor Value'
         )[0]
-        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
-                                             annotated_node.attribute_type)
+        solr_name = '{}_{}_652_326_s'.format(
+            annotated_node.attribute_subtype, 'Factor_Value'
+        )
         view_set = NodeViewSet()
         view_set.request = self.factory.get(self.url_root)
         response = view_set.get_first_annotated_node_from_solr_name(

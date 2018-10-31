@@ -245,7 +245,6 @@
 
         // Catches event when user clicks on cell to edit.
         vm.gridApi.edit.on.beginCellEdit(null, function (rowEntity, colDef) {
-          console.log('beginCellEdit');
           // need to add class manually due to how rows are generated
           var colId = vm.gridApi.grid.getColumn(colDef.name).uid;
           angular.element('.ui-grid-header-cell.ui-grid-col' +
