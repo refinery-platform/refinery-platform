@@ -834,7 +834,7 @@ def customize_attribute_response(facet_fields):
             customized_field['display_name'] = field_name[1].title()
             customized_field['attribute_type'] = 'Internal'
         elif field_edit_type:
-            index = field_name.index(field_edit_type.split(' ')[0])
+            index = field_name.index(field_edit_type)
             # some attributes don't have a name hence the default 1
             field_name = ' '.join(field_name[0:index or 1])
             customized_field['display_name'] = field_name.title()

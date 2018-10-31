@@ -861,8 +861,9 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request, file_node.uuid)
         self.assertEqual(get_response.status_code, 200)
-        derived_nodes_uuid = [node.uuid for node in Node.objects.filter(
-            assay=file_node.assay) if node.is_derived()]
+        assay_nodes = Node.objects.filter(assay=file_node.assay)
+        derived_nodes_uuid = [node.uuid for node in assay_nodes if
+                              node.is_derived() and not node == file_node]
         self.assertItemsEqual(get_response.data, derived_nodes_uuid)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -1167,6 +1168,104 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             )
             derived_matrix_attributes.extend(ann_node_old)
         self.assertEqual(len(derived_matrix_attributes), 4)
+
+    def test_get_first_annotated_node_from_solr_name_characteristic(self):
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        view_set = NodeViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        response = view_set.get_first_annotated_node_from_solr_name(
+            solr_name, node
+        )
+        self.assertEqual(annotated_node, response)
+
+    def test_get_first_annotated_node_from_solr_name_label(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype=None,
+            attribute_type='Label'
+        )[0]
+        solr_name = '{}_652_326_s'.format(annotated_node.attribute_type)
+        view_set = NodeViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        response = view_set.get_first_annotated_node_from_solr_name(
+            solr_name, node
+        )
+        self.assertEqual(annotated_node, response)
+
+    def test_get_first_annotated_node_from_solr_name_material_type(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype=None,
+            attribute_type='Material Type'
+        )[0]
+        solr_name = '{}_652_326_s'.format(annotated_node.attribute_type)
+        view_set = NodeViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        response = view_set.get_first_annotated_node_from_solr_name(
+            solr_name, node
+        )
+        self.assertEqual(annotated_node, response)
+
+    def test_get_first_annotated_node_from_solr_name_factor(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype='culture medium',
+            attribute_type='Factor Value'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        view_set = NodeViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        response = view_set.get_first_annotated_node_from_solr_name(
+            solr_name, node
+        )
+        self.assertEqual(annotated_node, response)
+
+    def test_get_first_annotated_node_from_solr_name_comment(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
+            name='http://test.site/sites/9909.GPL96_pluriconsensus.pdf'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype='Data Record Accession',
+            attribute_type='Comment'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        view_set = NodeViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        response = view_set.get_first_annotated_node_from_solr_name(
+            solr_name, node
+        )
+        self.assertEqual(annotated_node, response)
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):

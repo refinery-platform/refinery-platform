@@ -1148,6 +1148,22 @@ class NodeViewSet(APIView):
             logger.error(e)
             raise APIException("Multiple objects returned.")
 
+    def get_first_annotated_node_from_solr_name(self, solr_name, node):
+        # splits solr name into type and subtype
+        attribute_obj = customize_attribute_response([solr_name])[0]
+        attribute_subtype = attribute_obj.get('display_name')
+        attribute_type = attribute_obj.get('attribute_type')
+        # some attributes don't have a subtype, so display_name will be a
+        # the first word of the attribute type
+        if attribute_subtype in attribute_type:
+            attribute_subtype = None
+        # get node's annotated node to get the source attribute
+        return AnnotatedNode.objects.filter(
+            node=node,
+            attribute_type=attribute_type,
+            attribute_subtype__iexact=attribute_subtype
+        ).first()
+
     def get(self, request, uuid):
         # filter nodes by attributes' info
         attribute_solr_name = request.query_params.get(
@@ -1163,22 +1179,9 @@ class NodeViewSet(APIView):
         if not data_set.get_owner() == request.user:
             return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        # splits solr name into type and subtype
-        attribute_obj = customize_attribute_response([attribute_solr_name])[0]
-        attribute_subtype = attribute_obj.get('display_name')
-        attribute_type = attribute_obj.get('attribute_type')
-        # some attributes don't have a subtype, so display_name will be a
-        # the first word of the attribute type
-        if attribute_subtype in attribute_type:
-            attribute_subtype = None
-        # get node's annotated node to get the source attribute
-        annotated_node = AnnotatedNode.objects.filter(
-            node=node,
-            attribute_type=attribute_obj.get('attribute_type'),
-            attribute_subtype__iexact=attribute_obj.get(
-                'display_name'
-            )
-        ).first()
+        annotated_node = self.get_first_annotated_node_from_solr_name(
+            attribute_solr_name, node
+        )
 
         if annotated_node is not None:
             source_attribute = annotated_node.attribute
@@ -1187,15 +1190,13 @@ class NodeViewSet(APIView):
 
         children_annotated_nodes = AnnotatedNode.objects.filter(
             attribute=source_attribute
-        )
+        ).exclude(node=node)
         # from children annotated nodes get all the related file nodes
-        related_nodes = []
-        for ann_node in children_annotated_nodes:
-            if not ann_node.node == node:
-                related_nodes.append(ann_node.node.uuid)
+        related_node_uuids = [ann_node.node.uuid for ann_node in
+                              children_annotated_nodes]
 
         return Response(
-                related_nodes, status=status.HTTP_200_OK
+                related_node_uuids, status=status.HTTP_200_OK
             )
 
     def patch(self, request, uuid):
@@ -1237,28 +1238,20 @@ class NodeViewSet(APIView):
         # derived node can have multiple attribute sources
         elif solr_name and attribute_value and not node.is_derived():
             # splits solr name into type and subtype
-            attribute_obj = customize_attribute_response([solr_name])[0]
-            attribute_subtype = attribute_obj.get('display_name')
-            attribute_type = attribute_obj.get('attribute_type')
-            # some attributes don't have a subtype, so display_name will be
-            # the first word of the attribute type
-            if attribute_subtype in attribute_type:
-                attribute_subtype = None
-
+            attribute_type = customize_attribute_response([solr_name])[0].get(
+                'attribute_type'
+            )
             if attribute_type not in Attribute.editable_types:
                 return HttpResponseBadRequest('Attribute is not an '
                                               'editable type')
 
-            # get node's annotated node to get the source attribute
-            annotated_nodes_query = AnnotatedNode.objects.filter(
-                node=node,
-                attribute_type=attribute_type,
-                attribute_subtype__iexact=attribute_subtype
+            annotated_node = self.get_first_annotated_node_from_solr_name(
+                solr_name, node
             )
             # update the source attribute
-            try:
-                source_attribute = annotated_nodes_query[0].attribute
-            except:
+            if annotated_node is not None:
+                source_attribute = annotated_node.attribute
+            else:
                 return HttpResponseBadRequest('No associated attributes.')
 
             source_attribute.value = attribute_value
