@@ -64,7 +64,7 @@
                       ng-model="ASCtrl.uiSelectedFields[attributeObj.internal_name][field.name]"
                       ng-change="ASCtrl.attributeSelectionUpdate(attributeObj.internal_name, field.name)"
                       id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}"
-                      ng-disable="!field.count">
+                      ng-disabled="!field.count">
                   </div>
                   <div class="col-xs-8">
                     <label for="{{ field.name | replaceWhiteSpaceWithHyphen
@@ -133,7 +133,7 @@
                       ng-change="ASCtrl.attributeSelectionUpdate(
                       attributeObj.internal_name, fieldObj.name)"
                       id="analysis-filter-{{ $index }}"
-                      ng-disable="!fieldObj.count">
+                      ng-disabled="!fieldObj.count">
                   </div>
                   <div class="col-xs-8">
                     <label for="analysis-filter-{{ $index }}">
