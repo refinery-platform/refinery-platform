@@ -15,8 +15,4 @@ printf '%s' "${CONFIG_JSON}" | base64 -d > /home/ubuntu/config.json
 
 ln -s /home/ubuntu/config.yaml /srv/refinery-platform/refinery/config/override-config.yaml
 
-cd /srv/refinery-platform/deployment
-
-sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu
-
 /usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp

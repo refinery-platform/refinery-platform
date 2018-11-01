@@ -159,7 +159,7 @@ done >> /home/ubuntu/.ssh/authorized_keys
 # clone Refinery Platform repo
 mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
 su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
-su -c 'cd /srv/refinery-platform && git checkout -q ${var.git_commit}' ubuntu
+su -c 'cd /srv/refinery-platform && /usr/bin/git checkout -q ${var.git_commit}' ubuntu
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD=${var.django_admin_password}
@@ -178,6 +178,8 @@ export FACTER_EMAIL_HOST_USER=${aws_iam_access_key.ses_user.id}
 export FACTER_EMAIL_HOST_PASSWORD=${aws_iam_access_key.ses_user.ses_smtp_password}
 
 # configure librarian-puppet
+/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
+su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
 EOF
