@@ -26,3 +26,12 @@ variable "docker_host" {}
 variable "site_name" {}
 variable "site_domain" {}
 variable "tls" {}
+variable "django_email_subject_prefix" {}
+variable "refinery_custom_navbar_item" {}
+variable "refinery_google_analytics_id" {}
+variable "refinery_google_recaptcha_site_key" {}
+variable "refinery_google_recaptcha_secret_key" {}
+variable "refinery_url_scheme" {}
+variable "refinery_welcome_email_subject" {}
+variable "refinery_welcome_email_message" {}
+variable "refinery_user_files_columns" {}

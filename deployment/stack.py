@@ -9,7 +9,6 @@
 # AWS Cloudformation: https://aws.amazon.com/cloudformation/
 # CloudInit: https://help.ubuntu.com/community/CloudInit
 import argparse
-import base64
 import json
 import sys
 
@@ -31,15 +30,15 @@ def main():
     )
     args = parser.parse_args()
 
-    config, config_yaml = load_config()
+    config = load_config()
 
     if args.command == 'name':
         sys.stdout.write("{}\n".format(config['STACK_NAME']))
     elif args.command == 'dump':
-        template = make_template(config, config_yaml)
+        template = make_template(config)
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
-        template = make_template(config, config_yaml)
+        template = make_template(config)
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
@@ -50,7 +49,7 @@ def main():
         sys.stdout.write("{}\n".format(json.dumps(response, indent=2)))
 
 
-def make_template(config, config_yaml):
+def make_template(config):
     """Make a fresh CloudFormation template object and return it"""
 
     stack_name = config['STACK_NAME']
@@ -64,14 +63,6 @@ def make_template(config, config_yaml):
                          'Value': stack_name})
 
     config['tags'] = instance_tags
-
-    # The userdata script is executed via CloudInit
-    # It's made by concatenating a block of parameter variables,
-    # with the bootstrap.sh script, and the aws.sh script
-    "",
-    "#!/bin/sh\n",
-    "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
-    "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 

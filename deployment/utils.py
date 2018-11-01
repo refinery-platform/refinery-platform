@@ -70,10 +70,7 @@ def load_config():
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
 
-    with open("aws-config/config.yaml", 'r') as f:
-        config_string = f.read()
-
-    return config, config_string
+    return config
 
 
 def _load_config_file(filename):

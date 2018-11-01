@@ -103,15 +103,58 @@ variable "django_admin_email" {
 
 variable "site_name" {
   description = "Name of the site (cannot contain apostrophes)"
-  default = "Refinery Platform"
+  default     = "Refinery Platform"
 }
 
 variable "site_domain" {
-  description = "Host name of the site"
-  default = "www.example.org"
+  description = "Host name of the site (for example: www.example.org)"
 }
 
 variable "tls" {
   description = "Whether or not to use TLS to serve the site (true or false)"
-  default = "true"
+  default     = "true"
+}
+
+variable "django_email_subject_prefix" {
+  description = "Subject-line prefix for email messages"
+  default     = "[Refinery] "
+}
+
+variable "refinery_custom_navbar_item" {
+  description = "HTML-safe item to be displayed to the right of the `About` link in the navbar"
+  default     = "<a href=\"http://example.org/\">Sample Entry</a>"
+}
+
+variable "refinery_welcome_email_subject" {
+  description = "Subject of email message sent to new users after their account is activated"
+  default     = "Welcome to Refinery"
+}
+
+variable "refinery_welcome_email_message" {
+  description = "Email message sent to new users after their account is activated"
+  default     = "Please fill out your user profile"
+}
+
+variable "refinery_url_scheme" {
+  description = "Either `http` or `https` depending on whether a TLS certificate is configured"
+  default     = "http"
+}
+
+variable "refinery_google_analytics_id" {
+  description = "Google Analytics ID for the site"
+  default     = ""
+}
+
+variable "refinery_google_recaptcha_site_key" {
+  description = "Google ReCAPTCHA site key"
+  default     = ""
+}
+
+variable "refinery_google_recaptcha_secret_key" {
+  description = "Google ReCAPTCHA secret key"
+  default     = ""
+}
+
+variable "refinery_user_files_columns" {
+  default = "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 }

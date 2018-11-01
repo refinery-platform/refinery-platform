@@ -9,7 +9,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
 
 import djcelery
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +18,9 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
 
 local_settings_file_path = os.path.join(BASE_DIR,
                                         'refinery/config/config.json')
-
 tutorial_settings_file_path = os.path.join(
-    BASE_DIR,
-    'refinery/config/tutorial_steps.json'
+    BASE_DIR, 'refinery/config/tutorial_steps.json'
 )
-
-override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -44,14 +39,6 @@ except IOError as e:
         tutorial_settings_file_path, e
     )
     raise ImproperlyConfigured(error_msg)
-
-# load (optional) override-config.yaml
-try:
-    with open(override_path, 'r') as f:
-        override = yaml.load(f)
-    local_settings.update(override)
-except IOError:
-    pass
 
 
 def get_setting(name, settings=local_settings, default=None):
