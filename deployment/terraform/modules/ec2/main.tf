@@ -171,10 +171,13 @@ export FACTER_TLS_REWRITE=${var.tls}
 export FACTER_EMAIL_HOST_USER=${aws_iam_access_key.ses_user.id}
 export FACTER_EMAIL_HOST_PASSWORD=${aws_iam_access_key.ses_user.ses_smtp_password}
 export FACTER_EMAIL_SUBJECT_PREFIX=${var.django_email_subject_prefix}
+export FACTER_REFINERY_BANNER=${var.refinery_banner}
+export FACTER_REFINERY_BANNER_ANONYMOUS_ONLY=${var.refinery_banner_anonymous_only}
 export FACTER_REFINERY_CUSTOM_NAVBAR_ITEM=${var.refinery_custom_navbar_item}
 export FACTER_REFINERY_GOOGLE_ANALYTICS_ID=${var.refinery_google_analytics_id}
 export FACTER_REFINERY_GOOGLE_RECAPTCHA_SITE_KEY=${var.refinery_google_recaptcha_site_key}
 export FACTER_REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY=${var.refinery_google_recaptcha_secret_key}
+export FACTER_REFINERY_S3_USER_DATA=${var.refinery_s3_user_data}
 export FACTER_REFINERY_URL_SCHEME=${var.refinery_url_scheme}
 export FACTER_REFINERY_WELCOME_EMAIL_SUBJECT=${var.refinery_welcome_email_subject}
 export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE=${var.refinery_welcome_email_message}
@@ -185,6 +188,6 @@ export FACTER_USER_FILES_COLUMNS=${var.refinery_user_files_columns}
 su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
+#/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
 EOF
 }

@@ -110,14 +110,25 @@ variable "site_domain" {
   description = "Host name of the site (for example: www.example.org)"
 }
 
+# TODO: set internally based on presence of TLS certificate ARN in config
 variable "tls" {
   description = "Whether or not to use TLS to serve the site (true or false)"
-  default     = "true"
+  default     = "false"
 }
 
 variable "django_email_subject_prefix" {
   description = "Subject-line prefix for email messages"
   default     = "[Refinery] "
+}
+
+variable "refinery_banner" {
+  description = "Message to display near the top of every page (HTML allowed)"
+  default     = ""
+}
+
+variable "refinery_banner_anonymous_only" {
+  description = "Whether to display refinery_banner to anonymous users only or everyone"
+  default = "false"
 }
 
 variable "refinery_custom_navbar_item" {
@@ -155,6 +166,10 @@ variable "refinery_google_recaptcha_secret_key" {
   default     = ""
 }
 
+variable "refinery_s3_user_data" {
+  description = "Whether or not to use S3 as user data file storage backend"
+  default     = "false"
+}
 variable "refinery_user_files_columns" {
   default = "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 }
