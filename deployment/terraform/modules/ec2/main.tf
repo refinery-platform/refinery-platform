@@ -54,7 +54,6 @@ resource "aws_iam_role_policy" "app_server_s3_access" {
   # ListBucket on static bucket is required for Django collectstatic management command
   # ListBucket on upload bucket is required for checking availability of uploaded files
   # PutObjectAcl is required for file uploads in addition to PutObject
-  # TODO: remove -config bucket permissions when config is no longer stored there
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -73,11 +72,6 @@ resource "aws_iam_role_policy" "app_server_s3_access" {
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:PutObject", "s3:PutObjectAcl", "s3:DeleteObject"],
       "Resource": "arn:aws:s3:::${var.media_bucket_name}/*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["s3:GetObject"],
-      "Resource": "arn:aws:s3:::${var.resource_name_prefix}-config/*"
     },
     {
       "Effect": "Allow",

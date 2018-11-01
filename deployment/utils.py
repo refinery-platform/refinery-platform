@@ -55,15 +55,10 @@ def load_config():
 
     config = _load_config_file("config.yaml")
 
-    # Generate warning for old keys that we no longer use.
-    report_obsolete_keys(config)
-
     report_missing_keys(config)
 
     # Generate some special keys that are optional to specify.
     generated_config = {}
-    config_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-config"
-    generated_config['S3_CONFIG_BUCKET'] = config_bucket_name
     log_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-log"
     generated_config['S3_LOG_BUCKET'] = log_bucket_name
 
@@ -86,22 +81,6 @@ def _load_config_file(filename):
 
     # Convert "null" to empty dict()
     return {}
-
-
-def report_obsolete_keys(config):
-    """
-    Report obsolete keys that are no longer used.
-    Just a warning; carries on anyway.
-    """
-
-    ignored = ['VOLUME', 'S3_CONFIG_BUCKET']
-    bad = []
-    for key in ignored:
-        if key in config:
-            bad.append(key)
-    if bad:
-        sys.stderr.write("{:s} no longer used, ignoring\n".format(
-            bad))
 
 
 def report_missing_keys(config):
