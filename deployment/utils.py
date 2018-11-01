@@ -1,5 +1,4 @@
 import os
-import random
 import sys
 
 from cfn_pyplates.core import JSONableDict
@@ -114,8 +113,7 @@ def report_missing_keys(config):
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER',
-                'S3_BUCKET_NAME_BASE', 'STACK_NAME']
+    required = ['ELB_SECURITY_GROUP_ID', 'S3_BUCKET_NAME_BASE', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:

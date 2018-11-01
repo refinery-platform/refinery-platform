@@ -72,7 +72,6 @@ def make_template(config, config_yaml):
     "#!/bin/sh\n",
     "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
     "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
-    "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 

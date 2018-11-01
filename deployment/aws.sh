@@ -17,13 +17,6 @@ ln -s /home/ubuntu/config.yaml /srv/refinery-platform/refinery/config/override-c
 
 cd /srv/refinery-platform/deployment
 
-# Create SMTP credentials and
-# place them in (facter) environment variables.
-. bin/create-smtp-credentials
-
-export FACTER_EMAIL_HOST_USER="$EMAIL_HOST_USER"
-export FACTER_EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD"
-
 sudo su -c '/usr/local/bin/librarian-puppet install' ubuntu
 
 /usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp

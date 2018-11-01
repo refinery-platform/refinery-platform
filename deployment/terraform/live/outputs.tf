@@ -14,10 +14,6 @@ output "elb_security_group_id" {
   value = "${module.vpc.elb_security_group_id}"
 }
 
-output "iam_smtp_user" {
-  value = "${module.app_server.iam_smtp_user}"
-}
-
 output "app_server_instance_id" {
   value = "${module.app_server.instance_id}"
 }

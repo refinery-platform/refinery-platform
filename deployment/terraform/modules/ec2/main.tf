@@ -1,3 +1,7 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_iam_user" "ses" {
   name = "${var.resource_name_prefix}-refinery-ses"
 }
@@ -18,6 +22,10 @@ resource "aws_iam_user_policy" "ses_send_email" {
   ]
 }
 POLICY
+}
+
+resource "aws_iam_access_key" "ses_user" {
+  user = "${aws_iam_user.ses.name}"
 }
 
 resource "aws_iam_role" "app_server" {
@@ -83,28 +91,6 @@ resource "aws_iam_role_policy" "app_server_s3_access" {
 }
 EOF
 }
-
-data "aws_caller_identity" "current" {}
-
-#TODO: remove when SMTP user keys are generated with aws_iam_access_key
-resource "aws_iam_role_policy" "app_server_ses_access" {
-  name   = "AllowCreateKeysForSMTPUser"
-  role   = "${aws_iam_role.app_server.id}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["iam:CreateAccessKey"],
-      "Resource": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${aws_iam_user.ses.name}"
-    }
-  ]
-}
-EOF
-}
-
-data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "app_server_cognito_access" {
   name   = "AllowGetOpenIDTokenFromCognito"
@@ -188,6 +174,8 @@ export FACTER_DOCKER_HOST=${var.docker_host}
 export FACTER_SITE_NAME=${var.site_name}
 export FACTER_SITE_URL=${var.site_domain}
 export FACTER_TLS_REWRITE=${var.tls}
+export FACTER_EMAIL_HOST_USER=${aws_iam_access_key.ses_user.id}
+export FACTER_EMAIL_HOST_PASSWORD=${aws_iam_access_key.ses_user.ses_smtp_password}
 
 # configure librarian-puppet
 
