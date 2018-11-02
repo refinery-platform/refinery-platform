@@ -46,6 +46,12 @@
       }
     }
 
+    /**
+     * @name relaunchTool
+     * @desc  Relaunches a tool
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+     * @param {obj} vis - object with url to relaunch tool
+    **/
     function relaunchTool (vis) {
       vm.visRelaunchList[vis.uuid] = true;
       $http.get(vis.relaunch_url)
@@ -58,6 +64,12 @@
         });
     }
 
+    /**
+     * @name deleteTool
+     * @desc  Deletes a launced tool
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+     * @param {obj} vis - object with url to delete tool
+    **/
     function deleteTool (vis) {
       $http.delete(vis.detail_url)
         .then(function () {
@@ -67,6 +79,12 @@
         });
     }
 
+    /**
+     * @name isOwner
+     * @desc  Checks ownership based on profile uuid
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+     * @param {str} visOwnerUuid - owner's profile uuid
+    **/
     function isOwner (visOwnerUuid) {
       return visOwnerUuid === settings.djangoApp.userprofileUUID;
     }
