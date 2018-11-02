@@ -625,7 +625,7 @@ UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
-REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA')
 
 # ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
 ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
@@ -640,10 +640,8 @@ REFINERY_VISUALIZATION_REGISTRY = \
 # environments (They don't actually validate registering users)
 # See: https://developers.google.com/recaptcha/docs/faq
 REFINERY_GOOGLE_RECAPTCHA_SITE_KEY = get_setting(
-    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY",
-    default="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY"
 )
 REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY = get_setting(
-    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY",
-    default="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY"
 )
