@@ -724,20 +724,20 @@ def search_solr(encoded_params, core):
 
 def get_owner_from_assay(uuid):
     # Returns the owner from an assay_uuid. Ownership is passed from dataset
-
     try:
-        investigation_key = Study.objects.get(assay__uuid=uuid).investigation
+        study = Study.objects.get(assay__uuid=uuid)
     except (Study.DoesNotExist,
             Study.MultipleObjectsReturned) as e:
         logger.error(e)
-        return "Error: Invalid uuid"
+        return None
 
-    investigation_link = core.models.InvestigationLink.objects.get(
-            investigation=investigation_key)
-    owner = core.models.DataSet.objects.get(
-            investigationlink=investigation_link).get_owner()
+    try:
+        data_set = study.get_dataset()
+    except RuntimeError as e:
+        logger.error(e)
+        return None
 
-    return owner
+    return data_set.get_owner()
 
 
 def format_solr_response(solr_response):
@@ -814,6 +814,13 @@ def customize_attribute_response(facet_fields):
         if len(field_name) > 1:
             customized_field['file_ext'] = field_name[-1]
 
+        field_edit_type = ''
+        field_normalized = field.replace('_', ' ')
+        for edit_type in Attribute.editable_types:
+            if edit_type in field_normalized:
+                field_edit_type = edit_type
+                break
+
         if 'REFINERY_SUBANALYSIS' in field:
             customized_field['display_name'] = 'Analysis Group'
             customized_field['attribute_type'] = 'Internal'
@@ -826,21 +833,12 @@ def customize_attribute_response(facet_fields):
         elif 'REFINERY' in field:
             customized_field['display_name'] = field_name[1].title()
             customized_field['attribute_type'] = 'Internal'
-        elif 'Comment' in field:
-            index = field_name.index('Comment')
-            field_name = ' '.join(field_name[0:index])
+        elif field_edit_type:
+            index = field_name.index(field_edit_type.split(' ')[0])
+            # some attributes don't have a name hence the default 1
+            field_name = ' '.join(field_name[0:index or 1])
             customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Comment'
-        elif 'Factor' in field:
-            index = field_name.index('Factor')
-            field_name = ' '.join(field_name[0:index])
-            customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Factor Value'
-        elif 'Characteristics' in field:
-            index = field_name.index('Characteristics')
-            field_name = ' '.join(field_name[0:index])
-            customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Characteristics'
+            customized_field['attribute_type'] = field_edit_type
         # For uuid fields
         elif len(field_name) == 1:
             customized_field['display_name'] = \
@@ -1046,3 +1044,21 @@ def get_solr_response_json(node_uuids):
         'data_set_manager'
     )
     return format_solr_response(solr_response)
+
+
+def get_first_annotated_node_from_solr_name(solr_name, node):
+    # Helper method which get a node's first annotated node based on
+    # solr_name
+    # splits solr name into type and subtype
+    attribute_obj = customize_attribute_response([solr_name])[0]
+    attribute_subtype = attribute_obj.get('display_name')
+    attribute_type = attribute_obj.get('attribute_type')
+    # some attributes don't have a subtype, so display_name will be a
+    # the first word of the attribute type
+    if attribute_subtype in attribute_type:
+        attribute_subtype = None
+    return AnnotatedNode.objects.filter(
+        node=node,
+        attribute_type=attribute_type,
+        attribute_subtype__iexact=attribute_subtype
+    ).first()

@@ -16,6 +16,7 @@
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
+    'settings',
     'toolSelectService'
   ];
 
@@ -30,6 +31,7 @@
     fileBrowserSettings,
     nodeService,
     selectedFilterService,
+    settings,
     toolSelectService
     ) {
     // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
@@ -64,12 +66,29 @@
     * Method Definitions
     * ----------------------
     */
+
+    // helper method which returns  whether a cell is editable
+    function isCellEditable (attributeType) {
+      return dataSetPropsService.dataSet.is_owner &&
+        settings.djangoApp.attributeEditTypes.split(',').includes(attributeType);
+    }
+
     // helper method which returns css class for non-editable cells
     function addNonEditCellClass (attributeType, grid) {
-      if (attributeType === 'Internal' && grid.appScope.editMode) {
+      if (!isCellEditable(attributeType) && grid.appScope.editMode) {
         return 'non-select-cell';
       }
       return null;
+    }
+
+    // helper method to check if cell is derived
+    function isCellDerived (row) {
+      for (var cellName in row) {
+        if (cellName.includes('REFINERY_TYPE') && row[cellName].includes('Derived')) {
+          return true;
+        }
+      }
+      return false;
     }
 
     // populates the ui-grid columns variable
@@ -85,9 +104,15 @@
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false,
-          cellEditableCondition: dataSetPropsService.dataSet.is_owner,
-          cellClass: function (grid) {
-            return addNonEditCellClass(attribute.attribute_type, grid);
+          cellEditableCondition: function (scope) {
+            return !isCellDerived(scope.row.entity) && isCellEditable(attribute.attribute_type);
+          },
+          cellClass: function (grid, row) {
+            var rowUidClass = 'ui-grid-row' + row.uid;
+            if (isCellDerived(row.entity) && grid.appScope.editMode) {
+              return rowUidClass + ' non-select-cell';
+            }
+            return rowUidClass + ' ' + addNonEditCellClass(attribute.attribute_type, grid);
           },
           headerCellClass: function (grid) {
             return addNonEditCellClass(attribute.attribute_type, grid);
@@ -262,7 +287,9 @@
         pinnedLeft: true,
         cellTemplate: _cellTemplate,
         visible: isToolSelected,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
      /**
@@ -293,7 +320,9 @@
         pinnedLeft: true,
         cellTemplate: cellTemplate,
         visible: isToolSelected,
-        enableCellEdit: false
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 
@@ -316,7 +345,7 @@
         enableColumnMenu: false,
         enableColumnResizing: true,
         cellTemplate: _cellTemplate,
-        enableCellEdit: false,
+        cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
         headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };

@@ -63,7 +63,8 @@
                       name="optionsCheckboxes"
                       ng-model="ASCtrl.uiSelectedFields[attributeObj.internal_name][field.name]"
                       ng-change="ASCtrl.attributeSelectionUpdate(attributeObj.internal_name, field.name)"
-                      id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
+                      id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}"
+                      ng-disabled="!field.count">
                   </div>
                   <div class="col-xs-8">
                     <label for="{{ field.name | replaceWhiteSpaceWithHyphen
@@ -131,7 +132,8 @@
                       ng-model="ASCtrl.uiSelectedFields[attributeObj.internal_name][fieldObj.name]"
                       ng-change="ASCtrl.attributeSelectionUpdate(
                       attributeObj.internal_name, fieldObj.name)"
-                      id="analysis-filter-{{ $index }}">
+                      id="analysis-filter-{{ $index }}"
+                      ng-disabled="!fieldObj.count">
                   </div>
                   <div class="col-xs-8">
                     <label for="analysis-filter-{{ $index }}">

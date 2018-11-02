@@ -325,8 +325,12 @@ class Tool(OwnableResource):
         )
 
     @property
+    def detail_url(self):
+        return self._create_detail_url()
+
+    @property
     def relaunch_url(self):
-        return urljoin(self.TOOL_API_ROOT, "{}/relaunch/".format(self.uuid))
+        return self._create_detail_url("relaunch")
 
     @property
     def container_input_json_url(self):
@@ -334,14 +338,17 @@ class Tool(OwnableResource):
         Return the url that will expose a Tool's input data (as JSON) on
         GET requests
         """
-        return urljoin(
-            self.TOOL_API_ROOT,
-            "{}/container_input_data/".format(self.uuid)
-        )
+        return self._create_detail_url("container_input_data")
 
     @property
     def formatted_creation_date(self):
         return self.creation_date.strftime('%m/%d/%Y %H:%M:%S')
+
+    def _create_detail_url(self, detail_name=None):
+        detail_url = urljoin(self.TOOL_API_ROOT, "{}/".format(self.uuid))
+        if detail_name is None:
+            return detail_url
+        return urljoin(detail_url, "{}/".format(detail_name))
 
     def _get_owner_info_as_dict(self):
         user = self.get_owner()

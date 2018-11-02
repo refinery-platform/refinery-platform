@@ -44,6 +44,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
+from data_set_manager.models import Attribute
+
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, SiteStatistics,
@@ -282,6 +284,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "workflows": workflows,
             "isatab_archive": investigation.get_file_store_item(),
             "pre_isatab_archive": investigation.get_file_store_item(),
+            "attribute_edit_types": ','.join(Attribute.editable_types)
         },
         context_instance=RequestContext(request))
 
@@ -693,7 +696,10 @@ class DataSetsViewSet(APIView):
         for data_set in user_data_sets:
             is_public = all_public_perms.has_perm('read_meta_dataset',
                                                   data_set)
-            is_owner = all_owner_perms.has_perm('share_dataset', data_set)
+            if request.user.is_superuser:
+                is_owner = data_set.get_owner() == request.user
+            else:
+                is_owner = all_owner_perms.has_perm('share_dataset', data_set)
             setattr(data_set, 'public', is_public)
             setattr(data_set, 'is_owner', is_owner)
 
