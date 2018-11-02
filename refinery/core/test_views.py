@@ -727,6 +727,24 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_response = self.view(self.get_request)
         self.assertFalse(get_response.data.get('data_sets')[0]["is_clean"])
 
+    def test_is_owner_reflects_actual_owner(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.user_3_data_set.uuid))
+        get_request.user = self.user_3
+        get_response = self.view(get_request)
+        data_set = get_response.data.get('data_sets')[0]
+        self.assertTrue(data_set["is_owner"])
+
+    def test_is_owner_reflects_actual_owner_with_admin_requester(self):
+        username = password = "admin"
+        admin_user = User.objects.create_superuser(username, '', password)
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.user_3_data_set.uuid))
+        get_request.user = admin_user
+        get_response = self.view(self.get_request)
+        data_set = get_response.data.get('data_sets')[0]
+        self.assertFalse(data_set["is_owner"])
+
 
 class AnalysisApiV2Tests(APIV2TestCase):
 
