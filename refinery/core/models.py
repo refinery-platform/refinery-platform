@@ -750,10 +750,11 @@ class DataSet(SharableResource):
         """
         return bool(InvestigationLink.objects.filter(data_set=self))
 
-    def get_nodes(self):
+    def get_nodes(self, assay=None, study=None):
+
         return Node.objects.filter(
-            assay=self.get_latest_assay(),
-            study=self.get_latest_study()
+            assay=assay or self.get_latest_assay(),
+            study=study or self.get_latest_study()
         )
 
     def get_node_uuids(self):

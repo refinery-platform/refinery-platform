@@ -6,6 +6,7 @@ Created on May 10, 2012
 import os
 from datetime import datetime
 import logging
+import re
 
 from django.conf import settings
 from django.db import models
@@ -215,6 +216,19 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
+    def get_isatab_file_names(self):
+        if not self.is_isa_tab_based():
+            raise NotImplementedError("ISATabs only")
+        import zipfile
+        d = {}
+        for name in zipfile.ZipFile(
+            self.get_file_store_item().source
+        ).namelist():
+            m = re.search("(?:/)((i|s|a)_.*\.txt)", name)
+            if m:
+                d[m.group(2)] = m.group(1)
+        return d
 
     def get_file_store_items(self, exclude_metadata_file=False,
                              local_only=False):

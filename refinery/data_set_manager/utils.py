@@ -24,7 +24,8 @@ import core
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
-    Node, Study
+    Contact, Factor, Node, Ontology,  Protocol,  ProtocolParameter,
+    Publication, Study
 )
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
@@ -1062,3 +1063,212 @@ def get_first_annotated_node_from_solr_name(solr_name, node):
         attribute_type=attribute_type,
         attribute_subtype__iexact=attribute_subtype
     ).first()
+
+
+def get_isa_tools_dict(dataset):
+    data = {"i": {}}
+    investigation = dataset.get_investigation()
+    if not investigation.is_isa_tab_based():
+        raise RuntimeError
+
+    isatab_file_names = investigation.get_isatab_file_names()
+    data["i"]["identifier"] = investigation.get_identifier()
+    data["i"]["filename"] = isatab_file_names["i"]
+    data["i"]["title"] = investigation.get_title()
+    data["i"]["description"] = investigation.get_description()
+    data["i"]["submission_date"] = investigation.submission_date
+    data["i"]["public_release_date"] = investigation.release_date
+    data["i"]["ontology_source_references"] = []
+    data["i"]["publications"] = []
+    data["i"]["contacts"] = []
+    data["i"]["studies"] = []
+    data["i"]["comments"] = []
+
+    ontologies = Ontology.objects.filter(investigation=investigation)
+
+    for o in ontologies:
+        data["i"]["ontology_source_references"].append(
+            {
+                "name": o.name,
+                "version": o.version,
+                "description": o.description,
+                "file": o.file_name,
+                "comments": []  # What actually are these?
+            }
+        )
+
+    publications = Publication.objects.filter(collection=investigation)
+
+    for p in publications:
+        data["i"]["ontology_source_references"].append(
+            {
+                "pubmed_id": p.pubmed_id,
+                "doi": p.doi,
+                "author_list": p.authors,
+                "title": p.title,
+                "status": {
+                    "term": p.status,
+                    "term_source": p.status_source,
+                    "term_accession": p.status_accession,
+                    "comments": [],  # What actually are these?
+                    "id_": ''  # Where does this id come from??
+                }  # Must be an OntologyAnnotation instance
+            }
+        )
+
+    contacts = Contact.objects.filter(collection=investigation)
+
+    for c in contacts:
+        data["i"]["contacts"].append(
+            {
+                "last_name": c.last_name,
+                "first_name": c.first_name,
+                "mid_initials": c.middle_initials,
+                "email": c.email,
+                "phone": c.phone,
+                "fax": c.fax,
+                "address": c.address,
+                "affiliation": c.affiliation,
+                "roles": [c.roles],  # Split on semicolon? See Contact model
+                # roles_accession and roles_source also exist here in Contact?
+                "comments": [],  # What actually are these?
+            }  # Must be a Person instance
+        )
+
+    studies = Study.objects.filter(investigation=investigation)
+
+    for s in studies:
+        publications = Publication.objects.filter(collection=s)
+        contacts = Contact.objects.filter(collection=s)
+        factors = Factor.objects.filter(study=s)
+        protocols = Protocol.objects.filter(study=s)
+        assays = Assay.objects.filter(study=s)
+
+        study_dict = {
+            "identifier": s.identifier,
+            "title": s.title,
+            "description": s.description,
+            "submission_date": s.submission_date,
+            "public_release_date": s.release_date,
+            "filename": isatab_file_names["s"],
+            "design_descriptors": [],  # Must be OntologyAnnotation
+            # instances
+            "publications": [
+                {
+                    "pubmed_id": p.pubmed_id,
+                    "doi": p.doi,
+                    "author_list": p.authors,
+                    "title": p.title,
+                    "status": {
+                        "term": p.status,
+                        "term_source": p.status_source,
+                        "term_accession": p.status_accession,
+                        "comments": [],  # What actually are these??
+                        "id_": ''  # Where does this id come from??
+                    }  # Must be an OntologyAnnotation instance
+                } for p in publications
+            ],
+            "contacts": [
+                {
+                    "last_name": c.last_name,
+                    "first_name": c.first_name,
+                    "mid_initials": c.middle_initials,
+                    "email": c.email,
+                    "phone": c.phone,
+                    "fax": c.fax,
+                    "address": c.address,
+                    "affiliation": c.affiliation,
+                    "roles": [c.roles],  # Split on semicolon? See Contact
+                    # roles_accession and roles_source also exist ???
+                    "comments": [],  # What actually are these??
+                }  # Must be a Person instance
+                for c in contacts
+            ],
+            "factors": [
+                {
+                    "id_": "",
+                    "name": f.name,
+                    "factor_type": {
+                        "term": f.type,
+                        "term_source": f.type_source,
+                        "term_accession": f.type_accession,
+                        "comments": [],  # What actually are these?
+                        "id_": ''  # Where does this id come from??
+                    },  # Must be an OntologyAnnotation instance
+                    "comments": [],  # What actually are these?
+                }  # Must be StudyFactor instance
+                for f in factors
+            ],
+            "protocols": [
+                {
+                    "name": p.name,
+                    "protocol_type": {
+                        "term": p.type,
+                        "term_source": p.type_source,
+                        "term_accession": p.type_accession,
+                        "comments": [],  # What actually are these?
+                        "id_": ''  # Where does this id come from??
+                    },  # Must be an OntologyAnnotation instance
+                    "description": p.description,
+                    "uri": p.uri,
+                    "version": p.version,
+                    "parameters": [
+                        {
+                            "parameter_name": {
+                                "term": param.name,
+                                "term_source": param.name_source,
+                                "term_accession": param.name_accession,
+                                "comments": [],  # What actually are these?
+                                "id_": ''  # Where does this id come from??
+                            },  # Must be an OntologyAnnotation instance
+                            "comments": [],  # What actually are these?
+                        }  # Must be a ProtocolParameter instance
+                        for param in ProtocolParameter.objects.filter(
+                            study=s, protocol=p
+                        )
+                    ]
+                }
+                for p in protocols
+            ],
+            "assays": [],
+            "materials": "",
+            "sources": "",
+            "samples": "",
+            "other_material": "",
+            "units": "",
+            "characteristic_categories": "",
+            "process_sequence": "",
+            "comments": [],  # What actually are these?
+            "graph": ""
+        }  # Must be a Study instance
+
+        for a in assays:
+            # nodes = dataset.get_nodes(assay=a, study=s)
+            study_dict["assays"].append(
+                {
+                    "measurement_type": {
+                        "term": a.measurement,
+                        "term_source": a.measurement_source,
+                        "term_accession": a.measurement_accession,
+                        "comments": [],  # What actually are these?
+                        "id_": ''  # Where does this id come from??
+                    },  # Must be an OntologyAnnotation instance
+                    "technology_type": {
+                        "term": a.technology,
+                        "term_source": a.technology_source,
+                        "term_accession": a.technology_accession,
+                        "comments": [],  # What actually are these?
+                        "id_": ''  # Where does this id come from??
+                    },  # Must be an OntologyAnnotation instance
+                    "technology_platform": a.platform,
+                    "filename": isatab_file_names["a"],
+                    "materials": "",
+                    "units": "",
+                    "characteristic_categories": "",
+                    "process_sequence": "",
+                    "comments": [],  # What actually are these?
+                    "graph": ""
+                }  # Must be an Assay instance
+            )
+        data["i"]["studies"].append(study_dict)
+    return data
