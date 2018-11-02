@@ -760,7 +760,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             }
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     def test_check_datafiles_metadata_revision_files_will_be_deleted(self):
         open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
         self.post_tabular_meta_data_file(
