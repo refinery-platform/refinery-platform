@@ -48,7 +48,7 @@
 
     /**
      * @name relaunchTool
-     * @desc  Relaunches
+     * @desc  Relaunches a tool
      * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
      * @param {obj} vis - object with url to relaunch tool
     **/
@@ -66,7 +66,7 @@
 
     /**
      * @name deleteTool
-     * @desc  Updates the visualization list
+     * @desc  Deletes a launced tool
      * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
      * @param {obj} vis - object with url to delete tool
     **/
