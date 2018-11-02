@@ -237,7 +237,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.tools_view = ToolsViewSet.as_view(
             {
                 'get': 'list',
-                'post': 'create'
+                'post': 'create',
+                'delete': 'destroy'
             }
         )
         self.tool_defs_view = ToolDefinitionsViewSet.as_view(
@@ -2708,10 +2709,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             self.options_response.data['detail'],
             'Method "OPTIONS" not allowed.'
         )
-        self.assertEqual(
-            self.delete_response.data['detail'],
-            'Method "DELETE" not allowed.'
-        )
 
     def test_invalid_TLC_against_schema(self):
         self.create_vis_tool_definition()
@@ -3028,7 +3025,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             self.assertEqual(get_response.status_code, 403)
             self.assertTemplateUsed(
                 get_response,
-                'tool_manager/vis-tool-user-not-allowed.html'
+                'tool_manager/vis-tool-error.html'
             )
             self.assertFalse(launch_mock.called)
 
@@ -3083,6 +3080,60 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             ),
             self.post_response.content
         )
+
+    def test_vis_tool_deletion(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 200)
+        with self.assertRaises(VisualizationTool.DoesNotExist):
+            VisualizationTool.objects.get(uuid=self.tool.uuid)
+
+    def test_vis_tool_deletion_no_tool_uuid(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request)
+        self.assertEqual(delete_response.status_code, 400)
+
+    def test_vis_tool_deletion_disallows_non_owners(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 403)
+
+    def test_vis_tool_deletion_no_tool_exists(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        self.tool.delete()
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 404)
+
+    @mock.patch.object(VisualizationTool, "delete", side_effect=RuntimeError)
+    def test_vis_tool_deletion_rollback_on_failure(self, vis_delete_mock):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 400)
+        self.assertIsNotNone(
+            VisualizationTool.objects.get(uuid=self.tool.uuid)
+        )
+        self.assertTrue(vis_delete_mock.called)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
