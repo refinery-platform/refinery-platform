@@ -3,12 +3,11 @@ Created on May 10, 2012
 
 @author: nils
 '''
-import zipfile
-
 import os
 from datetime import datetime
 import logging
 import re
+import zipfile
 
 from django.conf import settings
 from django.db import models
