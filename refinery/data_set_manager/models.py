@@ -3,6 +3,8 @@ Created on May 10, 2012
 
 @author: nils
 '''
+import zipfile
+
 import os
 from datetime import datetime
 import logging
@@ -218,17 +220,45 @@ class Investigation(NodeCollection):
         return assay_count
 
     def get_isatab_file_names(self):
+        """
+        Attempt to find appropriate filename matches from ISATab zip
+        https://isa-specs.readthedocs.io/en/latest/isatab.html#format
+
+        Return a dict in the form:
+            {
+                "investigation": i_*.txt,
+                "study": s_*.txt,
+                "assay": a_*.txt
+            }
+
+        :return: dict mapping common names of the portions of an ISATab to
+        their respective files from the ISATab zip
+        :raises: NotImplementedError, RuntimeError
+        """
         if not self.is_isa_tab_based():
-            raise NotImplementedError("ISATabs only")
-        import zipfile
-        d = {}
-        for name in zipfile.ZipFile(
-            self.get_file_store_item().source
-        ).namelist():
-            m = re.search("(?:/)((i|s|a)_.*\.txt)", name)
-            if m:
-                d[m.group(2)] = m.group(1)
-        return d
+            raise NotImplementedError("Only Investigations derived from "
+                                      "ISATabs are supported")
+        common_isa_names_map = {
+            "i": "investigation",
+            "s": "study",
+            "a": "assay"
+        }
+        common_isa_names_to_file_name = {}
+
+        zipped_filenames = \
+            zipfile.ZipFile(self.get_file_store_item().source).namelist()
+
+        for base_file_name in [os.path.basename(n) for n in zipped_filenames]:
+            if re.match("[isa]_.*\.txt", base_file_name):
+                full_isa_name = common_isa_names_map[base_file_name[0]]
+                if full_isa_name in common_isa_names_to_file_name:
+                    raise RuntimeError(full_isa_name + " already found")
+                common_isa_names_to_file_name[full_isa_name] = base_file_name
+
+        for isa_char in common_isa_names_map.values():
+            if isa_char not in common_isa_names_to_file_name:
+                raise RuntimeError(isa_char + " not found")
+        return common_isa_names_to_file_name
 
     def get_file_store_items(self, exclude_metadata_file=False,
                              local_only=False):
