@@ -254,9 +254,9 @@ class Investigation(NodeCollection):
                     raise RuntimeError(full_isa_name + " already found")
                 common_isa_names_to_file_name[full_isa_name] = base_file_name
 
-        for isa_char in common_isa_names_map.values():
-            if isa_char not in common_isa_names_to_file_name:
-                raise RuntimeError(isa_char + " not found")
+        for isa_name in common_isa_names_map.values():
+            if isa_name not in common_isa_names_to_file_name:
+                raise RuntimeError(isa_name + " not found")
         return common_isa_names_to_file_name
 
     def get_file_store_items(self, exclude_metadata_file=False,
