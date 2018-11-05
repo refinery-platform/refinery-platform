@@ -17,9 +17,9 @@ INSTALLED_APPS += (
     'storages',
 )
 
-STATIC_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-static'
-MEDIA_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-media'
-UPLOAD_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-upload'
+MEDIA_BUCKET = get_setting('REFINERY_S3_MEDIA_BUCKET_NAME')
+STATIC_BUCKET = get_setting('REFINERY_S3_STATIC_BUCKET_NAME')
+UPLOAD_BUCKET = get_setting('REFINERY_S3_UPLOAD_BUCKET_NAME')
 
 STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 
