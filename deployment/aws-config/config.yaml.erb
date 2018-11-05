@@ -5,11 +5,6 @@
 #
 # Neither of these files exist to begin with but `config.yaml` is required
 
-# DATA_SNAPSHOT is only used when restoring a Refinery Platform stack from the
-# EBS snapshot of a previously created stack
-# If you don't specify this then fresh data volume will be created
-# DATA_SNAPSHOT: snap-XXX
-
 <%
 require 'json'
 require 'ostruct'
@@ -28,7 +23,6 @@ VPC_ID: "<%= tf.vpc_id %>"
 PUBLIC_SUBNET_ID: "<%= tf.public_subnet_id %>"
 ELB_SECURITY_GROUP_ID: "<%= tf.elb_security_group_id %>"
 APP_SERVER_INSTANCE_ID: "<%= tf.app_server_instance_id %>"
-APP_SERVER_INSTANCE_AZ: "<%= tf.app_server_instance_az %>"
 
 # Prefix for all S3 bucket names (must not be shared among stacks)
 # Constraint: DNS-compliant without periods (".")
@@ -38,11 +32,3 @@ S3_BUCKET_NAME_BASE: "<%= tf.s3_bucket_name_base %>"
 
 # AWS ARN for the TLS certifcate to be used for HTTPS connections
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
-
-EMAIL_SUBJECT_PREFIX: "[Refinery] "
-
-# size of the data volume in GB (ignored if a DATA_SNAPSHOT is specified)
-DATA_VOLUME_SIZE: 500
-# Type of the Data volume
-# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
-DATA_VOLUME_TYPE: "st1"

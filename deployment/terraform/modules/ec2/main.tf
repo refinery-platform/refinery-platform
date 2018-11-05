@@ -120,6 +120,13 @@ resource "aws_instance" "app_server" {
     volume_type = "gp2"
     volume_size = 11  # originally 8G but HiGlass is 2.5G (must be an integer)
   }
+  ebs_block_device {
+    delete_on_termination = false
+    device_name           = "/dev/xvdr"
+    snapshot_id           = "${var.data_volume_snapshot_id}"
+    volume_size           = "${var.data_volume_size}"
+    volume_type           = "${var.data_volume_type}"
+  }
   # scheduler:ebs-snapshot tag is used with the EBS Snapshot Scheduler:
   # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
   tags                   = "${merge(
@@ -143,7 +150,7 @@ set -x
 
 # install dependencies
 /usr/bin/apt-get clean && /usr/bin/apt-get -qq update
-/usr/bin/apt-get -qq -y install git jq puppet ruby-dev
+/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev
 
 # add extra SSH keys from Github
 for USERNAME in ${join(" ", var.ssh_users)}; do
@@ -188,6 +195,22 @@ export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
-#/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
+/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
 EOF
 }
+
+//resource "aws_ebs_volume" "user_data" {
+//  availability_zone = "${aws_instance.app_server.availability_zone}"
+//  size              = "${var.data_volume_size}"
+//  snapshot_id       = "${var.data_volume_snapshot_id}"
+//  type              = "${var.data_volume_type}"
+//  tags              = "${merge(
+//    var.tags, map("Name", "${var.resource_name_prefix} app server")
+//  )}"
+//}
+//
+//resource "aws_volume_attachment" "app_server_user_data" {
+//  device_name = "/dev/xvdr"
+//  instance_id = "${aws_instance.app_server.id}"
+//  volume_id   = "${aws_ebs_volume.user_data.id}"
+//}

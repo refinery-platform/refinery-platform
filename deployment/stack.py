@@ -52,46 +52,15 @@ def main():
 def make_template(config):
     """Make a fresh CloudFormation template object and return it"""
 
-    stack_name = config['STACK_NAME']
-
-    assert "'" not in config['SITE_NAME']
-
     instance_tags = load_tags()
 
     # Stack Name is also used for instances.
     instance_tags.append({'Key': 'Name',
-                         'Value': stack_name})
+                         'Value': config['STACK_NAME']})
 
     config['tags'] = instance_tags
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
-
-    volume_properties = {
-        'Encrypted': True,
-        'Size': config['DATA_VOLUME_SIZE'],
-        'Tags': load_tags(),
-        'AvailabilityZone': config['APP_SERVER_INSTANCE_AZ'],
-        'VolumeType': config['DATA_VOLUME_TYPE'],
-    }
-
-    if 'DATA_SNAPSHOT' in config:
-        volume_properties['SnapshotId'] = config['DATA_SNAPSHOT']
-
-    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-ebs-volume.html
-    cft.resources.ebs = core.Resource(
-        'RefineryData', 'AWS::EC2::Volume',
-        core.Properties(volume_properties),
-        core.DeletionPolicy("Snapshot"),
-    )
-
-    cft.resources.mount = core.Resource(
-        'RefineryVolume', 'AWS::EC2::VolumeAttachment',
-        core.Properties({
-            'Device': '/dev/xvdr',
-            'InstanceId': config['APP_SERVER_INSTANCE_ID'],
-            'VolumeId': functions.ref('RefineryData'),
-        })
-    )
 
     # ELB per
     # http://cfn-pyplates.readthedocs.io/en/latest/examples/options/template.html

@@ -129,6 +129,9 @@ module "app_server" {
   refinery_welcome_email_subject       = "${var.refinery_welcome_email_subject}"
   refinery_welcome_email_message       = "${var.refinery_welcome_email_message}"
   refinery_user_files_columns          = "${var.refinery_user_files_columns}"
+  data_volume_size                     = "${var.data_volume_size}"
+  data_volume_type                     = "${var.data_volume_type}"
+  data_volume_snapshot_id              = "${var.data_volume_snapshot_id}"
   resource_name_prefix                 = "${terraform.workspace}"
   tags                                 = "${local.tags}"
 }

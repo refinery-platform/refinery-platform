@@ -38,3 +38,6 @@ variable "refinery_url_scheme" {}
 variable "refinery_welcome_email_subject" {}
 variable "refinery_welcome_email_message" {}
 variable "refinery_user_files_columns" {}
+variable "data_volume_size" {}
+variable "data_volume_type" {}
+variable "data_volume_snapshot_id" {}

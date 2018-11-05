@@ -146,6 +146,7 @@ variable "refinery_welcome_email_message" {
   default     = "Please fill out your user profile"
 }
 
+#TODO: set internally based on presence of TLS certificate ARN in config
 variable "refinery_url_scheme" {
   description = "Either `http` or `https` depending on whether a TLS certificate is configured"
   default     = "http"
@@ -172,4 +173,19 @@ variable "refinery_s3_user_data" {
 }
 variable "refinery_user_files_columns" {
   default = "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
+}
+
+variable "data_volume_size" {
+  description = "Size of the EBS data volume in GB"
+  default     = 500
+}
+
+variable "data_volume_type" {
+  description = "Type of the EBS data volume"
+  default     = "st1"
+}
+
+variable "data_volume_snapshot_id" {
+  description = "A snapshot to base the EBS data volume off of"
+  default     = ""
 }
