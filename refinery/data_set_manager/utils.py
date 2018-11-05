@@ -1073,8 +1073,53 @@ class ISAToolsDictCreator:
         self.investigation = investigation
         self.isatab_file_names = self.investigation.get_isatab_file_names()
 
-    @property
-    def contacts(self):
+    def create(self):
+        contacts = Contact.objects.filter(collection=self.investigation)
+        publications = Publication.objects.filter(
+            collection=self.investigation
+        )
+
+        return {
+            "identifier": self.investigation.get_identifier(),
+            "filename": self.isatab_file_names["investigation"],
+            "title": self.investigation.get_title(),
+            "description": self.investigation.get_description(),
+            "submission_date": self.investigation.submission_date,
+            "public_release_date": self.investigation.release_date,
+            "publications": self._create_publications(publications),
+            "contacts": self._create_contacts(contacts),
+            "studies": self.studies,
+            "ontology_source_references": self.ontology_source_references,
+            "comments": [],
+        }
+
+    def _create_assays(self, assays):
+        # Will probably need to start retrieving Node information at this point
+        #   nodes = dataset.get_nodes(assay=a, study=s)
+
+        return [
+            {
+                "measurement_type": self._create_ontology_annotation(
+                    a.measurement, a.measurement_source,
+                    a.measurement_accession
+                ),
+                "technology_type": self._create_ontology_annotation(
+                    a.technology, a.technology_source,
+                    a.technology_accession
+                ),
+                "technology_platform": a.platform,
+                "filename": self.isatab_file_names["assay"],
+                "materials": "",
+                "units": "",
+                "characteristic_categories": "",
+                "process_sequence": "",
+                "comments": [],  # What actually are these?
+                "graph": ""
+            }  # Must be an Assay instance
+            for a in assays
+        ]
+
+    def _create_contacts(self, contacts):
         return [
             {
                 "last_name": c.last_name,
@@ -1089,191 +1134,125 @@ class ISAToolsDictCreator:
                 # roles_accession and roles_source also exist here in Contact?
                 "comments": [],  # What actually are these?
             }  # Must be a Person instance
-            for c in Contact.objects.filter(collection=self.investigation)
+            for c in contacts
         ]
 
-    def create(self):
-        return {
-            "identifier": self.investigation.get_identifier(),
-            "filename": self.isatab_file_names["investigation"],
-            "title": self.investigation.get_title(),
-            "description": self.investigation.get_description(),
-            "submission_date": self.investigation.submission_date,
-            "public_release_date": self.investigation.release_date,
-            "publications": self.publications,
-            "contacts": self.contacts,
-            "studies": self.studies,
-            "ontology_source_references": self.ontology_source_references,
-            "comments": [],
-        }
-
-    @property
-    def ontology_source_references(self):
+    def _create_factors(self, factors):
         return [
             {
-                "name": o.name,
-                "version": o.version,
-                "description": o.description,
-                "file": o.file_name,
-                "comments": []  # What actually are these?
-            }
-            for o in Ontology.objects.filter(investigation=self.investigation)
+                "id_": "",
+                "name": f.name,
+                "factor_type": self._create_ontology_annotation(
+                    f.type, f.type_source, f.type_accession
+                ),
+                "comments": [],  # What actually are these?
+            }  # Must be StudyFactor instance
+            for f in factors
         ]
 
-    @property
-    def publications(self):
+    def _create_ontology_annotation(self, term=None, term_source=None,
+                                    term_accession=None):
+        return {
+            "term": term,
+            "term_source": term_source,
+            "term_accession": term_accession,
+            "comments": [],  # What actually are these?
+            "id_": ''  # Where does this id come from??
+        }
+
+    def _create_ontology_source_reference(self, ontology):
+        return {
+                "name": ontology.name,
+                "version": ontology.version,
+                "description": ontology.description,
+                "file": ontology.file_name,
+                "comments": []  # What actually are these?
+            }
+
+    def _create_protocols(self, study, protocols):
+        return [
+            {
+                "name": protocol.name,
+                "protocol_type": self._create_ontology_annotation(
+                    protocol.type, protocol.type_source,
+                    protocol.type_accession
+                ),
+                "description": protocol.description,
+                "uri": protocol.uri,
+                "version": protocol.version,
+                "parameters": [
+                    {
+                        "parameter_name":
+                            self._create_ontology_annotation(
+                                param.name, param.name_source,
+                                param.name_accession
+                            ),
+                        "comments": [],  # What actually are these?
+                    }  # Must be a ProtocolParameter instance
+                    for param in ProtocolParameter.objects.filter(
+                        study=study, protocol=protocol
+                    )
+                ]
+            }
+            for protocol in protocols
+        ]
+
+    def _create_publications(self, publications):
         return [
             {
                 "pubmed_id": p.pubmed_id,
                 "doi": p.doi,
                 "author_list": p.authors,
                 "title": p.title,
-                "status": {
-                    "term": p.status,
-                    "term_source": p.status_source,
-                    "term_accession": p.status_accession,
-                    "comments": [],  # What actually are these?
-                    "id_": ''  # Where does this id come from??
-                }  # Must be an OntologyAnnotation instance
-            }
-            for p in Publication.objects.filter(collection=self.investigation)
+                "status": self._create_ontology_annotation(
+                    p.status, p.status_source, p.status_accession
+                )
+            } for p in publications
+        ]
+
+    def _create_study(self, study):
+        publications = Publication.objects.filter(collection=study)
+        contacts = Contact.objects.filter(collection=study)
+        factors = Factor.objects.filter(study=study)
+        protocols = Protocol.objects.filter(study=study)
+        assays = Assay.objects.filter(study=study)
+
+        return {
+            "identifier": study.identifier,
+            "title": study.title,
+            "description": study.description,
+            "submission_date": study.submission_date,
+            "public_release_date": study.release_date,
+            "filename": self.isatab_file_names["study"],
+            "design_descriptors": [],  # Must be OntologyAnnotation
+            "publications": self._create_publications(publications),
+            "contacts": self._create_contacts(contacts),
+            "factors": self._create_factors(factors),
+            "protocols": self._create_protocols(study, protocols),
+            "assays": self._create_assays(assays),
+            "materials": "",
+            "sources": "",
+            "samples": "",
+            "other_material": "",
+            "units": "",
+            "characteristic_categories": "",
+            "process_sequence": "",
+            "comments": [],  # What actually are these?
+            "graph": ""
+        }  # Must be a Study instance
+
+    @property
+    def ontology_source_references(self):
+        return [
+            self._create_ontology_source_reference(ontology)
+            for ontology in Ontology.objects.filter(
+                investigation=self.investigation
+            )
         ]
 
     @property
     def studies(self):
-        studies = []
-        for s in Study.objects.filter(investigation=self.investigation):
-            publications = Publication.objects.filter(collection=s)
-            contacts = Contact.objects.filter(collection=s)
-            factors = Factor.objects.filter(study=s)
-            protocols = Protocol.objects.filter(study=s)
-            assays = Assay.objects.filter(study=s)
-
-            study_dict = {
-                "identifier": s.identifier,
-                "title": s.title,
-                "description": s.description,
-                "submission_date": s.submission_date,
-                "public_release_date": s.release_date,
-                "filename": self.isatab_file_names["study"],
-                "design_descriptors": [],  # Must be OntologyAnnotation
-                # instances
-                "publications": [
-                    {
-                        "pubmed_id": p.pubmed_id,
-                        "doi": p.doi,
-                        "author_list": p.authors,
-                        "title": p.title,
-                        "status": {
-                            "term": p.status,
-                            "term_source": p.status_source,
-                            "term_accession": p.status_accession,
-                            "comments": [],  # What actually are these??
-                            "id_": ''  # Where does this id come from??
-                        }  # Must be an OntologyAnnotation instance
-                    } for p in publications
-                ],
-                "contacts": [
-                    {
-                        "last_name": c.last_name,
-                        "first_name": c.first_name,
-                        "mid_initials": c.middle_initials,
-                        "email": c.email,
-                        "phone": c.phone,
-                        "fax": c.fax,
-                        "address": c.address,
-                        "affiliation": c.affiliation,
-                        "roles": [c.roles],  # Split on semicolon? See Contact
-                        # roles_accession and roles_source also exist ???
-                        "comments": [],  # What actually are these??
-                    }  # Must be a Person instance
-                    for c in contacts
-                ],
-                "factors": [
-                    {
-                        "id_": "",
-                        "name": f.name,
-                        "factor_type": {
-                            "term": f.type,
-                            "term_source": f.type_source,
-                            "term_accession": f.type_accession,
-                            "comments": [],  # What actually are these?
-                            "id_": ''  # Where does this id come from??
-                        },  # Must be an OntologyAnnotation instance
-                        "comments": [],  # What actually are these?
-                    }  # Must be StudyFactor instance
-                    for f in factors
-                ],
-                "protocols": [
-                    {
-                        "name": p.name,
-                        "protocol_type": {
-                            "term": p.type,
-                            "term_source": p.type_source,
-                            "term_accession": p.type_accession,
-                            "comments": [],  # What actually are these?
-                            "id_": ''  # Where does this id come from??
-                        },  # Must be an OntologyAnnotation instance
-                        "description": p.description,
-                        "uri": p.uri,
-                        "version": p.version,
-                        "parameters": [
-                            {
-                                "parameter_name": {
-                                    "term": param.name,
-                                    "term_source": param.name_source,
-                                    "term_accession": param.name_accession,
-                                    "comments": [],  # What actually are these?
-                                    "id_": ''  # Where does this id come from??
-                                },  # Must be an OntologyAnnotation instance
-                                "comments": [],  # What actually are these?
-                            }  # Must be a ProtocolParameter instance
-                            for param in ProtocolParameter.objects.filter(
-                                study=s, protocol=p
-                            )
-                        ]
-                    }
-                    for p in protocols
-                ],
-                "assays": [],
-                "materials": "",
-                "sources": "",
-                "samples": "",
-                "other_material": "",
-                "units": "",
-                "characteristic_categories": "",
-                "process_sequence": "",
-                "comments": [],  # What actually are these?
-                "graph": ""
-            }  # Must be a Study instance
-
-            for a in assays:
-                # nodes = dataset.get_nodes(assay=a, study=s)
-                study_dict["assays"].append(
-                    {
-                        "measurement_type": {
-                            "term": a.measurement,
-                            "term_source": a.measurement_source,
-                            "term_accession": a.measurement_accession,
-                            "comments": [],  # What actually are these?
-                            "id_": ''  # Where does this id come from??
-                        },  # Must be an OntologyAnnotation instance
-                        "technology_type": {
-                            "term": a.technology,
-                            "term_source": a.technology_source,
-                            "term_accession": a.technology_accession,
-                            "comments": [],  # What actually are these?
-                            "id_": ''  # Where does this id come from??
-                        },  # Must be an OntologyAnnotation instance
-                        "technology_platform": a.platform,
-                        "filename": self.isatab_file_names["assay"],
-                        "materials": "",
-                        "units": "",
-                        "characteristic_categories": "",
-                        "process_sequence": "",
-                        "comments": [],  # What actually are these?
-                        "graph": ""
-                    }  # Must be an Assay instance
-                )
-            studies.append(study_dict)
-        return studies
+        return [
+            self._create_study(study)
+            for study in Study.objects.filter(investigation=self.investigation)
+        ]
