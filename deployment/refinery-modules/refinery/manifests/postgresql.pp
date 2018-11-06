@@ -1,5 +1,7 @@
 class refinery::postgresql {
-  $server_version = '9.3'
+  # Postgres versioning scheme provides latest point releases when
+  # specifying major version: https://www.postgresql.org/support/versioning/
+  $server_version = '10'
 
   if $::deployment_platform == 'aws' {
     $rds_settings = {
@@ -10,6 +12,7 @@ class refinery::postgresql {
     }
     class { '::postgresql::globals':
       version                  => $server_version,
+      manage_package_repo      => true,
       default_connect_settings => $rds_settings,
     }
     class { '::postgresql::server':
@@ -48,8 +51,13 @@ class refinery::postgresql {
     }
   }
   else {
+    package { 'postgresql-9.3':
+      ensure => purged,
+    }
+    ->
     class { '::postgresql::globals':
-      version  => $server_version,
+      version             => $server_version,
+      manage_package_repo => true,
     }
     ->
     class { '::postgresql::server':

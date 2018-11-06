@@ -9,10 +9,12 @@ cache:
 python:
   - 2.7
 
-services:
-  - postgresql
-  - neo4j
-  - docker
+addons:
+  postgresql: "10"
+  apt:
+    packages:
+      - postgresql-10
+      - postgresql-client-10
 
 install:
   - node --version
@@ -36,12 +38,17 @@ env:
     - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
 
 before_script:
+  # PostgreSQL-10 is still not fully supported by Travis.
+  # See: https://github.com/travis-ci/travis-ci/issues/8537#issuecomment-416467506
+  # Use default postgres port
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/10/main/postgresql.conf
+  # Use postgres 9.6 auth config:
+  - sudo cp /etc/postgresql/{9.6,10}/main/pg_hba.conf
+  - sudo service postgresql restart
+
   # Vagrant is not used on travis: This user is just for the database.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
-
-  - sudo mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
-  - sudo chown $USER /data
 
   - cd refinery
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
@@ -61,6 +68,7 @@ before_script:
   - pushd ui && grunt make && popd
   - python manage.py collectstatic --noinput -v 0
   - python manage.py runserver --insecure --settings config.settings.dev 2>&1 | grep -v 200 &
+
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 

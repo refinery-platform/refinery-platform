@@ -27,7 +27,7 @@ resource "aws_db_instance" "default" {
   copy_tags_to_snapshot      = true
   db_subnet_group_name       = "${aws_db_subnet_group.default.id}"
   engine                     = "postgres"
-  engine_version             = "9.3.14"
+  engine_version             = "10.5"
   final_snapshot_identifier  = "${var.resource_name_prefix}-final"
   identifier                 = "${var.resource_name_prefix}"
   instance_class             = "db.t2.small"
