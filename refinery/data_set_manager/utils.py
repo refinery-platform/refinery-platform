@@ -24,8 +24,8 @@ import core
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
-    Contact, Design, Factor, Node, Ontology, Protocol, ProtocolParameter,
-    Publication, Study)
+    Contact, Design, Factor, Node, Ontology, Protocol, ProtocolComponent,
+    ProtocolParameter, Publication, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 
@@ -1136,6 +1136,29 @@ class ISAToolsDictCreator:
         # Do we even support these with the current parser implementation?
         return []
 
+    def _create_components(self, protocol, study):
+        """
+        See: ProtocolComponent class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2436
+        :param protocol:
+        :param study:
+        :return:
+        """
+        # TODO: Refinery has a ProtocolComponent class, but it is never used...
+        return [
+            {
+                "name": protocol_component.name,
+                "component_type": self._create_ontology_annotation(
+                    protocol_component.type, protocol_component.type_source,
+                    protocol_component.type_accession
+                ),
+                "comments": self._create_comments()
+            }
+            for protocol_component in ProtocolComponent.objects.filter(
+                protocol=protocol, study=study
+            )
+        ]
+
     def _create_contacts(self, node_collection):
         """
         See: Person class
@@ -1228,12 +1251,12 @@ class ISAToolsDictCreator:
             )
         ]
 
-    def _create_protocol_parameters(self, study, protocol):
+    def _create_protocol_parameters(self, protocol, study):
         """
         See: ProtocolParameter class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2283
-        :param study:
         :param protocol:
+        :param study:
         :return:
         """
         return [
@@ -1245,7 +1268,7 @@ class ISAToolsDictCreator:
                 "comments": self._create_comments(),
             }
             for protocol_parameter in ProtocolParameter.objects.filter(
-                study=study, protocol=protocol
+                protocol=protocol, study=study
             )
         ]
 
@@ -1256,6 +1279,7 @@ class ISAToolsDictCreator:
         :param study:
         :return:
         """
+
         return [
             {
                 "name": protocol.name,
@@ -1266,7 +1290,10 @@ class ISAToolsDictCreator:
                 "description": protocol.description,
                 "uri": protocol.uri,
                 "version": protocol.version,
-                "parameters": self._create_protocol_parameters(study, protocol)
+                "parameters": self._create_protocol_parameters(protocol,
+                                                               study),
+                "components": self._create_components(protocol, study),
+                "comments": self._create_comments()
             }
             for protocol in Protocol.objects.filter(study=study)
         ]

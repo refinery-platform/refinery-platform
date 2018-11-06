@@ -319,7 +319,9 @@ class ISATabExportTests(MetadataImportTestBase):
                                 'term_source': u''
                             },
                             'uri': u'',
-                            'version': u''
+                            'version': u'',
+                            "components": [],
+                            "comments": []
                         },
                         {
                             'description': u'Aliquots of 400 \xb5l urine '
@@ -345,7 +347,9 @@ class ISATabExportTests(MetadataImportTestBase):
                                 'term_source': u''
                             },
                             'uri': u'',
-                            'version': u''
+                            'version': u'',
+                            "components": [],
+                            "comments": []
                         },
                         {
                             'description': u'The spectra of human urine '
@@ -364,7 +368,9 @@ class ISATabExportTests(MetadataImportTestBase):
                                 'term_source': u''
                             },
                             'uri': u'',
-                            'version': u''
+                            'version': u'',
+                            "components": [],
+                            "comments": []
                         },
                         {
                             'description': u'A 1D NOESY presaturation pulse '
@@ -385,7 +391,9 @@ class ISATabExportTests(MetadataImportTestBase):
                                 'term_source': u''
                             },
                             'uri': u'',
-                            'version': u''
+                            'version': u'',
+                            "components": [],
+                            "comments": []
                         },
                         {
                             'description': u'Spectra were processed using '
@@ -419,7 +427,9 @@ class ISATabExportTests(MetadataImportTestBase):
                             },
                             'uri': u'http://www.acdlabs.com/products/adh/nmr'
                                    u'/1d_man/',
-                            'version': u'ACD nmr manager 8.0'
+                            'version': u'ACD nmr manager 8.0',
+                            "components": [],
+                            "comments": []
                         },
                         {
                             'description': u'Assignments were confirmed by '
@@ -440,7 +450,9 @@ class ISATabExportTests(MetadataImportTestBase):
                                 'term_source': u''
                             },
                             'uri': u'',
-                            'version': u''
+                            'version': u'',
+                            "components": [],
+                            "comments": []
                         },
                         {
                             'description': u'For the human studies, '
@@ -478,7 +490,9 @@ class ISATabExportTests(MetadataImportTestBase):
                                 'term_source': u''
                             },
                             'uri': u'',
-                            'version': u''
+                            'version': u'',
+                            "components": [],
+                            "comments": []
                         }
                     ],
                     'public_release_date': datetime.date(2014, 11, 25),
