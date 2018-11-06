@@ -32,7 +32,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'materials': '',
                             'measurement_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'1969 - 1979',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -41,7 +40,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'technology_platform': u'',
                             'technology_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'',
                                 'term_accession': None,
                                 'term_source': u''
@@ -124,7 +122,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'materials': '',
                             'measurement_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'metabolite profiling',
                                 'term_accession': u'http://purl.obolibrary'
                                                   u'.org/obo/OBI_0000366',
@@ -134,7 +131,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'technology_platform': u'Bruker',
                             'technology_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'NMR spectroscopy',
                                 'term_accession': None,
                                 'term_source': u'OBI'
@@ -204,27 +200,23 @@ class ISATabExportTests(MetadataImportTestBase):
                             'comments': [],
                             'factor_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'Gender',
                                 'term_accession': u'http://ncicb.nci.nih.gov'
                                                   u'/xml/owl/EVS/Thesaurus'
                                                   u'.owl#C17357',
                                 'term_source': u'NCIT'
                             },
-                            'id_': '',
                             'name': u'Gender'
                         },
                         {
                             'comments': [],
                             'factor_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'metabolic syndrome',
                                 'term_accession': u'http://www.ebi.ac.uk/efo'
                                                   u'/EFO_0000195',
                                 'term_source': u'EFO'
                             },
-                            'id_': '',
                             'name': u'Metabolic syndrome'
                         }
                     ],
@@ -280,7 +272,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'Extraction',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -307,7 +298,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'NMR sample',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -327,7 +317,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'NMR spectroscopy',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -349,7 +338,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'NMR assay',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -383,7 +371,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'Data transformation',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -405,7 +392,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'Metabolite identification',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -444,7 +430,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'parameters': [],
                             'protocol_type': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'Sample collection',
                                 'term_accession': u'',
                                 'term_source': u''
@@ -466,7 +451,6 @@ class ISATabExportTests(MetadataImportTestBase):
                             'pubmed_id': u'17190852',
                             'status': {
                                 'comments': [],
-                                'id_': '',
                                 'term': u'Published',
                                 'term_accession': u'',
                                 'term_source': u''

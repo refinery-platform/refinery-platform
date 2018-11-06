@@ -1169,7 +1169,6 @@ class ISAToolsDictCreator:
         """
         return [
             {
-                "id_": "",  # Where should this come from?
                 "name": f.name,
                 "factor_type": self._create_ontology_annotation(
                     f.type, f.type_source, f.type_accession
@@ -1194,7 +1193,6 @@ class ISAToolsDictCreator:
             "term_source": term_source,
             "term_accession": term_accession,
             "comments": [],  # What actually are these?
-            "id_": ''  # Where does this id come from??
         }
 
     def _create_ontology_source_references(self):
