@@ -27,21 +27,6 @@ describe('Not logged in', function() {
     cy.visible('No analyses performed.');
   });
 
-  it('Has statistics', function() {
-    cy.viewport(1366, 768) //macbook 11"
-    cy.visit('/');
-    cy.visible('Statistics').click();
-
-    cy.visible('Statistics');
-
-    cy.visible('Users');
-    cy.visible('Groups');
-    cy.visible('Files');
-    cy.visible('Data Sets');
-    cy.visible('Workflows');
-    cy.visible('Projects');
-  });
-
   it('Has about', function() {
     cy.viewport(1366, 768) //macbook 11"
     cy.visit('/');
