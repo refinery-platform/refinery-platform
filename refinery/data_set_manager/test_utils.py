@@ -377,7 +377,8 @@ class ISATabExportTests(MetadataImportTestBase):
                             },
                             'uri': u'http://www.acdlabs.com/products/adh/nmr'
                                    u'/1d_man/',
-                            'version': u'ACD nmr manager 8.0'},
+                            'version': u'ACD nmr manager 8.0'
+                        },
                         {
                             'description': u'Assignments were confirmed by '
                                            u'two dimensional spectroscopy '
