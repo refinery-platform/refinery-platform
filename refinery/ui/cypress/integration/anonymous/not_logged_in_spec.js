@@ -7,7 +7,6 @@ describe('Not logged in', function() {
     //cy.visible('Refinery');
 
     cy.visible('Collaboration');
-    cy.visible('Statistics');
     cy.visible('About');
 
     cy.visible('Register');
