@@ -1113,15 +1113,15 @@ class ISAToolsDictCreator:
         return [
             {
                 "measurement_type": self._create_ontology_annotation(
-                    a.measurement, a.measurement_source,
-                    a.measurement_accession
+                    assay.measurement, assay.measurement_source,
+                    assay.measurement_accession
                 ),
                 "technology_type": self._create_ontology_annotation(
-                    a.technology, a.technology_source,
-                    a.technology_accession
+                    assay.technology, assay.technology_source,
+                    assay.technology_accession
                 ),
-                "technology_platform": a.platform,
-                "filename": a.file_name,
+                "technology_platform": assay.platform,
+                "filename": assay.file_name,
                 "materials": "",
                 "units": "",
                 "characteristic_categories": "",
@@ -1129,7 +1129,7 @@ class ISAToolsDictCreator:
                 "comments": self._create_comments(),
                 "graph": ""
             }
-            for a in Assay.objects.filter(study=study)
+            for assay in Assay.objects.filter(study=study)
         ]
 
     def _create_comments(self):
