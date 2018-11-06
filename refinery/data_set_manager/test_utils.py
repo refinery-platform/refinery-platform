@@ -195,7 +195,48 @@ class ISATabExportTests(MetadataImportTestBase):
                                    u'Note: This is part of a larger study, '
                                    u'please refer to the original paper '
                                    u'below.',
-                    'design_descriptors': [],
+                    'design_descriptors': [
+                        {
+                            'comments': [],
+                            'term': u'diabetes mellitus',
+                            'term_accession': u'http://www.ebi.ac.uk/efo'
+                                              u'/EFO_0000400',
+                            'term_source': u'EFO'
+                        },
+                        {
+                            'comments': [],
+                            'term': u'metabolic syndrome',
+                            'term_accession': u'http://www.ebi.ac.uk/efo'
+                                              u'/EFO_0000195',
+                            'term_source': u'EFO'
+                        },
+                        {
+                            'comments': [],
+                            'term': u'Urine global profiling',
+                            'term_accession': u'',
+                            'term_source': u''
+                        },
+                        {
+                            'comments': [],
+                            'term': u'nuclear magnetic resonance spectroscopy',
+                            'term_accession': u'http://purl.obolibrary.org'
+                                              u'/obo/CHMO_0000591',
+                            'term_source': u'CHMO'
+                        },
+                        {
+                            'comments': [],
+                            'term': u'Human Study Subject',
+                            'term_accession': u'http://ncicb.nci.nih.gov/xml'
+                                              u'/owl/EVS/Thesaurus.owl#C70665',
+                            'term_source': u'NCIT'
+                        },
+                        {
+                            'comments': [],
+                            'term': u'untargeted metabolites',
+                            'term_accession': u'',
+                            'term_source': u''
+                        }
+                    ],
                     'factors': [
                         {
                             'comments': [],

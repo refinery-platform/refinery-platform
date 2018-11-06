@@ -24,9 +24,8 @@ import core
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
-    Contact, Factor, Node, Ontology,  Protocol,  ProtocolParameter,
-    Publication, Study
-)
+    Contact, Design, Factor, Node, Ontology, Protocol, ProtocolParameter,
+    Publication, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 
@@ -1161,6 +1160,20 @@ class ISAToolsDictCreator:
         ]
 
     def _create_factors(self, factors):
+    def _create_design_descriptors(self, study):
+        """
+        See: DesignDescriptor class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1828
+        :param study:
+        :return:
+        """
+        return [
+            self._create_ontology_annotation(
+                design.type, design.type_source, design.type_accession
+            )
+            for design in Design.objects.filter(study=study)
+        ]
+
         """
         See: StudyFactor class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1828
@@ -1301,7 +1314,6 @@ class ISAToolsDictCreator:
                     "submission_date": study.submission_date,
                     "public_release_date": study.release_date,
                     "filename": study.file_name,
-                    "design_descriptors": [],  # Must be OntologyAnnotation
                     "publications": self._create_publications(publications),
                     "contacts": self._create_contacts(contacts),
                     "factors": self._create_factors(factors),
@@ -1319,3 +1331,6 @@ class ISAToolsDictCreator:
                 }  # Must be a Study instance
             )
         return studies
+                "design_descriptors": self._create_design_descriptors(
+                    study
+                ),
