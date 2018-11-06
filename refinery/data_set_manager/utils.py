@@ -1085,30 +1085,27 @@ class ISAToolsDictCreator:
 
         :return:
         """
-        contacts = Contact.objects.filter(collection=self.investigation)
-        publications = Publication.objects.filter(
-            collection=self.investigation
-        )
-
         return {
-            "identifier": self.investigation.get_identifier(),
             "filename": self.investigation.get_isatab_file_name(),
+            "identifier": self.investigation.get_identifier(),
             "title": self.investigation.get_title(),
             "description": self.investigation.get_description(),
             "submission_date": self.investigation.submission_date,
             "public_release_date": self.investigation.release_date,
-            "publications": self._create_publications(publications),
-            "contacts": self._create_contacts(contacts),
-            "studies": self._create_studies(),
             "ontology_source_references":
                 self._create_ontology_source_references(),
-            "comments": [],
+            "publications": self._create_publications(self.investigation),
+            "contacts": self._create_contacts(self.investigation),
+            "studies": self._create_studies(),
+            "comments": self._create_comments()
         }
 
-    def _create_assays(self, assays):
+    def _create_assays(self, study):
         """
         See: Assay class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1905
+        :param study:
+        :return:
         """
         # Will probably need to start retrieving Node information at this point
         #   nodes = dataset.get_nodes(assay=a, study=s)
@@ -1129,17 +1126,21 @@ class ISAToolsDictCreator:
                 "units": "",
                 "characteristic_categories": "",
                 "process_sequence": "",
-                "comments": [],  # What actually are these?
+                "comments": self._create_comments(),
                 "graph": ""
-            }  # Must be an Assay instance
-            for a in assays
+            }
+            for a in Assay.objects.filter(study=study)
         ]
 
-    def _create_contacts(self, contacts):
+    def _create_comments(self):
+        # Do we even support these with the current parser implementation?
+        return []
+
+    def _create_contacts(self, node_collection):
         """
         See: Person class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L883
-        :param contacts:
+        :param node_collection:
         :return:
         """
         return [
@@ -1154,12 +1155,11 @@ class ISAToolsDictCreator:
                 "affiliation": c.affiliation,
                 "roles": [c.roles],  # Split on semicolon? See Contact model
                 # roles_accession and roles_source also exist here in Contact?
-                "comments": [],  # What actually are these?
-            }  # Must be a Person instance
-            for c in contacts
+                "comments": self._create_comments(),
+            }
+            for c in Contact.objects.filter(collection=node_collection)
         ]
 
-    def _create_factors(self, factors):
     def _create_design_descriptors(self, study):
         """
         See: DesignDescriptor class
@@ -1174,10 +1174,11 @@ class ISAToolsDictCreator:
             for design in Design.objects.filter(study=study)
         ]
 
+    def _create_factors(self, study):
         """
         See: StudyFactor class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1828
-        :param factors:
+        :param study:
         :return:
         """
         return [
@@ -1186,9 +1187,9 @@ class ISAToolsDictCreator:
                 "factor_type": self._create_ontology_annotation(
                     f.type, f.type_source, f.type_accession
                 ),
-                "comments": [],  # What actually are these?
-            }  # Must be StudyFactor instance
-            for f in factors
+                "comments": self._create_comments(),
+            }
+            for f in Factor.objects.filter(study=study)
         ]
 
     def _create_ontology_annotation(self, term=None, term_source=None,
@@ -1205,14 +1206,13 @@ class ISAToolsDictCreator:
             "term": term,
             "term_source": term_source,
             "term_accession": term_accession,
-            "comments": [],  # What actually are these?
+            "comments": self._create_comments(),
         }
 
     def _create_ontology_source_references(self):
         """
         See: OntologySource class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L545
-        :param ontology:
         :return:
         """
         return [
@@ -1221,7 +1221,7 @@ class ISAToolsDictCreator:
                 "version": ontology.version,
                 "description": ontology.description,
                 "file": ontology.file_name,
-                "comments": []  # What actually are these?
+                "comments": self._create_comments()
             }
             for ontology in Ontology.objects.filter(
                 investigation=self.investigation
@@ -1242,19 +1242,18 @@ class ISAToolsDictCreator:
                     protocol_parameter.name, protocol_parameter.name_source,
                     protocol_parameter.name_accession
                 ),
-                "comments": [],  # What actually are these?
-            }  # Must be a ProtocolParameter instance
+                "comments": self._create_comments(),
+            }
             for protocol_parameter in ProtocolParameter.objects.filter(
                 study=study, protocol=protocol
             )
         ]
 
-    def _create_protocols(self, study, protocols):
+    def _create_protocols(self, study):
         """
         See: Protocol class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2078
         :param study:
-        :param protocols:
         :return:
         """
         return [
@@ -1269,14 +1268,14 @@ class ISAToolsDictCreator:
                 "version": protocol.version,
                 "parameters": self._create_protocol_parameters(study, protocol)
             }
-            for protocol in protocols
+            for protocol in Protocol.objects.filter(study=study)
         ]
 
-    def _create_publications(self, publications):
+    def _create_publications(self, node_collection):
         """
         See: Publication class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L751
-        :param publications:
+        :param node_collection:
         :return:
         """
         return [
@@ -1288,8 +1287,8 @@ class ISAToolsDictCreator:
                 "status": self._create_ontology_annotation(
                     p.status, p.status_source, p.status_accession
                 ),
-                "comments": [],  # What actually are these?
-            } for p in publications
+                "comments": self._create_comments(),
+            } for p in Publication.objects.filter(collection=node_collection)
         ]
 
     def _create_studies(self):
@@ -1298,39 +1297,31 @@ class ISAToolsDictCreator:
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1520
         :return:
         """
-        studies = []
-        for study in Study.objects.filter(investigation=self.investigation):
-            assays = Assay.objects.filter(study=study)
-            contacts = Contact.objects.filter(collection=study)
-            factors = Factor.objects.filter(study=study)
-            protocols = Protocol.objects.filter(study=study)
-            publications = Publication.objects.filter(collection=study)
-
-            studies.append(
-                {
-                    "identifier": study.identifier,
-                    "title": study.title,
-                    "description": study.description,
-                    "submission_date": study.submission_date,
-                    "public_release_date": study.release_date,
-                    "filename": study.file_name,
-                    "publications": self._create_publications(publications),
-                    "contacts": self._create_contacts(contacts),
-                    "factors": self._create_factors(factors),
-                    "protocols": self._create_protocols(study, protocols),
-                    "assays": self._create_assays(assays),
-                    "materials": "",
-                    "sources": "",
-                    "samples": "",
-                    "other_material": "",
-                    "units": "",
-                    "characteristic_categories": "",
-                    "process_sequence": "",
-                    "comments": [],  # What actually are these?
-                    "graph": ""
-                }  # Must be a Study instance
-            )
-        return studies
+        return [
+            {
+                "identifier": study.identifier,
+                "title": study.title,
+                "description": study.description,
+                "submission_date": study.submission_date,
+                "public_release_date": study.release_date,
+                "filename": study.file_name,
                 "design_descriptors": self._create_design_descriptors(
                     study
                 ),
+                "publications": self._create_publications(study),
+                "contacts": self._create_contacts(study),
+                "factors": self._create_factors(study),
+                "protocols": self._create_protocols(study),
+                "assays": self._create_assays(study),
+                "materials": "",
+                "sources": "",
+                "samples": "",
+                "other_material": "",
+                "units": "",
+                "characteristic_categories": "",
+                "process_sequence": "",
+                "comments": self._create_comments(),
+                "graph": ""
+            }
+            for study in Study.objects.filter(investigation=self.investigation)
+        ]
