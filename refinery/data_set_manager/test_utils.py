@@ -4,6 +4,7 @@ import mock
 from core.models import DataSet
 from data_set_manager.tests import MetadataImportTestBase
 from data_set_manager.utils import ISAToolsDictCreator
+from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.tasks import FileImportTask
 
 
@@ -481,3 +482,8 @@ class ISATabExportTests(MetadataImportTestBase):
         dataset = DataSet.objects.all().first()
         isa_tools_dict = ISAToolsDictCreator(dataset).create()
         self.assertEqual(isa_tools_dict, expected)
+
+    def test_isa_tab_based_datasets_supported_only(self):
+        non_isatab_dataset = create_dataset_with_necessary_models()
+        with self.assertRaises(RuntimeError):
+            ISAToolsDictCreator(non_isatab_dataset)
