@@ -1066,14 +1066,26 @@ def get_first_annotated_node_from_solr_name(solr_name, node):
 
 
 class ISAToolsDictCreator:
+    """
+    Create a dict representation of an ISATab-based Refinery DataSet
+
+    Said dict will be utilized by the https://github.com/ISA-tools/isa-api
+    to generate a new ISATab .zip file including any changes that have
+    occurred during the lifetime of the DataSet including, but not limited to:
+    Analysis/Workflow derived results, metadata revisions (DataSet Node
+    contents as well as DataSet-level modifications (title updates etc.))
+    """
     def __init__(self, dataset):
         investigation = dataset.get_investigation()
         if not investigation.is_isa_tab_based():
             raise RuntimeError("Investigation is not derived from an ISATab")
         self.investigation = investigation
-        self.isatab_file_names = self.investigation.get_isatab_file_names()
 
     def create(self):
+        """
+
+        :return:
+        """
         contacts = Contact.objects.filter(collection=self.investigation)
         publications = Publication.objects.filter(
             collection=self.investigation
@@ -1081,19 +1093,24 @@ class ISAToolsDictCreator:
 
         return {
             "identifier": self.investigation.get_identifier(),
-            "filename": self.isatab_file_names["investigation"],
+            "filename": self.investigation.get_isatab_file_name(),
             "title": self.investigation.get_title(),
             "description": self.investigation.get_description(),
             "submission_date": self.investigation.submission_date,
             "public_release_date": self.investigation.release_date,
             "publications": self._create_publications(publications),
             "contacts": self._create_contacts(contacts),
-            "studies": self.studies,
-            "ontology_source_references": self.ontology_source_references,
+            "studies": self._create_studies(),
+            "ontology_source_references":
+                self._create_ontology_source_references(),
             "comments": [],
         }
 
     def _create_assays(self, assays):
+        """
+        See: Assay class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1905
+        """
         # Will probably need to start retrieving Node information at this point
         #   nodes = dataset.get_nodes(assay=a, study=s)
 
@@ -1108,7 +1125,7 @@ class ISAToolsDictCreator:
                     a.technology_accession
                 ),
                 "technology_platform": a.platform,
-                "filename": self.isatab_file_names["assay"],
+                "filename": a.file_name,
                 "materials": "",
                 "units": "",
                 "characteristic_categories": "",
@@ -1120,6 +1137,12 @@ class ISAToolsDictCreator:
         ]
 
     def _create_contacts(self, contacts):
+        """
+        See: Person class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L883
+        :param contacts:
+        :return:
+        """
         return [
             {
                 "last_name": c.last_name,
@@ -1138,9 +1161,15 @@ class ISAToolsDictCreator:
         ]
 
     def _create_factors(self, factors):
+        """
+        See: StudyFactor class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1828
+        :param factors:
+        :return:
+        """
         return [
             {
-                "id_": "",
+                "id_": "",  # Where should this come from?
                 "name": f.name,
                 "factor_type": self._create_ontology_annotation(
                     f.type, f.type_source, f.type_accession
@@ -1152,6 +1181,14 @@ class ISAToolsDictCreator:
 
     def _create_ontology_annotation(self, term=None, term_source=None,
                                     term_accession=None):
+        """
+        See: OntologyAnnotation class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L656
+        :param term:
+        :param term_source:
+        :param term_accession:
+        :return:
+        """
         return {
             "term": term,
             "term_source": term_source,
@@ -1160,16 +1197,55 @@ class ISAToolsDictCreator:
             "id_": ''  # Where does this id come from??
         }
 
-    def _create_ontology_source_reference(self, ontology):
-        return {
+    def _create_ontology_source_references(self):
+        """
+        See: OntologySource class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L545
+        :param ontology:
+        :return:
+        """
+        return [
+            {
                 "name": ontology.name,
                 "version": ontology.version,
                 "description": ontology.description,
                 "file": ontology.file_name,
                 "comments": []  # What actually are these?
             }
+            for ontology in Ontology.objects.filter(
+                investigation=self.investigation
+            )
+        ]
+
+    def _create_protocol_parameters(self, study, protocol):
+        """
+        See: ProtocolParameter class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2283
+        :param study:
+        :param protocol:
+        :return:
+        """
+        return [
+            {
+                "parameter_name": self._create_ontology_annotation(
+                    protocol_parameter.name, protocol_parameter.name_source,
+                    protocol_parameter.name_accession
+                ),
+                "comments": [],  # What actually are these?
+            }  # Must be a ProtocolParameter instance
+            for protocol_parameter in ProtocolParameter.objects.filter(
+                study=study, protocol=protocol
+            )
+        ]
 
     def _create_protocols(self, study, protocols):
+        """
+        See: Protocol class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2078
+        :param study:
+        :param protocols:
+        :return:
+        """
         return [
             {
                 "name": protocol.name,
@@ -1180,24 +1256,18 @@ class ISAToolsDictCreator:
                 "description": protocol.description,
                 "uri": protocol.uri,
                 "version": protocol.version,
-                "parameters": [
-                    {
-                        "parameter_name":
-                            self._create_ontology_annotation(
-                                param.name, param.name_source,
-                                param.name_accession
-                            ),
-                        "comments": [],  # What actually are these?
-                    }  # Must be a ProtocolParameter instance
-                    for param in ProtocolParameter.objects.filter(
-                        study=study, protocol=protocol
-                    )
-                ]
+                "parameters": self._create_protocol_parameters(study, protocol)
             }
             for protocol in protocols
         ]
 
     def _create_publications(self, publications):
+        """
+        See: Publication class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L751
+        :param publications:
+        :return:
+        """
         return [
             {
                 "pubmed_id": p.pubmed_id,
@@ -1206,53 +1276,48 @@ class ISAToolsDictCreator:
                 "title": p.title,
                 "status": self._create_ontology_annotation(
                     p.status, p.status_source, p.status_accession
-                )
+                ),
+                "comments": [],  # What actually are these?
             } for p in publications
         ]
 
-    def _create_study(self, study):
-        publications = Publication.objects.filter(collection=study)
-        contacts = Contact.objects.filter(collection=study)
-        factors = Factor.objects.filter(study=study)
-        protocols = Protocol.objects.filter(study=study)
-        assays = Assay.objects.filter(study=study)
+    def _create_studies(self):
+        """
+        See: Study class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1520
+        :return:
+        """
+        studies = []
+        for study in Study.objects.filter(investigation=self.investigation):
+            assays = Assay.objects.filter(study=study)
+            contacts = Contact.objects.filter(collection=study)
+            factors = Factor.objects.filter(study=study)
+            protocols = Protocol.objects.filter(study=study)
+            publications = Publication.objects.filter(collection=study)
 
-        return {
-            "identifier": study.identifier,
-            "title": study.title,
-            "description": study.description,
-            "submission_date": study.submission_date,
-            "public_release_date": study.release_date,
-            "filename": self.isatab_file_names["study"],
-            "design_descriptors": [],  # Must be OntologyAnnotation
-            "publications": self._create_publications(publications),
-            "contacts": self._create_contacts(contacts),
-            "factors": self._create_factors(factors),
-            "protocols": self._create_protocols(study, protocols),
-            "assays": self._create_assays(assays),
-            "materials": "",
-            "sources": "",
-            "samples": "",
-            "other_material": "",
-            "units": "",
-            "characteristic_categories": "",
-            "process_sequence": "",
-            "comments": [],  # What actually are these?
-            "graph": ""
-        }  # Must be a Study instance
-
-    @property
-    def ontology_source_references(self):
-        return [
-            self._create_ontology_source_reference(ontology)
-            for ontology in Ontology.objects.filter(
-                investigation=self.investigation
+            studies.append(
+                {
+                    "identifier": study.identifier,
+                    "title": study.title,
+                    "description": study.description,
+                    "submission_date": study.submission_date,
+                    "public_release_date": study.release_date,
+                    "filename": study.file_name,
+                    "design_descriptors": [],  # Must be OntologyAnnotation
+                    "publications": self._create_publications(publications),
+                    "contacts": self._create_contacts(contacts),
+                    "factors": self._create_factors(factors),
+                    "protocols": self._create_protocols(study, protocols),
+                    "assays": self._create_assays(assays),
+                    "materials": "",
+                    "sources": "",
+                    "samples": "",
+                    "other_material": "",
+                    "units": "",
+                    "characteristic_categories": "",
+                    "process_sequence": "",
+                    "comments": [],  # What actually are these?
+                    "graph": ""
+                }  # Must be a Study instance
             )
-        ]
-
-    @property
-    def studies(self):
-        return [
-            self._create_study(study)
-            for study in Study.objects.filter(investigation=self.investigation)
-        ]
+        return studies
