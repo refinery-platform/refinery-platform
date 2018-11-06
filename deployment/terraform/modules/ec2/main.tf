@@ -201,19 +201,3 @@ su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet i
 /usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
 EOF
 }
-
-//resource "aws_ebs_volume" "user_data" {
-//  availability_zone = "${aws_instance.app_server.availability_zone}"
-//  size              = "${var.data_volume_size}"
-//  snapshot_id       = "${var.data_volume_snapshot_id}"
-//  type              = "${var.data_volume_type}"
-//  tags              = "${merge(
-//    var.tags, map("Name", "${var.resource_name_prefix} app server")
-//  )}"
-//}
-//
-//resource "aws_volume_attachment" "app_server_user_data" {
-//  device_name = "/dev/xvdr"
-//  instance_id = "${aws_instance.app_server.id}"
-//  volume_id   = "${aws_ebs_volume.user_data.id}"
-//}
