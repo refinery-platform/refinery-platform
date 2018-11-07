@@ -72,12 +72,14 @@ exec { "set_up_refinery_site_name":
   group       => $app_group,
 }
 ->
-
 file { "/opt":
   ensure => directory,
 }
 
-include '::rabbitmq'
+# workaround for CloudFront error 523 Origin Unreachable for https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
+class { '::rabbitmq':
+  package_gpg_key  => 'https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc',
+}
 
 class ui {
   apt::source { 'nodejs':
