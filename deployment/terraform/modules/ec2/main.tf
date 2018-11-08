@@ -118,7 +118,7 @@ resource "aws_instance" "app_server" {
   iam_instance_profile   = "${aws_iam_instance_profile.app_server.name}"
   root_block_device {
     volume_type = "gp2"
-    volume_size = 11  # originally 8G but HiGlass is 2.5G (must be an integer)
+    volume_size = 8  # GB
   }
   ebs_block_device {
     delete_on_termination = false
