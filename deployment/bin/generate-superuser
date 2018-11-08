@@ -3,6 +3,9 @@
 import json
 import os
 
+# https://docs.djangoproject.com/en/1.9/topics/auth/passwords/#django.contrib.auth.hashers.make_password
+from django.contrib.auth.hashers import make_password
+
 # The local package refinery/core/__init__.py
 import core     # Only used for its location
 
@@ -10,17 +13,8 @@ core_path = os.path.dirname(os.path.abspath(core.__file__))
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
 
-# https://docs.djangoproject.com/en/1.9/topics/auth/passwords/#django.contrib.auth.hashers.make_password
-from django.contrib.auth.hashers import make_password
 
 def main():
-
-    if 'ADMIN_PASSWORD' not in os.environ:
-        with open("/home/ubuntu/s3-config") as inp:
-            j = json.load(inp)
-            os.environ['ADMIN_PASSWORD'] = j['ADMIN_PASSWORD']
-    password = os.environ['ADMIN_PASSWORD']
-
     with open(os.path.join(core_path, 'fixtures/superuser.json')) as j:
 	o = json.load(j)
 
@@ -29,7 +23,7 @@ def main():
     assert len(admin_index) == 1
     (admin_index,) = admin_index
 
-    hashed_password = make_password(password)
+    hashed_password = make_password(os.environ['ADMIN_PASSWORD'])
 
     o[admin_index]['fields']['password'] = hashed_password
 

@@ -22,13 +22,14 @@ resource "aws_db_instance" "default" {
   allocated_storage          = 5
   auto_minor_version_upgrade = false
   availability_zone          = "${var.availability_zone}"
-  backup_window              = "23:34-00:04"
+  backup_window              = "23:34-00:04"  # UTC
   backup_retention_period    = 15
   copy_tags_to_snapshot      = true
   db_subnet_group_name       = "${aws_db_subnet_group.default.id}"
   engine                     = "postgres"
   engine_version             = "10.5"
-  final_snapshot_identifier  = "${var.resource_name_prefix}-final"
+  # snapshot IDs must be unique
+  final_snapshot_identifier  = "${var.resource_name_prefix}-final-${substr(uuid(), 0, 8)}"
   identifier                 = "${var.resource_name_prefix}"
   instance_class             = "db.t2.small"
   password                   = "${var.master_user_password}"
@@ -38,4 +39,8 @@ resource "aws_db_instance" "default" {
   tags                       = "${var.tags}"
   username                   = "root"
   vpc_security_group_ids     = ["${aws_security_group.db.id}"]
+  # avoid assigning a new value to final snapshot ID on every apply
+  lifecycle {
+    ignore_changes = ["final_snapshot_identifier"]
+  }
 }

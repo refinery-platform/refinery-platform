@@ -12,25 +12,40 @@ provider "aws" {
   region  = "${var.region}"
 }
 
+provider "external" {
+  version = "~> 1.0"
+}
+
 provider "random" {
   version = "~> 2.0"
 }
 
-locals {
-  s3_bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
-  tags                = "${merge(
-    var.tags,
-    map(
-      "product", "refinery",
-      "terraform", "true"
-    )
-  )}"
+data "external" "git" {
+  program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
 }
 
 resource "random_string" "rds_master_user_password" {
   length  = 8
   upper   = false
   special = false
+}
+
+resource "random_string" "django_admin_password" {
+  length  = 8
+  upper   = false
+  special = false
+}
+
+locals {
+  s3_bucket_name_base      = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
+  rds_master_user_password = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
+  tags                     = "${merge(
+    var.tags,
+    map(
+      "product", "refinery",
+      "terraform", "true"
+    )
+  )}"
 }
 
 module "object_storage" {
@@ -71,7 +86,7 @@ module "database" {
   source                       = "../modules/rds"
   app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
   availability_zone            = "${var.availability_zone_a}"
-  master_user_password         = "${var.rds_master_user_password != "" ? var.rds_master_user_password : random_string.rds_master_user_password.result}"
+  master_user_password         = "${local.rds_master_user_password}"
   private_subnet_a             = "${module.vpc.private_subnet_a_id}"
   private_subnet_b             = "${module.vpc.private_subnet_b_id}"
   resource_name_prefix         = "${terraform.workspace}"
@@ -81,10 +96,42 @@ module "database" {
 }
 
 module "app_server" {
-  source               = "../modules/ec2"
-  static_bucket_name   = "${module.object_storage.static_bucket_name}"
-  upload_bucket_name   = "${module.object_storage.upload_bucket_name}"
-  media_bucket_name    = "${module.object_storage.media_bucket_name}"
-  identity_pool_id     = "${module.identity_pool.identity_pool_id}"
-  resource_name_prefix = "${terraform.workspace}"
+  source                               = "../modules/ec2"
+  static_bucket_name                   = "${module.object_storage.static_bucket_name}"
+  upload_bucket_name                   = "${module.object_storage.upload_bucket_name}"
+  media_bucket_name                    = "${module.object_storage.media_bucket_name}"
+  identity_pool_id                     = "${module.identity_pool.identity_pool_id}"
+  instance_type                        = "${var.app_server_instance_type}"
+  key_pair_name                        = "${var.app_server_key_pair_name}"
+  security_group_id                    = "${module.vpc.app_server_security_group_id}"
+  subnet_id                            = "${module.vpc.public_subnet_id}"
+  ssh_users                            = "${var.app_server_ssh_users}"
+  git_commit                           = "${var.git_commit != "" ? var.git_commit : data.external.git.result["commit"]}"
+  django_admin_password                = "${var.django_admin_password != "" ? var.django_admin_password : random_string.django_admin_password.result}"
+  django_default_from_email            = "${var.django_default_from_email}"
+  django_server_email                  = "${var.django_server_email}"
+  django_admin_email                   = "${var.django_admin_email}"
+  rds_endpoint_address                 = "${module.database.instance_hostname}"
+  rds_superuser_password               = "${local.rds_master_user_password}"
+  docker_host                          = "${module.docker_host.docker_hostname}"
+  site_name                            = "${var.site_name}"
+  site_domain                          = "${var.site_domain}"
+  tls                                  = "${var.tls}"
+  django_email_subject_prefix          = "${var.django_email_subject_prefix}"
+  refinery_banner                      = "${var.refinery_banner}"
+  refinery_banner_anonymous_only       = "${var.refinery_banner_anonymous_only}"
+  refinery_custom_navbar_item          = "${var.refinery_custom_navbar_item}"
+  refinery_google_analytics_id         = "${var.refinery_google_analytics_id}"
+  refinery_google_recaptcha_site_key   = "${var.refinery_google_recaptcha_site_key}"
+  refinery_google_recaptcha_secret_key = "${var.refinery_google_recaptcha_secret_key}"
+  refinery_s3_user_data                = "${var.refinery_s3_user_data}"
+  refinery_url_scheme                  = "${var.refinery_url_scheme}"
+  refinery_welcome_email_subject       = "${var.refinery_welcome_email_subject}"
+  refinery_welcome_email_message       = "${var.refinery_welcome_email_message}"
+  refinery_user_files_columns          = "${var.refinery_user_files_columns}"
+  data_volume_size                     = "${var.data_volume_size}"
+  data_volume_type                     = "${var.data_volume_type}"
+  data_volume_snapshot_id              = "${var.data_volume_snapshot_id}"
+  resource_name_prefix                 = "${terraform.workspace}"
+  tags                                 = "${local.tags}"
 }

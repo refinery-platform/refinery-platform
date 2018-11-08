@@ -9,7 +9,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
 
 import djcelery
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +18,9 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
 
 local_settings_file_path = os.path.join(BASE_DIR,
                                         'refinery/config/config.json')
-
 tutorial_settings_file_path = os.path.join(
-    BASE_DIR,
-    'refinery/config/tutorial_steps.json'
+    BASE_DIR, 'refinery/config/tutorial_steps.json'
 )
-
-override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -44,14 +39,6 @@ except IOError as e:
         tutorial_settings_file_path, e
     )
     raise ImproperlyConfigured(error_msg)
-
-# load (optional) override-config.yaml
-try:
-    with open(override_path, 'r') as f:
-        override = yaml.load(f)
-    local_settings.update(override)
-except IOError:
-    pass
 
 
 def get_setting(name, settings=local_settings, default=None):
@@ -638,7 +625,7 @@ UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
-REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA')
 
 # ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
 ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
@@ -653,10 +640,8 @@ REFINERY_VISUALIZATION_REGISTRY = \
 # environments (They don't actually validate registering users)
 # See: https://developers.google.com/recaptcha/docs/faq
 REFINERY_GOOGLE_RECAPTCHA_SITE_KEY = get_setting(
-    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY",
-    default="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY"
 )
 REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY = get_setting(
-    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY",
-    default="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY"
 )
