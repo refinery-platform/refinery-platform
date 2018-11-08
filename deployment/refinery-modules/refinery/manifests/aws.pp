@@ -73,7 +73,8 @@ file { "$solr_core_data":
 exec { "generate_superuser_json":
   command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json.new",
   environment => ["PYTHONPATH=/srv/refinery-platform/refinery",
-                  "DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+                  "DJANGO_SETTINGS_MODULE=${django_settings_module}",
+                  "ADMIN_PASSWORD=${admin_password}"],
   user        => $app_user,
   group       => $app_group,
   require     => Exec["migrate"],

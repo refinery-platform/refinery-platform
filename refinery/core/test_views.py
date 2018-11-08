@@ -1113,6 +1113,10 @@ class EventApiV2Tests(APIV2TestCase):
 
 
 class CustomRegistrationViewTests(TestCase):
+    @override_settings(
+        REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",  # noqa: E251
+        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"  # noqa: E251
+    )
     def test_user_registration_successful_recaptcha(self):
         username = "new-test-user"
         password = make_password('password')

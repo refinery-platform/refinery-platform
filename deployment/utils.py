@@ -1,9 +1,6 @@
-import json
 import os
-import random
 import sys
 
-import boto3
 from cfn_pyplates.core import JSONableDict
 import yaml
 
@@ -58,28 +55,17 @@ def load_config():
 
     config = _load_config_file("config.yaml")
 
-    # Generate warning for old keys that we no longer use.
-    report_obsolete_keys(config)
-
     report_missing_keys(config)
 
     # Generate some special keys that are optional to specify.
     generated_config = {}
-    if 'ADMIN_PASSWORD' not in config:
-        generated_config['ADMIN_PASSWORD'] = random_password(8)
-
-    config_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-config"
-    generated_config['S3_CONFIG_BUCKET'] = config_bucket_name
     log_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-log"
     generated_config['S3_LOG_BUCKET'] = log_bucket_name
 
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
 
-    with open("aws-config/config.yaml", 'r') as f:
-        config_string = f.read()
-
-    return config, config_string
+    return config
 
 
 def _load_config_file(filename):
@@ -97,74 +83,13 @@ def _load_config_file(filename):
     return {}
 
 
-def ensure_s3_bucket(bucket_name):
-    """Ensure that the S3 bucket exists, creating it if necessary"""
-
-    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
-    s3 = boto3.resource('s3')
-
-    # Does nothing if already created, which is what we want.
-    s3.create_bucket(Bucket=bucket_name)
-
-    bucket_tags = s3.BucketTagging(bucket_name)
-    bucket_tags.put(Tagging={'TagSet': load_tags()})
-
-    return bucket_name
-
-
-def save_s3_config(config):
-    """Save the config as an S3 object in an S3 bucket
-    The config must have an 'S3_CONFIG_BUCKET' key, which is used for the name
-    of the S3 bucket
-
-    A URI in the form s3://bucket/key is returned
-    this URI refers to the S3 object that is created
-    """
-
-    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
-    s3 = boto3.resource('s3')
-
-    bucket_name = config['S3_CONFIG_BUCKET']
-    ensure_s3_bucket(bucket_name)
-
-    object_name = "refinery-config.json"
-
-    s3_uri = "s3://{}/{}".format(bucket_name, object_name)
-    config['S3_CONFIG_URI'] = s3_uri
-
-    # Store config as JSON in S3 object.
-    s3_object = s3.Object(bucket_name, object_name)
-    s3_object.put(Body=json.dumps(config, indent=2))
-    return s3_uri
-
-
-def report_obsolete_keys(config):
-    """
-    Report obsolete keys that are no longer used.
-    Just a warning; carries on anyway.
-    """
-
-    ignored = ['VOLUME', 'S3_CONFIG_BUCKET']
-    bad = []
-    for key in ignored:
-        if key in config:
-            bad.append(key)
-    if bad:
-        sys.stderr.write("{:s} no longer used, ignoring\n".format(
-            bad))
-
-
 def report_missing_keys(config):
     """
     Collect and report list of missing keys.
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['APP_SERVER_PROFILE_ID', 'APP_SERVER_SECURITY_GROUP_ID',
-                'COGNITO_IDENTITY_POOL_ID', 'EC2_INSTANCE_TYPE',
-                'ELB_SECURITY_GROUP_ID', 'IAM_SMTP_USER', 'KEY_NAME',
-                'RDS_ENDPOINT_ADDRESS', 'RDS_SUPERUSER_PASSWORD',
-                'S3_BUCKET_NAME_BASE', 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
+    required = ['ELB_SECURITY_GROUP_ID', 'S3_BUCKET_NAME_BASE', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:
@@ -174,22 +99,3 @@ def report_missing_keys(config):
             bad))
         raise RuntimeError
     return True
-
-
-def random_alnum(n):
-    """Random alphanumeric (digits and lowercase) string of length `n`"""
-
-    import string
-
-    return ''.join(
-        random.choice(string.ascii_lowercase + string.digits)
-        for _ in range(n))
-
-
-def random_password(n):
-    """Generate a random password using `n` bytes of randomness"""
-
-    import binascii
-
-    password = binascii.b2a_hex(os.urandom(n))
-    return password
