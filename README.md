@@ -10,7 +10,7 @@
 ## Installing and Launching for Development
 
 ### Prerequisites
-* Install [Git][gi] (2.19.0+), [jq][jq] (1.6+), [Vagrant][va] (2.2.0+) and [Virtualbox][vb] (5.2.20+)
+* Install [Git][gi] (2.19.0+), [Vagrant][va] (2.2.0+) and [Virtualbox][vb] (5.2.20+)
 * [Add SSH key to your GitHub account](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
 * Note: this procedure has only been tested on local development machines running OS X 10.10+
 
@@ -76,7 +76,6 @@ Please see [installation notes](https://github.com/refinery-platform/refinery-pl
 - To make sure all the required services are running after the VM was restarted or shut down, you need to provision again: `vagrant reload --provision` or `vagrant up --provision`
 
 [gi]: http://git-scm.com/
-[jq]: https://stedolan.github.io/jq/
 [va]: http://www.vagrantup.com/
 [vb]: https://www.virtualbox.org/
 [in]: https://refinery-platform.readthedocs.org/en/latest/administrator/setup.html
