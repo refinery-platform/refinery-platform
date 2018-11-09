@@ -110,7 +110,11 @@ variable "site_domain" {
   description = "Host name of the site (for example: www.example.org)"
 }
 
-# TODO: set internally based on presence of TLS certificate ARN in config
+variable "ssl_certificate_id" {
+  description = "ARN of an SSL certificate you have uploaded to AWS IAM"
+  default     = ""
+}
+
 variable "tls" {
   description = "Whether or not to use TLS to serve the site (true or false)"
   default     = "false"
@@ -146,7 +150,6 @@ variable "refinery_welcome_email_message" {
   default     = "Please fill out your user profile"
 }
 
-#TODO: set internally based on presence of TLS certificate ARN in config
 variable "refinery_url_scheme" {
   description = "Either `http` or `https` depending on whether a TLS certificate is configured"
   default     = "http"
