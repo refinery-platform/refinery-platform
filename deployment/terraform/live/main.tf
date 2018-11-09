@@ -21,7 +21,7 @@ provider "random" {
 }
 
 data "external" "git" {
-  program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
+  program = ["/bin/sh", "${path.module}/git-info.sh"]
 }
 
 resource "random_string" "rds_master_user_password" {
@@ -42,6 +42,7 @@ locals {
   tags                     = "${merge(
     var.tags,
     map(
+      "owner", lookup(var.tags, "owner", "") != "" ? lookup(var.tags, "owner", "") : data.external.git.result["email"],
       "product", "refinery",
       "terraform", "true"
     )
