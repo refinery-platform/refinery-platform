@@ -289,7 +289,7 @@ locals {
   }
 }
 resource "aws_elb" "http" {
-  count = "${var.ssl_certificate_id == "" ? 1 : 0}"
+  count           = "${var.ssl_certificate_id == "" ? 1 : 0}"
   instances       = ["${aws_instance.app_server.id}"]
   idle_timeout    = 180  # seconds
   name            = "${var.resource_name_prefix}"
@@ -310,7 +310,7 @@ resource "aws_elb" "http" {
   }
 }
 resource "aws_elb" "https" {
-  count = "${var.ssl_certificate_id == "" ? 0 : 1}"
+  count           = "${var.ssl_certificate_id == "" ? 0 : 1}"
   instances       = ["${aws_instance.app_server.id}"]
   idle_timeout    = 180  # seconds
   name            = "${var.resource_name_prefix}"
