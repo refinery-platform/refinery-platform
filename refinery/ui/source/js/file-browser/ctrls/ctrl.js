@@ -20,6 +20,8 @@
     '$uibModal',
     '$window',
     'uiGridConstants',
+    'uiGridExporterConstants',
+    'uiGridExporterService',
     '_',
     'assayFiltersService',
     'dataSetPermsService',
@@ -44,6 +46,8 @@
     $uibModal,
     $window,
     uiGridConstants,
+    uiGridExporterConstants,
+    uiGridExporterService,
     _,
     assayFiltersService,
     dataSetPermsService,
@@ -79,6 +83,7 @@
     vm.checkDataLength = checkDataLength;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
+    vm.downloadCSV = downloadCSV;
     vm.dataSet = {};
     vm.editMode = false;
     vm.fileEditsUpdating = false;
@@ -98,6 +103,12 @@
       data: fileBrowserFactory.assayFiles,
       editableCellTemplate: editCellTemplate,
       enableCellEdit: false,
+      exporterAllDataFn: function () {
+        var params = paramService.fileParam;
+        params.filter_attribute = {};
+        params.limit = 1000;
+        return fileBrowserFactory.getAssayFiles(paramService.fileParam);
+      },
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
@@ -122,6 +133,8 @@
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
+    vm.uiGridExporterConstants = uiGridExporterConstants;
+    vm.uiGridExporterService = uiGridExporterService;
     vm.userPerms = permsService.userPerms;
 
     activate();
@@ -165,10 +178,28 @@
       }
     }
 
+    function downloadCSV (visibility) {
+      if (visibility === 'all') {
+        vm.uiGridExporterService.csvExport(
+          vm.gridApi.grid,
+          vm.uiGridExporterConstants.ALL,
+          vm.uiGridExporterConstants.ALL
+        );
+      } else if (visibility === 'visible') {
+        vm.uiGridExporterService.csvExport(
+          vm.gridApi.grid,
+          vm.uiGridExporterConstants.VISIBLE,
+          vm.uiGridExporterConstants.VISIBLE
+        );
+      }
+    }
+
     // Gets the data set properties
     function refreshDataSetProps () {
       dataSetPropsService.refreshDataSet().then(function () {
         vm.dataSet = dataSetPropsService.dataSet;
+        // set the filename of the exportable .csv once we have the dataSet info
+        vm.gridOptions.exporterCsvFilename = vm.dataSet.title + '.csv';
         // initialize the dataset and updates ui-grid selection, filters, and url
         initializeDataOnPageLoad();
       });
