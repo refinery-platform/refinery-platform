@@ -316,7 +316,15 @@
     }
 
     function isFiltered () {
-      return paramService.fileParam.filter_attribute !== undefined;
+      var filtered = true;
+      if (paramService.fileParam.filter_attribute === undefined) {
+        filtered = false;
+      } else {
+        filtered = Boolean(
+          Object.keys(paramService.fileParam.filter_attribute).length
+        );
+      }
+      return filtered;
     }
 
     /** view method to open the permissions modal component, in commons
