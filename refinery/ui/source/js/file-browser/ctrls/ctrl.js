@@ -109,6 +109,7 @@
         params.limit = 1000;
         return fileBrowserFactory.getAssayFiles(paramService.fileParam);
       },
+      exporterSuppressColumns: ['Input Groups'],
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
