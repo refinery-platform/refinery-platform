@@ -18,6 +18,7 @@
       'ui.grid.pinning',
       'ui.grid.resizeColumns',
       'ui.select',
+      'ui.grid.exporter',
       'refineryDataSetImport'
     ]);
 })();
