@@ -180,19 +180,7 @@
     }
 
     function downloadCSV (visibility) {
-      if (visibility === 'all') {
-        vm.uiGridExporterService.csvExport(
-          vm.gridApi.grid,
-          vm.uiGridExporterConstants.ALL,
-          vm.uiGridExporterConstants.ALL
-        );
-      } else if (visibility === 'visible') {
-        vm.uiGridExporterService.csvExport(
-          vm.gridApi.grid,
-          vm.uiGridExporterConstants.VISIBLE,
-          vm.uiGridExporterConstants.VISIBLE
-        );
-      }
+      vm.uiGridExporterService.csvExport(vm.gridApi.grid, visibility, visibility);
     }
 
     // Gets the data set properties
