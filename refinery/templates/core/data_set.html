@@ -119,8 +119,9 @@
     var externalStudyUuid = "{{ study_uuid }}";
     var dataSetUuid = "{{ data_set.uuid }}";
     var analysisUuid = "{{ analysis_uuid }}";
-
     var csrf_token = "{{ csrf_token }}";
+    // already defined in base html
+    window.djangoApp.attributeEditTypes = "{{ attribute_edit_types }}";
   </script>
 
   <!-- Scripts for popup content in the ui-grid-->

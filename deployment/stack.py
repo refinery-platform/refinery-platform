@@ -16,7 +16,7 @@ import sys
 
 import boto3
 from cfn_pyplates import core, functions
-from utils import ensure_s3_bucket, load_config, load_tags, save_s3_config
+from utils import load_config, load_tags, save_s3_config
 
 VERSION = '1.1'
 
@@ -41,7 +41,6 @@ def main():
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
         template = make_template(config, config_yaml)
-        ensure_s3_bucket(config['S3_LOG_BUCKET'])
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
@@ -93,18 +92,14 @@ def make_template(config, config_yaml):
         "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
         "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "RDS_ENDPOINT_ADDRESS=",
-        functions.get_att('RDSInstance', 'Endpoint.Address'),
+        "export FACTER_RDS_ENDPOINT_ADDRESS=", config['RDS_ENDPOINT_ADDRESS'],
         "\n",
-        "RDS_ENDPOINT_PORT=",
-        functions.get_att('RDSInstance', 'Endpoint.Port'),
-        "\n",
-        "RDS_SUPERUSER_PASSWORD=", config['RDS_SUPERUSER_PASSWORD'], "\n",
-        "RDS_ROLE=", config['RDS_ROLE'], "\n",
+        "export FACTER_RDS_SUPERUSER_PASSWORD=",
+        config['RDS_SUPERUSER_PASSWORD'], "\n",
         "ADMIN=", config['ADMIN'], "\n",
         "DEFAULT_FROM_EMAIL=", config['DEFAULT_FROM_EMAIL'], "\n",
         "SERVER_EMAIL=", config['SERVER_EMAIL'], "\n",
-        "IAM_SMTP_USER=", functions.ref('RefinerySMTPUser'), "\n",
+        "IAM_SMTP_USER=", config['IAM_SMTP_USER'], "\n",
         "export FACTER_DOCKER_HOST=", config["REFINERY_DOCKER_HOST"], "\n",
         "export FACTER_TLS_REWRITE=", tls_rewrite, "\n",
         "S3_CONFIG_URI=", config['S3_CONFIG_URI'], "\n",
@@ -130,37 +125,6 @@ def make_template(config, config_yaml):
             }
         )
     )
-
-    rds_properties = {
-        "AllocatedStorage": "5",
-        "AutoMinorVersionUpgrade": False,
-        "BackupRetentionPeriod": "15",
-        "CopyTagsToSnapshot": True,
-        "DBInstanceClass": "db.t2.small",       # todo:?
-        "DBInstanceIdentifier": config['RDS_NAME'],
-        "DBSubnetGroupName": config["RDS_DB_SUBNET_GROUP_NAME"],
-        "Engine": "postgres",
-        "EngineVersion": "9.3.14",
-        # "KmsKeyId" ?
-        "MasterUsername": "root",
-        "MasterUserPassword": config['RDS_SUPERUSER_PASSWORD'],
-        "MultiAZ": False,
-        "Port": "5432",
-        "PubliclyAccessible": False,
-        "StorageType": "gp2",
-        "Tags": instance_tags,  # todo: Should be different?
-        "VPCSecurityGroups": [
-            functions.get_att('RDSSecurityGroup', 'GroupId')],
-    }
-
-    if 'RDS_SNAPSHOT' in config:
-        rds_properties['DBSnapshotIdentifier'] = config['RDS_SNAPSHOT']
-
-    cft.resources.rds_instance = core.Resource(
-        'RDSInstance', 'AWS::RDS::DBInstance',
-        core.Properties(rds_properties),
-        core.DeletionPolicy("Snapshot"),
-        )
 
     volume_properties = {
         'Encrypted': True,
@@ -189,11 +153,9 @@ def make_template(config, config_yaml):
             'InstanceType': config['EC2_INSTANCE_TYPE'],
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
-            'IamInstanceProfile': functions.ref('WebInstanceProfile'),
+            'IamInstanceProfile': config['APP_SERVER_PROFILE_ID'],
             'Monitoring': True,
-            'SecurityGroupIds': [
-                functions.get_att('InstanceSecurityGroup', 'GroupId')
-            ],
+            'SecurityGroupIds': [config['APP_SERVER_SECURITY_GROUP_ID']],
             'Tags': instance_tags,
             'BlockDeviceMappings': [
                 {
@@ -207,160 +169,6 @@ def make_template(config, config_yaml):
             ],
             "SubnetId": config['PUBLIC_SUBNET_ID']
         }),
-        core.DependsOn(['RDSInstance']),
-    )
-
-    cft.resources.instance_profile = core.Resource(
-        'WebInstanceProfile', 'AWS::IAM::InstanceProfile',
-        core.Properties({
-            'Path': '/',
-            'Roles': [
-              functions.ref('WebInstanceRole')
-            ]
-        })
-    )
-
-    cft.resources.web_role = core.Resource(
-        'WebInstanceRole', 'AWS::IAM::Role',
-        core.Properties({
-            # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-templateexamples
-            "AssumeRolePolicyDocument": {
-                "Version": "2012-10-17",
-                "Statement": [{
-                    "Effect": "Allow",
-                    "Principal": {
-                        "Service": ["ec2.amazonaws.com"]
-                    },
-                    "Action": ["sts:AssumeRole"]
-                }]
-            },
-            'ManagedPolicyArns': [
-                'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonS3FullAccess'
-            ],
-            'Path': '/',
-            'Policies': [
-                {
-                    'PolicyName': "CreateAccessKey",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "iam:CreateAccessKey"
-                                ],
-                                "Resource": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    },
-                },
-                {
-                    'PolicyName': "CreateSnapshot",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "ec2:CreateSnapshot"
-                                ],
-                                "Resource": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    'PolicyName': "CreateDBSnapshot",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "rds:CreateDBSnapshot"
-                                ],
-                                "Resource": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    'PolicyName': "CreateTags",
-                    'PolicyDocument': {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "ec2:CreateTags"
-                                ],
-                                "Resource": "*"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "PolicyName": "CognitoAccess",
-                    "PolicyDocument": {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "cognito-identity:ListIdentityPools",
-                                ],
-                                "Resource": "arn:aws:cognito-identity:*"
-                            },
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "cognito-identity:"
-                                    "GetOpenIdTokenForDeveloperIdentity"
-                                ],
-                                "Resource": {
-                                    "Fn::Sub": [
-                                        "arn:aws:cognito-identity:"
-                                        "${AWS::Region}:${AWS::AccountId}:"
-                                        "identitypool/${PoolId}",
-                                        {
-                                            "PoolId":
-                                                config[
-                                                    'COGNITO_IDENTITY_POOL_ID'
-                                                ]
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                }
-            ]
-        })
-    )
-
-    cft.resources.smtp_user = core.Resource(
-        'RefinerySMTPUser', 'AWS::IAM::User',
-        core.Properties({
-            'Policies': [{
-                'PolicyName': "SESSendingAccess",
-                'PolicyDocument': {
-                    "Version": "2012-10-17",
-                    "Statement": [{
-                        "Effect": "Allow",
-                        "Action": "ses:SendRawEmail",
-                        "Resource": "*"
-                    }]
-                }
-            }]
-        })
     )
 
     cft.resources.mount = core.Resource(
@@ -369,100 +177,6 @@ def make_template(config, config_yaml):
             'Device': '/dev/xvdr',
             'InstanceId': functions.ref('WebInstance'),
             'VolumeId': functions.ref('RefineryData'),
-        })
-    )
-
-    # Security Group for Elastic Load Balancer
-    # (public facing).
-    cft.resources.elbsg = core.Resource(
-        'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery ELB",
-            # Egress Rule defined via
-            # AWS::EC2::SecurityGroupEgress resource,
-            # to avoid circularity (below).
-            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html # noqa: E501
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "443",
-                    "ToPort": "443",
-                    "CidrIp": "0.0.0.0/0",
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
-    cft.resources.elbegress = core.Resource(
-        'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
-        core.Properties({
-            "GroupId": functions.get_att('ELBSecurityGroup', 'GroupId'),
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "DestinationSecurityGroupId": functions.get_att(
-                'InstanceSecurityGroup', 'GroupId'),
-        })
-    )
-
-    # Security Group for EC2- instance.
-    cft.resources.instancesg = core.Resource(
-        'InstanceSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery EC2 Instance",
-            'SecurityGroupEgress':  [],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "22",
-                    "ToPort": "22",
-                    "CidrIp": "0.0.0.0/0",
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    # "CidrIp": "0.0.0.0/0",
-                    # Only accept connections from the ELB.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'ELBSecurityGroup', 'GroupId'),
-                },
-            ],
-            'VpcId': config['VPC_ID'],
-        })
-    )
-
-    # Security Group for RDS instance.
-    cft.resources.rdssg = core.Resource(
-        'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
-        core.Properties({
-            'GroupDescription': "Refinery RDS",
-            'SecurityGroupEgress':  [
-                # We would like to remove all egress rules here,
-                # but you can't do that with this version
-                # of CloudFormation.
-                # We decided that the hacky workarounds are
-                # not worth it.
-            ],
-            'SecurityGroupIngress': [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "5432",
-                    "ToPort": "5432",
-                    # Only accept connections from the
-                    # Instance Security Group.
-                    "SourceSecurityGroupId": functions.get_att(
-                        'InstanceSecurityGroup', 'GroupId'),
-                },
-            ],
-            'VpcId': config['VPC_ID'],
         })
     )
 
@@ -513,11 +227,11 @@ def make_template(config, config_yaml):
             'Instances': [functions.ref('WebInstance')],
             'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
-            'SecurityGroups': [
-                functions.get_att('ELBSecurityGroup', 'GroupId')],
+            'SecurityGroups': [config['ELB_SECURITY_GROUP_ID']],
             'Subnets': [config["PUBLIC_SUBNET_ID"]],
             'Tags': load_tags(),
         })
+
     cft.parameters.add(
         core.Parameter('LogInterval', 'Number', {
                 'Default': 60,
@@ -527,41 +241,6 @@ def make_template(config, config_yaml):
                 "this to be 5 or 60.",
             }
         )
-    )
-
-    # See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy # noqa: E501
-    # for full list of region--principal identifiers.
-    cft.mappings.region = core.Mapping(
-        'Region',
-        {'us-east-1': {'ELBPrincipal': '127311923021'}})
-
-    cft.resources.log_policy = core.Resource(
-        'LogBucketPolicy', 'AWS::S3::BucketPolicy',
-        core.Properties({
-            'Bucket': config['S3_LOG_BUCKET'],
-            'PolicyDocument': {
-                'Statement': [{
-                    "Action": [
-                      "s3:PutObject"
-                    ],
-                    "Effect": "Allow",
-                    "Resource":
-                    functions.join(
-                        "",
-                        "arn:aws:s3:::",
-                        config['S3_LOG_BUCKET'],
-                        "/AWSLogs/",
-                        functions.ref("AWS::AccountId"), "/*"),
-                    "Principal": {
-                      "AWS": [
-                        functions.find_in_map(
-                            'Region',
-                            functions.ref("AWS::Region"), 'ELBPrincipal'),
-                      ]
-                    }
-                }]
-            }
-        })
     )
 
     return cft

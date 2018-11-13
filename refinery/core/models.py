@@ -26,6 +26,7 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
+from django.db.models import Sum
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -57,6 +58,7 @@ from data_set_manager.utils import (
     add_annotated_nodes_selection, index_annotated_nodes_selection
 )
 from file_store.models import FileStoreItem, FileType
+from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
 import tool_manager
 
@@ -312,13 +314,16 @@ class OwnableResource(BaseResource):
         if self._meta.verbose_name == 'dataset':
             assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
 
-    def transfer_ownership(self, user, new_owner):
+    def remove_owner(self, user):
         remove_perm("add_%s" % self._meta.verbose_name, user, self)
         remove_perm("read_%s" % self._meta.verbose_name, user, self)
         remove_perm("delete_%s" % self._meta.verbose_name, user, self)
         remove_perm("change_%s" % self._meta.verbose_name, user, self)
         if self._meta.verbose_name == 'dataset':
             remove_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+
+    def transfer_ownership(self, user, new_owner):
+        self.remove_owner(user)
         self.set_owner(new_owner)
 
     def get_owner(self):
@@ -353,7 +358,7 @@ class OwnableResource(BaseResource):
 
 class SharableResource(OwnableResource):
     """Abstract base class for core resources that can be shared
-    (projects, data sets, workflows, workflow engines, etc.)
+    (projects, data sets, workflow)
     IMPORTANT:
     expects derived classes to have "add/read/change/write_xxx" + "share_xxx"
     permissions, where "xxx" is the simple_modelname
@@ -363,9 +368,35 @@ class SharableResource(OwnableResource):
     def __unicode__(self):
         return self.name
 
+    def get_owner(self):
+        owner = None
+
+        content_type_id = ContentType.objects.get_for_model(self).id
+        permission_id = Permission.objects.filter(
+            codename='share_%s' % self._meta.verbose_name
+        )[0].id
+
+        perms = UserObjectPermission.objects.filter(
+            content_type_id=content_type_id,
+            permission_id=permission_id,
+            object_pk=self.id
+        )
+
+        if perms.count() > 0:
+            try:
+                owner = User.objects.get(id=perms[0].user_id)
+            except User.DoesNotExist:
+                pass
+
+        return owner
+
     def set_owner(self, user):
         super(SharableResource, self).set_owner(user)
         assign_perm("share_%s" % self._meta.verbose_name, user, self)
+
+    def remove_owner(self, user):
+        super(SharableResource, self).remove_owner(user)
+        remove_perm("share_%s" % self._meta.verbose_name, user, self)
 
     """
     Sharing something always grants read and add permission
@@ -548,26 +579,6 @@ class DataSet(SharableResource):
     def get_investigation_links(self):
         return InvestigationLink.objects.filter(data_set=self)
 
-    def get_owner(self):
-        owner = None
-
-        content_type_id = ContentType.objects.get_for_model(self).id
-        permission_id = Permission.objects.filter(codename='add_dataset')[0].id
-
-        perms = UserObjectPermission.objects.filter(
-            content_type_id=content_type_id,
-            permission_id=permission_id,
-            object_pk=self.id
-        )
-
-        if perms.count() > 0:
-            try:
-                owner = User.objects.get(id=perms[0].user_id)
-            except User.DoesNotExist:
-                pass
-
-        return owner
-
     def set_investigation(self, investigation, message=""):
         """Associate this data set with an investigation. If this data set has
         an association with an investigation this association will be cleared
@@ -673,9 +684,7 @@ class DataSet(SharableResource):
             study__in=investigation.study_set.all(), file_uuid__isnull=False
         ).values_list('file_uuid', flat=True)
         file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
-        return sum(
-            [item.get_file_size(report_symlinks=True) for item in file_items]
-        )
+        return sum([item.get_file_size() for item in file_items])
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -1438,7 +1447,7 @@ class Analysis(OwnableResource):
     def terminate_file_import_tasks(self):
         """
         Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
-        and trys to terminate their import_file tasks if possible
+        and trys to terminate their file import tasks if possible
         """
         workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
         if workflow_tool is not None:
@@ -1523,8 +1532,8 @@ class Analysis(OwnableResource):
         )
 
     def has_all_local_input_files(self):
-        return all(file_store_item.is_local() for file_store_item in
-                   self._get_input_file_store_items())
+        return all(file_store_item.datafile for file_store_item in
+                   self.get_input_file_store_items())
 
     def _get_input_nodes(self):
         return [analysis_node_connection.node for analysis_node_connection in
@@ -1532,7 +1541,7 @@ class Analysis(OwnableResource):
                     analysis=self, direction=INPUT_CONNECTION
                 )]
 
-    def _get_input_file_store_items(self):
+    def get_input_file_store_items(self):
         return [node.get_file_store_item()
                 for node in self._get_input_nodes()]
 
@@ -1681,6 +1690,19 @@ class Analysis(OwnableResource):
             self.get_input_node_assay().uuid
         )
         self._prepare_annotated_nodes(node_uuids)
+
+    def get_refinery_import_task_signatures(self):
+        """Create and return a list of file import task signatures for the
+        user-selected inputs of a WorkflowTool.launch()
+
+        NOTE: We avoid adding UUIDs of already imported FileStoreItem's as
+        to not re-import them without need.
+        """
+        return [
+            FileImportTask().subtask((file_store_item.uuid,))
+            for file_store_item in self.get_input_file_store_items()
+            if not file_store_item.datafile
+        ]
 
 
 @receiver(pre_delete, sender=Analysis)
@@ -2229,8 +2251,18 @@ class SiteStatistics(models.Model):
     users_created = models.IntegerField(default=0)
     unique_user_logins = models.IntegerField(default=0)
 
+    CSV_COLUMN_HEADERS = [
+        "", "datasets_shared", "datasets_uploaded", "groups_created",
+        "run_date", "total_user_logins", "total_visualization_launches",
+        "total_workflow_launches", "users_created", "unique_user_logins"
+    ]
+
     class Meta:
         verbose_name_plural = "site statistics"
+
+    @property
+    def formatted_run_date(self):
+        return self.run_date.strftime("%Y-%m-%d")
 
     def collect(self):
         self.datasets_uploaded = self._get_datasets_uploaded()
@@ -2296,6 +2328,26 @@ class SiteStatistics(models.Model):
         return sum(u.login_count for u in UserProfile.objects.all()) - \
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
+
+    def get_csv_row(self, aggregates=False):
+        def get_aggregate_sum(field_name):
+            if not aggregates:
+                return getattr(self, field_name)
+            return SiteStatistics.objects.filter(
+                run_date__lte=self.run_date
+            ).aggregate(Sum(field_name)).values()[0]
+
+        return [
+            self.pk, get_aggregate_sum("datasets_shared"),
+            get_aggregate_sum("datasets_uploaded"),
+            get_aggregate_sum("groups_created"),
+            self.formatted_run_date,
+            get_aggregate_sum("total_user_logins"),
+            get_aggregate_sum("total_visualization_launches"),
+            get_aggregate_sum("total_workflow_launches"),
+            get_aggregate_sum("users_created"),
+            get_aggregate_sum("unique_user_logins")
+        ]
 
 
 class Event(models.Model):

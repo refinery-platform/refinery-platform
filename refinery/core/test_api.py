@@ -368,6 +368,30 @@ class DataSetResourceTest(LoginResourceTestCase):
         self.assertEqual(data["pre_isa_archive"],
                          pre_isa_archive_file_store_item.uuid)
 
+    def test_is_owner_reflects_actual_owner(self):
+        resp = self.api_client.get(api_uri(DataSetResource), format='json')
+        data = json.loads(resp.content)
+        dataset = data["objects"][0]
+        self.assertTrue(dataset["is_owner"])
+        self.assertEqual(dataset["owner"], self.user.profile.uuid)
+
+    def test_is_owner_reflects_actual_owner_with_admin_requester(self):
+        self.username = self.password = "admin"
+        admin_user = User.objects.create_superuser(
+            self.username, '', self.password
+        )
+
+        # use admin user's session authentication for this request
+        self.get_credentials()
+
+        resp = self.api_client.get(api_uri(DataSetResource), format='json')
+        data = json.loads(resp.content)
+        dataset = data["objects"][0]
+
+        # assert that the admin user isn't displayed as the DataSet's owner
+        self.assertFalse(dataset["is_owner"])
+        self.assertNotEqual(dataset["owner"], admin_user.profile.uuid)
+
 
 class NodeAPITest(LoginResourceTestCase):
 

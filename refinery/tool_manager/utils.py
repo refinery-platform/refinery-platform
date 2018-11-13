@@ -131,6 +131,7 @@ def create_tool_definition(annotation_data):
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             image_name=annotation["image_name"],
+            mem_reservation_mb=annotation["mem_reservation_mb"],
             **common_tool_definition_params
         )
 
@@ -221,9 +222,11 @@ def create_tool(tool_launch_configuration, user_instance):
         parse_file_relationship_nesting(nesting)
 
     display_name = tool_launch_configuration.get("display_name")
-    if not display_name:
-        display_name = "{} {} {}".format(tool.name, tool.creation_date,
-                                         tool.get_owner().username)
+    if display_name is None:
+        display_name = "{tool_name} {creation_date} {username}".format(
+            tool_name=tool.name, creation_date=tool.formatted_creation_date,
+            username=tool.get_owner().username,
+        )
     tool.display_name = display_name
     try:
         tool.save()

@@ -161,15 +161,6 @@ class SharableResourceAPIInterface(object):
                 )
 
         if cache_check is None:
-            # for ownership, don't check group perms
-            owned_res_set = Set(
-                get_objects_for_user(
-                    user,
-                    'core.share_%s' %
-                    self.res_type._meta.verbose_name,
-                    use_groups=False
-                ).values_list("id", flat=True))
-
             public_res_set = Set(
                 get_objects_for_group(
                     ExtendedGroup.objects.public_group(),
@@ -186,9 +177,9 @@ class SharableResourceAPIInterface(object):
 
             # instantiate owner and public fields
             for res in res_list:
-                is_owner = res.id in owned_res_set
-                setattr(res, 'is_owner', is_owner)
                 owner = res.get_owner()
+                is_owner = owner == user
+                setattr(res, 'is_owner', is_owner)
                 setattr(
                     res,
                     'owner',
@@ -698,7 +689,10 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
-        is_owner = request.user.has_perm('core.share_dataset', ds)
+        if request.user.is_superuser:
+            is_owner = ds.get_owner() == request.user
+        else:
+            is_owner = request.user.has_perm('core.share_dataset', ds)
 
         try:
             user_uuid = request.user.profile.uuid

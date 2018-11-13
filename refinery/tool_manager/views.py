@@ -3,19 +3,19 @@ import urllib2
 
 from django.conf import settings
 from django.db import transaction
-from django.http import (HttpResponseBadRequest, JsonResponse)
+from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
+                         JsonResponse)
+from django.http.response import HttpResponse
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
-from rest_framework import status
 from rest_framework.decorators import detail_route
 from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
 
-from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
+from .models import ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import (
     create_tool, user_has_access_to_tool, validate_tool_launch_configuration
@@ -28,19 +28,13 @@ class ToolManagerViewSetBase(ModelViewSet):
     def __init__(self, **kwargs):
         super(ToolManagerViewSetBase, self).__init__(**kwargs)
         self.data_set = None
-        self.user_tools = []
-        self.visualization_tools = None
-        self.workflow_tools = None
 
     def list(self, request, *args, **kwargs):
         try:
-            data_set_uuid = self.request.query_params[
-                kwargs["data_set_uuid_lookup_name"]
-            ]
+            data_set_uuid = self.request.query_params["data_set_uuid"]
         except (AttributeError, KeyError) as e:
             return HttpResponseBadRequest("Must specify a DataSet "
                                           "UUID: {}".format(e))
-
         try:
             self.data_set = DataSet.objects.get(uuid=data_set_uuid)
         except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
@@ -49,25 +43,15 @@ class ToolManagerViewSetBase(ModelViewSet):
                 .format(data_set_uuid, e)
             )
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
-            self.visualization_tools = \
-                VisualizationTool.objects.filter(dataset=self.data_set)
-            self.user_tools.extend(self.visualization_tools)
-
-            self.workflow_tools = WorkflowTool.objects.filter(
-                dataset=self.data_set
-            )
-            self.user_tools.extend(self.workflow_tools)
-        else:
-            return Response(
-                "User is not authorized to access DataSet with UUID: {}"
-                .format(self.data_set.uuid),
-                status.HTTP_401_UNAUTHORIZED
-            )
-        return super(ToolManagerViewSetBase, self).list(request)
+            return super(ToolManagerViewSetBase, self).list(request)
+        return HttpResponseForbidden(
+            "User is not authorized to access DataSet with UUID: {}"
+            .format(self.data_set.uuid)
+        )
 
 
 class ToolDefinitionsViewSet(ToolManagerViewSetBase):
-    """API endpoint that allows for ToolDefinitions to be fetched"""
+    """ViewSet that allows for ToolDefinitions to be fetched"""
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
@@ -80,69 +64,32 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
             return ToolDefinition.objects.filter(
                 tool_type=ToolDefinition.VISUALIZATION
             )
-
-    def list(self, request, *args, **kwargs):
-        return super(ToolDefinitionsViewSet, self).list(
-            request,
-            data_set_uuid_lookup_name="dataSetUuid"
-        )
+        else:
+            return []  # get_queryset should return an iterable
 
 
 class ToolsViewSet(ToolManagerViewSetBase):
-    """API endpoint that allows for Tools to be fetched and launched"""
-    queryset = Tool.objects.all()
+    """ViewSet that allows for Tools to be fetched, launched and relaunched"""
     serializer_class = ToolSerializer
     lookup_field = 'uuid'
-    http_method_names = ['get', 'post']
-
-    def list(self, request, *args, **kwargs):
-        self.data_set_uuid = request.query_params.get('data_set_uuid')
-        if self.data_set_uuid:
-            return super(ToolsViewSet, self).list(
-                request,
-                data_set_uuid_lookup_name="data_set_uuid"
-            )
-        return super(ToolManagerViewSetBase, self).list(request)
+    http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self):
-        """
-        This view returns a list of all the Tools that the currently user has
-        at least read_meta permissions on.
-        """
-        # returns user's owned tools
-        if not self.data_set_uuid:
-            vis_tools = [v for v in VisualizationTool.objects.all()
-                         if v.get_owner() == self.request.user]
-
-            workflow_tools = [w for w in WorkflowTool.objects.all()
-                              if w.get_owner() == self.request.user]
-
-            tool_type = self.request.query_params.get("tool_type")
-            if tool_type == ToolDefinition.VISUALIZATION.lower():
-                return vis_tools
-            elif tool_type == ToolDefinition.WORKFLOW.lower():
-                return workflow_tools
-            else:
-                user_tools = vis_tools
-                user_tools.extend(workflow_tools)
-                return user_tools
-
-        elif self.request.user.has_perm('core.read_meta_dataset',
-                                        self.data_set):
-            tool_type = self.request.query_params.get("tool_type")
-
-            if not tool_type:
-                return self.user_tools
-
-            tool_types_to_tools = {
-                ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
-                ToolDefinition.WORKFLOW.lower(): self.workflow_tools
-            }
-            # get_queryset should return an iterable
-            return tool_types_to_tools.get(tool_type.lower()) or []
-
-        return Response("User is not authorized to view visualizations.",
-                        status=status.HTTP_401_UNAUTHORIZED)
+        visualization_tools = list(
+            VisualizationTool.objects.filter(dataset=self.data_set)
+        )
+        workflow_tools = list(
+            WorkflowTool.objects.filter(dataset=self.data_set)
+        )
+        tool_type = self.request.query_params.get("tool_type")
+        if tool_type is None:
+            return workflow_tools + visualization_tools
+        elif tool_type.upper() == ToolDefinition.WORKFLOW:
+            return workflow_tools
+        elif tool_type.upper() == ToolDefinition.VISUALIZATION:
+            return visualization_tools
+        else:
+            return []  # get_queryset should return an iterable
 
     def create(self, request, *args, **kwargs):
         """
@@ -158,13 +105,47 @@ class ToolsViewSet(ToolManagerViewSetBase):
             try:
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
-                    logger.debug("Successfully created Tool: %s", tool.name)
                     tool.launch()
                     serializer = ToolSerializer(tool)
-                    return JsonResponse(serializer.data)
             except Exception as e:
                 logger.error(e)
                 return HttpResponseBadRequest(e)
+            else:
+                logger.debug("Successfully created Tool: %s", tool.name)
+                return JsonResponse(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """Allows for the deletion of a VisualizationTool"""
+        tool_uuid = kwargs.get("uuid")
+        if not tool_uuid:
+            return HttpResponseBadRequest(
+                "Deleting a Tool requires a Tool UUID"
+            )
+        visualization_tool = get_object_or_404(VisualizationTool,
+                                               uuid=tool_uuid)
+
+        if not request.user == visualization_tool.get_owner():
+            return render_vis_tool_error_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to delete {}: {}".format(
+                    request.user.username,
+                    visualization_tool.name,
+                    visualization_tool.uuid
+                ), status=403
+            )
+        try:
+            with transaction.atomic():
+                visualization_tool.delete()
+        except Exception as exc:
+            logger.error(exc)
+            return HttpResponseBadRequest("{} could not be deleted: {}".format(
+                visualization_tool.display_name, exc
+            ))
+        else:
+            return HttpResponse("{} deleted successfully".format(
+                visualization_tool.display_name
+            ))
 
     @detail_route(methods=['get'])
     def relaunch(self, request, *args, **kwargs):
@@ -176,14 +157,14 @@ class ToolsViewSet(ToolManagerViewSetBase):
                                                uuid=tool_uuid)
 
         if not user_has_access_to_tool(request.user, visualization_tool):
-            return render_vis_tool_user_not_allowed_template(
+            return render_vis_tool_error_template(
                 request,
                 visualization_tool.name,
                 "User: {} does not have permission to view {}: {}".format(
                     request.user.username,
                     visualization_tool.name,
                     visualization_tool.uuid
-                )
+                ), status=403
             )
 
         if visualization_tool.is_running():
@@ -244,14 +225,14 @@ class AutoRelaunchProxy(Proxy, object):
             container_name=container_name
         )
         if not user_has_access_to_tool(request.user, visualization_tool):
-            return render_vis_tool_user_not_allowed_template(
+            return render_vis_tool_error_template(
                 request,
                 visualization_tool.name,
                 "User: {} does not have permission to view {}: {}".format(
                     request.user.username,
                     visualization_tool.name,
                     visualization_tool.uuid
-                )
+                ), status=403
             )
 
         if not visualization_tool.is_running():
@@ -267,14 +248,14 @@ class AutoRelaunchProxy(Proxy, object):
             return view(request)
 
 
-def render_vis_tool_user_not_allowed_template(
+def render_vis_tool_error_template(
     request, visualization_tool_name, message,
-    template="tool_manager/vis-tool-user-not-allowed.html"
+    template="tool_manager/vis-tool-error.html", status=400
 ):
     return render(
         request, template,
         {
             "message": message,
             "visualization_tool_name": visualization_tool_name
-        }
+        }, status=status
     )

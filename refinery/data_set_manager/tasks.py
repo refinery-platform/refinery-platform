@@ -1,5 +1,4 @@
 from datetime import date
-import errno
 import glob
 import logging
 import os
@@ -24,6 +23,8 @@ from requests.exceptions import HTTPError
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
+from file_store.tasks import FileImportTask
+from file_store.utils import make_dir
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -31,29 +32,6 @@ from .utils import (calculate_checksum, fix_last_column, get_node_types,
                     index_annotated_nodes, update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
-
-
-def create_dir(file_path):
-    """creates a directory if it needs to be created
-    Parameters:
-    file_path: directory to create if necessary
-    """
-    try:
-        os.makedirs(file_path)
-    except OSError, e:
-        if e.errno != errno.EEXIST:
-            raise
-
-
-def delete_external_file(file_path):
-    """removes a file with the given path (that is outside the file_store)
-    Parameters:
-    file_path: location of the file to delete
-    """
-    try:
-        os.remove(file_path)
-    except OSError:
-        raise
 
 
 def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
@@ -97,7 +75,7 @@ def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     f.close()
     last_line = lines[-1]
     dir_to_zip = os.path.join(temp_dir, "magetab")
-    create_dir(dir_to_zip)
+    make_dir(dir_to_zip)
     # isolate the links by splitting on '<a href="'
     a_hrefs = string.split(last_line, '<a href="')
     # get the links we want
@@ -404,13 +382,10 @@ def parse_isatab(username, public, path, identity_id=None,
 
 
 @task()
-def generate_auxiliary_file(auxiliary_node, datafile_path,
-                            parent_node_file_store_item):
-    """
-    Task that will generate an auxiliary file for visualization purposes
+def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
+    """Task that will generate an auxiliary file for visualization purposes
     with specific file generation tasks going on for different FileTypes
     flagged as: `used_for_visualization`.
-
     :param auxiliary_node: a Node instance
     :type auxiliary_node: Node
     :param datafile_path: relative path to datafile used to generate aux file
@@ -419,11 +394,12 @@ def generate_auxiliary_file(auxiliary_node, datafile_path,
     parent Node
     :type parent_node_file_store_item: FileStoreItem
     """
-
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
-
     auxiliary_file_store_item = auxiliary_node.get_file_store_item()
-
+    try:
+        datafile_path = parent_node_file_store_item.datafile.path
+    except (NotImplementedError, ValueError):
+        datafile_path = None
     try:
         start_time = time.time()
         logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
@@ -479,3 +455,37 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
     auxiliary_file_store_item.save()
+
+
+def post_process_file_import(**kwargs):
+    """Updates Solr with state of file import and starts generating auxiliary
+    file if import finished successfully
+    """
+    # allow for the use of uuid as a keyword or positional argument
+    try:
+        file_store_item_uuid = kwargs['kwargs']['item_uuid']
+    except KeyError:
+        file_store_item_uuid = kwargs['args'][0]
+    try:
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
+    except Node.DoesNotExist as exc:
+        logger.error("Could not retrieve Node with file UUID '%s': %s",
+                     file_store_item_uuid, exc)
+    except Node.MultipleObjectsReturned:
+        logger.critical("Multiple Node instance returned with file UUID '%s'",
+                        file_store_item_uuid)
+    else:
+        node.update_solr_index()
+        logger.info("Updated Solr index with file import state for Node '%s'",
+                    node.uuid)
+        if kwargs['state'] == celery.states.SUCCESS:
+            node.run_generate_auxiliary_node_task()
+
+
+@celery.signals.worker_init.connect
+def on_worker_init(sender, **kwargs):
+    # required to connect update_solr_index handler to task_postrun signal
+    # https://github.com/celery/celery/issues/1873#issuecomment-35288899
+    celery.signals.task_postrun.connect(
+        post_process_file_import, sender=sender.app.tasks[FileImportTask.name]
+    )

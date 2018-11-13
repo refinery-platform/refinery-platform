@@ -19,6 +19,8 @@ from django.test import TestCase, override_settings
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
 from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_mock_hg_19_data_set,
+                               create_mock_isatab_9909_data_set,
                                make_analyses_with_single_dataset)
 from haystack.exceptions import SkipDocument
 import mock
@@ -30,7 +32,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, InvestigationLink)
 from core.tests import TestMigrations
 from file_store.models import FileStoreItem, generate_file_source_translator
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 
 from .isa_tab_parser import IsaTabParser, ParserException
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
@@ -46,6 +48,7 @@ from .utils import (_create_solr_params_from_node_uuids,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
+                    get_first_annotated_node_from_solr_name,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     is_field_in_hidden_list, update_annotated_nodes,
                     update_attribute_order_ranks)
@@ -347,6 +350,11 @@ class UtilitiesTests(TestCase):
             study=self.study
         )
 
+        self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user1)
+        self.isatab_9909_data_set = create_mock_isatab_9909_data_set(
+            user=self.user1
+        )
+
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -639,7 +647,7 @@ class UtilitiesTests(TestCase):
     def test_get_owner_from_invalid_assay(self):
         # invalid uuid
         response = get_owner_from_assay(self.invalid_uuid)
-        self.assertEqual(response, 'Error: Invalid uuid')
+        self.assertEqual(response, None)
 
     def test_format_solr_response_valid(self):
         # valid input, expected response from solr
@@ -1256,6 +1264,85 @@ class UtilitiesTests(TestCase):
             )
         )
 
+    def test_get_first_annotated_node_from_solr_name_characteristic(self):
+        node = self.hg_19_data_set.get_nodes().filter(
+            type=Node.RAW_DATA_FILE
+        )[0]
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node, attribute_subtype='organism'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        first_node = get_first_annotated_node_from_solr_name(solr_name, node)
+        self.assertEqual(annotated_node, first_node)
+
+    def test_get_first_annotated_node_from_solr_name_label(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype=None,
+            attribute_type='Label'
+        )[0]
+        solr_name = '{}_652_326_s'.format(annotated_node.attribute_type)
+        first_node = get_first_annotated_node_from_solr_name(solr_name, node)
+        self.assertEqual(annotated_node, first_node)
+
+    def test_get_first_annotated_node_from_solr_name_material_type(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype=None,
+            attribute_type='Material Type'
+        )[0]
+        solr_name = '{}_652_326_s'.format('Material_Type')
+        first_node = get_first_annotated_node_from_solr_name(solr_name, node)
+        self.assertEqual(annotated_node, first_node)
+
+    def test_get_first_annotated_node_from_solr_name_factor(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.ARRAY_DATA_FILE,
+            name='http://test.site/sites/bioassay_files/ks020802HU133A1a.CEL'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype='culture medium',
+            attribute_type='Factor Value'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(
+            annotated_node.attribute_subtype, 'Factor_Value'
+        )
+        first_node = get_first_annotated_node_from_solr_name(solr_name, node)
+        self.assertEqual(annotated_node, first_node)
+
+    def test_get_first_annotated_node_from_solr_name_comment(self):
+        nodes = self.isatab_9909_data_set.get_nodes()
+        node = nodes.filter(
+            type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
+            name='http://test.site/sites/9909.GPL96_pluriconsensus.pdf'
+        )[0]
+
+        annotated_node = AnnotatedNode.objects.filter(
+            node=node,
+            attribute_subtype='Data Record Accession',
+            attribute_type='Comment'
+        )[0]
+        solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
+                                             annotated_node.attribute_type)
+        first_node = get_first_annotated_node_from_solr_name(solr_name, node)
+        self.assertEqual(annotated_node, first_node)
+
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
@@ -1835,7 +1922,8 @@ class MetadataImportTestBase(IsaTabTestBase):
 
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
-        self.import_file_mock = mock.patch.object(import_file, "delay").start()
+        self.file_import_mock = mock.patch.object(FileImportTask,
+                                                  'delay').start()
 
     def tearDown(self):
         mock.patch.stopall()

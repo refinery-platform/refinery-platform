@@ -1,9 +1,11 @@
+import csv
 import logging
 import urllib
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -16,7 +18,8 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import get_object_or_404, redirect, render_to_response
+from django.shortcuts import (get_object_or_404, redirect, render,
+                              render_to_response)
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
@@ -41,9 +44,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
+from data_set_manager.models import Attribute
+
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology,
+                     ExtendedGroup, Invitation, Ontology, SiteStatistics,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
@@ -279,6 +284,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "workflows": workflows,
             "isatab_archive": investigation.get_file_store_item(),
             "pre_isatab_archive": investigation.get_file_store_item(),
+            "attribute_edit_types": ','.join(Attribute.editable_types)
         },
         context_instance=RequestContext(request))
 
@@ -690,7 +696,10 @@ class DataSetsViewSet(APIView):
         for data_set in user_data_sets:
             is_public = all_public_perms.has_perm('read_meta_dataset',
                                                   data_set)
-            is_owner = all_owner_perms.has_perm('share_dataset', data_set)
+            if request.user.is_superuser:
+                is_owner = data_set.get_owner() == request.user
+            else:
+                is_owner = all_owner_perms.has_perm('share_dataset', data_set)
             setattr(data_set, 'public', is_public)
             setattr(data_set, 'is_owner', is_owner)
 
@@ -928,6 +937,7 @@ class AnalysesViewSet(APIView):
 
 
 class CustomRegistrationView(RegistrationView):
+    success_url = "registration_complete"
 
     def register(self, request):
         """
@@ -977,13 +987,16 @@ class CustomRegistrationView(RegistrationView):
                                      request=request)
         return new_user
 
-    def get_success_url(self, user):
-        """
-        Return the name of the URL to redirect to after successful
-        user registration.
-
-        """
-        return ('registration_complete', (), {})
+    def form_valid(self, form):
+        if not self.request.recaptcha_is_valid:
+            return render(
+                self.request, "registration/registration_form.html",
+                {
+                    "form": form,
+                    "recaptcha_error_message": "* Could not verify reCAPTCHA"
+                }, status=400
+            )
+        return super(CustomRegistrationView, self).form_valid(form)
 
 
 class OpenIDToken(APIView):
@@ -1086,3 +1099,22 @@ class UserProfileViewSet(APIView):
         return Response(
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@staff_member_required
+def site_statistics(request, **kwargs):
+    site_statistics_type = kwargs.get("type")
+    response = HttpResponse()
+    writer = csv.writer(response)
+    writer.writerow(SiteStatistics.CSV_COLUMN_HEADERS)
+
+    queryset = SiteStatistics.objects.all().order_by("run_date")
+    if site_statistics_type == "deltas":
+        queryset = queryset[1:]
+    for site_statistics_instance in queryset:
+        writer.writerow(
+            site_statistics_instance.get_csv_row(
+                aggregates=(site_statistics_type == "totals")
+            )
+        )
+    return response

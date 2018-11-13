@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import ast
+from functools import wraps
 import logging
 import sys
 from urlparse import urljoin
@@ -1003,3 +1004,22 @@ def accept_global_perms(resource_type):
     if resource_type == 'dataset':
         return False
     return True
+
+
+def verify_recaptcha(view_function):
+    @wraps(view_function)
+    def _wrapped_view(request, *args, **kwargs):
+        request.recaptcha_is_valid = False
+        if request.method == 'POST':
+            recaptcha_response = request.POST.get('g-recaptcha-response')
+            data = {
+                'secret': settings.REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY,
+                'response': recaptcha_response
+            }
+            result = requests.post(
+                'https://www.google.com/recaptcha/api/siteverify', data=data
+            ).json()
+            if result['success']:
+                request.recaptcha_is_valid = True
+        return view_function(request, *args, **kwargs)
+    return _wrapped_view

@@ -4,6 +4,7 @@
   "annotation": {
     "extra_directories": [],
     "image_name": "nginx:1.10.3-alpine",
+    "mem_reservation_mb": 15,
     "description": "This visualization does really cool things",
     "parameters": [],
     "file_relationship": {

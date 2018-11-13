@@ -65,40 +65,63 @@
         <h3 class="p-l-1">
           {{ FBCtrl.assayFilesTotal }} files
         </h3>
-        <span class="p-l-1"
-          ng-class="{banned: !FBCtrl.dataSet.is_clean}"
-          ng-if="FBCtrl.dataSet.isa_archive.length && FBCtrl.dataSet.is_owner">
-          <a
-            ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
-            class="refinery-base btn btn-default btn-xs header-button"
-            ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
-            .title }}/#/isa-tab-import?data_set_uuid={{ FBCtrl.dataSet.uuid }}">
-            Revise Metadata
-          </a>
-        </span>
-        <span class="p-l-1"
-          ng-class="{banned: !FBCtrl.dataSet.is_clean}"
-          ng-if="FBCtrl.dataSet.pre_isa_archive.length && FBCtrl.dataSet.is_owner">
-          <a
-            ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
-            class="refinery-base btn btn-default btn-xs header-button"
-            ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
-            .title }}/#/?data_set_uuid={{ FBCtrl.dataSet.uuid }}">
-            Revise Metadata
-          </a>
-        </span>
-        <span class="p-l-1-3" ng-if="FBCtrl.dataSet.is_owner">
-          <a
-            popover-placement="right"
-            uib-popover-html="'Redirects to the Data Set Upload page where you
-            can upload revised metadata. <strong>Note:</strong> Once you have
-            run an analysis or visualization on a data set, its metadata can no longer be revised.'"
-            popover-title="Revise Metadata"
-            popover-trigger="'outsideClick'"
-            popover-append-to-body="true">
-              <i class="fa fa-question-circle info-icon icon-only"></i>
-          </a>
-        </span>
+        <div class="float-right" ng-if="FBCtrl.dataSet.is_owner">
+          <h4 class="p-r-1-2">
+            Edit Metadata
+          </h4>
+          <span
+            ng-class="{banned: !FBCtrl.dataSet.is_clean}">
+            <button
+              ng-class="{'disabledLink': !FBCtrl.dataSet.is_clean,
+              'engaged-button-color': FBCtrl.editMode}"
+              class="refinery-base btn btn-default btn-xs header-button"
+              ng-click="FBCtrl.toggleEditMode()">
+              <span
+                ng-show="FBCtrl.editMode">
+                <i class="fa fa-table"></i> Modifying...
+              </span>
+              <span ng-show="!FBCtrl.editMode">
+                <i class="fa fa-table"></i> Modify
+              </span>
+            </button>
+          </span>
+          <span class="p-l-1-2"
+            ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+            ng-if="FBCtrl.dataSet.isa_archive.length">
+            <a
+              ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
+              class="refinery-base btn btn-default btn-xs header-button"
+              ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
+              .title }}/#/isa-tab-import?data_set_uuid={{ FBCtrl.dataSet.uuid }}">
+              <i class="fa fa-file"></i> Upload
+            </a>
+          </span>
+          <span class="p-l-1-2"
+            ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+            ng-if="FBCtrl.dataSet.pre_isa_archive.length">
+            <a
+              ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
+              class="refinery-base btn btn-default btn-xs header-button"
+              ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
+              .title }}/#/?data_set_uuid={{ FBCtrl.dataSet.uuid }}">
+              <i class="fa fa-file"></i> Upload
+            </a>
+          </span>
+          <span class="p-l-1-3">
+            <a
+              popover-placement="left"
+              uib-popover-html="'<em>Modify</em> allows direct editing of
+              individual metadata values (only for Raw Data Files).
+              <em>Upload</em> allows the re-uploading of revised metadata
+              files. <strong>Note</strong>: Metadata can no longer be edited once an
+              analysis or visualization has been run on a data set.'"
+              popover-title="Revise Metadata"
+              popover-trigger="'outsideClick'"
+              popover-append-to-body="true">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
+          </span>
+        </div>
       </div>
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>

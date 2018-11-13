@@ -2,7 +2,6 @@ import StringIO
 import ast
 import json
 import logging
-import time
 from urlparse import urljoin
 import uuid
 
@@ -23,7 +22,6 @@ import celery
 
 import constants
 from django_docker_engine.docker_utils import DockerClientWrapper
-from docker.errors import NotFound
 from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -66,7 +64,6 @@ from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.serializers import ToolDefinitionSerializer
-from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool,
@@ -240,7 +237,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.tools_view = ToolsViewSet.as_view(
             {
                 'get': 'list',
-                'post': 'create'
+                'post': 'create',
+                'delete': 'destroy'
             }
         )
         self.tool_defs_view = ToolDefinitionsViewSet.as_view(
@@ -265,11 +263,6 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
         self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
 
-        self.django_docker_cleanup_wait_time = 1
-        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = (
-            self.django_docker_cleanup_wait_time
-        )
-
     @mock.patch("django_docker_engine.docker_utils.DockerClientWrapper.pull")
     def load_visualizations(
         self,
@@ -284,8 +277,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
         # Remove any running containers
-        with self.settings(DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE=0):
-            django_docker_cleanup()
+        DockerClientWrapper().purge_inactive(0)
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, nodes):
@@ -385,12 +377,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             with mock.patch("tool_manager.models.get_solr_response_json"):
                 if not start_vis_container:
                     run_container_mock.start()
-
                 self.post_response = self.tools_view(self.post_request)
-                logger.debug(
-                    "Visualization tool launch response: %s",
-                    self.post_response.content
-                )
+                if self.post_response.status_code != 200:
+                    return  # No Tool was created
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -404,7 +393,6 @@ class ToolManagerTestBase(ToolManagerMocks):
                 self.post_response = self.tools_view(self.post_request)
                 assert self.post_response.status_code == 200, \
                     self.post_response.content
-                logger.debug(self.post_response.content)
 
             self.tool = WorkflowTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -506,11 +494,6 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
             *[self.make_node() for i in range(0, 4)]
         )
-
-    def _django_docker_engine_cleanup_wrapper(self):
-        time.sleep(self.django_docker_cleanup_wait_time * 2)
-        django_docker_cleanup()
-        time.sleep(self.django_docker_cleanup_wait_time * 2)
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
@@ -628,7 +611,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 self.dataset.uuid
             )
@@ -709,7 +692,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
     def test_request_from_public_dataset_shows_vis_tools_only(self):
         get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 self.public_dataset.uuid
             )
@@ -750,7 +733,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
-            "{}?dataSetUuid={}".format(
+            "{}?data_set_uuid={}".format(
                 self.tool_defs_url_root,
                 dataset_uuid
             )
@@ -1631,7 +1614,7 @@ class ToolTests(ToolManagerTestBase):
             start_vis_container=True
         )
         self.assertTrue(self.tool.is_running())
-        self._django_docker_engine_cleanup_wrapper()
+        DockerClientWrapper().purge_inactive(0)
         self.assertFalse(self.tool.is_running())
 
     def test_workflow_is_running(self):
@@ -1649,13 +1632,13 @@ class ToolTests(ToolManagerTestBase):
             self.tool.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 1)
 
-    def test_tool_launch_has_resonable_default_display_name(self):
+    def test_tool_launch_has_reasonable_default_display_name(self):
         self.create_tool(tool_type=ToolDefinition.VISUALIZATION)
-        self.assertEqual(self.tool.display_name, "{} {} {}".format(
-            self.tool.name,
-            self.tool.creation_date,
-            self.tool.get_owner().username
-        ))
+        self.assertEqual(
+            self.tool.display_name,
+            " ".join([self.tool.name, self.tool.formatted_creation_date,
+                      self.user.username])
+        )
 
 
 class VisualizationToolTests(ToolManagerTestBase):
@@ -2714,7 +2697,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
         self._make_tools_get_request(user=self.user2)
-        self.assertEqual(self.get_response.status_code, 401)
+        self.assertEqual(self.get_response.status_code, 403)
 
     def test_unallowed_http_verbs(self):
         self.create_tool(ToolDefinition.WORKFLOW)
@@ -2725,10 +2708,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertEqual(
             self.options_response.data['detail'],
             'Method "OPTIONS" not allowed.'
-        )
-        self.assertEqual(
-            self.delete_response.data['detail'],
-            'Method "DELETE" not allowed.'
         )
 
     def test_invalid_TLC_against_schema(self):
@@ -2819,7 +2798,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self.assertTrue(self.get_response.data[0]["is_running"])
 
-        self._django_docker_engine_cleanup_wrapper()
+        DockerClientWrapper().purge_inactive(0)
 
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 1)
@@ -2864,7 +2843,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertTrue(self.tool.is_running())
 
         # Remove Container
-        self._django_docker_engine_cleanup_wrapper()
+        DockerClientWrapper().purge_inactive(0)
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
@@ -2912,7 +2891,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.status_code, 403)
         self.assertIn(
             "User: {} does not have permission to view {}: {}".format(
                 self.user.username, self.tool.name, self.tool.uuid
@@ -3043,10 +3022,10 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         if user_has_permission:
             self.assertTrue(launch_mock.called)
         else:
-            self.assertEqual(get_response.status_code, 200)
+            self.assertEqual(get_response.status_code, 403)
             self.assertTemplateUsed(
                 get_response,
-                'tool_manager/vis-tool-user-not-allowed.html'
+                'tool_manager/vis-tool-error.html'
             )
             self.assertFalse(launch_mock.called)
 
@@ -3102,6 +3081,60 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             self.post_response.content
         )
 
+    def test_vis_tool_deletion(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 200)
+        with self.assertRaises(VisualizationTool.DoesNotExist):
+            VisualizationTool.objects.get(uuid=self.tool.uuid)
+
+    def test_vis_tool_deletion_no_tool_uuid(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request)
+        self.assertEqual(delete_response.status_code, 400)
+
+    def test_vis_tool_deletion_disallows_non_owners(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 403)
+
+    def test_vis_tool_deletion_no_tool_exists(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        self.tool.delete()
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 404)
+
+    @mock.patch.object(VisualizationTool, "delete", side_effect=RuntimeError)
+    def test_vis_tool_deletion_rollback_on_failure(self, vis_delete_mock):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        delete_request = self.factory.delete(
+            self.tool.get_relative_container_url()
+        )
+        delete_request.user = self.user
+        delete_response = self.tools_view(delete_request, uuid=self.tool.uuid)
+        self.assertEqual(delete_response.status_code, 400)
+        self.assertIsNotNone(
+            VisualizationTool.objects.get(uuid=self.tool.uuid)
+        )
+        self.assertTrue(vis_delete_mock.called)
+
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
@@ -3151,16 +3184,16 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=True)
     @mock.patch.object(run_analysis, "retry", side_effect=None)
-    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+    def test_get_refinery_import_task_signatures_gets_called_during_import(
             self, retry_mock, ready_mock, successful_mock
     ):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         with mock.patch(
-            "tool_manager.models.Tool.get_input_file_uuid_list"
-        ) as get_uuid_list_mock:
+            "core.models.Analysis.get_refinery_import_task_signatures"
+        ) as get_refinery_import_task_signatures_mock:
             _refinery_file_import(self.tool.analysis.uuid)
-            self.assertTrue(get_uuid_list_mock.called)
+            self.assertTrue(get_refinery_import_task_signatures_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertTrue(ready_mock.called)
         self.assertTrue(successful_mock.called)
@@ -3658,51 +3691,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             'igv.json',
             self.sample_igv_file_url
         )
-
-    def test_HiGlass(self):
-        self._start_visualization(
-            'higlass.json',
-            "https://s3.amazonaws.com/pkerp/public/"
-            "dixon2012-h1hesc-hindiii-allreps-filtered."
-            "1000kb.multires.cool"
-        )
-
-    def test_docker_cleanup(self):
-        wait_time = 1
-        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
-
-        def assertions(tool):
-            client = DockerClientWrapper()
-            client.lookup_container_url(tool.container_name)
-
-            self.assertTrue(tool.is_running())
-
-            self._django_docker_engine_cleanup_wrapper()
-
-            with self.assertRaises(NotFound):
-                client.lookup_container_url(tool.container_name)
-
-            self.assertFalse(tool.is_running())
-
-        self._start_visualization(
-            'hello_world.json',
-            "https://www.example.com/file.txt",
-            assertions
-        )
-
-    def test_max_containers(self):
-        with self.settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1):
-            self._start_visualization(
-                'hello_world.json',
-                "https://www.example.com/file.txt",
-                count=settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-            )
-            with self.assertRaises(VisualizationToolError) as context:
-                self._start_visualization(
-                    'hello_world.json',
-                    "https://www.example.com/file.txt",
-                )
-        self.assertIn("Max containers", context.exception.message)
 
     def test__get_launch_parameters(self):
         def assertions(tool):

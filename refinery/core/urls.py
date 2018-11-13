@@ -10,7 +10,8 @@ from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    OpenIDToken, UserProfileViewSet, WorkflowViewSet)
+                    OpenIDToken, UserProfileViewSet, WorkflowViewSet,
+                    site_statistics)
 
 urlpatterns = patterns(
     'core.views',
@@ -60,7 +61,8 @@ urlpatterns = patterns(
 
     url(r'^neo4j/annotations/$',
         'neo4j_dataset_annotations', name="neo4j_dataset_annotations"),
-    url(r'^auto_login/$', 'auto_login', name='auto_login')
+    url(r'^auto_login/$', 'auto_login', name='auto_login'),
+    url(r'^sitestatistics/(?P<type>(deltas)|(totals)).csv', site_statistics)
 )
 
 # DRF url routing

@@ -3,8 +3,9 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-import logging
 import urlparse
+
+from django.conf import settings
 
 from bioblend import galaxy
 import celery
@@ -15,12 +16,13 @@ from celery.task.sets import TaskSet
 import core
 from core.models import Analysis, AnalysisResult, Workflow
 from file_store.models import FileStoreItem, FileExtension
-from file_store.tasks import import_file
+from file_store.tasks import FileImportTask
 import tool_manager
 
 from .models import AnalysisStatus
 
-logger = logging.getLogger(__name__)
+logger = celery.utils.log.get_task_logger(__name__)
+logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 RETRY_INTERVAL = 5  # seconds
 
@@ -251,30 +253,9 @@ def _refinery_file_import(analysis_uuid):
         analysis.set_status(Analysis.RUNNING_STATUS)
         logger.info("Starting input file import tasks for analysis '%s'",
                     analysis)
-        refinery_import_tasks = []
-        tool = _get_workflow_tool(analysis_uuid)
-
-        for input_file_uuid in tool.get_input_file_uuid_list():
-            try:
-                file_store_item = FileStoreItem.objects.get(
-                    uuid=input_file_uuid
-                )
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as exc:
-                error_msg = "Error retrieving FileStoreItem with UUID '{}': " \
-                            "{}".format(input_file_uuid, exc)
-                logger.error(error_msg)
-                analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            else:
-                if not file_store_item.is_local():
-                    # Avoid adding UUIDs of already imported
-                    # FileStoreItem's to this refinery_import_taskset
-                    refinery_import_task = import_file.subtask(
-                        (input_file_uuid,)
-                    )
-                    refinery_import_tasks.append(refinery_import_task)
         refinery_import_taskset = TaskSet(
-            tasks=refinery_import_tasks).apply_async()
+            tasks=analysis.get_refinery_import_task_signatures()
+        ).apply_async()
         refinery_import_taskset.save()
         analysis_status.refinery_import_task_group_id = \
             refinery_import_taskset.taskset_id
@@ -543,9 +524,7 @@ def _get_galaxy_download_task_ids(analysis):
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
-                task_id = import_file.subtask(
-                        (file_store_item.uuid, False, file_size)
-                )
+                task_id = FileImportTask().subtask((file_store_item.uuid,))
                 task_id_list.append(task_id)
 
     return task_id_list

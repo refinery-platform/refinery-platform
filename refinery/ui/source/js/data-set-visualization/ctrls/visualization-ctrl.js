@@ -30,6 +30,7 @@
     var vm = this;
     vm.isOwner = isOwner;
     vm.relaunchTool = relaunchTool;
+    vm.deleteTool = deleteTool;
     vm.visRelaunchList = {};
     vm.visualizations = visService.visualizations;
     activate();
@@ -45,6 +46,12 @@
       }
     }
 
+    /**
+     * @name relaunchTool
+     * @desc  Relaunches a tool
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+     * @param {obj} vis - object with url to relaunch tool
+    **/
     function relaunchTool (vis) {
       vm.visRelaunchList[vis.uuid] = true;
       $http.get(vis.relaunch_url)
@@ -57,6 +64,27 @@
         });
     }
 
+    /**
+     * @name deleteTool
+     * @desc  Deletes a launced tool
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+     * @param {obj} vis - object with url to delete tool
+    **/
+    function deleteTool (vis) {
+      $http.delete(vis.detail_url)
+        .then(function () {
+          refreshVisualizations();
+        }, function (error) {
+          $log.error(error);
+        });
+    }
+
+    /**
+     * @name isOwner
+     * @desc  Checks ownership based on profile uuid
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+     * @param {str} visOwnerUuid - owner's profile uuid
+    **/
     function isOwner (visOwnerUuid) {
       return visOwnerUuid === settings.djangoApp.userprofileUUID;
     }

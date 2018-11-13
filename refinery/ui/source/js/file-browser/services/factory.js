@@ -12,9 +12,11 @@
     'assayAttributeService',
     'assayFileService',
     'assayFiltersService',
+    'dataSetPropsService',
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
+    'settings',
     'toolSelectService'
   ];
 
@@ -25,9 +27,11 @@
     assayAttributeService,
     assayFileService,
     assayFiltersService,
+    dataSetPropsService,
     fileBrowserSettings,
     nodeService,
     selectedFilterService,
+    settings,
     toolSelectService
     ) {
     // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
@@ -62,10 +66,34 @@
     * Method Definitions
     * ----------------------
     */
+
+    // helper method which returns  whether a cell is editable
+    function isCellEditable (attributeType) {
+      return dataSetPropsService.dataSet.is_owner &&
+        settings.djangoApp.attributeEditTypes.split(',').includes(attributeType);
+    }
+
+    // helper method which returns css class for non-editable cells
+    function addNonEditCellClass (attributeType, grid) {
+      if (!isCellEditable(attributeType) && grid.appScope.editMode) {
+        return 'non-select-cell';
+      }
+      return null;
+    }
+
+    // helper method to check if cell is derived
+    function isCellDerived (row) {
+      for (var cellName in row) {
+        if (cellName.includes('REFINERY_TYPE') && row[cellName].includes('Derived')) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
-
       assayAttributes.forEach(function (attribute) {
         var columnName = attribute.display_name;
         var columnWidth = columnName.length * 6 + 100;
@@ -75,8 +103,22 @@
           width: columnWidth,
           field: attribute.internal_name,
           cellTooltip: true,
-          enableHiding: false
+          enableHiding: false,
+          cellEditableCondition: function (scope) {
+            return !isCellDerived(scope.row.entity) && isCellEditable(attribute.attribute_type);
+          },
+          cellClass: function (grid, row) {
+            var rowUidClass = 'ui-grid-row' + row.uid;
+            if (isCellDerived(row.entity) && grid.appScope.editMode) {
+              return rowUidClass + ' non-select-cell';
+            }
+            return rowUidClass + ' ' + addNonEditCellClass(attribute.attribute_type, grid);
+          },
+          headerCellClass: function (grid) {
+            return addNonEditCellClass(attribute.attribute_type, grid);
+          },
         };
+
         if (columnName === 'Download') {
           // Url requires a custom template for downloading links
           tempCustomColumnNames.push(setCustomUrlColumn(attribute));
@@ -244,7 +286,10 @@
         enableColumnResizing: true,
         pinnedLeft: true,
         cellTemplate: _cellTemplate,
-        visible: isToolSelected
+        visible: isToolSelected,
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
      /**
@@ -274,7 +319,10 @@
         enableColumnResizing: true,
         pinnedLeft: true,
         cellTemplate: cellTemplate,
-        visible: isToolSelected
+        visible: isToolSelected,
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 
@@ -296,7 +344,10 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
-        cellTemplate: _cellTemplate
+        cellTemplate: _cellTemplate,
+        cellEditableCondition: false,
+        cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
       };
     }
 

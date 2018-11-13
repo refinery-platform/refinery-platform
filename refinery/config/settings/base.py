@@ -232,6 +232,8 @@ AUTHENTICATION_BACKENDS = (
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
+REFINERY_LOG_LEVEL = get_setting('REFINERY_LOG_LEVEL')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -258,7 +260,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level': get_setting("REFINERY_LOG_LEVEL"),
+            'level': REFINERY_LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
@@ -283,9 +285,6 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
-        'revproxy': {
-            'level': 'ERROR',
-        },
         'httpstream': {  # dependency of py2neo
             'level': 'INFO',
         },
@@ -295,8 +294,21 @@ LOGGING = {
         'requests': {
             'level': 'ERROR',
         },
+        'revproxy': {
+            'level': 'ERROR',
+        },
     },
 }
+# enable log output for levels less than WARNING from external Refinery
+# functions called in Celery tasks that use Celery task logger
+REFINERY_APP_NAMES = [
+    'analysis_manager', 'annotation_server', 'core', 'data_set_manager',
+    'file_store', 'galaxy_connector', 'tool_manager', 'user_files_manager',
+    'workflow_manager'
+]
+LOGGING['loggers'].update({
+    app_name: {'level': REFINERY_LOG_LEVEL} for app_name in REFINERY_APP_NAMES
+})
 
 # Expiration time of a token API that was originally designed to handle group
 # invitations using uuid-based tokens.
@@ -322,21 +334,15 @@ CELERYD_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
                           '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
-CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
+CELERY_ROUTES = {"file_store.tasks.FileImportTask": {"queue": "file_import"}}
 CELERY_ACCEPT_CONTENT = ['pickle']
+CELERYD_TASK_SOFT_TIME_LIMIT = 60  # seconds
 CELERYBEAT_SCHEDULE = {
     'collect_site_statistics': {
         'task': 'core.tasks.collect_site_statistics',
         'schedule': timedelta(days=1),
         'options': {
             'expires': 30,  # seconds
-        }
-    },
-    'django_docker_cleanup': {
-        'task': 'tool_manager.tasks.django_docker_cleanup',
-        'schedule': timedelta(seconds=30),
-        'options': {
-            'expires': 20,  # seconds
         }
     },
 }
@@ -614,11 +620,9 @@ TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
 # https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
-DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
-# Time in seconds to wait before killing unused visualization
-DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
-DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
+DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB = \
+    get_setting("DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB")
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
@@ -644,3 +648,15 @@ MIGRATION_MODULES = {
 }
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"
+
+# The GOOGLE_RECAPTCHA values below are only valid for testing/dev
+# environments (They don't actually validate registering users)
+# See: https://developers.google.com/recaptcha/docs/faq
+REFINERY_GOOGLE_RECAPTCHA_SITE_KEY = get_setting(
+    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY",
+    default="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+)
+REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY = get_setting(
+    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY",
+    default="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+)

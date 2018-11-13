@@ -47,51 +47,6 @@ def uniquify(seq):
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment
 # graph follow the same sequence of node types
-def get_node_attributes(study_uuid, assay_uuid, node=None, node_type=None):
-    """node_type indicates the node type for which the available attributes
-    should be determined. node_type should be in
-    Node.ASSAYS | Node.FILES | Node.SOURCE | Node.SAMPLE | Node.EXTRACT |
-    Node.LABELED_EXTRACT
-    If node is not None, node_type will be ignored and the method will return
-    the attributes for this node (and its node type).
-    """
-    if node is None:
-        try:
-            if assay_uuid is None:
-                node = Node.objects.filter(
-                    Q(study__uuid=study_uuid, assay__uuid__isnull=True),
-                    type=node_type)[0]
-            else:
-                node = Node.objects.filter(
-                    Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-                    Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
-                    type=node_type)[0]
-        except:
-            return None
-    # assumption: we now have a node
-    return _get_node_attributes_recursion(node)
-
-
-def _get_node_attributes_recursion(node):
-    attributes = []
-
-    for attribute in node.attribute_set.all():
-        attributes.append({
-            "type": attribute.type,
-            "subtype": attribute.subtype
-        })
-    try:
-        parent = node.parents.all()[0]
-        attributes.extend(_get_node_attributes_recursion(parent))
-    except:
-        pass
-
-    return attributes
-
-
-# for an assay declaration (= assay file in a study)
-# this method is based on the assumption that all paths through the experiment
-# graph follow the same sequence of node types
 def get_node_types(study_uuid, assay_uuid=None, files_only=False,
                    filter_set=None):
     """filter_set is a set of node types, e.g. ["Sample Name", "Source Name"].
@@ -136,23 +91,6 @@ def _get_node_types_recursion(node):
     return sequence
 
 
-def _get_parent_attributes(nodes, node_id):
-    """Recursively collects attributes from the current node and each parent
-    node until no more parents are available.
-    """
-    attributes = []
-
-    if len(nodes[node_id]["parents"]) == 0:
-        # End of recursion
-        return nodes[node_id]["attributes"]
-
-    for parent_id in nodes[node_id]["parents"]:
-        attributes.extend(_get_parent_attributes(nodes, parent_id))
-
-    attributes.extend(nodes[node_id]["attributes"])
-    return attributes
-
-
 def _get_unique_parent_attributes(nodes, node_id):
     """Recursively collects attributes from the current node and each parent
     node until no more parents are available and make sure that the final list
@@ -173,16 +111,6 @@ def _get_unique_parent_attributes(nodes, node_id):
         attributes[attr[0]] = attr
 
     return attributes
-
-
-def _get_assay_name(result, node):
-    if result[node]["type"] in Node.ASSAYS:
-        return result[node]["name"]
-
-    for parent in result[node]["parents"]:
-        return _get_assay_name(result, parent)
-
-    return None
 
 
 def _retrieve_nodes(
@@ -285,66 +213,6 @@ def _retrieve_nodes(
         nodes[current_id] = current_node
 
     return nodes
-
-
-def get_nodes(node_type, study_uuid, assay_uuid=None,
-              ontology_attribute_fields=False):
-    nodes = _retrieve_nodes(study_uuid, assay_uuid, ontology_attribute_fields)
-    results = {}
-    attribute_count = 0
-    for key in nodes:
-        if nodes[key]["type"] == node_type:
-            results[nodes[key]["uuid"]] = nodes[key].copy()
-            results[nodes[key]["uuid"]]["attributes"] = \
-                _get_parent_attributes(nodes, key)
-            attribute_count += len(results[nodes[key]["uuid"]]["attributes"])
-    logger.info("Nodes: %s   attributes: %s",
-                str(len(results)), str(attribute_count))
-    return results
-
-
-# this method is obsolete - do not use!
-def get_matrix(node_type, study_uuid, assay_uuid=None,
-               ontology_attribute_fields=False):
-    nodes = _retrieve_nodes(study_uuid, assay_uuid, ontology_attribute_fields)
-    results = {}
-    results["meta"] = {}
-    results["data"] = {}
-    results["meta"]["study"] = study_uuid
-    results["meta"]["assay"] = assay_uuid
-    results["meta"]["attributes"] = None
-    results["meta"]["type"] = node_type
-    attribute_count = 0
-
-    for key in nodes:
-        if nodes[key]["type"] == node_type:
-            # copy a subset of the node model attributes
-            results["data"][nodes[key]["uuid"]] = {
-                k: nodes[key].copy()[k] for k in ("name", "file_uuid")}
-            # get the name of the nearest assay node predecessor
-            results["data"][nodes[key]["uuid"]]["assay"] = _get_assay_name(
-                nodes, key)
-            # initialize attribute list
-            results["data"][nodes[key]["uuid"]]["attributes"] = []
-            # save attributes (attribute[1], etc. are based on
-            # Attribute.ALL_FIELDS
-            for attribute in _get_parent_attributes(nodes, key):
-                results["data"][nodes[key]["uuid"]]["attributes"].append(
-                    attribute[3])  # 3 = value
-                if attribute[4] is not None:
-                    results["data"][nodes[key]["uuid"]]["attributes"][-1] += \
-                        " " + attribute[4]  # 4 = value unit
-            # store attribute labels in meta section (only for the first node
-            # -> for all further nodes the assumption is that they have the
-            # same attribute list)
-            if results["meta"]["attributes"] is None:
-                results["meta"]["attributes"] = []
-                for attribute in _get_parent_attributes(nodes, key):
-                    results["meta"]["attributes"].append(
-                        {"type": attribute[1], "subtype": attribute[2]})
-            attribute_count += len(
-                results["data"][nodes[key]["uuid"]]["attributes"])
-    return results
 
 
 def _create_annotated_node_objs(
@@ -856,20 +724,20 @@ def search_solr(encoded_params, core):
 
 def get_owner_from_assay(uuid):
     # Returns the owner from an assay_uuid. Ownership is passed from dataset
-
     try:
-        investigation_key = Study.objects.get(assay__uuid=uuid).investigation
+        study = Study.objects.get(assay__uuid=uuid)
     except (Study.DoesNotExist,
             Study.MultipleObjectsReturned) as e:
         logger.error(e)
-        return "Error: Invalid uuid"
+        return None
 
-    investigation_link = core.models.InvestigationLink.objects.get(
-            investigation=investigation_key)
-    owner = core.models.DataSet.objects.get(
-            investigationlink=investigation_link).get_owner()
+    try:
+        data_set = study.get_dataset()
+    except RuntimeError as e:
+        logger.error(e)
+        return None
 
-    return owner
+    return data_set.get_owner()
 
 
 def format_solr_response(solr_response):
@@ -946,6 +814,13 @@ def customize_attribute_response(facet_fields):
         if len(field_name) > 1:
             customized_field['file_ext'] = field_name[-1]
 
+        field_edit_type = ''
+        field_normalized = field.replace('_', ' ')
+        for edit_type in Attribute.editable_types:
+            if edit_type in field_normalized:
+                field_edit_type = edit_type
+                break
+
         if 'REFINERY_SUBANALYSIS' in field:
             customized_field['display_name'] = 'Analysis Group'
             customized_field['attribute_type'] = 'Internal'
@@ -958,21 +833,12 @@ def customize_attribute_response(facet_fields):
         elif 'REFINERY' in field:
             customized_field['display_name'] = field_name[1].title()
             customized_field['attribute_type'] = 'Internal'
-        elif 'Comment' in field:
-            index = field_name.index('Comment')
-            field_name = ' '.join(field_name[0:index])
+        elif field_edit_type:
+            index = field_name.index(field_edit_type.split(' ')[0])
+            # some attributes don't have a name hence the default 1
+            field_name = ' '.join(field_name[0:index or 1])
             customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Comment'
-        elif 'Factor' in field:
-            index = field_name.index('Factor')
-            field_name = ' '.join(field_name[0:index])
-            customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Factor Value'
-        elif 'Characteristics' in field:
-            index = field_name.index('Characteristics')
-            field_name = ' '.join(field_name[0:index])
-            customized_field['display_name'] = field_name.title()
-            customized_field['attribute_type'] = 'Characteristics'
+            customized_field['attribute_type'] = field_edit_type
         # For uuid fields
         elif len(field_name) == 1:
             customized_field['display_name'] = \
@@ -1178,3 +1044,21 @@ def get_solr_response_json(node_uuids):
         'data_set_manager'
     )
     return format_solr_response(solr_response)
+
+
+def get_first_annotated_node_from_solr_name(solr_name, node):
+    # Helper method which get a node's first annotated node based on
+    # solr_name
+    # splits solr name into type and subtype
+    attribute_obj = customize_attribute_response([solr_name])[0]
+    attribute_subtype = attribute_obj.get('display_name')
+    attribute_type = attribute_obj.get('attribute_type')
+    # some attributes don't have a subtype, so display_name will be a
+    # the first word of the attribute type
+    if attribute_subtype in attribute_type:
+        attribute_subtype = None
+    return AnnotatedNode.objects.filter(
+        node=node,
+        attribute_type=attribute_type,
+        attribute_subtype__iexact=attribute_subtype
+    ).first()

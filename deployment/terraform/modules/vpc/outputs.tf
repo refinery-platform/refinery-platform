@@ -14,3 +14,10 @@ output "public_subnet_id" {
   value = "${aws_subnet.public_subnet.id}"
 }
 
+output "elb_security_group_id" {
+  value = "${aws_security_group.elb.id}"
+}
+
+output "app_server_security_group_id" {
+  value = "${aws_security_group.app_server.id}"
+}

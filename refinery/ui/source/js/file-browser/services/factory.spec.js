@@ -175,34 +175,183 @@
 
     describe('createColumnDefs', function () {
       var tempAssayAttributes = [
-        { display_name: 'Attribute1',
-          internal_name: '_Attribute1_s'
+        {
+          display_name: 'Attribute1',
+          internal_name: '_Attribute1_s',
+          attribute_type: 'Factor'
         },
-        { display_name: 'Analysis Group',
-          internal_name: 'Analysis Group'
+        {
+          display_name: 'Analysis Group',
+          internal_name: 'Analysis Group',
+          attribute_type: 'Internal'
         },
-        { display_name: 'Url',
-          internal_name: 'Url'
+        {
+          display_name: 'Download',
+          internal_name: 'Url',
+          attribute_type: 'Internal'
+        },
+        {
+          display_name: 'Selection',
+          internal_name: 'Selection',
+          attribute_type: 'Internal'
+        },
+        {
+          display_name: 'Input Groups',
+          internal_name: 'Input Groups',
+          attribute_type: 'Internal'
         }
       ];
+      var response = [];
+
+      beforeEach(inject(function () {
+        angular.copy(tempAssayAttributes, factory.assayAttributes);
+        response = factory.createColumnDefs();
+      }));
 
       it('createColumnDefs is a method', function () {
         expect(angular.isFunction(factory.createColumnDefs)).toBe(true);
       });
 
       it('returns an array of same length', function () {
-        angular.copy(tempAssayAttributes, factory.assayAttributes);
-        var response = factory.createColumnDefs();
         expect(response.length).toEqual(tempAssayAttributes.length);
+      });
+
+      it('sets cellClass to a function', function () {
+        expect(angular.isFunction(response[0].cellClass)).toBe(true);
+      });
+
+      it('sets headerCellClass to a function', function () {
+        expect(angular.isFunction(response[0].headerCellClass)).toBe(true);
+      });
+
+      it('sets correct name', function () {
+        expect(response[0].name).toEqual(tempAssayAttributes[0].display_name);
+        expect(response[1].name).toEqual(tempAssayAttributes[1].display_name);
+      });
+
+      it('sets correct field', function () {
+        expect(response[0].field).toEqual(tempAssayAttributes[0].internal_name);
+        expect(response[1].field).toEqual(tempAssayAttributes[1].internal_name);
+      });
+
+      it('sets other default properities for reg column', function () {
+        expect(response[0].cellTooltip).toEqual(true);
+        expect(response[0].enableHiding).toEqual(false);
       });
 
       it('returns corrent template for analysis group', function () {
         var analysisGroupTemplate = '<div class="ngCellText ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">{{COL_FIELD |' +
-            ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
-        angular.copy(tempAssayAttributes, factory.assayAttributes);
-        var response = factory.createColumnDefs();
+          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
         expect(response[1].cellTemplate).toContain(analysisGroupTemplate);
+      });
+
+      // url (download) column
+      it('sets url cell template', function () {
+        var cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD" node-obj="row.entity">' +
+          '</rp-data-file-dropdown>';
+        expect(response[2].cellTemplate).toEqual(cellTemplate);
+      });
+
+      it('sets cellClass to a function for url column', function () {
+        expect(angular.isFunction(response[2].cellClass)).toBe(true);
+      });
+
+      it('sets headerCellClass to a function for url column', function () {
+        expect(angular.isFunction(response[2].headerCellClass)).toBe(true);
+      });
+
+      it('sets custom url field', function () {
+        expect(response[2].field).toEqual(tempAssayAttributes[2].internal_name);
+      });
+
+      it('sets custom url name', function () {
+        expect(response[2].name).toEqual(tempAssayAttributes[2].internal_name);
+      });
+
+      it('sets custom url display name', function () {
+        expect(response[2].displayName).toEqual('File');
+      });
+
+      it('sets other default properities for url column', function () {
+        expect(response[2].cellTooltip).toEqual(true);
+        expect(response[2].width).toEqual(80);
+        expect(response[2].enableFiltering).toEqual(false);
+        expect(response[2].enableSorting).toEqual(false);
+        expect(response[2].enableColumnMenu).toEqual(false);
+        expect(response[2].enableColumnResizing).toEqual(true);
+        expect(response[2].cellEditableCondition).toEqual(false);
+      });
+
+      // selection column
+      it('returns corrent template for selection column', function () {
+        var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
+          '<a rp-node-selection-popover title="Select Tool Input"' +
+          'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
+          'id="{{row.entity.uuid}}">' +
+          '<div class="full-size ui-grid-selection-row-header-buttons solidText">' +
+          '<i class="fa fa-arrow-right" aria-hidden="true">' +
+          '</i></div></a></div>';
+        expect(response[3].cellTemplate).toContain(cellTemplate);
+      });
+
+      it('sets cellClass to a function for selection column', function () {
+        expect(angular.isFunction(response[3].cellClass)).toBe(true);
+      });
+
+      it('sets headerCellClass to a function for selection column', function () {
+        expect(angular.isFunction(response[3].headerCellClass)).toBe(true);
+      });
+
+      it('sets correct name and field for selection column', function () {
+        expect(response[3].name).toEqual(tempAssayAttributes[3].display_name);
+        expect(response[3].field).toEqual(tempAssayAttributes[3].display_name);
+      });
+
+      it('sets other default properities for selection column', function () {
+        expect(response[3].cellTooltip).toEqual(false);
+        expect(response[3].width).toEqual(50);
+        expect(response[3].displayName).toEqual('');
+        expect(response[3].enableFiltering).toEqual(false);
+        expect(response[3].enableSorting).toEqual(false);
+        expect(response[3].enableColumnMenu).toEqual(false);
+        expect(response[3].enableColumnResizing).toEqual(true);
+        expect(response[3].pinnedLeft).toEqual(true);
+        expect(response[3].cellEditableCondition).toEqual(false);
+      });
+
+      // input groups column
+      it('returns corrent template for input groups column', function () {
+        var cellTemplate = '<rp-input-groups-column-template>' +
+        '</rp-input-groups-column-template>';
+        expect(response[4].cellTemplate).toContain(cellTemplate);
+      });
+
+      it('sets cellClass to a function for input groups column', function () {
+        expect(angular.isFunction(response[4].cellClass)).toBe(true);
+      });
+
+      it('sets headerCellClass to a function for input groups column', function () {
+        expect(angular.isFunction(response[4].headerCellClass)).toBe(true);
+      });
+
+      it('sets correct name and field for input groups column', function () {
+        expect(response[4].name).toEqual(tempAssayAttributes[4].display_name);
+        expect(response[4].field).toEqual(tempAssayAttributes[4].display_name);
+      });
+
+      it('sets correct display name for input groups column', function () {
+        expect(response[4].displayName).toEqual('Input Groups');
+      });
+
+      it('sets other default properities for input groups column', function () {
+        expect(response[4].width).toEqual(130);
+        expect(response[4].enableFiltering).toEqual(false);
+        expect(response[4].enableSorting).toEqual(false);
+        expect(response[4].enableColumnMenu).toEqual(false);
+        expect(response[4].enableColumnResizing).toEqual(true);
+        expect(response[4].pinnedLeft).toEqual(true);
+        expect(response[4].cellEditableCondition).toEqual(false);
       });
     });
 
