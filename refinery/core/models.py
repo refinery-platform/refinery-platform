@@ -1929,23 +1929,6 @@ class RefineryLDAPBackend(LDAPBackend):
         return user, created
 
 
-class ResourceStatistics(object):
-    def __init__(
-            self,
-            user=0,
-            group=0,
-            files=0,
-            dataset=None,
-            workflow=None,
-            project=None):
-        self.user = user
-        self.group = group
-        self.files = files
-        self.dataset = dataset
-        self.workflow = workflow
-        self.project = project
-
-
 class GroupManagement(object):
     def __init__(
             self,
