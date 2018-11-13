@@ -65,6 +65,13 @@
         <h3 class="p-l-1">
           {{ FBCtrl.assayFilesTotal }} files
         </h3>
+        <button
+          class="refinery-base btn btn-default btn-xs header-button"
+          ng-click="FBCtrl.downloadCSV('all')">Download entire table as CSV</button>
+        <button
+          class="refinery-base btn btn-default btn-xs header-button"
+          ng-click="FBCtrl.downloadCSV('visible')">Download visible table as
+          CSV</button>
         <div class="float-right" ng-if="FBCtrl.dataSet.is_owner">
           <h4 class="p-r-1-2">
             Edit Metadata
