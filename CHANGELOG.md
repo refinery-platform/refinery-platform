@@ -100,6 +100,8 @@
 ## [v1.6.6.2](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.2) (2018-09-17)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6.1...v1.6.6.2)
 
+- This hotfix release resolves a bug in the events api caused by a str conversion.
+
 **Merged pull requests:**
 
 - Remove str cast. [\#3001](https://github.com/refinery-platform/refinery-platform/pull/3001) ([jkmarx](https://github.com/jkmarx))
@@ -107,6 +109,7 @@
 ## [v1.6.6.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.1) (2018-09-14)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6...v1.6.6.1)
 
+- This is a hotfix release solely to get a larger EC2 instance type for our docker host running our `VisualizationTools`
 **Implemented enhancements:**
 
 - Scottx611x/tool manager views cleanup [\#2991](https://github.com/refinery-platform/refinery-platform/pull/2991) ([scottx611x](https://github.com/scottx611x))
