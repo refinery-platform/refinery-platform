@@ -61,17 +61,46 @@
       ng-class="{'col-lg-7 col-md-7 col-sm-5': !FBCtrl.collapsedToolPanel,
       'col-lg-10 col-md-10 col-sm-9': FBCtrl.collapsedToolPanel}"
       id="main-area">
-      <div class="refinery-subheader grid_data_set_total">
+      <div uib-dropdown class="refinery-subheader grid_data_set_total dropdown-menu-right">
         <h3 class="p-l-1">
           {{ FBCtrl.assayFilesTotal }} files
         </h3>
-        <button
-          class="refinery-base btn btn-default btn-xs header-button"
-          ng-click="FBCtrl.downloadCSV('all')">Download entire table as CSV</button>
-        <button
-          class="refinery-base btn btn-default btn-xs header-button"
-          ng-click="FBCtrl.downloadCSV('visible')">Download visible table as
-          CSV</button>
+          <button
+            class="refinery-base btn btn-default btn-xs header-button"
+            id="btn-append-to-single-button"
+            uib-dropdown-toggle>
+            Download CSV <i class="fa fa-caret-down"></i>
+          </button>
+          <ul class="dropdown-menu text-align-center" uib-dropdown-menu role="menu"
+            aria-labelledby="btn-append-to-single-button">
+            <li class="p-r-1 p-l-1" role="menuitem">
+             <button
+              class="refinery-base btn btn-primary btn-xs"
+              ng-click="FBCtrl.downloadCSV(FBCtrl.uiGridExporterConstants.ALL)">
+               Entire Table Contents ({{ FBCtrl.totalRows }} rows)
+             </button>
+            </li>
+            <li ng-if="FBCtrl.isFiltered()" class="p-t-1 p-r-1 p-l-1" role="menuitem">
+             <button
+              class="refinery-base btn btn-primary btn-xs"
+              ng-click="FBCtrl.downloadCSV(FBCtrl.uiGridExporterConstants.VISIBLE)">
+               Filtered Table Contents ({{ FBCtrl.assayFilesTotal }} rows)
+              </button>
+            </li>
+          </ul>
+          <span class="p-l-1-3">
+          <a
+            popover-placement="right"
+            uib-popover-html="'Download a .csv file including the entire Data
+             Set contents, or only the data currently filtered within the
+             FileBrowser.'"
+            popover-title="Download CSV"
+            popover-trigger="'outsideClick'"
+            popover-append-to-body="true">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+          </a>
+        </span>
+
         <div class="float-right" ng-if="FBCtrl.dataSet.is_owner">
           <h4 class="p-r-1-2">
             Edit Metadata

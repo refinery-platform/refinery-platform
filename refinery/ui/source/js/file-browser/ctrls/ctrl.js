@@ -123,6 +123,7 @@
       useExternalSorting: true
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
+    vm.isFiltered = isFiltered;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openPermissionEditor = openPermissionEditor;
@@ -134,6 +135,7 @@
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
+    vm.totalRows = null;
     vm.uiGridExporterConstants = uiGridExporterConstants;
     vm.uiGridExporterService = uiGridExporterService;
     vm.userPerms = permsService.userPerms;
@@ -313,6 +315,10 @@
       }
     }
 
+    function isFiltered () {
+      return paramService.fileParam.filter_attribute !== undefined;
+    }
+
     /** view method to open the permissions modal component, in commons
      *  directive*/
     function openPermissionEditor () {
@@ -362,6 +368,9 @@
         // Ui-grid rows generated from assay files
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
         vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+        if (vm.totalRows === null) {
+          vm.totalRows = vm.assayFilesTotal;
+        }
         // turns off infinite scroll for data sets < 100 files
         if (vm.assayFilesTotal < maxFileRequest && vm.gridApi) {
           vm.gridApi.infiniteScroll.setScrollDirections(false, false);
