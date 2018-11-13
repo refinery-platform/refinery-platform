@@ -512,7 +512,6 @@ class TestManagementCommands(TestCase):
 class TestMigrations(TestCase):
     """
     Useful test class for testing Django Data migrations
-
     From https://www.caktusgroup.com/blog/2016/02/02/
     writing-unit-tests-django-migrations/
     """

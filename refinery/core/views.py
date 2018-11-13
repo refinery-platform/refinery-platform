@@ -75,11 +75,6 @@ def about(request):
                               context_instance=RequestContext(request))
 
 
-def statistics(request):
-    return render_to_response('core/statistics.html', {},
-                              context_instance=RequestContext(request))
-
-
 @login_required
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},

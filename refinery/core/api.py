@@ -41,10 +41,9 @@ from tastypie.utils import trailing_slash
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Study
-from file_store.models import FileStoreItem
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                     Invitation, Project, ResourceStatistics, Tutorials,
-                     UserAuthentication, UserProfile, Workflow)
+                     Invitation, Project, Tutorials, UserAuthentication,
+                     UserProfile, Workflow)
 from .utils import (get_data_sets_annotations, get_resources_for_user,
                     which_default_read_perm)
 
@@ -1000,79 +999,6 @@ class AnalysisResource(ModelResource):
         if request.GET.get('meta_only'):
             return {'meta': data['meta']}
         return data
-
-
-class StatisticsResource(Resource):
-    user = fields.IntegerField(attribute='user')
-    group = fields.IntegerField(attribute='group')
-    files = fields.IntegerField(attribute='files')
-    dataset = fields.DictField(attribute='dataset')
-    workflow = fields.DictField(attribute='workflow')
-    project = fields.DictField(attribute='project')
-
-    class Meta:
-        resource_name = 'statistics'
-        object_class = ResourceStatistics
-
-    def stat_summary(self, model, unique_workflows=False):
-
-        if not unique_workflows:
-            model_list = model.objects.all()
-        else:
-            # Filter out inactive workflows
-            model_list = model.objects.filter(is_active=True)
-
-        total = len(model_list)
-
-        public = len(filter(lambda x: x.is_public(), model_list))
-
-        private_shared = len(filter(
-            lambda x: not x.is_public() and len(x.get_groups()) > 1,
-            model_list))
-
-        private = total - public - private_shared
-        return {
-            'total': total, 'public': public,
-            'private': private, 'private_shared': private_shared
-        }
-
-    def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-        kwargs['pk'] = uuid.uuid1()
-        return kwargs
-
-    def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle.request)
-
-    def get_object_list(self, request):
-
-        user_count = User.objects.count()
-        group_count = Group.objects.count()
-        files_count = FileStoreItem.objects.count()
-        dataset_summary = {}
-        workflow_summary = {}
-        project_summary = {}
-
-        if 'dataset' in request.GET:
-            dataset_summary = self.stat_summary(DataSet)
-        if 'workflow' in request.GET:
-            workflow_summary = self.stat_summary(Workflow, True)
-        if 'project' in request.GET:
-            project_summary = self.stat_summary(Project)
-
-        request_string = request.GET.get('type')
-
-        if request_string is not None:
-            if 'dataset' in request_string:
-                dataset_summary = self.stat_summary(DataSet)
-            if 'workflow' in request_string:
-                workflow_summary = self.stat_summary(Workflow)
-            if 'project' in request_string:
-                project_summary = self.stat_summary(Project)
-
-        return [ResourceStatistics(
-            user_count, group_count, files_count,
-            dataset_summary, workflow_summary, project_summary)]
 
 
 class GroupManagementResource(Resource):

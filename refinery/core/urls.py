@@ -18,7 +18,6 @@ urlpatterns = patterns(
     url(r'^$', 'home', name="home"),
     url(r'^about/$', 'about', name="about"),
     url(r'^dashboard/$', 'dashboard', name="dashboard"),
-    url(r'^statistics/$', 'statistics', name="statistics"),
     url(r'^collaboration/$', 'collaboration', name='collaboration'),
     url(r'^group_invite/(?P<token>' + UUID_RE + r')/$',
         'group_invite', name='group_invite'),
