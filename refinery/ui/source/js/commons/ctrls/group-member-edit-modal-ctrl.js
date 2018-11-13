@@ -14,13 +14,11 @@
 
   GroupMemberEditModalCtrl.$inject = [
     '$timeout',
-    'groupDataService',
     'groupMemberService'
   ];
 
   function GroupMemberEditModalCtrl (
     $timeout,
-    groupDataService,
     groupMemberService
   ) {
     var vm = this;
@@ -61,7 +59,6 @@
         userId: vm.member.user_id
       }).$promise.then(
         function () {
-          groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully demoted member ' + vm.member.username;
           $timeout(function () {
@@ -89,7 +86,6 @@
         user_id: vm.member.user_id
       }).$promise.then(
         function () {
-          groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully promoted member ' + vm.member.username + '.';
           vm.isLoading = false;
@@ -116,7 +112,6 @@
         userId: vm.member.user_id
       }).$promise.then(
         function () {
-          groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully removed member ' + vm.member.username + '.';
           vm.isLoading = false;

@@ -126,7 +126,6 @@
         <button type="button" class="navbar-toggle collapsed"
           data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
           <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
         </button>
       </div>
 
@@ -209,10 +208,6 @@
          ng-intro-onbeforechange="collabBeforeChangeEvent"
          ng-intro-onafterchange="collabAfterChangeEvent">
         <ul class="nav navbar-nav">
-          <li id="collaborationTutorialStep0" class="{{
-            navbar_class_collaboration }}">
-            <a id="collaborationTutorialStep0_click" href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
-          </li>
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
           </li>
@@ -312,7 +307,6 @@
   <script src="{% static "js/data-set-nav.js" %}"></script>
   <script src="{% static "js/provvis.js" %}"></script>
   <script src="{% static "js/dashboard.js" %}"></script>
-  <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>
   <script src="{% static "js/data-set-visualization.js" %}"></script>
   <script src="{% static "js/tool-launch.js" %}"></script>

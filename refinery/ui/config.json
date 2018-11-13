@@ -19,7 +19,6 @@
     "features": [
       "analysis-monitor",
       "chart",
-      "collaboration",
       "commons",
       "dashboard",
       "data-set-import",
