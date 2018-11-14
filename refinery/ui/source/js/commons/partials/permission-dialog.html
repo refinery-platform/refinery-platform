@@ -2,9 +2,9 @@
   <h3>Permission Editor</h3>
   <div class="modal-description">
     <h4>
-      Select groups you would like to access this data set.
-      To share this data set with a new group or add a user
-      to a group, go to <a href="/collaboration"> the collaboration page.</a>
+      Select groups you would like to access this data set. To share this
+      data set with a new group or add a user to a group, go to <a
+      href="/dashboard"> dashboard page's collaboration section.</a>
       <rp-sharing-help-popover></rp-sharing-help-popover>
     </h4>
     <p>
@@ -41,9 +41,7 @@
           <tbody>
             <tr ng-repeat="group in modal.permissions.groups track by $index">
               <td>
-                <a href="/collaboration/#/{{ group.uuid }}">
-                  {{ group.name }}
-                </a>
+                {{ group.name }}
               </td>
               <td>
                 <input

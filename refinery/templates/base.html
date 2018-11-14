@@ -33,7 +33,6 @@
       userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
       userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
       launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
-      collaboration_tut_viewed: `{{ user.profile.has_viewed_collaboration_tut}}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
@@ -198,15 +197,7 @@
           </a>
       </span>
       </div>
-      <div class="collapse navbar-collapse" id="navbarMain"
-           ng-controller="collaborationTutorialCtrl">
-         <div ng-intro-options="collabIntroOptions"
-         ng-intro-method="collaborationStart"
-         ng-intro-oncomplete="collabCompletedEvent"
-         ng-intro-onexit="collabExitEvent"
-         ng-intro-onchange="collabChangeEvent"
-         ng-intro-onbeforechange="collabBeforeChangeEvent"
-         ng-intro-onafterchange="collabAfterChangeEvent">
+      <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="nav navbar-nav">
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
@@ -217,7 +208,6 @@
              </li>
           {% endif %}
         </ul>
-      </div>
       </div>
     </div>
     </div>

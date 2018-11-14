@@ -65,38 +65,6 @@
 
       </div>
     </div>
-    <div ng-controller="collaborationTutorialCtrl">
-         <div ng-intro-options="collabIntroOptions"
-         ng-intro-method="collaborationStart"
-         ng-intro-oncomplete="collabCompletedEvent"
-         ng-intro-onexit="collabExitEvent"
-         ng-intro-onchange="collabChangeEvent"
-         ng-intro-onbeforechange="collabBeforeChangeEvent"
-         ng-intro-onafterchange="collabAfterChangeEvent">
-
-        <li>
-          <div ng-show="tutorials_viewed.collaboration=='False'">
-            <i class="fa fa-square-o"></i>
-            <a ng-if="isOnHomepage" class="black clickable"
-               ng-click="collaborationStart();">
-              Start Collaboration tutorial</a>
-            <a ng-if="isntOnHomepage" class="black clickable"
-               ng-click="startHandler();">
-              Start Collaboration tutorial</a>
-          </div>
-          <div ng-show="tutorials_viewed.collaboration=='True'">
-            <i class="fa fa-check-square-o"></i>
-            <a ng-if="isOnHomepage" class="black clickable"
-               ng-click="collaborationStart();">
-              Start Collaboration tutorial</a>
-            <a ng-if="isntOnHomepage" class="black clickable"
-               ng-click="startHandler();">
-              Start Collaboration tutorial</a>
-          </div>
-        </li>
-        </div>
-
-    </div>
     <br><br><br>
   </div>
 </div>
