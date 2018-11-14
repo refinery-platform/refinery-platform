@@ -47,6 +47,7 @@ angular
      */
     'refineryRouter',
     'refineryProvvis',
+    'refineryHome',
     'refineryDataSetImport',
     'refineryDataSetNav',
     'refineryDashboard',
