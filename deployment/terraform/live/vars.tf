@@ -110,10 +110,9 @@ variable "site_domain" {
   description = "Host name of the site (for example: www.example.org)"
 }
 
-# TODO: set internally based on presence of TLS certificate ARN in config
-variable "tls" {
-  description = "Whether or not to use TLS to serve the site (true or false)"
-  default     = "false"
+variable "ssl_certificate_id" {
+  description = "ARN of an SSL certificate you have uploaded to AWS IAM"
+  default     = ""
 }
 
 variable "django_email_subject_prefix" {
@@ -144,12 +143,6 @@ variable "refinery_welcome_email_subject" {
 variable "refinery_welcome_email_message" {
   description = "Email message sent to new users after their account is activated"
   default     = "Please fill out your user profile"
-}
-
-#TODO: set internally based on presence of TLS certificate ARN in config
-variable "refinery_url_scheme" {
-  description = "Either `http` or `https` depending on whether a TLS certificate is configured"
-  default     = "http"
 }
 
 variable "refinery_google_analytics_id" {

@@ -2,6 +2,10 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
+data "aws_subnet" "app_server" {
+  id = "${var.subnet_id}"
+}
+
 resource "aws_iam_user" "ses" {
   name = "${var.resource_name_prefix}-refinery-ses"
 }
@@ -113,12 +117,11 @@ resource "aws_instance" "app_server" {
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
-  vpc_security_group_ids = ["${var.security_group_id}"]
+  vpc_security_group_ids = ["${aws_security_group.app_server.id}"]
   subnet_id              = "${var.subnet_id}"
   iam_instance_profile   = "${aws_iam_instance_profile.app_server.name}"
   root_block_device {
     volume_type = "gp2"
-    volume_size = 8  # GB
   }
   ebs_block_device {
     delete_on_termination = false
@@ -174,7 +177,6 @@ export FACTER_ADMIN="${var.django_admin_email}"
 export FACTER_DOCKER_HOST="${var.docker_host}"
 export FACTER_SITE_NAME="${var.site_name}"
 export FACTER_SITE_URL="${var.site_domain}"
-export FACTER_TLS_REWRITE="${var.tls}"
 export FACTER_EMAIL_HOST_USER="${aws_iam_access_key.ses_user.id}"
 export FACTER_EMAIL_HOST_PASSWORD="${aws_iam_access_key.ses_user.ses_smtp_password}"
 export FACTER_EMAIL_SUBJECT_PREFIX="${var.django_email_subject_prefix}"
@@ -188,7 +190,7 @@ export FACTER_REFINERY_S3_USER_DATA="${var.refinery_s3_user_data}"
 export FACTER_REFINERY_S3_MEDIA_BUCKET_NAME="${var.media_bucket_name}"
 export FACTER_REFINERY_S3_STATIC_BUCKET_NAME="${var.static_bucket_name}"
 export FACTER_REFINERY_S3_UPLOAD_BUCKET_NAME="${var.upload_bucket_name}"
-export FACTER_REFINERY_URL_SCHEME="${var.refinery_url_scheme}"
+export FACTER_REFINERY_URL_SCHEME="${var.ssl_certificate_id == "" ? "http" : "https"}"
 export FACTER_REFINERY_WELCOME_EMAIL_SUBJECT="${var.refinery_welcome_email_subject}"
 export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE="${var.refinery_welcome_email_message}"
 export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
@@ -200,4 +202,131 @@ su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet i
 # run puppet
 /usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
 EOF
+}
+
+resource "aws_security_group" "elb" {
+  # using standalone security group rule resources to avoid cycle errors
+  description = "Refinery: allow HTTP/S ingress and HTTP egress"
+  name        = "${var.resource_name_prefix}-elb"
+  tags        = "${var.tags}"
+  vpc_id      = "${data.aws_subnet.app_server.vpc_id}"
+}
+
+resource "aws_security_group_rule" "http_ingress" {
+  description       = "Refinery: allow HTTP ingress from Internet to ELB"
+  type              = "ingress"
+  cidr_blocks       = ["0.0.0.0/0"]
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = "${aws_security_group.elb.id}"
+}
+
+resource "aws_security_group_rule" "https_ingress" {
+  description       = "Refinery: allow HTTPS ingress from Internet to ELB"
+  type              = "ingress"
+  cidr_blocks       = ["0.0.0.0/0"]
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = "${aws_security_group.elb.id}"
+}
+
+resource "aws_security_group_rule" "http_egress" {
+  description              = "Refinery: allow HTTP egress from ELB to app server"
+  type                     = "egress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  security_group_id        = "${aws_security_group.elb.id}"
+  source_security_group_id = "${aws_security_group.app_server.id}"
+}
+
+resource "aws_security_group" "app_server" {
+  description = "Refinery: allow HTTP and SSH access to app server instance"
+  name        = "${var.resource_name_prefix}-appserver"
+  tags        = "${var.tags}"
+  vpc_id      = "${data.aws_subnet.app_server.vpc_id}"
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = ["${aws_security_group.elb.id}"]
+  }
+
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+  }
+
+  egress {
+    # implicit with AWS but Terraform requires this to be explicit
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# workaround inability to specify blocks and parameters conditionally
+# https://github.com/hashicorp/terraform/issues/14037
+locals {
+  http_listener = {
+    instance_port     = 80
+    instance_protocol = "HTTP"
+    lb_port           = 80
+    lb_protocol       = "HTTP"
+  }
+  https_listener = {
+    instance_port      = 80
+    instance_protocol  = "HTTP"
+    lb_port            = 443
+    lb_protocol        = "HTTPS"
+    ssl_certificate_id = "${var.ssl_certificate_id}"
+  }
+}
+resource "aws_elb" "http" {
+  count           = "${var.ssl_certificate_id == "" ? 1 : 0}"
+  instances       = ["${aws_instance.app_server.id}"]
+  idle_timeout    = 180  # seconds
+  name            = "${var.resource_name_prefix}"
+  security_groups = ["${aws_security_group.elb.id}"]
+  subnets         = ["${var.subnet_id}"]
+  tags            = "${var.tags}"
+  access_logs {
+    bucket   = "${var.log_bucket_name}"
+    interval = 60  # minutes
+  }
+  listener = ["${local.http_listener}"]
+  health_check {
+    healthy_threshold   = 2
+    interval            = 30
+    target              = "HTTP:80/"
+    timeout             = 5
+    unhealthy_threshold = 4
+  }
+}
+resource "aws_elb" "https" {
+  count           = "${var.ssl_certificate_id == "" ? 0 : 1}"
+  instances       = ["${aws_instance.app_server.id}"]
+  idle_timeout    = 180  # seconds
+  name            = "${var.resource_name_prefix}"
+  security_groups = ["${aws_security_group.elb.id}"]
+  subnets         = ["${var.subnet_id}"]
+  tags            = "${var.tags}"
+  access_logs {
+    bucket   = "${var.log_bucket_name}"
+    interval = 60  # minutes
+  }
+  listener = ["${local.http_listener}", "${local.https_listener}"]
+  health_check {
+    healthy_threshold   = 2
+    interval            = 30
+    target              = "HTTP:80/"
+    timeout             = 5
+    unhealthy_threshold = 4
+  }
 }
