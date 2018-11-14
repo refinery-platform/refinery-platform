@@ -13,13 +13,11 @@
 
   GroupMemberAddModalCtrl.$inject = [
     '$log',
-    'groupDataService',
     'groupInviteService'
   ];
 
   function GroupMemberAddModalCtrl (
     $log,
-    groupDataService,
     groupInviteService
   ) {
     var vm = this;
@@ -86,7 +84,6 @@
         function () {
           vm.isLoading = false;
           generateAlertMessage('success', vm.form.email);
-          groupDataService.update();
         }, function (error) {
           vm.isLoading = false;
           generateAlertMessage('danger', vm.form.email);

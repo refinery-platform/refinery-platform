@@ -62,7 +62,6 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
 
   $scope.tutorials_viewed = {
     launchpad: settings.djangoApp.launchpad_tut_viewed,
-    collaboration: settings.djangoApp.collaboration_tut_viewed,
     data_upload: settings.djangoApp.data_upload_tut_viewed
   };
 
@@ -70,10 +69,8 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
 
   $scope.uuid = settings.djangoApp.userprofileUUID;
 
-  $scope.collaborationKey = 'collaborationTutorialFirstStepViewed';
   $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
 
-  $scope.collabAutoStart = 'collaborationAtuoStart';
   $scope.dataUploadAutoStart = 'dataUploadAutoStart';
   $scope.launchpadAutoStart = 'launchpadAutoStart';
 

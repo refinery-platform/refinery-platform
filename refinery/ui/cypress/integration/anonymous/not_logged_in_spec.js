@@ -6,7 +6,6 @@ describe('Not logged in', function() {
     cy.visit('/');
     //cy.visible('Refinery');
 
-    cy.visible('Collaboration');
     cy.visible('About');
 
     cy.visible('Register');

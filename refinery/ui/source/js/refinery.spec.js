@@ -87,10 +87,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryAnalysisMonitor')).toEqual(true);
     });
 
-    it('should have "refineryCollaboration" as a dependency', function () {
-      expect(hasModule('refineryCollaboration')).toEqual(true);
-    });
-
     it('should have "refineryFileBrowser" as a dependency', function () {
       expect(hasModule('refineryFileBrowser')).toEqual(true);
     });
