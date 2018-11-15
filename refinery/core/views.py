@@ -69,6 +69,14 @@ def home(request):
     )
 
 
+def home_v2(request):
+    return render_to_response(
+        'core/home_v2.html',
+        {},
+        context_instance=RequestContext(request)
+    )
+
+
 def about(request):
     return render_to_response('core/about.html',
                               {'site_name': get_current_site(request).name},

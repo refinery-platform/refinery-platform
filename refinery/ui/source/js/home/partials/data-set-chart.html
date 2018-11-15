@@ -1,0 +1,21 @@
+<div class="row">
+  <div class="col-md-6 col-md-offset-6">
+    <ui-select
+      id="tool-select-drop-down"
+      append-to-body="true"
+      ng-model="$ctrl.selectedAttribute.select"
+      on-select="$ctrl.updateAttribute($item)"
+      theme="select2"
+      class="ui-select-drop text-left select2-allowclear">
+       <ui-select-match placeholder="Select an attribute" allow-clear="true">
+         {{$select.selected.name }}
+       </ui-select-match>
+      <ui-select-choices
+        position="down"
+        repeat="attribute in $ctrl.attributes | filter: $select.search | orderBy:'name' track by $index">
+        <span ng-bind-html="attribute.name | highlight: $select.search"></span>
+      </ui-select-choices>
+    </ui-select>
+    <canvas id="bar-chart"></canvas>
+  </div>
+</div>
