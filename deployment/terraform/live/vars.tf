@@ -63,11 +63,13 @@ variable "rds_master_user_password" {
 }
 
 variable "app_server_instance_type" {
-  default = "m3.medium"
+  description = "EC2 instance type of the main host"
+  default     = "m3.medium"
 }
 
 variable "app_server_key_pair_name" {
-  description = "Name of the key pair to use for the app server instance"
+  description = "Name of the SSH key pair to use for the app server instance"
+  default     = ""
 }
 
 variable "app_server_ssh_users" {
