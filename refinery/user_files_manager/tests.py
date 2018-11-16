@@ -6,11 +6,12 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import TestCase, override_settings
 
 from guardian.utils import get_anonymous_user
 import mock
 import requests
+from rest_framework.authtoken.models import Token
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
@@ -43,6 +44,47 @@ class UserFilesAPITests(APITestCase):
             'nodes_count'
         ])
 
+    @override_settings(USER_FILES_COLUMNS='filename,fake')
+    def test_get_user_files_csv_with_token_auth(self):
+        request = self.factory.get("/files_download?fq=&limit=100000000&sort=")
+        user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password'
+        )
+        Token.objects.create(user=user)
+        force_authenticate(request, user=user, token=user.auth_token)
+        mock_doc = {
+            NodeIndex.DOWNLOAD_URL:
+                'fake-url',
+            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
+                'fake-filename',
+            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
+                u'handles\u2013unicode'
+            # Just want to exercise "_Characteristics" and "_Factor_Value":
+            # Doesn't matter if the names are backwards.
+        }
+        with mock.patch(
+                'user_files_manager.views._get_solr',
+                return_value=json.dumps({
+                    'response': {
+                        'docs': [mock_doc]
+                    }
+                })
+        ):
+            response = user_files_csv(request)
+            self.assertEqual(
+                response.content,
+                'url,filename,fake\r\n'
+                'fake-url,fake-filename,\r\n'
+            )
+
+    @override_settings(USER_FILES_COLUMNS='filename,fake')
+    def test_get_user_files_csv_without_token_auth(self):
+        request = self.factory.get("/files_download?fq=&limit=100000000&sort=")
+        User.objects.create_user('testuser', 'test@example.com', 'password')
+        response = user_files_csv(request)
+        response.render()
+        self.assertEqual(response.status_code, 401)
+
 
 class UserFilesUITests(StaticLiveServerTestCase):
     def setUp(self):
@@ -72,39 +114,6 @@ class UserFilesUITests(StaticLiveServerTestCase):
             response.content,
             'url,name,fake\r\n'
         )
-
-
-class UserFilesViewTests(TestCase):
-
-    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
-    def test_user_files_csv(self):
-        request = RequestFactory().get('/fake-url')
-        request.user = User.objects.create_user(
-            'testuser', 'test@example.com', 'password')
-        mock_doc = {
-            NodeIndex.DOWNLOAD_URL:
-                'fake-url',
-            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
-                'fake-filename',
-            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
-                u'handles\u2013unicode'
-            # Just want to exercise "_Characteristics" and "_Factor_Value":
-            # Doesn't matter if the names are backwards.
-        }
-        with mock.patch(
-            'user_files_manager.views._get_solr',
-            return_value=json.dumps({
-                'response': {
-                    'docs': [mock_doc]
-                }
-            })
-        ):
-            response = user_files_csv(request)
-            self.assertEqual(
-                response.content,
-                'url,filename,fake\r\n'
-                'fake-url,fake-filename,\r\n'
-            )
 
 
 class UserFilesUtilsTests(TestCase):
