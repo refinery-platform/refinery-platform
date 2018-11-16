@@ -15,7 +15,7 @@
                 rows="6" cols="80"
                 onclick="this.focus(); this.select();"
                 readonly="readonly"
-            >curl '{{ $ctrl.downloadCsvUrl() }}' | cut -f 1 -d ',' | tail -n +2 | xargs -n 1 curl -O -L</textarea>
+            >curl '{{ $ctrl.downloadCsvCurl() }} | cut -f 1 -d ',' | tail -n +2 | xargs -n 1 curl -O -L</textarea>
             <p>
               This downloads the CSV, gets the URLs, and downloads each URL in turn.
             </p>

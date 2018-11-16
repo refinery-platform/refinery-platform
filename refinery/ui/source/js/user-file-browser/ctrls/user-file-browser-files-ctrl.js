@@ -12,6 +12,7 @@
     '$q',
     '$scope',
     '_',
+    'authTokenService',
     'userFileBrowserFactory',
     'userFileFiltersService',
     'userFileParamsService',
@@ -26,6 +27,7 @@
       $q,
       $scope,
       _,
+      authTokenService,
       userFileBrowserFactory,
       userFileFiltersService,
       userFileParamsService,
@@ -33,6 +35,9 @@
       gridOptionsService
   ) {
     var vm = this;
+    authTokenService.query().$promise.then(function (authToken) {
+      vm.authToken = authToken.token;
+    });
     vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
     vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
 
@@ -111,6 +116,10 @@
         + $location.host() + ':' + $location.port()
         + vm.downloadCsvPath();
     };
+    vm.downloadCsvCurl = function () {
+      return vm.downloadCsvUrl() + '\' -H "Authorization: Token ' + vm.authToken + '"';
+    };
+
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
