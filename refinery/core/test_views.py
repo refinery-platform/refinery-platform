@@ -31,7 +31,8 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    UserProfileViewSet, WorkflowViewSet)
+                    UserProfileViewSet, WorkflowViewSet,
+                    ObtainAuthTokenValidSession)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -1194,3 +1195,23 @@ class SiteStatisticsViewTests(TestCase):
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=True)
         self.assertEqual(get_csv_row_mock.call_count, 2)
+
+
+class ObtainAuthTokenValidSessionApiV2Tests(APIV2TestCase):
+    def setUp(self, **kwargs):
+        super(ObtainAuthTokenValidSessionApiV2Tests, self).setUp(
+            api_base_name="obtain-auth-token/",
+            view=ObtainAuthTokenValidSession.as_view()
+        )
+
+    def test_get_with_valid_session(self):
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(json.loads(get_response.content),
+                         {"token": self.user.auth_token.key})
+
+    def test_get_without_valid_session(self):
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 403)

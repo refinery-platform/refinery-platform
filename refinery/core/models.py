@@ -48,6 +48,7 @@ from guardian.shortcuts import (
 import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
+from rest_framework.authtoken.models import Token
 
 import data_set_manager
 from data_set_manager.models import (
@@ -181,7 +182,7 @@ user_activated.connect(register_handler, dispatch_uid='activated')
 
 
 # check if user has a catch all project and create one if not
-def create_catch_all_project(sender, user, request, **kwargs):
+def create_catch_all_project(user, request):
     if user.profile.catch_all_project is None:
         project = Project.objects.create(
             name="Catch-All Project",
@@ -199,16 +200,22 @@ def create_catch_all_project(sender, user, request, **kwargs):
         )  # needed to avoid MessageFailure when running tests
 
 
-def iterate_user_login_count(sender, user, request, **kwargs):
+def iterate_user_login_count(user):
     user.profile.login_count += 1
     user.profile.save()
 
 
-# create catch all project for user if none exists
-user_logged_in.connect(create_catch_all_project)
+@receiver(user_logged_in)
+def _post_user_login(sender, user, request, **kwargs):
+    # create catch all project for user if none exists
+    create_catch_all_project(user, request)
 
-# Iterate `login_count` to keep track of user's logins
-user_logged_in.connect(iterate_user_login_count)
+    # Iterate `login_count` to keep track of user's logins
+    iterate_user_login_count(user)
+
+    # Create DRF API token for users after they've logged in
+    if not Token.objects.filter(user=user).exists():
+        Token.objects.create(user=user)
 
 
 class Tutorials(models.Model):
