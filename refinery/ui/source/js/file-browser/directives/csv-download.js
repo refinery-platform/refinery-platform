@@ -1,11 +1,18 @@
 (function () {
   'use strict';
+
   angular
     .module('refineryFileBrowser')
-    .component('rpFileBrowserCsvDownload', {
-      controller: 'FileBrowserCtrl',
-      templateUrl: ['$window', function ($window) {
+    .directive('rpFileBrowserCsvDownload', rpFileBrowserCsvDownload);
+
+  rpFileBrowserCsvDownload.$inject = ['$window'];
+
+  function rpFileBrowserCsvDownload ($window) {
+    return {
+      restrict: 'E',
+      templateUrl: function () {
         return $window.getStaticUrl('partials/file-browser/partials/csv-download.html');
-      }]
-    });
+      }
+    };
+  }
 })();
