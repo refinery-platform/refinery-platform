@@ -32,17 +32,18 @@
             datasets: [
               {
                 label: 'File Type',
-                backgroundColor: ['#3e95cd', '#8e5ea2', '#3cba9f', '#e8c3b9', '#c45850'],
+                backgroundColor: ['#56B4E9', '#CC79A7', '#009E73', '#D55E00', '#0072B2'],
                 data: []
               }
             ],
             borderColor: [
-              'rgba(255,99,132,1)',
-              'rgba(54, 162, 235, 1)',
-              'rgba(255, 206, 86, 1)',
-              'rgba(75, 192, 192, 1)',
-              'rgba(153, 102, 255, 1)',
-              'rgba(255, 159, 64, 1)'
+              '#56B4E9', // sky-blue
+              '#CC79A7', // reddish purple
+              '#009E73', // blue-green
+              '#D55E00', // red-orange
+              '#0072B2', // blue
+              '#F0E442'  // yellow
+
             ],
             borderWidth: 1
           },
