@@ -6,7 +6,9 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import (SessionAuthentication,
+                                           TokenAuthentication)
+
 from rest_framework.decorators import (api_view, authentication_classes,
                                        permission_classes)
 from rest_framework.permissions import IsAuthenticated
@@ -29,7 +31,7 @@ def user_files(request):
 
 
 @api_view(['GET'])
-@authentication_classes((TokenAuthentication,))
+@authentication_classes((SessionAuthentication, TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def user_files_csv(request):
     solr_response = _get_solr(request.GET, request.user.id)
