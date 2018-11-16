@@ -2,9 +2,7 @@
   <button
     class="refinery-base btn btn-default btn-xs header-button"
     ng-click="FBCtrl.downloadCSV(FBCtrl.isFiltered() ? FBCtrl.uiGridExporterConstants.VISIBLE : FBCtrl.uiGridExporterConstants.ALL)">
-    Download CSV
-    <span ng-if="!FBCtrl.isFiltered() && FBCtrl.totalRows">({{ FBCtrl.totalRows }} rows)</span>
-    <span ng-if="FBCtrl.isFiltered() && FBCtrl.assayFilesTotal">({{ FBCtrl.assayFilesTotal }} rows)</span>
+    Download CSV <span>({{ FBCtrl.assayFilesTotal }} rows)</span>
   </button>
   <span class="p-l-1-3">
     <a
