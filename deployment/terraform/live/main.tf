@@ -21,7 +21,7 @@ provider "random" {
 }
 
 data "external" "git" {
-  program = ["/bin/sh", "${path.module}/get-current-commit.sh"]
+  program = ["/bin/sh", "${path.module}/git-info.sh"]
 }
 
 resource "random_string" "rds_master_user_password" {
@@ -42,6 +42,7 @@ locals {
   tags                     = "${merge(
     var.tags,
     map(
+      "owner", lookup(var.tags, "owner", "") != "" ? lookup(var.tags, "owner", "") : data.external.git.result["email"],
       "product", "refinery",
       "terraform", "true"
     )
@@ -84,7 +85,7 @@ module "vpc" {
 
 module "database" {
   source                       = "../modules/rds"
-  app_server_security_group_id = "${module.vpc.app_server_security_group_id}"
+  app_server_security_group_id = "${module.web.instance_security_group_id}"
   availability_zone            = "${var.availability_zone_a}"
   master_user_password         = "${local.rds_master_user_password}"
   private_subnet_a             = "${module.vpc.private_subnet_a_id}"
@@ -95,15 +96,15 @@ module "database" {
   tags                         = "${local.tags}"
 }
 
-module "app_server" {
+module "web" {
   source                               = "../modules/ec2"
   static_bucket_name                   = "${module.object_storage.static_bucket_name}"
   upload_bucket_name                   = "${module.object_storage.upload_bucket_name}"
   media_bucket_name                    = "${module.object_storage.media_bucket_name}"
+  log_bucket_name                      = "${module.object_storage.log_bucket_name}"
   identity_pool_id                     = "${module.identity_pool.identity_pool_id}"
   instance_type                        = "${var.app_server_instance_type}"
   key_pair_name                        = "${var.app_server_key_pair_name}"
-  security_group_id                    = "${module.vpc.app_server_security_group_id}"
   subnet_id                            = "${module.vpc.public_subnet_id}"
   ssh_users                            = "${var.app_server_ssh_users}"
   git_commit                           = "${var.git_commit != "" ? var.git_commit : data.external.git.result["commit"]}"
@@ -116,7 +117,7 @@ module "app_server" {
   docker_host                          = "${module.docker_host.docker_hostname}"
   site_name                            = "${var.site_name}"
   site_domain                          = "${var.site_domain}"
-  tls                                  = "${var.tls}"
+  ssl_certificate_id                   = "${var.ssl_certificate_id}"
   django_email_subject_prefix          = "${var.django_email_subject_prefix}"
   refinery_banner                      = "${var.refinery_banner}"
   refinery_banner_anonymous_only       = "${var.refinery_banner_anonymous_only}"
@@ -125,7 +126,6 @@ module "app_server" {
   refinery_google_recaptcha_site_key   = "${var.refinery_google_recaptcha_site_key}"
   refinery_google_recaptcha_secret_key = "${var.refinery_google_recaptcha_secret_key}"
   refinery_s3_user_data                = "${var.refinery_s3_user_data}"
-  refinery_url_scheme                  = "${var.refinery_url_scheme}"
   refinery_welcome_email_subject       = "${var.refinery_welcome_email_subject}"
   refinery_welcome_email_message       = "${var.refinery_welcome_email_message}"
   refinery_user_files_columns          = "${var.refinery_user_files_columns}"

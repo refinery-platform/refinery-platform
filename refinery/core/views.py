@@ -112,12 +112,6 @@ def auto_login(request):
 
 
 @login_required
-def collaboration(request):
-    return render_to_response('core/collaboration.html', {},
-                              context_instance=RequestContext(request))
-
-
-@login_required
 def group_invite(request, token):
     inv_list = Invitation.objects.filter(token_uuid=token)
     if len(inv_list) == 0:
