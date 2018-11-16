@@ -104,9 +104,6 @@
       editableCellTemplate: editCellTemplate,
       enableCellEdit: false,
       exporterAllDataFn: function () {
-        var params = paramService.fileParam;
-        params.filter_attribute = {};
-        params.limit = 1000;
         return fileBrowserFactory.getAssayFiles(paramService.fileParam);
       },
       exporterSuppressColumns: ['Input Groups'],
@@ -135,7 +132,6 @@
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
-    vm.totalRows = null;
     vm.uiGridExporterConstants = uiGridExporterConstants;
     vm.uiGridExporterService = uiGridExporterService;
     vm.userPerms = permsService.userPerms;
@@ -376,9 +372,6 @@
         // Ui-grid rows generated from assay files
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
         vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
-        if (vm.totalRows === null) {
-          vm.totalRows = vm.assayFilesTotal;
-        }
         // turns off infinite scroll for data sets < 100 files
         if (vm.assayFilesTotal < maxFileRequest && vm.gridApi) {
           vm.gridApi.infiniteScroll.setScrollDirections(false, false);
