@@ -2,6 +2,7 @@ import json
 import logging
 from urlparse import urljoin
 
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -93,6 +94,9 @@ class UserFilesUITests(StaticLiveServerTestCase):
         # automatically when needed
         ContentType.objects.clear_cache()
 
+        self.factory = APIRequestFactory()
+        self.view = user_files_csv
+
     def test_ui(self):
         response = requests.get(
             urljoin(
@@ -102,14 +106,18 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertIn("All Files", response.content)
 
-    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'name,fake')
+    @override_settings(USER_FILES_COLUMNS='name,fake')
     def test_csv(self):
-        response = requests.get(
-            urljoin(
-                self.live_server_url,
-                'files_download'
-            )
+        password = make_password("password")
+        user = User.objects.create_user(
+            'testuser', 'test@example.com', password
         )
+        Token.objects.create(user=user)
+        request = self.factory.get(
+            urljoin(self.live_server_url, 'files_download')
+        )
+        force_authenticate(request, user=user, token=user.auth_token)
+        response = self.view(request)
         self.assertEqual(
             response.content,
             'url,name,fake\r\n'
