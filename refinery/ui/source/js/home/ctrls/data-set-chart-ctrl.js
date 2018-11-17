@@ -11,10 +11,12 @@
     .module('refineryHome')
     .controller('DataSetChartCtrl', DataSetChartCtrl);
 
-  DataSetChartCtrl.$inject = ['$scope', 'chartDataService'];
+  DataSetChartCtrl.$inject = ['$location', '$scope', '$window', 'chartDataService'];
 
   function DataSetChartCtrl (
+    $location,
     $scope,
+    $window,
     chartDataService
   ) {
     var service = chartDataService;
@@ -31,17 +33,13 @@
         var field = 'filetype_Characteristics_generic_s';
         $scope.homeChart.data.datasets[0].data = service.attributes[field].countsArray;
         $scope.homeChart.data.labels = service.attributes[field].fieldsArray;
-        $scope.homeChart.options.title.text = 'File types';
         $scope.homeChart.update();
       });
     }
 
     function updateAttribute (attribute) {
-      console.log('in the updateAttribute');
-      console.log(vm.selectedAttribute);
       $scope.homeChart.data.datasets[0].data = service.attributes[attribute.solr_name].countsArray;
       $scope.homeChart.data.labels = service.attributes[attribute.solr_name].fieldsArray;
-      $scope.homeChart.options.title.text = attribute.name;
       $scope.homeChart.update();
     }
 

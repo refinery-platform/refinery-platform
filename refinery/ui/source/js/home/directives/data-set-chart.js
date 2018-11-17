@@ -20,12 +20,11 @@
       templateUrl: function () {
         return $window.getStaticUrl('partials/home/partials/data-set-chart.html');
       },
-      link: function (scope) {
-        // TODO: MOVE THE CHART GENERATION TO A SERVICE VS POPLUTING THE SCOPE
+      link: function (scope, attr, elem, ctrl) {
         // initialize the chart
-        var ctx = angular.element('#bar-chart')[0].getContext('2d');
+        var domChart = angular.element('#bar-chart')[0];
         // eslint-disable-next-line no-undef
-        scope.homeChart = new Chart(ctx, {
+        scope.homeChart = new Chart(domChart.getContext('2d'), {
           type: 'bar',
           data: {
             labels: [],
@@ -49,19 +48,26 @@
           },
           options: {
             legend: { display: false },
-            title: {
-              display: true,
-              text: 'Files'
-            },
             scales: {
               yAxes: [{
                 ticks: {
                   beginAtZero: true
+                },
+                scaleLabel: {
+                  display: true,
+                  labelString: 'Number of Files'
                 }
               }]
             }
           }
         });
+
+        domChart.onclick = function (e) {
+          var activePoint = scope.homeChart.getElementAtEvent(e);
+          // TODO: after move to home, can use $location
+          $window.location.href = '/files/#?' + ctrl.selectedAttribute.select.solr_name +
+            '=' + activePoint[0]._model.label.join(' ');
+        };
       }
     };
   }
