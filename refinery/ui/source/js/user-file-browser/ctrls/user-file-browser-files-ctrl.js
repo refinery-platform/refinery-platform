@@ -103,7 +103,7 @@
     gridOptionsService.appScopeProvider = vm;
     vm.downloadCsvQuery = function () {
       return $httpParamSerializer({
-        fq: createFacetQuery(),
+        filter_attribute: userFileFiltersService,
         sort: userFileParamsService.sort(),
         limit: 100000000
       });
@@ -124,18 +124,6 @@
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
     };
-
-    // helper method to create facet query for solr
-    function createFacetQuery () {
-      var filters = Object.keys(userFileFiltersService).map(function (internalName) {
-        var fields = userFileFiltersService[internalName];
-        var queryStr = fields.map(function (field) {
-          return '(' + internalName + ':' + '"' + field + '")';
-        }).join(' OR ');
-        return ('(') + queryStr + (')');
-      });
-      return filters.join(' AND ');
-    }
 
     $scope.$watchCollection(
       function () {
