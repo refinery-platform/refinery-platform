@@ -45,14 +45,17 @@ class UserFilesAPITests(APITestCase):
             'nodes_count'
         ])
 
-    @override_settings(USER_FILES_COLUMNS='filename,fake')
-    def test_get_user_files_csv_with_token_auth(self):
+    def _test_user_files_csv(self, use_token_auth=False):
         request = self.factory.get("/files_download?fq=&limit=100000000&sort=")
         user = User.objects.create_user(
             'testuser', 'test@example.com', 'password'
         )
-        Token.objects.create(user=user)
-        force_authenticate(request, user=user, token=user.auth_token)
+        if use_token_auth:
+            Token.objects.create(user=user)
+            force_authenticate(request, user=user, token=user.auth_token)
+        else:
+            force_authenticate(request, user=user)
+
         mock_doc = {
             NodeIndex.DOWNLOAD_URL:
                 'fake-url',
@@ -79,37 +82,12 @@ class UserFilesAPITests(APITestCase):
             )
 
     @override_settings(USER_FILES_COLUMNS='filename,fake')
+    def test_get_user_files_csv_with_token_auth(self):
+        self._test_user_files_csv(use_token_auth=True)
+
+    @override_settings(USER_FILES_COLUMNS='filename,fake')
     def test_get_user_files_csv_with_session_auth(self):
-        request = self.factory.get("/files_download?fq=&limit=100000000&sort=")
-        user = User.objects.create_user(
-            'testuser', 'test@example.com', 'password'
-        )
-        Token.objects.create(user=user)
-        force_authenticate(request, user=user)
-        mock_doc = {
-            NodeIndex.DOWNLOAD_URL:
-                'fake-url',
-            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
-                'fake-filename',
-            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
-                u'handles\u2013unicode'
-            # Just want to exercise "_Characteristics" and "_Factor_Value":
-            # Doesn't matter if the names are backwards.
-        }
-        with mock.patch(
-                'user_files_manager.views._get_solr',
-                return_value=json.dumps({
-                    'response': {
-                        'docs': [mock_doc]
-                    }
-                })
-        ):
-            response = user_files_csv(request)
-            self.assertEqual(
-                response.content,
-                'url,filename,fake\r\n'
-                'fake-url,fake-filename,\r\n'
-            )
+        self._test_user_files_csv()
 
     @override_settings(USER_FILES_COLUMNS='filename,fake')
     def test_get_user_files_csv_without_auth(self):
