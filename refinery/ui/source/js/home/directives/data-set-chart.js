@@ -21,6 +21,7 @@
         return $window.getStaticUrl('partials/home/partials/data-set-chart.html');
       },
       link: function (scope, attr, elem, ctrl) {
+        // TODO: MOVE THE CHART GENERATION TO A SERVICE
         // initialize the chart
         var domChart = angular.element('#bar-chart')[0];
         // eslint-disable-next-line no-undef
@@ -48,6 +49,16 @@
           },
           options: {
             legend: { display: false },
+            hover: {
+              onHover: function (e) {
+                // dynamic fix to have a pointer on the clickable bar charts
+                if (scope.homeChart.getElementAtEvent(e).length) {
+                  domChart.style.cursor = e ? 'pointer' : 'default';
+                } else {
+                  domChart.style.cursor = 'default';
+                }
+              }
+            },
             scales: {
               yAxes: [{
                 ticks: {
