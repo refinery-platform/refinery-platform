@@ -18,7 +18,8 @@ from rest_framework.views import APIView
 from unidecode import unidecode
 
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.utils import format_solr_response, search_solr
+from data_set_manager.utils import format_solr_response, search_solr, \
+    generate_solr_params_for_assay
 
 from .utils import generate_solr_params_for_user
 
@@ -34,7 +35,12 @@ def user_files(request):
 @authentication_classes((SessionAuthentication, TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def user_files_csv(request):
-    solr_response = _get_solr(request.GET, request.user.id)
+    assay_uuid = request.GET.get("assay_uuid")
+    if assay_uuid is not None:
+        solr_params = generate_solr_params_for_assay(request.GET, assay_uuid)
+        solr_response = search_solr(solr_params, 'data_set_manager')
+    else:
+        solr_response = _get_solr(request.GET, request.user.id)
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="user-files.csv"'

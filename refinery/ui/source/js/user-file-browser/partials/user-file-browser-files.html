@@ -1,40 +1,13 @@
 <div class="col-lg-10 col-md-10 col-sm-9" id="main-area">
-    <div class="modal fade" id="multi-file-download-modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Download selected files</h4>
-          </div>
-          <div class="modal-body">
-            <p>
-              To download all of the currently selected files, copy and paste this to your command line:
-            </p>
-            <textarea
-                style="width: 100%; font-family: monospace; overflow-wrap: break-word;"
-                rows="6" cols="80"
-                onclick="this.focus(); this.select();"
-                readonly="readonly"
-            >curl '{{ $ctrl.downloadCsvCurl() }} | cut -f 1 -d ',' | tail -n +2 | xargs -n 1 curl -O -L</textarea>
-            <p>
-              This downloads the CSV, gets the URLs, and downloads each URL in turn.
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal" >Ok</button>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="btn-toolbar p-b-1">
       <a class="refinery-base btn btn-default btn-sm"
         href="{{ $ctrl.downloadCsvPath() }}">
         <i class="fa fa-arrow-circle-o-down"></i> Download as CSV
       </a>
-      <span class="refinery-base btn btn-default btn-sm"
-            data-toggle="modal" data-target="#multi-file-download-modal">
+      <span class="refinery-base btn btn-default btn-sm" data-toggle="modal" data-target="#multi-file-download-modal">
           <i class="fa fa-arrow-circle-o-down"></i> Download files
       </span>
+      <rp-download-files-modal></rp-download-files-modal>
     </div>
     <div class="m-r-1">
       <div class="refinery-subheader grid_data_set_total">

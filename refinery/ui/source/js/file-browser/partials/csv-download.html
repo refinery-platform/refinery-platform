@@ -16,4 +16,21 @@
         <i class="fa fa-question-circle info-icon icon-only"></i>
     </a>
   </span>
+  <button
+    class="refinery-base btn btn-default btn-xs header-button"
+    data-toggle="modal" data-target="#multi-file-download-modal">
+    Download Files
+  </button>
+  <span class="p-l-1-3">
+    <a
+      popover-placement="left"
+      uib-popover-html="'Display a cURL command that will allow you to
+      download the current set of filtered files outside of Refinery.'"
+      popover-title="Download Files"
+      popover-trigger="'outsideClick'"
+      popover-append-to-body="true">
+        <i class="fa fa-question-circle info-icon icon-only"></i>
+    </a>
+  </span>
+  <rp-download-files-modal></rp-download-files-modal>
 </div>
