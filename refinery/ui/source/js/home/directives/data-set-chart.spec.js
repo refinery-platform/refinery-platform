@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('rp component unit test', function () {
+  describe('rpDataSetChart component unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryHome'));
 
@@ -39,9 +39,9 @@
       expect(directiveElement.html()).toContain('files-bar-chart');
     });
 
-    it('initializes a new Chart class', function () {
+    it('initializes a new Chart class which is an object', function () {
       // eslint-disable-next-line no-undef
-      expect(scope.$ctrl.homeChart).toEqual(jasmine.any(Chart));
+      expect(scope.$ctrl.homeChart).toEqual(jasmine.any(Object));
     });
 
     it('initializes a bar chart', function () {
