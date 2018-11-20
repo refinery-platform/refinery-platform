@@ -41,7 +41,7 @@
 
     it('initializes a new Chart class which is an object', function () {
       // eslint-disable-next-line no-undef
-      expect(scope.$ctrl.homeChart).toEqual(jasmine.any(Object));
+      expect(scope.$ctrl.homeChart).toEqual(jasmine.any(Chart));
     });
 
     it('initializes a bar chart', function () {
