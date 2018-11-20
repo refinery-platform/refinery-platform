@@ -1,7 +1,7 @@
 /**
  * Data Set Chart Ctrl
  * @namespace DataSetChartCtrl
- * @desc Main controller for the main view.
+ * @desc Directive controller for the data set chart on homepage.
  * @memberOf refineryApp.refineryHome
  */
 (function () {
@@ -31,16 +31,17 @@
       chartDataService.getDataSets().then(function () {
         vm.attributes = service.attributeNames;
         var field = 'filetype_Characteristics_generic_s';
-        $scope.homeChart.data.datasets[0].data = service.attributes[field].countsArray;
-        $scope.homeChart.data.labels = service.attributes[field].fieldsArray;
-        $scope.homeChart.update();
+        // initialized in the directive link
+        vm.homeChart.data.datasets[0].data = service.attributes[field].countsArray;
+        vm.homeChart.data.labels = service.attributes[field].fieldsArray;
+        vm.homeChart.update();
       });
     }
 
     function updateAttribute (attribute) {
-      $scope.homeChart.data.datasets[0].data = service.attributes[attribute.solr_name].countsArray;
-      $scope.homeChart.data.labels = service.attributes[attribute.solr_name].fieldsArray;
-      $scope.homeChart.update();
+      vm.homeChart.data.datasets[0].data = service.attributes[attribute.solr_name].countsArray;
+      vm.homeChart.data.labels = service.attributes[attribute.solr_name].fieldsArray;
+      vm.homeChart.update();
     }
 
     refreshDataSetChart();
