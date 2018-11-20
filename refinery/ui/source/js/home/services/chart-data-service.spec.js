@@ -20,7 +20,7 @@
 
     it('factory and tools variables should exist', function () {
       expect(factory).toBeDefined();
-      expect(factory.attributes).toEqual({});
+      expect(factory.attributeFields).toEqual({});
       expect(factory.attributeNames).toEqual([]);
     });
 
@@ -112,14 +112,14 @@
       it('getDataSetSharing sets Attribute countsArray', function () {
         factory.getDataSets();
         rootScope.$apply();
-        expect(factory.attributes[field].countsArray).toEqual([143, 27]);
+        expect(factory.attributeFields[field].countsArray).toEqual([143, 27]);
       });
 
       it('getDataSetSharing sets Attribute countsArray', function () {
         factory.getDataSets();
         rootScope.$apply();
-        expect(factory.attributes[field].fieldsArray[0]).toEqual(['DNA', 'microarray']);
-        expect(factory.attributes[field].fieldsArray[1]).toEqual(['nucleotide', 'sequencing']);
+        expect(factory.attributeFields[field].fieldsArray[0]).toEqual(['DNA', 'microarray']);
+        expect(factory.attributeFields[field].fieldsArray[1]).toEqual(['nucleotide', 'sequencing']);
       });
     });
   });

@@ -32,8 +32,8 @@
         vm.attributes = service.attributeNames;
         var field = 'filetype_Characteristics_generic_s';
         // initialized in the directive link
-        vm.homeChart.data.datasets[0].data = service.attributes[field].countsArray;
-        vm.homeChart.data.labels = service.attributes[field].fieldsArray;
+        vm.homeChart.data.datasets[0].data = service.attributeFields[field].countsArray;
+        vm.homeChart.data.labels = service.attributeFields[field].fieldsArray;
         vm.homeChart.update();
       });
     }

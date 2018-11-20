@@ -15,11 +15,11 @@
   chartDataService.$inject = ['$log', 'userFileService'];
 
   function chartDataService ($log, userFileService) {
-    var attributes = {};
+    var attributeFields = {};
     var attributeNames = [];
 
     var service = {
-      attributes: attributes,
+      attributeFields: attributeFields,
       attributeNames: attributeNames,
       getDataSets: getDataSets
     };
@@ -33,9 +33,7 @@
        /**
      * @name getDataSets
      * @desc Grab and store data sets from user files service
-     * @memberOf refineryToolLaunch.toolLaunchStatusService
-     * @param {object} toolLaunch - custom tool launch object requires uuid,
-     * tool type, name, and status
+     * @memberOf refineryHome.chartDataService
     **/
     function getDataSets () {
       var userFile = userFileService.query();
@@ -60,14 +58,14 @@
         for (var k = 0; k < attributeSolrNames.length; k++) {
           if (attributeSolrNames[k].indexOf('Characteristics') > -1) {
             fields = response.facet_field_counts[attributeSolrNames[k]];
-            attributes[attributeSolrNames[k]] = {
+            attributeFields[attributeSolrNames[k]] = {
               countsArray: [],
               fieldsArray: []
             };
             maxLength = fields.length > maxSetting ? maxSetting : fields.length;
             for (var j = 0; j < maxLength; j++) {
-              attributes[attributeSolrNames[k]].countsArray.push(fields[j].count);
-              attributes[attributeSolrNames[k]].fieldsArray.push(fields[j].name.split(' '));
+              attributeFields[attributeSolrNames[k]].countsArray.push(fields[j].count);
+              attributeFields[attributeSolrNames[k]].fieldsArray.push(fields[j].name.split(' '));
             }
           }
         }
