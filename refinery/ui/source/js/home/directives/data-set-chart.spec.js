@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('rpHome component unit test', function () {
+  describe('rp component unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryHome'));
 
