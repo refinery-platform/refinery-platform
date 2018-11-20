@@ -11,12 +11,10 @@
     .module('refineryHome')
     .controller('DataSetChartCtrl', DataSetChartCtrl);
 
-  DataSetChartCtrl.$inject = ['$location', '$scope', '$window', 'chartDataService'];
+  DataSetChartCtrl.$inject = ['$scope', 'chartDataService'];
 
   function DataSetChartCtrl (
-    $location,
     $scope,
-    $window,
     chartDataService
   ) {
     var service = chartDataService;

@@ -1,8 +1,7 @@
 /**
  * Chart Data Service
  * @namespace Chart Data Service
- * @desc Service which utilizes the user/files api to populate the home page
- * chart with accessible data sets
+ * @desc Service which utilizes the user/files api for user accessible files
  * @memberOf refineryApp.refineryHome
  */
 (function () {
