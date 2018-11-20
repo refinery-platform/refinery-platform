@@ -51,5 +51,10 @@
     it('sets a hover function', function () {
       expect(angular.isFunction(scope.$ctrl.homeChart.config.options.hover.onHover)).toBe(true);
     });
+
+    it('sets a hover function', function () {
+      var chartConfig = scope.$ctrl.homeChart.config.options;
+      expect(angular.isFunction(chartConfig.tooltips.callbacks.label)).toBe(true);
+    });
   });
 })();

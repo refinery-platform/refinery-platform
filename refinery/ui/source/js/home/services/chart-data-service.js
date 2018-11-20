@@ -17,15 +17,10 @@
   function chartDataService ($log, userFileService) {
     var attributes = {};
     var attributeNames = [];
-    var selectedAttribute = {
-      countsArray: [],
-      fieldsArray: []
-    };
 
     var service = {
       attributes: attributes,
       attributeNames: attributeNames,
-      selectedAttribute: selectedAttribute,
       getDataSets: getDataSets
     };
 
@@ -36,8 +31,8 @@
      * ----------------------
      */
        /**
-     * @name addToolLaunchStatus
-     * @desc Adds tool launch to the list
+     * @name getDataSets
+     * @desc Grab and store data sets from user files service
      * @memberOf refineryToolLaunch.toolLaunchStatusService
      * @param {object} toolLaunch - custom tool launch object requires uuid,
      * tool type, name, and status
@@ -54,7 +49,7 @@
             solrName.indexOf('Characteristics') > 0) {
             attributeNames.push({
               name: displayName,
-              solr_name: solrName
+              solrName: solrName
             });
           }
         }
