@@ -1,4 +1,3 @@
-
 /**
  * Chart Data Service
  * @namespace Chart Data Service
@@ -30,9 +29,9 @@
      * Method Definitions
      * ----------------------
      */
-       /**
+    /**
      * @name getDataSets
-     * @desc Grab and store data sets from user files service
+     * @desc Grab and store attribute fields and names from user files service
      * @memberOf refineryHome.chartDataService
     **/
     function getDataSets () {
@@ -43,17 +42,17 @@
         for (var i = 0; i < response.attributes.length; i++) {
           var solrName = response.attributes[i].internal_name;
           var displayName = response.attributes[i].display_name;
+          // filter out unused/unwanted attribute names
           if (displayName && attributeSolrNames.indexOf(solrName) > -1 &&
-            solrName.indexOf('Characteristics') > 0) {
+            solrName.indexOf('Characteristics') > -1) {
             attributeNames.push({
               name: displayName,
               solrName: solrName
             });
           }
         }
-        // To Do att setting numbers for 5
-        var maxSetting = 5;
-        var maxLength = maxSetting;
+        // parse the facet_field_counts into a counts and field names array for the data set chart
+        var maxFieldLen = 5;
         var fields = '';
         for (var k = 0; k < attributeSolrNames.length; k++) {
           if (attributeSolrNames[k].indexOf('Characteristics') > -1) {
@@ -62,8 +61,8 @@
               countsArray: [],
               fieldsArray: []
             };
-            maxLength = fields.length > maxSetting ? maxSetting : fields.length;
-            for (var j = 0; j < maxLength; j++) {
+            var maxCount = fields.length > maxFieldLen ? maxFieldLen : fields.length;
+            for (var j = 0; j < maxCount; j++) {
               attributeFields[attributeSolrNames[k]].countsArray.push(fields[j].count);
               attributeFields[attributeSolrNames[k]].fieldsArray.push(fields[j].name.split(' '));
             }

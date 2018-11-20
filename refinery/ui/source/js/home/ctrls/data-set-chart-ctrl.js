@@ -27,6 +27,11 @@
     vm.attributes = service.attributeNames;
     vm.updateAttribute = updateAttribute;
 
+    /**
+     * @name refreshDataSetChart
+     * @desc Private method to initalize the chart
+     * @memberOf refineryHome.dataSetChartCtrl
+    **/
     function refreshDataSetChart () {
       chartDataService.getDataSets().then(function () {
         vm.attributes = service.attributeNames;
@@ -38,9 +43,14 @@
       });
     }
 
+    /**
+     * @name updateAttribute
+     * @desc Update chart based on selected attribute
+     * @memberOf refineryHome.dataSetChartCtrl
+    **/
     function updateAttribute (attribute) {
-      vm.homeChart.data.datasets[0].data = service.attributes[attribute.solr_name].countsArray;
-      vm.homeChart.data.labels = service.attributes[attribute.solr_name].fieldsArray;
+      vm.homeChart.data.datasets[0].data = service.attributes[attribute.solrName].countsArray;
+      vm.homeChart.data.labels = service.attributes[attribute.solrName].fieldsArray;
       vm.homeChart.update();
     }
 
