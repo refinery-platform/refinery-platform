@@ -1,3 +1,7 @@
+data "aws_elb_service_account" "main" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "static_files" {
   bucket        = "${var.bucket_name_base}-static"
   force_destroy = true
@@ -67,10 +71,6 @@ resource "aws_s3_bucket" "media_files" {
 }
 EOF
 }
-
-data "aws_elb_service_account" "main" {}
-
-data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "log_files" {
   acl    = "private"

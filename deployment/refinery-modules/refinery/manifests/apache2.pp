@@ -45,7 +45,7 @@ class refinery::apache2 {
     content => 'ErrorLogFormat "%M"',
   }
 
-  if $::tls_rewrite == 'true' {
+  if $::refinery_url_scheme == 'https' {
     $rewrites = [
       {
         comment      => 'Redirect http to https unless AWS ELB terminated TLS',

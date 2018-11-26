@@ -1,6 +1,3 @@
-output "instance_id" {
-  value = "${aws_instance.app_server.id}"
-}
-output "instance_az" {
-  value = "${aws_instance.app_server.availability_zone}"
+output "instance_security_group_id" {
+  value = "${aws_security_group.app_server.id}"
 }

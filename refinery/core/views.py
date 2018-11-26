@@ -70,11 +70,7 @@ def home(request):
 
 
 def home_v2(request):
-    return render_to_response(
-        'core/home_v2.html',
-        {},
-        context_instance=RequestContext(request)
-    )
+    return render(request, 'core/home_v2.html')
 
 
 def about(request):
