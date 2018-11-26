@@ -1,0 +1,20 @@
+<div class="row p-t-1">
+  <div class="col-md-4 col-md-offset-7">
+    <ui-select
+      append-to-body="true"
+      ng-model="$ctrl.selectedAttribute.select"
+      on-select="$ctrl.updateAttribute($item)"
+      theme="select2"
+      class="text-left p-l-1 p-b-1">
+       <ui-select-match placeholder="Select an attribute">
+         {{$select.selected.name }}
+       </ui-select-match>
+      <ui-select-choices
+        position="down"
+        repeat="attribute in $ctrl.attributes | orderBy:'name' track by $index">
+        <span ng-bind-html="attribute.name"></span>
+      </ui-select-choices>
+    </ui-select>
+    <canvas id="files-bar-chart"></canvas>
+  </div>
+</div>

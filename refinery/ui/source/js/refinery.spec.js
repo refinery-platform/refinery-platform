@@ -71,6 +71,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryProvvis')).toEqual(true);
     });
 
+    it('should have "refineryHome" as a dependency', function () {
+      expect(hasModule('refineryHome')).toEqual(true);
+    });
+
     it('should have "refineryDataSetImport" as a dependency', function () {
       expect(hasModule('refineryDataSetImport')).toEqual(true);
     });

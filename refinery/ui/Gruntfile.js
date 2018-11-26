@@ -602,7 +602,9 @@ module.exports = function (grunt) {
           '<%= cfg.basePath.ui.build %>/styles/provenance-visualization.css':
             '<%= cfg.basePath.ui.src %>/styles/provenance-visualization.less',
           '<%= cfg.basePath.ui.build %>/styles/file-browser.css':
-            '<%= cfg.basePath.ui.src %>/styles/file-browser.less'
+            '<%= cfg.basePath.ui.src %>/styles/file-browser.less',
+          '<%= cfg.basePath.ui.build %>/styles/home.css':
+            '<%= cfg.basePath.ui.src %>/styles/home.less'
         }
       },
       compile: {
