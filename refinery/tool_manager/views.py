@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django_docker_engine.proxy import Proxy
 from rest_framework.decorators import detail_route
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
@@ -55,6 +56,11 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
+
+    def list(self, request):
+        serializer = ToolDefinitionSerializer(ToolDefinition.objects.all(),
+                                              many=True)
+        return Response(serializer.data)
 
     def get_queryset(self):
         if self.request.user.has_perm('core.change_dataset', self.data_set):
