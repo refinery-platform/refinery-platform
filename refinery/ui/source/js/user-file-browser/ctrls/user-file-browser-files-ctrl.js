@@ -35,6 +35,8 @@
     var vm = this;
     vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
     vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
+    vm.downloadCsv = downloadCsv;
+    vm.downloadCsvQuery = downloadCsvQuery;
 
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
@@ -96,16 +98,17 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
-    vm.downloadCsvQuery = function () {
+    function downloadCsv () {
+      document.location.href = '/files_download?' + downloadCsvQuery();
+    }
+
+    function downloadCsvQuery () {
       return $httpParamSerializer({
         filter_attribute: userFileFiltersService,
         sort: userFileParamsService.sort(),
         limit: 100000000
       });
-    };
-    vm.downloadCsvPath = function () {
-      return '/files_download?' + vm.downloadCsvQuery();
-    };
+    }
 
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {

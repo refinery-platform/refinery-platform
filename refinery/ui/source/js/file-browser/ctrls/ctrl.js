@@ -13,6 +13,7 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
+    '$httpParamSerializer',
     '$log',
     '$q',
     '$scope',
@@ -39,6 +40,7 @@
   ];
 
   function FileBrowserCtrl (
+    $httpParamSerializer,
     $log,
     $q,
     $scope,
@@ -83,8 +85,9 @@
     vm.checkDataLength = checkDataLength;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
-    vm.downloadCSV = downloadCSV;
     vm.dataSet = {};
+    vm.downloadCsv = downloadCsv;
+    vm.downloadCsvQuery = downloadCsvQuery;
     vm.editMode = false;
     vm.fileEditsUpdating = false;
     vm.firstPage = 0;
@@ -132,8 +135,6 @@
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
-    vm.uiGridExporterConstants = uiGridExporterConstants;
-    vm.uiGridExporterService = uiGridExporterService;
     vm.userPerms = permsService.userPerms;
 
     activate();
@@ -177,8 +178,20 @@
       }
     }
 
-    function downloadCSV (visibility) {
-      vm.uiGridExporterService.csvExport(vm.gridApi.grid, visibility, visibility);
+    function downloadCsv () {
+      var visibility = uiGridExporterConstants.ALL;
+      if (isFiltered()) {
+        visibility = uiGridExporterConstants.VISIBLE;
+      }
+      uiGridExporterService.csvExport(vm.gridApi.grid, visibility, visibility);
+    }
+
+    function downloadCsvQuery () {
+      return $httpParamSerializer({
+        filter_attribute: selectedFilterService.attributeSelectedFields,
+        assay_uuid: $window.externalAssayUuid,
+        limit: 100000000
+      });
     }
 
     // Gets the data set properties
