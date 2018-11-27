@@ -1,7 +1,21 @@
 <div>
-  <ul>
-    <li ng-repeat="tool in $ctrl.toolList">
-      {{ tool.name }}: {{ tool.description }}
+  <div class="refinery-header">
+    <h3>
+      Analysis and Visualization Tools
+    </h3>
+  </div>
+  <ul class="list-unstyled">
+    <li ng-repeat="tool in $ctrl.toolList" class="p-b-1-2">
+      <i class="{{tool.tool_type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
+      <span ng-if="tool.tool_type=='WORKFLOW'">
+        <a ng-href="/workflows/{{tool.workflow}}">
+          {{ tool.name }}
+        </a>
+      </span>
+      <span ng-if="tool.tool_type!=='WORKFLOW'">
+         {{ tool.name }}
+      </span>
+       - {{ tool.description }}
     </li>
   </ul>
 </div>
