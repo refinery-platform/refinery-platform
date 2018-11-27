@@ -31,8 +31,8 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    UserProfileViewSet, WorkflowViewSet,
-                    ObtainAuthTokenValidSession)
+                    ObtainAuthTokenValidSession, UserProfileViewSet,
+                    WorkflowViewSet)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
