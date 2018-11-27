@@ -15,6 +15,7 @@ from haystack.exceptions import SkipDocument
 
 import constants
 import core
+from core.utils import get_absolute_url
 
 from .models import AnnotatedNode, Assay, Node
 
@@ -193,7 +194,7 @@ def _get_download_url_or_import_state(file_store_item):
 
     download_url = file_store_item.get_datafile_url()
     if download_url:
-        return download_url
+        return get_absolute_url(download_url)
 
     # "PENDING" if an import_task_id doesn't exist and
     # there is no valid download_url
