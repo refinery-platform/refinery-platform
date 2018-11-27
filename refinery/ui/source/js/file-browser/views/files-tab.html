@@ -65,7 +65,13 @@
         <h3 class="p-l-1">
           {{ FBCtrl.assayFilesTotal }} files
         </h3>
-        <rp-file-browser-csv-download></rp-file-browser-csv-download>
+        <rp-download-csv-button
+          total-files="FBCtrl.assayFilesTotal"
+          download-csv="FBCtrl.downloadCsv">
+        </rp-download-csv-button>
+        <rp-download-files-button
+          download-csv-query="FBCtrl.downloadCsvQuery">
+        </rp-download-files-button>
         <div class="float-right" ng-if="FBCtrl.dataSet.is_owner">
           <h4 class="p-r-1-2">
             Edit Metadata

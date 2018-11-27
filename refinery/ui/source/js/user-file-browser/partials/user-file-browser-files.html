@@ -1,19 +1,18 @@
 <div class="col-lg-10 col-md-10 col-sm-9" id="main-area">
     <div class="btn-toolbar p-b-1">
-      <a class="refinery-base btn btn-default btn-sm"
-        href="{{ $ctrl.downloadCsvPath() }}">
-        <i class="fa fa-arrow-circle-o-down"></i> Download as CSV
-      </a>
-      <span class="refinery-base btn btn-default btn-sm" data-toggle="modal" data-target="#multi-file-download-modal">
-          <i class="fa fa-arrow-circle-o-down"></i> Download files
-      </span>
-      <rp-download-files-modal></rp-download-files-modal>
     </div>
     <div class="m-r-1">
       <div class="refinery-subheader grid_data_set_total">
         <h3>
           {{ $ctrl.nodesCount }} of {{ $ctrl.totalNodesCount }} files
         </h3>
+        <rp-download-csv-button
+          total-files="$ctrl.totalNodesCount"
+          download-csv="$ctrl.downloadCsv">
+        </rp-download-csv-button>
+        <rp-download-files-button
+          download-csv-query="$ctrl.downloadCsvQuery">
+        </rp-download-files-button>
       </div>
         <!-- Bootstrap col classes are using the window width, not our inner div.
              #table-filter has a margin-left, so do something similar on the other side -->
