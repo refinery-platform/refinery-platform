@@ -27,9 +27,12 @@
       authTokenService
   ) {
     var vm = this;
-    authTokenService.query().$promise.then(function (authToken) {
-      vm.authToken = authToken.token;
-    });
+
+    vm.$onInit = function () {
+      authTokenService.query().$promise.then(function (authToken) {
+        vm.authToken = authToken.token;
+      });
+    };
 
     vm.downloadCsvUrl = function () {
       return '\'' + $location.protocol() + '://' + $location.host() + ':' + $location.port() + vm.downloadCsvPath + '\'';
