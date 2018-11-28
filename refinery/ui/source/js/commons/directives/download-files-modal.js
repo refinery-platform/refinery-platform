@@ -2,15 +2,17 @@
   'use strict';
   angular
     .module('refineryApp')
-    .component('rpDownloadFilesButton', {
+    .component('rpDownloadFilesModal', {
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl(
-            'partials/commons/partials/download-files-button.html'
+            'partials/commons/partials/download-files-modal.html'
         );
       }],
       bindings: {
         modalInstance: '<',
         resolve: '<',
+        downloadCsvQuery: '<'
       },
+      controller: 'DownloadFilesCtrl'
     });
 })();
