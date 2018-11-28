@@ -29,7 +29,15 @@ class S3MediaStorage(S3Boto3Storage):
     custom_domain = settings.MEDIA_BUCKET + '.s3.amazonaws.com'
     file_overwrite = False
 
+    def exists(self, name):
+        # returns False only if no object versions or delete markers are
+        # present to prevent overwrites
+        s3 = boto3.client('s3')
+        result = s3.list_object_versions(Bucket=self.bucket_name, Prefix=name)
+        return bool(result.get('Versions') or result.get('DeleteMarkers'))
+
     def get_available_name(self, name, max_length=None):
+        name = self._clean_name(name)
         while True:
             # remove leading '-' characters to make file management easier
             # limit file name length to 255 to make "fully portable" in POSIX

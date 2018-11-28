@@ -70,6 +70,10 @@ resource "aws_s3_bucket" "media_files" {
   ]
 }
 EOF
+
+  versioning {
+    enabled = true
+  }
 }
 
 resource "aws_s3_bucket" "log_files" {
