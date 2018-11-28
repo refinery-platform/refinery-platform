@@ -710,25 +710,6 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
                 )
             )
 
-    def test_no_query_params_in_get_yields_bad_request(self):
-        get_request = self.factory.get(self.tool_defs_url_root)
-        force_authenticate(get_request, self.user)
-        get_response = self.tool_defs_view(get_request)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a DataSet UUID", get_response.content)
-
-    def test_bad_query_params_in_get_yields_bad_request(self):
-        get_request = self.factory.get(
-            "{}?coffee={}".format(
-                self.tool_defs_url_root,
-                self.dataset.uuid
-            )
-        )
-        force_authenticate(get_request, self.user)
-        get_response = self.tool_defs_view(get_request)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a DataSet UUID", get_response.content)
-
     def test_missing_dataset_in_get_yields_bad_request(self):
         dataset_uuid = str(uuid.uuid4())
 

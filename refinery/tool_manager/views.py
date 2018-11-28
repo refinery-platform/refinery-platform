@@ -58,6 +58,9 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get']
 
     def list(self, request):
+        if request.query_params.get('data_set_uuid'):
+            return super(ToolDefinitionsViewSet, self).list(request)
+
         serializer = ToolDefinitionSerializer(ToolDefinition.objects.all(),
                                               many=True)
         return Response(serializer.data)
