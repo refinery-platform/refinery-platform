@@ -4,8 +4,8 @@ describe('Common.service.auth-token: unit tests', function () {
   var $httpBackend;
   var $rootScope;
   var service;
-  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var fakeResponse = { token: fakeUuid };
+  var mocker;
+  var fakeResponse;
 
   beforeEach(function () {
     module('refineryApp');
@@ -15,6 +15,8 @@ describe('Common.service.auth-token: unit tests', function () {
       $httpBackend = $injector.get('$httpBackend');
       $rootScope = $injector.get('$rootScope');
       service = $injector.get('authTokenService');
+      mocker = $injector.get('mockParamsFactory');
+      fakeResponse = { token: mocker.generateUuid() };
 
       $httpBackend
         .expectGET(
