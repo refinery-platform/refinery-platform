@@ -6,23 +6,23 @@
   .controller('DownloadFilesCtrl', DownloadFilesCtrl);
 
   DownloadFilesCtrl.$inject = [
-    '$window',
     '$httpParamSerializer',
     '$location',
     '$log',
     '$q',
     '$scope',
+    '$window',
     '_',
     'authTokenService'
   ];
 
   function DownloadFilesCtrl (
-      $window,
       $httpParamSerializer,
       $location,
       $log,
       $q,
       $scope,
+      $window,
       _,
       authTokenService
   ) {
