@@ -16,8 +16,20 @@
     var vm = this;
     vm.toolList = toolListService.toolList;
 
-    toolListService.getTools().then(function () {
-      vm.toolList = toolListService.toolList;
-    });
+    activate();
+    /*
+     * -----------------------------------------------------------------------------
+     * Methods
+     * -----------------------------------------------------------------------------
+    */
+    function activate () {
+      // tool list should won't be updated often, so no need for api call
+      // if list is already populated
+      if (!vm.toolList.length) {
+        toolListService.getTools().then(function () {
+          vm.toolList = toolListService.toolList;
+        });
+      }
+    }
   }
 })();
