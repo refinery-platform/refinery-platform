@@ -71,9 +71,8 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
     workflow = serializers.SerializerMethodField()
 
     def get_workflow(self, tool):
-        if tool.workflow:
+        if tool.workflow is not None:
             return tool.workflow.uuid
-        return tool.workflow
 
     class Meta:
         model = ToolDefinition
