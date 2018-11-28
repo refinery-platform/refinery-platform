@@ -23,7 +23,7 @@
      * -----------------------------------------------------------------------------
     */
     function activate () {
-      // tool list should won't be updated often, so no need for api call
+      // tool list won't be updated often, so no need for api call
       // if list is already populated
       if (!vm.toolList.length) {
         toolListService.getTools().then(function () {

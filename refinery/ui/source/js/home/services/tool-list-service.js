@@ -10,9 +10,9 @@
     .module('refineryHome')
     .factory('toolListService', toolListService);
 
-  toolListService.$inject = ['$window', 'toolDefinitionsService'];
+  toolListService.$inject = ['toolDefinitionsService'];
 
-  function toolListService ($window, toolDefinitionsService) {
+  function toolListService (toolDefinitionsService) {
     var toolList = [];
 
     var service = {
