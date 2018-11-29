@@ -18,8 +18,10 @@ from rest_framework.views import APIView
 from unidecode import unidecode
 
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.utils import format_solr_response, search_solr, \
-    generate_solr_params_for_assay
+from data_set_manager.utils import (format_solr_response,
+                                    generate_solr_params_for_assay,
+                                    search_solr)
+
 
 from .utils import generate_solr_params_for_user
 
