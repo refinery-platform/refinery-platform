@@ -2,6 +2,7 @@ import json
 import logging
 from urlparse import urljoin
 
+import uuid
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -45,8 +46,14 @@ class UserFilesAPITests(APITestCase):
             'nodes_count'
         ])
 
-    def _test_user_files_csv(self, use_token_auth=False):
-        request = self.factory.get("/files_download?fq=&limit=100000000&sort=")
+    def _test_user_files_csv(self, assay_uuid=False, use_token_auth=False):
+        solr_mock_reference = 'search_solr' if assay_uuid else '_get_solr'
+        get_data = {"assay_uuid": uuid.uuid4()} if assay_uuid else {}
+
+        request = self.factory.get(
+            "/files_download?fq=&limit=100000000&sort=", get_data
+        )
+
         user = User.objects.create_user(
             'testuser', 'test@example.com', 'password'
         )
@@ -67,7 +74,7 @@ class UserFilesAPITests(APITestCase):
             # Doesn't matter if the names are backwards.
         }
         with mock.patch(
-                'user_files_manager.views._get_solr',
+                'user_files_manager.views.' + solr_mock_reference,
                 return_value=json.dumps({
                     'response': {
                         'docs': [mock_doc]
@@ -96,6 +103,10 @@ class UserFilesAPITests(APITestCase):
         response = user_files_csv(request)
         response.render()
         self.assertEqual(response.status_code, 403)
+
+    @override_settings(USER_FILES_COLUMNS='filename,fake')
+    def test_get_user_files_csv_with_assay_uuid(self):
+        self._test_user_files_csv(assay_uuid=True)
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
