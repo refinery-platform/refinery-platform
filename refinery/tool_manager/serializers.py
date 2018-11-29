@@ -68,6 +68,11 @@ class FileRelationshipSerializer(serializers.ModelSerializer):
 class ToolDefinitionSerializer(serializers.ModelSerializer):
     file_relationship = FileRelationshipSerializer()
     parameters = ParameterSerializer(many=True, allow_null=True)
+    workflow = serializers.SerializerMethodField()
+
+    def get_workflow(self, tool):
+        if tool.workflow is not None:
+            return tool.workflow.uuid
 
     class Meta:
         model = ToolDefinition

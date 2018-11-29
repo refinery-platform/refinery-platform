@@ -13,14 +13,12 @@
       $templateCache,
       $window
     ) {
-      // Parent component contains the input-group (child) component
       $templateCache.put(
         $window.getStaticUrl('partials/home/views/home.html'),
         '<div id="home-main">/div>'
       );
 
       var scope = $rootScope.$new();
-      // Parent component
       var template = '<rp-home></rp-home>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
