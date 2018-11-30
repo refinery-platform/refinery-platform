@@ -1,0 +1,54 @@
+<div class="navbar-text pull-right" id="navbar-right">
+  <!--add pointer-->
+  <a href="/dashboard"
+    ng-class="{'navLinkDisabled':'dashboard'===$ctrl.path, 'pointer':'dashboard'===$ctrl.path}">
+    <i id="refinery-logout" class="fa fa-tachometer icon-only"></i>&nbsp;
+    <span id="dashboard-icon-text">
+      My Dashboard
+    </span>
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <span>
+   <a rp-analysis-monitor-global-status-tooltip-hider tabindex=8>
+     <span>
+       <rp-analysis-monitor-global-status>
+       </rp-analysis-monitor-global-status>
+     </span>
+   </a>
+  </span>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a
+   class="pointer"
+   popover-placement="bottom"
+   popover-trigger="'outsideClick'"
+   uib-popover-template="dynamicPopover.templateUrl">
+   <i class="fa fa-question-circle"></i>
+   <span id="help-icon-text">
+      Tutorial
+   </span>
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="/about"
+   ng-class="{'navLinkDisabled':'about'===$ctrl.path, 'pointer':'about'===$ctrl.path}">
+     <i id="refinery-logout" class="fa fa-info-circle icon-only"></i>&nbsp;
+    About
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+
+  <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
+     tabindex=5>
+    <i class="fa fa-user"></i>
+    <span id="login-name-icon-text">
+      Guest Guest
+    </span>
+  </a>&nbsp;&nbsp;&nbsp;&nbsp;
+
+  <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
+     tabindex=5>
+   <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
+    <span id="logout-icon-text">
+      Logout
+    </span>
+  </a>
+
+</div>
