@@ -198,8 +198,7 @@
     function refreshDataSetProps () {
       dataSetPropsService.refreshDataSet().then(function () {
         vm.dataSet = dataSetPropsService.dataSet;
-        // set the filename of the exportable .csv once we have the dataSet info
-        vm.gridOptions.exporterCsvFilename = vm.dataSet.title + '.csv';
+        vm.setCsvFileName(vm.dataSet.title);
         // initialize the dataset and updates ui-grid selection, filters, and url
         initializeDataOnPageLoad();
       });
@@ -324,8 +323,15 @@
       }
     }
 
+    /** view method to aid in determining if the user has begun using the
+     *  facets to filter the FileBrowser table's results.*/
     function isFiltered () {
+      // Note: paramService.fileParam.filter_attribute can be both
+      // undefined and an empty object. Both of these scenarios correlate
+      // to facet filtering not having happened yet.
+
       var filtered = true;
+
       if (paramService.fileParam.filter_attribute === undefined) {
         filtered = false;
       } else {
@@ -421,6 +427,11 @@
         });
       }
     }
+
+    vm.setCsvFileName = function (dataSetTitle) {
+      // set the filename of the exportable .csv once we have the dataSet info
+      vm.gridOptions.exporterCsvFilename = dataSetTitle + '.csv';
+    };
 
     /**
      * Generates sort param for api call from ui-grid response and calls grid

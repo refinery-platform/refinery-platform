@@ -6,6 +6,7 @@
     var permsService;
     var resetService;
     var scope;
+    var paramService;
     var toolService;
 
     beforeEach(module('refineryApp'));
@@ -16,14 +17,17 @@
       $window,
       dataSetPermsService,
       fileBrowserFactory,
+      fileParamService,
       mockParamsFactory,
       resetGridService,
       selectedFilterService,
       toolSelectService
     ) {
       scope = $rootScope.$new();
+      paramService = fileParamService;
       ctrl = $controller('FileBrowserCtrl', {
-        $scope: scope
+        $scope: scope,
+        fileParamService: paramService
       });
       permsService = dataSetPermsService;
       resetService = resetGridService;
@@ -118,7 +122,10 @@
         attributes: [],
         facet_field_counts: {}
       };
-      beforeEach(inject(function ($q, fileBrowserFactory) {
+      var gridExporterService;
+
+      beforeEach(inject(function ($q, fileBrowserFactory, uiGridExporterService) {
+        gridExporterService = uiGridExporterService;
         spyOn(fileBrowserFactory, 'getAssayFiles').and.returnValue(assayFiles);
       }));
 
@@ -142,8 +149,52 @@
         expect(angular.isFunction(ctrl.downloadCsvQuery)).toBe(true);
       });
 
+      it('setCsvFileName is defined', function () {
+        expect(angular.isFunction(ctrl.setCsvFileName)).toBe(true);
+      });
+
       it('isFiltered is defined', function () {
         expect(angular.isFunction(ctrl.isFiltered)).toBe(true);
+      });
+
+      it('setCsvFileName sets grid options appropriately', function () {
+        ctrl.setCsvFileName('Test DataSet Name');
+        expect(ctrl.gridOptions.exporterCsvFilename).toEqual('Test DataSet Name.csv');
+      });
+
+      it('isFiltered is false when filter_attribute is undefined', function () {
+        expect(ctrl.isFiltered()).toBe(false);
+      });
+
+      it('isFiltered is false when filter_attribute is empty object', function () {
+        paramService.setParamFilterAttribute({});
+        expect(ctrl.isFiltered()).toBe(false);
+      });
+
+      it('isFiltered is true when filter_attribute is populated', function () {
+        var mockFilterAttribute = { REFINERY_TYPE_48_24_s: ['Raw Data File'] };
+        paramService.setParamFilterAttribute(mockFilterAttribute);
+        expect(ctrl.isFiltered()).toBe(true);
+      });
+
+      it('downloadCsv calls csvExport with proper visibility when filtered', function () {
+        var mockFilterAttribute = { REFINERY_TYPE_48_24_s: ['Raw Data File'] };
+        paramService.setParamFilterAttribute(mockFilterAttribute);
+        spyOn(gridExporterService, 'csvExport');
+        ctrl.gridApi = { grid: { fake_grid: {} } };
+        ctrl.downloadCsv();
+        expect(gridExporterService.csvExport).toHaveBeenCalledWith(
+          { fake_grid: {} }, 'visible', 'visible'
+        );
+      });
+
+      it('downloadCsv calls csvExport with proper visibility when not filtered', function () {
+        spyOn(gridExporterService, 'csvExport');
+        ctrl.gridApi = { grid: { fake_grid: {} } };
+        ctrl.downloadCsv();
+        expect(gridExporterService.csvExport).toHaveBeenCalledWith(
+          { fake_grid: {} }, 'all', 'all'
+        );
       });
     });
   });
