@@ -51,9 +51,25 @@
     vm.downloadCsvCurl = function (downloadCsvQuery) {
       return 'curl ' +
         '\'' + $location.protocol() + '://' + $location.host() + ':' + $location.port() +
+
+        // construct URL for csv file download including any filter params
         '/files_download?' + downloadCsvQuery + '\'' +
-        ' -H \"Authorization:  Token ' + vm.authToken +
-        '\" | cut -f 1 -d \',\' | tail -n +2 | xargs -n 1 curl -O -L';
+
+        // add Authorization header so that users can access protected
+        // `/files_download` endpoint from outside out Refinery
+        ' -H \"Authorization:  Token ' + vm.authToken + '\" |' +
+
+        // exclude csv column headers
+        ' tail -n +2 |' +
+
+        // get the first column (file url) from each row the .csv file returned
+        ' cut -f 1 -d \',\' |' +
+
+        // exclude files from the download that aren't available or pending
+        ' grep -v \'N/A\' | grep -v \'PENDING\' |' +
+
+        // download each file with cURL again
+        ' xargs -n 1 curl -O -L';
     };
   }
 })();
