@@ -441,8 +441,14 @@
       }
     }
 
+
+    /**
+     * @name setCsvFileName
+     * @desc  VM method used to set the filename of the exportable .csv once
+     * we have the dataSet info
+     * @memberOf FileBrowserCtrl
+    **/
     vm.setCsvFileName = function (dataSetTitle) {
-      // set the filename of the exportable .csv once we have the dataSet info
       vm.gridOptions.exporterCsvFilename = dataSetTitle + '.csv';
     };
 
