@@ -24,7 +24,7 @@ UNKNOWN_FILE_SIZE = 0
 
 
 class S3MediaStorage(S3Boto3Storage):
-    """Django media (user data) files storage"""
+    """Django media files (user data) storage"""
     bucket_name = settings.MEDIA_BUCKET
     custom_domain = settings.MEDIA_BUCKET + '.s3.amazonaws.com'
     file_overwrite = False
