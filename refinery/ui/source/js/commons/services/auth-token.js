@@ -1,3 +1,10 @@
+/**
+ * Auth Token Service
+ * @namespace authTokenService
+ * @desc Service responsible for fetching a Django REST framework auth
+ * token for a user
+ * @memberOf refineryApp
+ */
 (function () {
   'use strict';
   angular
