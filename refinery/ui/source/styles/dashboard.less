@@ -1808,8 +1808,6 @@ body.repo-mode .refinery-dashboard {
   }
 
   .btn {
-    font-size: 12px;
-    padding: 2px 10px 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellisis;
@@ -1853,11 +1851,12 @@ body.repo-mode .refinery-dashboard {
     }
   }
 
+  @card-full-view:  ~"calc(100vh - @{navbar-height} - 2em)";
   @card-top-half-view: ~"calc((100vh - @{navbar-height})/2)";
   @card-bottom-half-view: ~"calc(@{card-top-half-view} - 3em)";
 
   #dashboard-data-set-card {
-    height: @card-top-half-view;
+    height: @card-full-view;
 
     .fa-question-circle {
       padding-top: 75%;
@@ -1884,13 +1883,13 @@ body.repo-mode .refinery-dashboard {
       border: none;
       display: inline-block;
       #dashboard-data-search {
-        width: 300px;
+        width: 150px;
         float: right;
       }
       .fa-search {
-          right: 350px;
-          left: unset;
-          position: absolute;
+        right: 200px;
+        left: unset;
+        position: absolute;
       }
       .btn {
         float: right;
@@ -1903,7 +1902,7 @@ body.repo-mode .refinery-dashboard {
 
     #dashboard-data-set-list {
       overflow-y: scroll;
-      height:  ~"calc(@{card-top-half-view} - 118px)";
+      height:  ~"calc(@{card-full-view} - 116px)";
       padding-left: 0.3em;
       .data-set-name {
         font-size: 1.15em;
@@ -1958,7 +1957,8 @@ body.repo-mode .refinery-dashboard {
   }
 
   #dashboard-collaboration-card {
-    height: @card-bottom-half-view;
+    margin-bottom: 15px;
+    height: @card-top-half-view;
 
     .group-name-header.row {
       font-size: 1.15em;
