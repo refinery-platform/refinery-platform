@@ -131,78 +131,87 @@
         spyOn(fileBrowserFactory, 'getAssayFiles').and.returnValue(assayFiles);
       }));
 
-      it('gridOptions.exporterAllDataFn is defined', function () {
-        expect(angular.isFunction(ctrl.gridOptions.exporterAllDataFn)).toBe(true);
+      describe('gridOptions.exporterAllDataFn tests', function () {
+        it('is defined', function () {
+          expect(angular.isFunction(ctrl.gridOptions.exporterAllDataFn)).toBe(true);
+        });
+
+        it('returns assayFiles response', function () {
+          expect(ctrl.gridOptions.exporterAllDataFn()).toEqual(assayFiles);
+        });
+
+        it('gridOptions.exporterSuppressColumns excludes Input Groups', function () {
+          expect(ctrl.gridOptions.exporterSuppressColumns).toEqual(['Input Groups']);
+        });
       });
 
-      it('gridOptions.exporterAllDataFn return query', function () {
-        expect(ctrl.gridOptions.exporterAllDataFn()).toEqual(assayFiles);
+      describe('downloadCsv tests', function () {
+        it('is defined', function () {
+          expect(angular.isFunction(ctrl.downloadCsv)).toBe(true);
+        });
+
+        it('downloadCsv calls csvExport with proper visibility when filtered', function () {
+          var mockFilterAttribute = { REFINERY_TYPE_48_24_s: ['Raw Data File'] };
+          paramService.setParamFilterAttribute(mockFilterAttribute);
+          spyOn(gridExporterService, 'csvExport');
+          ctrl.gridApi = { grid: { fake_grid: {} } };
+          ctrl.downloadCsv();
+          expect(gridExporterService.csvExport).toHaveBeenCalledWith(
+            { fake_grid: {} }, 'visible', 'visible'
+          );
+        });
+
+        it('calls csvExport with proper visibility when not filtered', function () {
+          spyOn(gridExporterService, 'csvExport');
+          ctrl.gridApi = { grid: { fake_grid: {} } };
+          ctrl.downloadCsv();
+          expect(gridExporterService.csvExport).toHaveBeenCalledWith(
+            { fake_grid: {} }, 'all', 'all'
+          );
+        });
       });
 
-      it('gridOptions.exporterSuppressColumns excludes Input Groups', function () {
-        expect(ctrl.gridOptions.exporterSuppressColumns).toEqual(['Input Groups']);
+      describe('isFiltered tests', function () {
+        it('is defined', function () {
+          expect(angular.isFunction(ctrl.isFiltered)).toBe(true);
+        });
+
+        it('is false when filter_attribute is undefined', function () {
+          expect(ctrl.isFiltered()).toBe(false);
+        });
+
+        it('is false when filter_attribute is empty object', function () {
+          paramService.setParamFilterAttribute({});
+          expect(ctrl.isFiltered()).toBe(false);
+        });
+
+        it('is true when filter_attribute is populated', function () {
+          var mockFilterAttribute = { REFINERY_TYPE_48_24_s: ['Raw Data File'] };
+          paramService.setParamFilterAttribute(mockFilterAttribute);
+          expect(ctrl.isFiltered()).toBe(true);
+        });
       });
 
-      it('downloadCsv is defined', function () {
-        expect(angular.isFunction(ctrl.downloadCsv)).toBe(true);
+      describe('downloadCsvQuery tests', function () {
+        it('is defined', function () {
+          expect(angular.isFunction(ctrl.downloadCsvQuery)).toBe(true);
+        });
+        it('returns appropriate value', function () {
+          expect(ctrl.downloadCsvQuery()).toEqual(
+            'assay_uuid=' + externalAssayUuid + '&filter_attribute=%7B%7D&limit=100000000'
+          );
+        });
       });
 
-      it('downloadCsvQuery is defined', function () {
-        expect(angular.isFunction(ctrl.downloadCsvQuery)).toBe(true);
-      });
+      describe('setCsvFileName tests', function () {
+        it('is defined', function () {
+          expect(angular.isFunction(ctrl.setCsvFileName)).toBe(true);
+        });
 
-      it('setCsvFileName is defined', function () {
-        expect(angular.isFunction(ctrl.setCsvFileName)).toBe(true);
-      });
-
-      it('isFiltered is defined', function () {
-        expect(angular.isFunction(ctrl.isFiltered)).toBe(true);
-      });
-
-      it('setCsvFileName sets grid options appropriately', function () {
-        ctrl.setCsvFileName('Test DataSet Name');
-        expect(ctrl.gridOptions.exporterCsvFilename).toEqual('Test DataSet Name.csv');
-      });
-
-      it('isFiltered is false when filter_attribute is undefined', function () {
-        expect(ctrl.isFiltered()).toBe(false);
-      });
-
-      it('isFiltered is false when filter_attribute is empty object', function () {
-        paramService.setParamFilterAttribute({});
-        expect(ctrl.isFiltered()).toBe(false);
-      });
-
-      it('isFiltered is true when filter_attribute is populated', function () {
-        var mockFilterAttribute = { REFINERY_TYPE_48_24_s: ['Raw Data File'] };
-        paramService.setParamFilterAttribute(mockFilterAttribute);
-        expect(ctrl.isFiltered()).toBe(true);
-      });
-
-      it('downloadCsv calls csvExport with proper visibility when filtered', function () {
-        var mockFilterAttribute = { REFINERY_TYPE_48_24_s: ['Raw Data File'] };
-        paramService.setParamFilterAttribute(mockFilterAttribute);
-        spyOn(gridExporterService, 'csvExport');
-        ctrl.gridApi = { grid: { fake_grid: {} } };
-        ctrl.downloadCsv();
-        expect(gridExporterService.csvExport).toHaveBeenCalledWith(
-          { fake_grid: {} }, 'visible', 'visible'
-        );
-      });
-
-      it('downloadCsv calls csvExport with proper visibility when not filtered', function () {
-        spyOn(gridExporterService, 'csvExport');
-        ctrl.gridApi = { grid: { fake_grid: {} } };
-        ctrl.downloadCsv();
-        expect(gridExporterService.csvExport).toHaveBeenCalledWith(
-          { fake_grid: {} }, 'all', 'all'
-        );
-      });
-
-      it('downloadCsvQuery returns appropriate value', function () {
-        expect(ctrl.downloadCsvQuery()).toEqual(
-          'assay_uuid=' + externalAssayUuid + '&filter_attribute=%7B%7D&limit=100000000'
-        );
+        it('sets grid options appropriately', function () {
+          ctrl.setCsvFileName('Test DataSet Name');
+          expect(ctrl.gridOptions.exporterCsvFilename).toEqual('Test DataSet Name.csv');
+        });
       });
     });
   });
