@@ -98,10 +98,23 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
+
+    /**
+     * @name downloadCsv
+     * @desc  VM method used to interact with the `/files_download`
+     * endpoint to get a .csv
+     * @memberOf UserFileBrowserFilesCtrl
+    **/
     function downloadCsv () {
-      document.location.href = '/files_download?' + downloadCsvQuery();
+      $location.href = '/files_download?' + downloadCsvQuery();
     }
 
+    /**
+     * @name downloadCsvQuery
+     * @desc  VM method used to construct the query parameters to be sent
+     * to the `/files_download` endpoint
+     * @memberOf UserFileBrowserFilesCtrl
+    **/
     function downloadCsvQuery () {
       return $httpParamSerializer({
         filter_attribute: userFileFiltersService,
