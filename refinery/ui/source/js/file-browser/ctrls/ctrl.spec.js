@@ -111,5 +111,40 @@
         expect(mockUibModal).toHaveBeenCalled();
       });
     });
+
+    describe('uiGrid csv export', function () {
+      var assayFiles = {
+        nodes: [],
+        attributes: [],
+        facet_field_counts: {}
+      };
+      beforeEach(inject(function ($q, fileBrowserFactory) {
+        spyOn(fileBrowserFactory, 'getAssayFiles').and.returnValue(assayFiles);
+      }));
+
+      it('gridOptions.exporterAllDataFn is defined', function () {
+        expect(angular.isFunction(ctrl.gridOptions.exporterAllDataFn)).toBe(true);
+      });
+
+      it('gridOptions.exporterAllDataFn return query', function () {
+        expect(ctrl.gridOptions.exporterAllDataFn()).toEqual(assayFiles);
+      });
+
+      it('gridOptions.exporterSuppressColumns excludes Input Groups', function () {
+        expect(ctrl.gridOptions.exporterSuppressColumns).toEqual(['Input Groups']);
+      });
+
+      it('downloadCsv is defined', function () {
+        expect(angular.isFunction(ctrl.downloadCsv)).toBe(true);
+      });
+
+      it('downloadCsvQuery is defined', function () {
+        expect(angular.isFunction(ctrl.downloadCsvQuery)).toBe(true);
+      });
+
+      it('isFiltered is defined', function () {
+        expect(angular.isFunction(ctrl.isFiltered)).toBe(true);
+      });
+    });
   });
 })();
