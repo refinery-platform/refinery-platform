@@ -178,6 +178,13 @@
       }
     }
 
+    /**
+     * @name downloadCsv
+     * @desc  VM method used to call the uiGridExporterService.csvExport
+     * with the appropriate "visibility" based on whether or not the user
+     * has begun filtering with the FileBrowser facets or not
+     * @memberOf FileBrowserCtrl
+    **/
     function downloadCsv () {
       var visibility = uiGridExporterConstants.ALL;
       if (isFiltered()) {
@@ -186,6 +193,12 @@
       uiGridExporterService.csvExport(vm.gridApi.grid, visibility, visibility);
     }
 
+    /**
+     * @name downloadCsvQuery
+     * @desc  VM method used to construct the query parameters to be sent
+     * to the `/files_download` endpoint
+     * @memberOf FileBrowserCtrl
+    **/
     function downloadCsvQuery () {
       return $httpParamSerializer({
         filter_attribute: selectedFilterService.attributeSelectedFields,
