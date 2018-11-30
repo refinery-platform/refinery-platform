@@ -11,6 +11,7 @@
     '$log',
     '$q',
     '$scope',
+    '$window',
     '_',
     'userFileBrowserFactory',
     'userFileFiltersService',
@@ -25,6 +26,7 @@
       $log,
       $q,
       $scope,
+      $window,
       _,
       userFileBrowserFactory,
       userFileFiltersService,
@@ -106,7 +108,7 @@
      * @memberOf UserFileBrowserFilesCtrl
     **/
     function downloadCsv () {
-      $location.href = '/files_download?' + downloadCsvQuery();
+      $window.location.href = '/files_download?' + downloadCsvQuery();
     }
 
     /**

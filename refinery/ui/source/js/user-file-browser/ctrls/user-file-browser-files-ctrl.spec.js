@@ -3,23 +3,22 @@
 
   describe('Controller: UserFileBrowserFilesCtrl', function () {
     var ctrl;
-    var location;
     var scope;
+    var window;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryUserFileBrowser'));
+    beforeEach(module({ $window: { location: { href: '' } } }));
     beforeEach(inject(function (
       $controller,
-      $location,
-      $rootScope
+      $rootScope,
+      $window
     ) {
       scope = $rootScope.$new();
-      location = $location;
-      location.href = '';
-
+      window = $window;
       ctrl = $controller('UserFileBrowserFilesCtrl', {
         $scope: scope,
-        $location: location
+        $window: window
       });
     }));
 
@@ -47,7 +46,7 @@
 
     it('downloadCsv sets location.href properly', function () {
       ctrl.downloadCsv();
-      expect(location.href).toEqual(
+      expect(window.location.href).toEqual(
         '/files_download?filter_attribute=%7B%7D&limit=100000000&sort='
       );
     });
