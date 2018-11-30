@@ -123,9 +123,11 @@
         facet_field_counts: {}
       };
       var gridExporterService;
+      var externalAssayUuid;
 
-      beforeEach(inject(function ($q, fileBrowserFactory, uiGridExporterService) {
+      beforeEach(inject(function ($q, $window, fileBrowserFactory, uiGridExporterService) {
         gridExporterService = uiGridExporterService;
+        externalAssayUuid = $window.externalAssayUuid;
         spyOn(fileBrowserFactory, 'getAssayFiles').and.returnValue(assayFiles);
       }));
 
@@ -194,6 +196,12 @@
         ctrl.downloadCsv();
         expect(gridExporterService.csvExport).toHaveBeenCalledWith(
           { fake_grid: {} }, 'all', 'all'
+        );
+      });
+
+      it('downloadCsvQuery returns appropriate value', function () {
+        expect(ctrl.downloadCsvQuery()).toEqual(
+          'assay_uuid=' + externalAssayUuid + '&filter_attribute=%7B%7D&limit=100000000'
         );
       });
     });
