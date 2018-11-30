@@ -42,9 +42,9 @@
 
     it('Expect downloadCsvCurl to return valid cURL command with authToken', function () {
       expect(ctrl.downloadCsvCurl('testParam')).toEqual(
-        'curl \'http://server:80/files_download?testParam\' ' +
-        '-H "Authorization:  Token ' + mockToken + '" ' +
-        '| cut -f 1 -d \',\' | tail -n +2 | xargs -n 1 curl -O -L'
+        'curl \'http://server:80/files_download?testParam\' -H' +
+        ' "Authorization:  Token ' + mockToken + '" | tail -n +2 | cut -f 1' +
+      ' -d \',\' | grep -v \'N/A\' | grep -v \'PENDING\' | xargs -n 1 curl -O -L'
       );
     });
   });
