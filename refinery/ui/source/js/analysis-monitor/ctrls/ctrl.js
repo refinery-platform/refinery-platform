@@ -4,6 +4,7 @@ function AnalysisMonitorCtrl (
   $rootScope,
   $scope,
   $timeout,
+  $uibModal,
   $window,
   analysisMonitorFactory,
   fileRelationshipService
@@ -23,6 +24,7 @@ function AnalysisMonitorCtrl (
   vm.launchAnalysisFlag = false;
   vm.analysesLoadingFlag = 'LOADING';
   vm.initializedFlag = {};
+  vm.openAnalysisDeleteModal = openAnalysisDeleteModal;
 
   // On data set browser analysis tab, method set timer and refreshes the
   // analysis list and refreshes details for running analyses.
@@ -153,6 +155,24 @@ function AnalysisMonitorCtrl (
 
   // Close ui-grid popover when tabbing
   fileRelationshipService.hideNodePopover = true;
+
+  function openAnalysisDeleteModal (analysis) {
+    var modalInstance = $uibModal.open({
+      component: 'rpAnalysisDeleteModal',
+      resolve: {
+        config: function () {
+          return {
+            analysis: analysis,
+            model: 'analyses',
+            uuid: analysis.uuid
+          };
+        }
+      }
+    });
+    modalInstance.result.then(function (response) {
+      console.log(response);
+    });
+  }
 }
 
 angular
@@ -161,6 +181,7 @@ angular
     '$rootScope',
     '$scope',
     '$timeout',
+    '$uibModal',
     '$window',
     'analysisMonitorFactory',
     'fileRelationshipService',

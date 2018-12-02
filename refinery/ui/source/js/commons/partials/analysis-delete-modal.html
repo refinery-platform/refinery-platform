@@ -1,0 +1,78 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <a class="float-right modal-close" ng-click="$ctrl.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+    <h3 class="modal-title">Delete Analysis</h3>
+  </div>
+  <div class="modal-body">
+    <i
+      class="analyses-status {{ $ctrl.analysis.status | analysisStatusIcon }}"
+      title="{{ $ctrl.analysis.status | analysisStatusTitle }}"
+      refinery-tooltip
+      refinery-tooltip-placement="left">
+    </i>
+    <i
+      class="fa fa-user"
+      title="You ran this analysis"
+      ng-if="$ctrl.isOwner"
+      refinery-tooltip
+      refinery-tooltip-placement="top">
+
+    </i>
+    <i
+      class="fa fa-users icon-shared-in"
+      title="Some collaborator ran this analysis"
+      ng-if="!$ctrl.isOwner"
+      refinery-tooltip
+      refinery-tooltip-placement="top">
+
+    </i>
+    <span ng-if="$ctrl.responseMessage.length !== 'success'">
+      <span ng-if="$ctrl.analysis.status == 'SUCCESS'">
+         <a
+           ng-href='/data_sets/{{$ctrl.analysis
+             .data_set__uuid}}/#/files/?{"{{$ctrl
+             .analysis.facet_name}}":"{{$ctrl.analysis.name}}"}'>
+        {{ $ctrl.analysis.name }}
+      </a>
+      </span>
+      <span ng-if="$ctrl.analysis.status != 'SUCCESS'">
+         <a
+           ng-href='/data_sets/{{$ctrl.analysis.data_set__uuid}}/#/analyses'>
+        {{ $ctrl.analysis.name }}
+      </a>
+      </span>
+    </span>
+    <span ng-if="$ctrl.responseMessage == 'success'">
+      {{ $ctrl.analysis.name }}
+    </span>
+  </div>
+
+  <div class="modal-footer">
+    <div class="text-align-left">
+      <div class="refinery-spinner" ng-if="$ctrl.isDeleting"></div>
+      <div
+        class='p-t-1-2'
+        ng-if="$ctrl.responseMessage">
+        <div class="alert alert-{{ $ctrl.alertType }} text-center">
+         {{$ctrl.responseMessage}}
+       </div>
+    </div>
+    </div>
+    <div class="text-align-right">
+      <button id="analysis-delete-close-button"
+        class="refinery-base btn btn-default"
+        ng-disabled="$ctrl.isDeleting"
+        ng-click="$ctrl.close()">
+        Close
+      </button>
+      <button id="analysis-delete-button"
+        class="btn btn-danger"
+        ng-disabled="$ctrl.isDeleting || $ctrl.responseMessage === 'success'"
+        ng-click="$ctrl.deleteAnalysis()">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>

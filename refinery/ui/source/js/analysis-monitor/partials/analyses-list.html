@@ -107,6 +107,16 @@
                   {{ analysis.name }}
               </span>
             </span>
+            <span class="indicator">
+              <i class="fa fa-trash-o analysis-delete pointer p-l-1-2"
+                title="Delete Analysis"
+                ng-click="dashboard.openAnalysisDeleteModal(analysis)"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="bottom"
+                refinery-tooltip-hide-on-click="true">
+              </i>
+            </span>
             <span ng-show="analysis.is_owner && (analysis.status=='RUNNING' ||
              analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN')"
               class="analysis-cancel-col">
