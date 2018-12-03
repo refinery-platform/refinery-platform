@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}
+{{ block.super }} - Home
+{% endblock %}
+
+{% block head_html %}
+  <link rel="stylesheet" href="{% static "styles/home.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
+{% endblock head_html %}
+
+{% block content %}
+  <div id="refinery-home">
+    <rp-home></rp-home>
+  </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+  <script type="text/javascript" src="{% static "vendor/chart.js/dist/chart.min.js" %}"></script>
+{% endblock %}

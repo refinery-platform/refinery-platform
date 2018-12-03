@@ -10,16 +10,15 @@ from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    OpenIDToken, UserProfileViewSet, WorkflowViewSet,
-                    site_statistics)
+                    ObtainAuthTokenValidSession, OpenIDToken,
+                    UserProfileViewSet, WorkflowViewSet, site_statistics)
 
 urlpatterns = patterns(
     'core.views',
     url(r'^$', 'home', name="home"),
+    url(r'^home_v2/$', 'home_v2', name="home_v2"),
     url(r'^about/$', 'about', name="about"),
     url(r'^dashboard/$', 'dashboard', name="dashboard"),
-    url(r'^statistics/$', 'statistics', name="statistics"),
-    url(r'^collaboration/$', 'collaboration', name='collaboration'),
     url(r'^group_invite/(?P<token>' + UUID_RE + r')/$',
         'group_invite', name='group_invite'),
 
@@ -78,5 +77,6 @@ core_router.urls.extend([
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
         AnalysesViewSet.as_view()),
     url(r'^openid_token/$',
-        OpenIDToken.as_view(), name="openid-token")
+        OpenIDToken.as_view(), name="openid-token"),
+    url(r'^obtain-auth-token/', ObtainAuthTokenValidSession.as_view())
 ])

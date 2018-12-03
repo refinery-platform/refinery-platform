@@ -6,8 +6,6 @@ describe('Not logged in', function() {
     cy.visit('/');
     //cy.visible('Refinery');
 
-    cy.visible('Collaboration');
-    cy.visible('Statistics');
     cy.visible('About');
 
     cy.visible('Register');
@@ -26,21 +24,6 @@ describe('Not logged in', function() {
     cy.get('#global-analysis-status').should('visible').click();
     cy.visible('Recent Analyses');
     cy.visible('No analyses performed.');
-  });
-
-  it('Has statistics', function() {
-    cy.viewport(1366, 768) //macbook 11"
-    cy.visit('/');
-    cy.visible('Statistics').click();
-
-    cy.visible('Statistics');
-
-    cy.visible('Users');
-    cy.visible('Groups');
-    cy.visible('Files');
-    cy.visible('Data Sets');
-    cy.visible('Workflows');
-    cy.visible('Projects');
   });
 
   it('Has about', function() {

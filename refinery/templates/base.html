@@ -33,7 +33,6 @@
       userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
       userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
       launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
-      collaboration_tut_viewed: `{{ user.profile.has_viewed_collaboration_tut}}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
@@ -126,8 +125,6 @@
         <button type="button" class="navbar-toggle collapsed"
           data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
           <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
         </button>
       </div>
 
@@ -200,23 +197,8 @@
           </a>
       </span>
       </div>
-      <div class="collapse navbar-collapse" id="navbarMain"
-           ng-controller="collaborationTutorialCtrl">
-         <div ng-intro-options="collabIntroOptions"
-         ng-intro-method="collaborationStart"
-         ng-intro-oncomplete="collabCompletedEvent"
-         ng-intro-onexit="collabExitEvent"
-         ng-intro-onchange="collabChangeEvent"
-         ng-intro-onbeforechange="collabBeforeChangeEvent"
-         ng-intro-onafterchange="collabAfterChangeEvent">
+      <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="nav navbar-nav">
-          <li id="collaborationTutorialStep0" class="{{
-            navbar_class_collaboration }}">
-            <a id="collaborationTutorialStep0_click" href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
-          </li>
-          <li class="{{ navbar_class_statistics }}">
-            <a href="{% url "statistics" %}" tabindex=3>Statistics</a>
-          </li>
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
           </li>
@@ -226,7 +208,6 @@
              </li>
           {% endif %}
         </ul>
-      </div>
       </div>
     </div>
     </div>
@@ -309,15 +290,14 @@
   <script src="{% static "js/refinery-settings.js" %}"></script>
   <script src="{% static "js/refinery-libraries.js" %}"></script>
   <script src="{% static "js/refinery-controller.js" %}"></script>
+  <script src="{% static "js/home.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
   <script src="{% static "js/analysis-monitor.js" %}"></script>
   <script src="{% static "js/file-browser.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
-  <script src="{% static "js/statistics.js" %}"></script>
   <script src="{% static "js/provvis.js" %}"></script>
   <script src="{% static "js/dashboard.js" %}"></script>
-  <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>
   <script src="{% static "js/data-set-visualization.js" %}"></script>
   <script src="{% static "js/tool-launch.js" %}"></script>

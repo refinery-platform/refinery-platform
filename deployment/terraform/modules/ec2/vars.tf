@@ -2,11 +2,10 @@ variable "resource_name_prefix" {}
 variable "static_bucket_name" {}
 variable "upload_bucket_name" {}
 variable "media_bucket_name" {}
+variable "log_bucket_name" {}
 variable "identity_pool_id" {}
 variable "instance_type" {}
 variable "key_pair_name" {}
-# cannot pass a list of IDs due to a bug: https://github.com/hashicorp/terraform/issues/13103
-variable "security_group_id" {}
 variable "subnet_id" {}
 variable "tags" {
   type        = "map"
@@ -25,7 +24,7 @@ variable "django_admin_email" {}
 variable "docker_host" {}
 variable "site_name" {}
 variable "site_domain" {}
-variable "tls" {}
+variable "ssl_certificate_id" {}
 variable "django_email_subject_prefix" {}
 variable "refinery_banner" {}
 variable "refinery_banner_anonymous_only" {}
@@ -34,7 +33,6 @@ variable "refinery_google_analytics_id" {}
 variable "refinery_google_recaptcha_site_key" {}
 variable "refinery_google_recaptcha_secret_key" {}
 variable "refinery_s3_user_data" {}
-variable "refinery_url_scheme" {}
 variable "refinery_welcome_email_subject" {}
 variable "refinery_welcome_email_message" {}
 variable "refinery_user_files_columns" {}

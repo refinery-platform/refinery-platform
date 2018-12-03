@@ -208,6 +208,7 @@ INSTALLED_APPS = (
     'django_docker_engine',
     'revproxy',
     'cuser',
+    'rest_framework.authtoken'
 )
 
 # NG: added for django-guardian

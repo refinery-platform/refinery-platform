@@ -46,13 +46,12 @@ angular
      * Refinery modules
      */
     'refineryRouter',
-    'refineryStatistics',
     'refineryProvvis',
+    'refineryHome',
     'refineryDataSetImport',
     'refineryDataSetNav',
     'refineryDashboard',
     'refineryAnalysisMonitor',
-    'refineryCollaboration',
     'refineryFileBrowser',
     'refineryDataSetAbout',
     'refineryToolLaunch',

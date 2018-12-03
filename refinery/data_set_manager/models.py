@@ -807,24 +807,6 @@ class Attribute(models.Model):
 
 
 # non-ISA Tab
-class AttributeDefinition(models.Model):
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-
-    type = models.TextField(db_index=True)
-    subtype = models.TextField(blank=True, null=True, db_index=True)
-
-    # attribute value to match on
-    value = models.TextField(blank=True, null=True, db_index=True)
-
-    # definition of the attribute value
-    definition = models.TextField(blank=True, null=True, db_index=True)
-
-    value_accession = models.TextField(blank=True, null=True)
-    value_source = models.TextField(blank=True, null=True)
-
-
-# non-ISA Tab
 class AttributeOrder(models.Model):
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
