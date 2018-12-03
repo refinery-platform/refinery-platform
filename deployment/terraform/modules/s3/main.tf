@@ -76,7 +76,7 @@ EOF
   }
 
   lifecycle_rule {
-    id = "Delete non-current object versions and expired delete markers"
+    id      = "Delete non-current object versions and expired delete markers"
     enabled = true
     expiration {
       expired_object_delete_marker = true
