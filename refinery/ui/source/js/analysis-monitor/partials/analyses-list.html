@@ -107,10 +107,10 @@
                   {{ analysis.name }}
               </span>
             </span>
-            <span class="indicator">
+            <span ng-if='analysis.is_owner' class="indicator">
               <i class="fa fa-trash-o analysis-delete pointer p-l-1-2"
                 title="Delete Analysis"
-                ng-click="dashboard.openAnalysisDeleteModal(analysis)"
+                ng-click="AMCtrl.openAnalysisDeleteModal(analysis)"
                 refinery-tooltip
                 refinery-tooltip-container="body"
                 refinery-tooltip-placement="bottom"

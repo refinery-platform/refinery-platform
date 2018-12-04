@@ -15,7 +15,7 @@
     <i
       class="fa fa-user"
       title="You ran this analysis"
-      ng-if="$ctrl.isOwner"
+      ng-if="$ctrl.analysis.is_owner"
       refinery-tooltip
       refinery-tooltip-placement="top">
 
@@ -23,7 +23,7 @@
     <i
       class="fa fa-users icon-shared-in"
       title="Some collaborator ran this analysis"
-      ng-if="!$ctrl.isOwner"
+      ng-if="!$ctrl.analysis.is_owner"
       refinery-tooltip
       refinery-tooltip-placement="top">
 

@@ -27,7 +27,6 @@
     vm.deleteAnalysis = deleteAnalysis;
     vm.generateAlertMessage = generateAlertMessage;
     vm.isDeleting = false;
-    vm.isOwner = true; // update
     vm.responseMessage = '';
 
     /*
@@ -38,7 +37,7 @@
     /**
      * @name close
      * @desc  View method to close modals
-     * @memberOf refineryApp.GroupAddModalCtrl
+     * @memberOf refineryApp.AnalysisDeleteModalCtrl
      **/
     function close () {
       vm.modalInstance.close(vm.alertType);
@@ -47,7 +46,7 @@
     /**
      * @name generateAlertMessage
      * @desc  Helper method which generates api response message
-     * @memberOf refineryApp.GroupAddModalCtrl
+     * @memberOf refineryApp.AnalysisDeleteModalCtrl
      **/
     function generateAlertMessage (infoType, analysisName) {
       if (infoType === 'success') {
@@ -59,6 +58,11 @@
       }
     }
 
+     /**
+     * @name Delete Analysis
+     * @desc  Main view method to delete analysis
+     * @memberOf refineryApp.AnalysisDeleteModalCtrl
+     **/
     function deleteAnalysis () {
       vm.isDeleting = true;
       deletionService.delete({
@@ -75,7 +79,6 @@
 
     vm.$onInit = function () {
       vm.analysis = vm.resolve.config.analysis;
-     // vm.isOwner = vm.resolve.config.analysis;
     };
   }
 })();
