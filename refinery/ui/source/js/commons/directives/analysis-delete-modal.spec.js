@@ -2,10 +2,9 @@
   'use strict';
 
   describe('rpAnalysisDeleteModal component unit test', function () {
-    beforeEach(module('refineryApp'));
-
     var directiveElement;
 
+    beforeEach(module('refineryApp'));
     beforeEach(inject(function (
       $compile,
       $controller,
