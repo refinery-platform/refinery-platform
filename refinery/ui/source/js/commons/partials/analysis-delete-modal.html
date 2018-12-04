@@ -28,7 +28,7 @@
       refinery-tooltip-placement="top">
 
     </i>
-    <span ng-if="$ctrl.responseMessage.length !== 'success'">
+    <span ng-if="$ctrl.alertType !== 'success'">
       <span ng-if="$ctrl.analysis.status == 'SUCCESS'">
          <a
            ng-href='/data_sets/{{$ctrl.analysis
@@ -44,7 +44,7 @@
       </a>
       </span>
     </span>
-    <span ng-if="$ctrl.responseMessage == 'success'">
+    <span ng-if="$ctrl.alertType == 'success'">
       {{ $ctrl.analysis.name }}
     </span>
   </div>
@@ -54,7 +54,7 @@
       <div class="refinery-spinner" ng-if="$ctrl.isDeleting"></div>
       <div
         class='p-t-1-2'
-        ng-if="$ctrl.responseMessage">
+        ng-if="$ctrl.responseMessage.length">
         <div class="alert alert-{{ $ctrl.alertType }} text-center">
          {{$ctrl.responseMessage}}
        </div>
@@ -69,7 +69,7 @@
       </button>
       <button id="analysis-delete-button"
         class="btn btn-danger"
-        ng-disabled="$ctrl.isDeleting || $ctrl.responseMessage === 'success'"
+        ng-disabled="$ctrl.isDeleting || $ctrl.alertType === 'success'"
         ng-click="$ctrl.deleteAnalysis()">
         Delete
       </button>

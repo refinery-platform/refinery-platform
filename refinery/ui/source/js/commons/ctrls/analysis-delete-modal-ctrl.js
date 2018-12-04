@@ -75,7 +75,6 @@
 
     vm.$onInit = function () {
       vm.analysis = vm.resolve.config.analysis;
-      console.log(vm.analysis);
      // vm.isOwner = vm.resolve.config.analysis;
     };
   }
