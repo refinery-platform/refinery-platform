@@ -153,9 +153,12 @@ function AnalysisMonitorCtrl (
     return false;
   };
 
-  // Close ui-grid popover when tabbing
-  fileRelationshipService.hideNodePopover = true;
-
+   /**
+   * @name openAnalysisDeleteModal
+   * @desc  view method which opens the delete component
+   * @memberOf refineryAnalysisMonitor.AnalysisMonitorCtrl
+   * @param {obj} analysis - api sent analysis object
+  **/
   function openAnalysisDeleteModal (analysis) {
     var modalInstance = $uibModal.open({
       component: 'rpAnalysisDeleteModal',
@@ -169,10 +172,13 @@ function AnalysisMonitorCtrl (
         }
       }
     });
-    modalInstance.result.then(function (response) {
-      console.log(response);
+    modalInstance.result.then(function () {
+      vm.updateAnalysesList();
     });
   }
+
+  // Close ui-grid popover when tabbing
+  fileRelationshipService.hideNodePopover = true;
 }
 
 angular
