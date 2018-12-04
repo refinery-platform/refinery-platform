@@ -84,6 +84,11 @@ resource "aws_iam_role_policy" "app_server_s3_access" {
         "arn:aws:s3:::${var.static_bucket_name}",
         "arn:aws:s3:::${var.upload_bucket_name}"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucketVersions"],
+      "Resource": "arn:aws:s3:::${var.media_bucket_name}"
     }
   ]
 }

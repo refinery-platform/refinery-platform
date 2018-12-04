@@ -70,6 +70,21 @@ resource "aws_s3_bucket" "media_files" {
   ]
 }
 EOF
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    id      = "Delete non-current object versions and expired delete markers"
+    enabled = true
+    expiration {
+      expired_object_delete_marker = true
+    }
+    noncurrent_version_expiration {
+      days = 14
+    }
+  }
 }
 
 resource "aws_s3_bucket" "log_files" {
