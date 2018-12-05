@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "static_files" {
   force_destroy = true
   tags          = "${var.tags}"
 
-  policy        = <<EOF
+  policy        = <<PUBLIC_ACCESS
 {
   "Version":"2012-10-17",
   "Statement": [
@@ -19,7 +19,7 @@ resource "aws_s3_bucket" "static_files" {
     }
   ]
 }
-EOF
+PUBLIC_ACCESS
 
   cors_rule {
     allowed_headers = ["Authorization"]
@@ -57,7 +57,7 @@ resource "aws_s3_bucket" "media_files" {
   bucket = "${var.bucket_name_base}-media"
   tags   = "${var.tags}"
 
-  policy = <<EOF
+  policy = <<PUBLIC_ACCESS
 {
   "Version":"2012-10-17",
   "Statement": [
@@ -69,7 +69,7 @@ resource "aws_s3_bucket" "media_files" {
     }
   ]
 }
-EOF
+PUBLIC_ACCESS
 
   versioning {
     enabled = true
@@ -85,14 +85,20 @@ EOF
       days = 14
     }
   }
+
+  logging {
+    target_bucket = "${aws_s3_bucket.log_files.id}"
+    # to match ELB log key name format
+    target_prefix = "AWSLogs/${data.aws_caller_identity.current.account_id}/s3/media/"
+  }
 }
 
 resource "aws_s3_bucket" "log_files" {
-  acl    = "private"
+  acl    = "log-delivery-write"  # for S3 server access logging
   bucket = "${var.bucket_name_base}-log"
   tags   = "${var.tags}"
 
-  policy = <<POLICY
+  policy = <<ELB_ACCESS_LOG
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -106,5 +112,5 @@ resource "aws_s3_bucket" "log_files" {
     }
   ]
 }
-POLICY
+ELB_ACCESS_LOG
 }
