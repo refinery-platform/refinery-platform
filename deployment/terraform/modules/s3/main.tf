@@ -24,14 +24,13 @@ PUBLIC_ACCESS
   cors_rule {
     allowed_headers = ["Authorization"]
     allowed_methods = ["GET"]
-    allowed_origins = ["*"]
+    allowed_origins = ["${var.origin_protocol}://${var.origin_domain}"]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
 }
 
 resource "aws_s3_bucket" "uploaded_files" {
-  acl           = "private"
   bucket        = "${var.bucket_name_base}-upload"
   force_destroy = true
   tags          = "${var.tags}"
@@ -39,7 +38,7 @@ resource "aws_s3_bucket" "uploaded_files" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT", "POST", "DELETE"]
-    allowed_origins = ["*"]
+    allowed_origins = ["${var.origin_protocol}://${var.origin_domain}"]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
