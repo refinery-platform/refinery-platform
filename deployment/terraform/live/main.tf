@@ -52,6 +52,8 @@ locals {
 module "object_storage" {
   source           = "../modules/s3"
   bucket_name_base = "${local.s3_bucket_name_base}"
+  origin_protocol  = "${var.ssl_certificate_id == "" ? "http" : "https"}"
+  origin_domain    = "${var.site_domain}"
   tags             = "${local.tags}"
 }
 
