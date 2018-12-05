@@ -162,6 +162,15 @@ variable "refinery_google_recaptcha_secret_key" {
   default     = ""
 }
 
+variable "refinery_intro" {
+  description = "Mark-down to be displayed in the intro paragraph on the landing page."
+  default = "The refinery platform is for managing, analyzing, and visualizing data. Users can upload various types of files, annotated with
+  pertinent metadata, and can choose to share those files within their own lab and collaborators. Users can also run common analyses via customizable
+  Galaxy[https://galaxyproject.org/] workflows and explore subsequent results
+   with interactive visualization tools. Watch feature-specific tutorial
+   videos below to get started. Once you've registered an account, log in, and click My Dashboard[/dashboard] to start managing your own workspace."
+}
+
 variable "refinery_s3_user_data" {
   description = "Whether or not to use S3 as user data file storage backend"
   default     = "false"

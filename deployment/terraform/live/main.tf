@@ -125,6 +125,7 @@ module "web" {
   refinery_google_analytics_id         = "${var.refinery_google_analytics_id}"
   refinery_google_recaptcha_site_key   = "${var.refinery_google_recaptcha_site_key}"
   refinery_google_recaptcha_secret_key = "${var.refinery_google_recaptcha_secret_key}"
+  refinery_intro                       = "${var.refinery_intro}"
   refinery_s3_user_data                = "${var.refinery_s3_user_data}"
   refinery_welcome_email_subject       = "${var.refinery_welcome_email_subject}"
   refinery_welcome_email_message       = "${var.refinery_welcome_email_message}"
