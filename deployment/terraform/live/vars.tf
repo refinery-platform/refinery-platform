@@ -164,7 +164,7 @@ variable "refinery_google_recaptcha_secret_key" {
 
 variable "refinery_intro" {
   description = "Mark-down to be displayed in the intro paragraph on the landing page."
-  default = "The refinery platform is for managing, analyzing, and visualizing.\s\s Users can upload various types of files, annotated with pertinent metadata, and can choose to share those files within their own lab and collaborators. Users can also run common analyses via customizable [Galaxy](https://galaxyproject.org/) workflows and explore subsequent results with interactive visualization tools.\s\s Watch feature-specific tutorial videos below to get started. Once you have registered an account, log in, and click [My Dashboard](/dashboard) to start managing your own workspace."
+  default = "The refinery platform is for managing, analyzing, and visualizing data.\s\s Users can upload various types of files, annotated with pertinent metadata, and can choose to share those files with their own lab and collaborators. Users can also run common analyses via customizable [Galaxy](https://galaxyproject.org/) workflows and explore subsequent results with interactive visualization tools.\s\s Watch feature-specific tutorial videos below to get started. Once you have registered an account, log in, and click [My Dashboard](/dashboard) to start managing your own workspace."
   }
 
 variable "refinery_s3_user_data" {
