@@ -41,19 +41,19 @@
 
     it('initializes a new Chart class which is an object', function () {
       // eslint-disable-next-line no-undef
-      expect(scope.$ctrl.homeChart).toEqual(jasmine.any(Chart));
+      expect(scope.DSCtrl.homeChart).toEqual(jasmine.any(Chart));
     });
 
     it('initializes a bar chart', function () {
-      expect(scope.$ctrl.homeChart.config.type).toEqual('bar');
+      expect(scope.DSCtrl.homeChart.config.type).toEqual('bar');
     });
 
     it('sets a hover function', function () {
-      expect(angular.isFunction(scope.$ctrl.homeChart.config.options.hover.onHover)).toBe(true);
+      expect(angular.isFunction(scope.DSCtrl.homeChart.config.options.hover.onHover)).toBe(true);
     });
 
     it('sets a hover function', function () {
-      var chartConfig = scope.$ctrl.homeChart.config.options;
+      var chartConfig = scope.DSCtrl.homeChart.config.options;
       expect(angular.isFunction(chartConfig.tooltips.callbacks.label)).toBe(true);
     });
   });
