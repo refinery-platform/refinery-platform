@@ -17,10 +17,10 @@
 
     vm.$onInit = function () {
       if ($window.djangoApp && $window.djangoApp.refineryIntro.length) {
-        vm.introParagraphs = $window.djangoApp.refineryIntro.split('   ');
+        var introParagraphs = $window.djangoApp.refineryIntro.split('   ');
         vm.htmlIntros = [];
-        for (var i = 0; i < vm.introParagraphs.length; i++) {
-          vm.htmlIntros[i] = MarkdownJS.toHTML(vm.introParagraphs[i]);
+        for (var i = 0; i < introParagraphs.length; i++) {
+          vm.htmlIntros[i] = MarkdownJS.toHTML(introParagraphs[i]);
         }
       }
     };
