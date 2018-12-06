@@ -10,17 +10,20 @@
     .module('refineryHome')
     .controller('HomeCtrl', HomeCtrl);
 
-  HomeCtrl.$inject = ['$window'];
+  HomeCtrl.$inject = ['MarkdownJS', '$window'];
 
-  function HomeCtrl ($window) {
+  function HomeCtrl (MarkdownJS, $window) {
     var vm = this;
-    vm.wtf = 'wtf';
 
     console.log($window.djangoApp.refineryIntro);
 
     vm.$onInit = function () {
-      vm.introParagraph = $window.djangoApp.refineryIntro;
-      console.log('on init');
+      vm.introParagraphs = $window.djangoApp.refineryIntro.split('   ');
+      vm.htmlIntros = [];
+      for (var i = 0; i < vm.introParagraphs.length; i++) {
+        vm.htmlIntros[i] = MarkdownJS.toHTML(vm.introParagraphs[i]);
+      }
+      console.log(vm.htmlIntros);
     };
   }
 })();

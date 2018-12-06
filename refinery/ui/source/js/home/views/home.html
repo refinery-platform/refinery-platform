@@ -1,8 +1,11 @@
 <div>
   <div class="row p-t-1">
     <div class="col-md-7">
-      {{ $ctrl.introParagraph }}
-      {{ $ctrl.wtf }}
+      <ul class="list-unstyled">
+        <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
+          <p ng-bind-html="htmlIntro"></p>
+        </li>
+      </ul>
     </div>
     <div class="col-md-5">
        <rp-data-set-chart></rp-data-set-chart>
