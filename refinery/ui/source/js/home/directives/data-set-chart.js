@@ -16,7 +16,7 @@
   function rpDataSetChart ($window) {
     return {
       restrict: 'AE',
-      controller: 'DataSetChartCtrl as $ctrl',
+      controller: 'DataSetChartCtrl as DSCtrl',
       templateUrl: function () {
         return $window.getStaticUrl('partials/home/partials/data-set-chart.html');
       },
