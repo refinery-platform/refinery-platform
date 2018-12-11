@@ -27,9 +27,8 @@
       expect(ctrl).toBeDefined();
     });
 
-    it('sets view method twitterId', function () {
+    it('sets view data twitterId', function () {
       ctrl.$onInit();
-      console.log(ctrl);
       expect(ctrl.twitterId).toEqual(window.djangoApp.refineryTwitter);
     });
   });
