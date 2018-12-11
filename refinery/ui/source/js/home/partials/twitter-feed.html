@@ -1,0 +1,16 @@
+<div>
+  <div class="refinery-header">
+    <h3>
+      News from {{ $ctrl.twitterId }}
+    </h3>
+  </div>
+  <a class="twitter-timeline"
+    ng-href="https://twitter.com/{{ $ctrl.twitterId }}"
+    data-width="500"
+    data-height="300"
+    data-tweet-limit="1"
+    data-chrome="transparent noheader nofooter noborders">
+  </a>
+
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
