@@ -172,11 +172,6 @@ variable "refinery_s3_user_data" {
   default     = "false"
 }
 
-variable "refinery_video" {
-  description = "URL for refinery tutorial video"
-  default = ""
-}
-
 variable "refinery_user_files_columns" {
   default = "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 }
