@@ -10,13 +10,14 @@
     .module('refineryHome')
     .controller('HomeCtrl', HomeCtrl);
 
-  HomeCtrl.$inject = ['MarkdownJS', '$window'];
+  HomeCtrl.$inject = ['_', 'MarkdownJS', '$window'];
 
-  function HomeCtrl (MarkdownJS, $window) {
+  function HomeCtrl (_, MarkdownJS, $window) {
     var vm = this;
 
     vm.$onInit = function () {
-      if ($window.djangoApp && $window.djangoApp.refineryIntro.length) {
+      var djangoApp = $window.djangoApp;
+      if (_.has(djangoApp, 'refineryIntro') && djangoApp.refineryIntro.length) {
         var introParagraphs = $window.djangoApp.refineryIntro.split('   ');
         vm.htmlIntros = [];
         for (var i = 0; i < introParagraphs.length; i++) {
