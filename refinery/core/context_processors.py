@@ -71,4 +71,6 @@ def extra_context(context):
         "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS,
         "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY":
             settings.REFINERY_GOOGLE_RECAPTCHA_SITE_KEY,
+        "REFINERY_TWITTER": settings.REFINERY_TWITTER,
+        "REFINERY_VIDEOS": settings.REFINERY_VIDEOS,
     }

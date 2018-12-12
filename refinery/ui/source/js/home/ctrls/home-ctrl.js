@@ -10,20 +10,18 @@
     .module('refineryHome')
     .controller('HomeCtrl', HomeCtrl);
 
-  HomeCtrl.$inject = ['$', 'MarkdownJS', '$window'];
+  HomeCtrl.$inject = ['_', 'MarkdownJS', '$window'];
 
-  function HomeCtrl ($, MarkdownJS, $window) {
+  function HomeCtrl (_, MarkdownJS, $window) {
     var vm = this;
-    vm.videoIds = ['rdTkUVJYaE0', 'Dd2oZAZJ0-c', 'a11GSabhDfs'];
 
     vm.$onInit = function () {
-      if ($window.djangoApp) {
-        if ($window.djangoApp.refineryIntro.length) {
-          var introParagraphs = $window.djangoApp.refineryIntro.split('   ');
-          vm.htmlIntros = [];
-          for (var i = 0; i < introParagraphs.length; i++) {
-            vm.htmlIntros[i] = MarkdownJS.toHTML(introParagraphs[i]);
-          }
+      var djangoApp = $window.djangoApp;
+      if (_.has(djangoApp, 'refineryIntro') && djangoApp.refineryIntro.length) {
+        var introParagraphs = $window.djangoApp.refineryIntro.split('   ');
+        vm.htmlIntros = [];
+        for (var i = 0; i < introParagraphs.length; i++) {
+          vm.htmlIntros[i] = MarkdownJS.toHTML(introParagraphs[i]);
         }
         // vm.homeVideoUrl = '';
         // if ($window.djangoApp.refineryVideo.length) {
