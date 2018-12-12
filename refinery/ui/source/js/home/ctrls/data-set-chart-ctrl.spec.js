@@ -17,7 +17,7 @@
       });
     }));
 
-    it('HomeCtrl ctrl should exist', function () {
+    it('DataSetChartCtrl ctrl should exist', function () {
       expect(ctrl).toBeDefined();
     });
 

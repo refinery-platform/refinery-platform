@@ -9,6 +9,7 @@
   angular
     .module('refineryHome')
     .component('rpHome', {
+      controller: 'HomeCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/home/views/home.html');
       }]

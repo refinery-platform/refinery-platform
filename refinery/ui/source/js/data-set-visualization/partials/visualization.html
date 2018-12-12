@@ -80,27 +80,27 @@
                 </span>
               </a>
           </div>
-           <div class="col-md-2">
+           <div class="col-md-2 p-b-1-3">
               <span ng-if="!vis.is_running">
                 <button
                   class="btn btn-primary btn-xs"
                   ng-disabled="$ctrl.visRelaunchList[vis.uuid]"
                   ng-click="$ctrl.relaunchTool(vis)">
-                  Relaunch
+                  <i class="fa fa-repeat"></i>
                 </button>
                 <span ng-show="$ctrl.visRelaunchList[vis.uuid]"><em>Pending</em></span>
               </span>
               <span ng-if="vis.is_running">
                 <a
-                  class="refinery-base btn btn-default btn-xs"
+                  class="btn btn-primary btn-xs"
                   ng-href="{{ vis.container_url }}" target="_blank">
-                  View
+                  <i class="fa fa-eye"></i>
                 </a>
               </span>
               <button
                 class="btn btn-danger btn-xs"
                 ng-click="$ctrl.deleteTool(vis)">
-                Delete
+                <i class="fa fa-trash-o"></i>
               </button>
           </div>
         </div>

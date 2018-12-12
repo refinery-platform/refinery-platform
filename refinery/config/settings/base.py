@@ -617,6 +617,12 @@ REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
 
+REFINERY_INTRO = get_setting("REFINERY_INTRO")
+
+REFINERY_TWITTER = get_setting("REFINERY_TWITTER")
+
+REFINERY_VIDEOS = get_setting("REFINERY_VIDEOS")
+
 USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 

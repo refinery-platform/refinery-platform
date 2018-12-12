@@ -1717,27 +1717,23 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
  * @date    2016-9-28
  */
 DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
-  var analysisDeleteDialogUrl = this.$window.getStaticUrl(
-    'partials/dashboard/partials/analysis-delete-dialog.html'
-  );
+  var that = this;
   this.$uibModal.open({
     backdrop: 'static',
     keyboard: false,
-    templateUrl: analysisDeleteDialogUrl,
-    controller: 'AnalysisDeleteCtrl as modal',
+    component: 'rpAnalysisDeleteModal',
     resolve: {
       config: function () {
         return {
-          model: 'analyses',
-          uuid: analysis.uuid
+          analysis: analysis
         };
-      },
-      analysis: analysis,
-      analyses: this.analyses,
-      dataSets: this.dataSets,
-      analysesReloadService: this.dashboardAnalysesReloadService,
-      isOwner: analysis.is_owner
+      }
     }
+  }).result.then(function () {
+    that.dataSets.newOrCachedCache(undefined, true);
+    that.dashboardDataSetsReloadService.reload(true);
+    that.analyses.newOrCachedCache(undefined, true);
+    that.dashboardAnalysesReloadService.reload();
   });
 };
 

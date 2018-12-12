@@ -52,6 +52,8 @@ locals {
 module "object_storage" {
   source           = "../modules/s3"
   bucket_name_base = "${local.s3_bucket_name_base}"
+  origin_protocol  = "${var.ssl_certificate_id == "" ? "http" : "https"}"
+  origin_domain    = "${var.site_domain}"
   tags             = "${local.tags}"
 }
 
@@ -125,7 +127,10 @@ module "web" {
   refinery_google_analytics_id         = "${var.refinery_google_analytics_id}"
   refinery_google_recaptcha_site_key   = "${var.refinery_google_recaptcha_site_key}"
   refinery_google_recaptcha_secret_key = "${var.refinery_google_recaptcha_secret_key}"
+  refinery_intro                       = "${var.refinery_intro}"
   refinery_s3_user_data                = "${var.refinery_s3_user_data}"
+  refinery_twitter                     = "${var.refinery_twitter}"
+  refinery_videos                      = "${var.refinery_videos}"
   refinery_welcome_email_subject       = "${var.refinery_welcome_email_subject}"
   refinery_welcome_email_message       = "${var.refinery_welcome_email_message}"
   refinery_user_files_columns          = "${var.refinery_user_files_columns}"

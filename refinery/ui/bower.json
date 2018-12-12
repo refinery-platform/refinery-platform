@@ -55,7 +55,8 @@
     "filesize": "3.3.0",
     "angular-local-storage": "0.5.2",
     "intro.js": "2.4.0",
-    "angular-intro.js": "2.1.2"
+    "angular-intro.js": "2.1.2",
+    "markdown": "0.5.0"
   },
   "resolutions": {
     "d3": "3.5.16",

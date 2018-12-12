@@ -1,8 +1,8 @@
 <div>
   <ui-select
     append-to-body="true"
-    ng-model="$ctrl.selectedAttribute.select"
-    on-select="$ctrl.updateAttribute($item)"
+    ng-model="DSCtrl.selectedAttribute.select"
+    on-select="DSCtrl.updateAttribute($item)"
     theme="select2"
     class="text-left p-l-1 p-b-1">
      <ui-select-match placeholder="Select an attribute">
@@ -10,7 +10,7 @@
      </ui-select-match>
     <ui-select-choices
       position="down"
-      repeat="attribute in $ctrl.attributes | orderBy:'name' track by $index">
+      repeat="attribute in DSCtrl.attributes | orderBy:'name' track by $index">
       <span ng-bind-html="attribute.name"></span>
     </ui-select-choices>
   </ui-select>
