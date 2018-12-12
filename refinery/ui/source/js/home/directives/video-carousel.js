@@ -35,7 +35,7 @@
               playerVars: {
                 controls: 2,
                 rel: 0,
-               // autohide: 1,
+                autohide: 1,
                 showinfo: 0,
                 modestbranding: 1,
                 wmode: 'transparent',
@@ -49,12 +49,10 @@
         }
 
         scope.navPrev = function () {
-          console.log('navPrev');
           carouselDiv.carousel('prev').trigger('slide');
         };
 
         scope.navNext = function () {
-          console.log('navnext');
           carouselDiv.carousel('next').trigger('slide');
         };
 
