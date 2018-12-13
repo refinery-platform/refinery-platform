@@ -23,10 +23,6 @@
         for (var i = 0; i < introParagraphs.length; i++) {
           vm.htmlIntros[i] = MarkdownJS.toHTML(introParagraphs[i]);
         }
-        // vm.homeVideoUrl = '';
-        // if ($window.djangoApp.refineryVideo.length) {
-        //  vm.homeVideoUrl = $window.djangoApp.refineryVideo;
-        // }
       }
     };
   }
