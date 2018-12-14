@@ -1,10 +1,11 @@
-<div>
+<div id="home-chart">
   <ui-select
+    id="home-ui-select"
     append-to-body="true"
     ng-model="DSCtrl.selectedAttribute.select"
     on-select="DSCtrl.updateAttribute($item)"
     theme="select2"
-    class="text-left p-l-1 p-b-1">
+    class="text-left">
      <ui-select-match placeholder="Select an attribute">
        {{$select.selected.name }}
      </ui-select-match>

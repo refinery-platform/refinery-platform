@@ -1,14 +1,13 @@
-<div>
+<div id="home-twitter-feed">
   <div class="refinery-header">
     <h3 class="m-l-1-2 p-l-1-3">
-      News from {{ $ctrl.twitterId }}
+      News from <a ng-href="https://www.twitter.com/{{ $ctrl.twitterId }}">
+      @{{ $ctrl.twitterId }} </a>
     </h3>
   </div>
   <a class="twitter-timeline"
     ng-href="https://twitter.com/{{ $ctrl.twitterId }}"
-    data-width="500"
-    data-height="300"
-    data-tweet-limit="1"
+    data-tweet-limit="10"
     data-chrome="transparent noheader nofooter noborders">
   </a>
 
