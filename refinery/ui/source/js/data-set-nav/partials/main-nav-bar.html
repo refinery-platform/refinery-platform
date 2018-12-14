@@ -1,6 +1,6 @@
 <div class="navbar-text pull-right" id="navbar-right">
   <!--add pointer-->
-  <a href="/dashboard"
+  <a href="/dashboard" tabindex=1
     ng-class="{'navLinkDisabled':'dashboard'===$ctrl.path, 'pointer':'dashboard'===$ctrl.path}">
     <i id="refinery-logout" class="fa fa-tachometer icon-only"></i>&nbsp;
     <span id="dashboard-icon-text">
@@ -8,8 +8,9 @@
     </span>
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
+
   <span>
-   <a rp-analysis-monitor-global-status-tooltip-hider tabindex=8>
+   <a rp-analysis-monitor-global-status-tooltip-hider tabindex=2>
      <span>
        <rp-analysis-monitor-global-status>
        </rp-analysis-monitor-global-status>
@@ -17,38 +18,39 @@
    </a>
   </span>
   &nbsp;&nbsp;&nbsp;&nbsp;
+
   <a
    class="pointer"
    popover-placement="bottom"
    popover-trigger="'outsideClick'"
-   uib-popover-template="dynamicPopover.templateUrl">
+   uib-popover-template="dynamicPopover.templateUrl"
+   tabindex=2>
    <i class="fa fa-question-circle"></i>
    <span id="help-icon-text">
       Tutorial
    </span>
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
+
   <a href="/about"
-   ng-class="{'navLinkDisabled':'about'===$ctrl.path, 'pointer':'about'===$ctrl.path}">
+   ng-class="{'navLinkDisabled':'about'===$ctrl.path, 'pointer':'about'===$ctrl.path}"
+   tabindex=3>
      <i id="refinery-logout" class="fa fa-info-circle icon-only"></i>&nbsp;
     About
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
 
-  <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
-     tabindex=5>
-    <i class="fa fa-user"></i>
-    <span id="login-name-icon-text">
-      Guest Guest
-    </span>
-  </a>&nbsp;&nbsp;&nbsp;&nbsp;
-
-  <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
-     tabindex=5>
-   <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
-    <span id="logout-icon-text">
-      Logout
-    </span>
-  </a>
-
+  <span id="user-nav">
+    <a id="refinery-user" href="{% url "user" user.profile.uuid %}" tabindex=4>
+      <i class="fa fa-user"></i>
+      <span id="login-name-icon-text">
+        Guest Guest
+      </span>
+    </a>
+    <a href="{% url "user" user.profile.uuid %}" tabindex=5>
+      <span id="logout-icon-text">
+        <i class="fa fa-caret-down"></i>
+      </span>
+    </a>
+  </span>
 </div>
