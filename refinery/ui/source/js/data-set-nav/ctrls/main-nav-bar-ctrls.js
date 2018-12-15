@@ -12,12 +12,14 @@
     .controller('MainNavBarCtrl', MainNavBarCtrl);
 
   MainNavBarCtrl.$inject = [
-    '$location'
+    '$location',
+    'settings'
   ];
 
 
   function MainNavBarCtrl (
-    $location
+    $location,
+    settings
   ) {
     var vm = this;
     vm.path = '';
@@ -42,12 +44,14 @@
       } else {
         vm.path = '';
       }
+
+      vm.userProfileUUID = settings.djangoApp.userprofileUUID;
+
+      if (settings.djangoApp.userFullName.length) {
+        vm.userName = settings.djangoApp.userFullName;
+      } else {
+        vm.userName = settings.djangoApp.userName;
+      }
     }
-    /**
-     * @name navLeft
-     * @desc  Updates the current group when user navigates
-     * @memberOf refineryToolLaunch.InputControlCtrl
-     * @param {int} depth - group nav index
-    **/
   }
 })();
