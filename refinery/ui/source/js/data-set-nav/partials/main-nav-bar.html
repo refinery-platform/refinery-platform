@@ -44,14 +44,18 @@
 
   <span id="user-nav">
     <span ng-if="!$ctrl.userProfileUUID.length">
-      <a href="/accounts/register" tabindex=4>
+      <a href="/accounts/register"
+        ng-class="{'navLinkDisabled':'register'===$ctrl.path, 'pointer':'dashboard'===$ctrl.path}"
+        tabindex=4>
         <i class="fa fa-pencil"></i>
         <span>
           Register
         </span>
       </a>
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <a href="/accounts/login/?next=/" tabindex=5>
+      <a href="/accounts/login/?next=/"
+        ng-class="{'navLinkDisabled':'login'===$ctrl.path, 'pointer':'dashboard'===$ctrl.path}"
+        tabindex=5>
         <i class="fa fa-sign-in"></i>
         <span>
           Login
@@ -60,6 +64,7 @@
     </span>
     <span ng-if="$ctrl.userProfileUUID.length">
       <a id="refinery-user"
+        ng-class="{'navLinkDisabled':'users'===$ctrl.path, 'pointer':'dashboard'===$ctrl.path}"
         ng-href="/users/{{ $ctrl.userProfileUUID }}"
         class="p-r-1-3"
         tabindex=4>

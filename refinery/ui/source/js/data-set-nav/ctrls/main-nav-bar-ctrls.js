@@ -41,6 +41,8 @@
         vm.path = 'login';
       } else if (absUrl.indexOf('accounts/register') > -1) {
         vm.path = 'register';
+      } else if (absUrl.indexOf('users') > -1) {
+        vm.path = 'users';
       } else {
         vm.path = '';
       }
