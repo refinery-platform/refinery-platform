@@ -32,6 +32,23 @@
    * ---------------------------------------------------------
    */
     function activate () {
+      getCurrentPath();
+
+      vm.userProfileUUID = settings.djangoApp.userprofileUUID;
+
+      if (settings.djangoApp.userFullName.length) {
+        vm.userName = settings.djangoApp.userFullName;
+      } else {
+        vm.userName = settings.djangoApp.userName;
+      }
+    }
+
+    /**
+     * @name getCurrentPath
+     * @desc  Private method to get current path and set view path variable
+     * @memberOf refineryDataSetNav.refineryDataSetNav
+    **/
+    function getCurrentPath () {
       var absUrl = $location.absUrl();
       if (absUrl.indexOf('dashboard') > -1) {
         vm.path = 'dashboard';
@@ -45,14 +62,6 @@
         vm.path = 'users';
       } else {
         vm.path = '';
-      }
-
-      vm.userProfileUUID = settings.djangoApp.userprofileUUID;
-
-      if (settings.djangoApp.userFullName.length) {
-        vm.userName = settings.djangoApp.userFullName;
-      } else {
-        vm.userName = settings.djangoApp.userName;
       }
     }
   }
