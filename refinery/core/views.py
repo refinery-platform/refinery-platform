@@ -50,7 +50,7 @@ from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, SiteStatistics,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, EventSerializer,
+from .serializers import (DataSetSerializer, EventSerializer, UserSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations)
 
@@ -1036,6 +1036,14 @@ class OpenIDToken(APIView):
         token["Region"] = settings.REFINERY_AWS_REGION
 
         return Response(token)
+
+
+class UserViewSet(APIView):
+    http_method_Names = ["get"]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserProfileViewSet(APIView):

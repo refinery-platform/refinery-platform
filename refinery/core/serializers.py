@@ -86,7 +86,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ('primary_group', 'uuid')
+        fields = ('affiliation', 'has_viewed_launchpad_tut',
+                  'has_viewed_data_upload_tut', 'has_viewed_collaboration_tut',
+                  'primary_group', 'uuid')
 
     def validate_primary_group(self, group):
         user = self.context.get('request').user
@@ -119,7 +121,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'profile', 'username')
+        fields = ('first_name', 'id', 'last_name', 'profile', 'username')
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):

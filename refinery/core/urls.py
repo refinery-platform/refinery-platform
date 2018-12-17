@@ -10,8 +10,8 @@ from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    OpenIDToken, UserProfileViewSet, WorkflowViewSet,
-                    site_statistics)
+                    OpenIDToken, UserProfileViewSet, UserViewSet,
+                    WorkflowViewSet, site_statistics)
 
 urlpatterns = patterns(
     'core.views',
@@ -70,6 +70,7 @@ core_router.register(r'workflows', WorkflowViewSet)
 core_router.urls.extend([
     url(r'^data_sets/$', DataSetsViewSet.as_view()),
     url(r'^events/$', EventViewSet.as_view()),
+    url(r'^user/$', UserViewSet.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         UserProfileViewSet.as_view()),
     url(r'^data_sets/(?P<uuid>' + UUID_RE + r')/$',
