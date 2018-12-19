@@ -1,7 +1,9 @@
 from __future__ import division
+import contextlib
 import os
 from tempfile import NamedTemporaryFile
 import threading
+import urllib2
 import urlparse
 
 from django.conf import settings
@@ -39,6 +41,10 @@ class FileImportTask(celery.Task):
             self.update_state(state=celery.states.FAILURE,
                               meta='Failed to import file')
             raise celery.exceptions.Ignore()
+
+        if item.datafile:
+            logger.info("Import stopped: data file '%s' already exists", item)
+            return
 
         # exit if an import task is already running for this file
         if item.import_task_id:
@@ -118,6 +124,9 @@ class FileImportTask(celery.Task):
         """Import file from an absolute file system path into MEDIA_BUCKET"""
         storage = S3MediaStorage()
         file_store_name = storage.get_name(os.path.basename(source_path))
+
+        logger.debug("Transferring from '%s' to 's3://%s/%s'",
+                     source_path, settings.MEDIA_BUCKET, file_store_name)
         try:
             with open(source_path, 'rb') as source_file_object:
                 upload_file_object(
@@ -125,11 +134,14 @@ class FileImportTask(celery.Task):
                     ProgressPercentage(source_path, self.request.id)
                 )
         except EnvironmentError as exc:
-            raise RuntimeError("Error copying '{}': {}".format(source_path,
-                                                               exc))
+            raise RuntimeError("Error copying from '{}': {}".format(
+                source_path, exc))
 
         if source_path.startswith(get_temp_dir()):
             delete_file(source_path)
+
+        logger.info("Finished transferring from '%s' to 's3://%s/%s'",
+                    source_path, settings.MEDIA_BUCKET, file_store_name)
 
         return file_store_name
 
@@ -195,29 +207,26 @@ class FileImportTask(celery.Task):
 
     def import_url_to_s3(self, source_url):
         """Download file from URL and upload to MEDIA_BUCKET"""
+        storage = S3MediaStorage()
+        # remove query string from URL before extracting file name
+        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        file_store_name = storage.get_name(source_file_name)
+
+        logger.debug("Transferring from '%s' to 's3://%s/%s'",
+                     source_url, settings.MEDIA_BUCKET, file_store_name)
         try:
-            request_response = requests.get(source_url, stream=True)
-            request_response.raise_for_status()
-        except requests.exceptions.RequestException as exc:
-            raise RuntimeError("Error downloading from '{}': '{}'".format(
-                               source_url, exc))
-        with NamedTemporaryFile(dir=get_temp_dir()) as temp_file:
-            download_file_object(
-                request_response, temp_file, ProgressPercentage(
-                    source_url, self.request.id, 0, 50
+            with contextlib.closing(urllib2.urlopen(source_url, timeout=30)) \
+                    as response:
+                upload_file_object(
+                    response, settings.MEDIA_BUCKET, file_store_name,
+                    ProgressPercentage(source_url, self.request.id)
                 )
-            )
-            temp_file.seek(0)
-            storage = S3MediaStorage()
-            # remove query string from URL before extracting file name
-            source_file_name = os.path.basename(
-                urlparse.urlparse(source_url).path
-            )
-            file_store_name = storage.get_name(source_file_name)
-            upload_file_object(
-                temp_file, settings.MEDIA_BUCKET, file_store_name,
-                ProgressPercentage(temp_file.name, self.request.id, 50, 100)
-            )
+        except urllib2.URLError as exc:
+            raise RuntimeError("Error downloading from '{}': '{}'".format(
+                source_url, exc))
+        logger.info("Finished transferring from '%s' to 's3://%s/%s'",
+                    source_url, settings.MEDIA_BUCKET, file_store_name)
+
         return file_store_name
 
 
@@ -246,8 +255,7 @@ class ProgressPercentage(object):
             FileImportTask().update_state(
                 self._import_task_id, state='PROGRESS', meta={
                     'percent_done': '{:.0f}'.format(percentage),
-                    'current': self._seen_so_far,
-                    'total': self._file_size
+                    'current': self._seen_so_far, 'total': self._file_size
                 }
             )
 

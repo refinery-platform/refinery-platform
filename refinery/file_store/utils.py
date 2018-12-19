@@ -281,19 +281,13 @@ def symlink_file(source_path, link_path):
 
 
 def upload_file_object(source, bucket, key, progress_report=lambda _: None):
-    """Upload file from source path to S3 bucket and report progress"""
+    """Upload file-like object to S3 and report progress"""
     s3 = boto3.client('s3')
-    logger.debug("Started uploading from '%s' to 's3://%s/%s'",
-                 source.name, bucket, key)
     try:
         s3.upload_fileobj(source, bucket, key, ExtraArgs=S3_WRITE_ARGS,
                           Callback=progress_report)
     except (EnvironmentError, botocore.exceptions.ClientError,
             botocore.exceptions.ParamValidationError) as exc:
         raise RuntimeError(
-            "Error uploading from '{}' to 's3://{}/{}': {}".format(
-                source.name, bucket, key, exc
-            )
+            "Error uploading to 's3://{}/{}': {}".format(bucket, key, exc)
         )
-    logger.info("Finished uploading from '%s' to 's3://%s/%s'",
-                source.name, bucket, key)
