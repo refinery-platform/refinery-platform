@@ -1039,9 +1039,14 @@ class OpenIDToken(APIView):
 
 
 class UserViewSet(APIView):
+    """API endpoint for returning the request user's info and profile."""
     http_method_Names = ["get"]
 
     def get(self, request):
+        if request.user.is_anonymous():
+            return Response("Anonymous user, please log in.",
+                            status=status.HTTP_401_UNAUTHORIZED)
+
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

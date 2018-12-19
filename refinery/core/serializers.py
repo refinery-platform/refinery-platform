@@ -1,6 +1,8 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth.models import Group
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -82,7 +84,14 @@ class DataSetSerializer(serializers.ModelSerializer):
         return instance
 
 
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'name')
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
+    primary_group = GroupSerializer(read_only=True)
 
     class Meta:
         model = UserProfile
