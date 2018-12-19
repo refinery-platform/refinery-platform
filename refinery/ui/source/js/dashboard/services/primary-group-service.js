@@ -34,7 +34,7 @@
     function setPrimaryGroup (group) {
       var userProfile = userProfileV2Service.partial_update({
         uuid: currentUserService.currentUser.profile.uuid,
-        primary_group: group.id
+        primary_group_id: group.id
       });
       return userProfile.$promise;
     }

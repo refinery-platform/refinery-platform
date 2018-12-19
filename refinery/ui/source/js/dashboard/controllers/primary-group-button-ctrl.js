@@ -55,8 +55,7 @@
     **/
     function updatePrimaryGroup (group) {
       primaryGroupService.setPrimaryGroup(group).then(function (response) {
-        console.log(response);
-        // vm.primaryGroup = primaryGroupService.primaryGroup;
+        vm.primaryGroup = response.primary_group;
       });
     }
 
