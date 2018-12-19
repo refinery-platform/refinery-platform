@@ -1,7 +1,7 @@
 /**
  * Current User Service
  * @namespace currentUserService
- * @desc Service which gets the current user's profile.
+ * @desc Service which gets and stores the current user's profile.
  * @memberOf refineryApp
  */
 (function () {
@@ -19,14 +19,21 @@
     $q,
     settings
   ) {
+    // expected api structure
     var anonUser = {
-      id: 0, username: '', profile: { uuid: '', primary_group: { id: '', name: '' } },
-      first_name: '', last_name: '',
-      launchpad_tut_viewed: 'False', data_upload_tut_viewed: 'False',
+      id: null,
+      name: '',
+      username: '',
+      profile: { uuid: '' },
+      primary_group: { id: null, name: '' },
+      has_viewed_collaboration_tut: false,
+      has_viewed_data_upload_tut: false,
+      has_viewed_launchpad_tut: false
     };
     var currentUser = anonUser;
 
     var service = {
+      anonUser: anonUser,
       currentUser: currentUser,
       getCurrentUser: getCurrentUser
     };
@@ -45,7 +52,7 @@
     function getCurrentUser () {
       var userId = settings.djangoApp.userId;
       var def = $q.defer();
-      if (currentUser.id !== userId && userId !== 0) {
+      if (currentUser.id !== userId && userId !== anonUser.id) {
         return $http({
           method: 'GET',
           url: settings.refineryApiV2 + '/user/'
@@ -54,7 +61,7 @@
         }, function (error) {
           $log.error(error);
         });
-      } else if (userId === 0) {
+      } else if (userId === anonUser.id) {
         currentUser = anonUser;
       }
       def.resolve(currentUser);

@@ -87,19 +87,21 @@ class DataSetSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
+        fields = ('id', 'name')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     primary_group = GroupSerializer(read_only=True)
     # need to update a seperate field due to serializers defaults read-only
     primary_group_id = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(), source='primary_group', write_only=True)
+        queryset=Group.objects.all(), source='primary_group', write_only=True
+    )
 
     class Meta:
         model = UserProfile
-        fields = ('affiliation', 'has_viewed_launchpad_tut',
-                  'has_viewed_data_upload_tut', 'has_viewed_collaboration_tut',
-                  'primary_group', 'primary_group_id', 'uuid')
+        fields = ('has_viewed_collaboration_tut', 'has_viewed_data_upload_tut',
+                  'has_viewed_launchpad_tut', 'primary_group',
+                  'primary_group_id', 'uuid')
 
     def validate_primary_group(self, group):
         user = self.context.get('request').user
@@ -111,7 +113,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             )
 
         if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:
-            return group.id
+            return group
         else:
             raise serializers.ValidationError('Primary group can not be '
                                               'the Public group')

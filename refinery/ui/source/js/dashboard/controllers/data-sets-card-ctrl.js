@@ -49,7 +49,6 @@
     vm.pageStartOffset = 0;
     vm.pageChangedUpdate = pageChangedUpdate;
     vm.params = { limit: vm.itemsPerPage, offset: vm.pageStartOffset };
-    console.log(currentUserService.currentUser);
     vm.primaryGroupID = currentUserService.currentUser.profile.primary_group.id;
     vm.refreshDataSets = refreshDataSets;
     vm.resetDataSetSearch = resetDataSetSearch;

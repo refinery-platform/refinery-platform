@@ -15,14 +15,14 @@
     '$scope',
     '_',
     'currentUserService',
-    'primaryGroupService'
+    'userProfileV2Service'
   ];
 
   function PrimaryGroupButtonCtrl (
     $scope,
     _,
     currentUserService,
-    primaryGroupService
+    userProfileV2Service
   ) {
     var vm = this;
     vm.filterDataSet = filterDataSet;
@@ -54,8 +54,11 @@
      * @param {obj} group - contains group name and id
     **/
     function updatePrimaryGroup (group) {
-      primaryGroupService.setPrimaryGroup(group).then(function (response) {
-        vm.primaryGroup = response.primary_group;
+      userProfileV2Service.partial_update({
+        uuid: currentUserService.currentUser.profile.uuid,
+        primary_group_id: group.id
+      }).$promise.then(function (response) {
+        angular.copy(response.primary_group, vm.primaryGroup);
       });
     }
 

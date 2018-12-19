@@ -12,7 +12,7 @@ function AboutDetailsCtrl (
   fileRelationshipService
   ) {
   var vm = this;
-  vm.loggedIn = currentUserService.currentUser.id !== 0;
+  vm.loggedIn = currentUserService.currentUser !== currentUserService.anonUser;
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetImportStatus = 'NONE';
