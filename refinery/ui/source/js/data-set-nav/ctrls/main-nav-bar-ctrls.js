@@ -13,16 +13,22 @@
 
   MainNavBarCtrl.$inject = [
     '$location',
-    'settings'
+    '$scope',
+    'currentUserService',
   ];
 
 
   function MainNavBarCtrl (
     $location,
-    settings
+    $scope,
+    currentUserService
   ) {
     var vm = this;
     vm.path = '';
+    vm.currentUser = currentUserService.currentUser;
+    vm.userProfileUUID = vm.currentUser.profile.uuid;
+    vm.fullName = vm.currentUser.first_name + ' ' + vm.currentUser.last_name;
+    vm.userName = vm.currentUser.username;
 
     activate();
 
@@ -33,14 +39,6 @@
    */
     function activate () {
       getCurrentPath();
-
-      vm.userProfileUUID = settings.djangoApp.userprofileUUID;
-
-      if (settings.djangoApp.userFullName.length) {
-        vm.userName = settings.djangoApp.userFullName;
-      } else {
-        vm.userName = settings.djangoApp.userName;
-      }
     }
 
     /**
@@ -64,5 +62,19 @@
         vm.path = '';
       }
     }
+
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return currentUserService.currentUser;
+        },
+        function () {
+          vm.currentUser = currentUserService.currentUser;
+          vm.userProfileUUID = vm.currentUser.profile.uuid;
+          vm.fullName = vm.currentUser.first_name + vm.currentUser.last_name;
+          vm.userName = vm.currentUser.username;
+        }
+      );
+    };
   }
 })();

@@ -19,8 +19,8 @@
     '$window',
     '_',
     'DataSetSearchApi',
-    'dataSetCardFactory',
-    'primaryGroupService'
+    'currentUserService',
+    'dataSetCardFactory'
   ];
 
   function DataSetsCardCtrl (
@@ -30,8 +30,8 @@
     $window,
     _,
     DataSetSearchApi,
-    dataSetCardFactory,
-    primaryGroupService
+    currentUserService,
+    dataSetCardFactory
   ) {
     var vm = this;
     vm.currentPage = 1;
@@ -49,7 +49,8 @@
     vm.pageStartOffset = 0;
     vm.pageChangedUpdate = pageChangedUpdate;
     vm.params = { limit: vm.itemsPerPage, offset: vm.pageStartOffset };
-    vm.primaryGroupID = primaryGroupService.primaryGroup.id;
+    console.log(currentUserService.currentUser);
+    vm.primaryGroupID = currentUserService.currentUser.profile.primary_group.id;
     vm.refreshDataSets = refreshDataSets;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
@@ -266,10 +267,10 @@
 
       $scope.$watchCollection(
         function () {
-          return primaryGroupService.primaryGroup;
+          return currentUserService.currentUser.profile.primary_group;
         },
-        function () {
-          vm.primaryGroupID = primaryGroupService.primaryGroup.id;
+        function (updatedGroup) {
+          vm.primaryGroupID = updatedGroup.id;
         }
       );
     };

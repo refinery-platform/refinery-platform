@@ -1,6 +1,16 @@
 'use strict';
 
-function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings) {
+function AppCtrl (
+  $,
+  $scope,
+  $rootScope,
+  $timeout,
+  $window,
+  _,
+  currentUserService,
+  pubSub,
+  settings
+) {
   this.$window = $window;
   this.jqWindow = $($window);
   this.$ = $;
@@ -61,13 +71,13 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   $scope.isntOnHomepage = location.pathname !== '/';
 
   $scope.tutorials_viewed = {
-    launchpad: settings.djangoApp.launchpad_tut_viewed,
-    data_upload: settings.djangoApp.data_upload_tut_viewed
+    launchpad: currentUserService.currentUser.launchpad_tut_viewed,
+    data_upload: currentUserService.currentUser.data_upload_tut_viewed
   };
 
   $scope.currentCommit = settings.djangoApp.currentCommit;
 
-  $scope.uuid = settings.djangoApp.userprofileUUID;
+  $scope.uuid = currentUserService.currentUser.profile.uuid;
 
   $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
 
@@ -82,6 +92,22 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
     content: 'These are some helpful tutorials to guide you through Refinery!',
     templateUrl: tutorialPopoverUrl
   };
+
+  $scope.$watch(
+    function () {
+      return settings.djangoApp.userId;
+    },
+    function () {
+      // update user info when user changes
+      currentUserService.getCurrentUser().then(function () {
+        $scope.uuid = currentUserService.currentUser.profile.uuid;
+        $scope.tutorials_viewed = {
+          launchpad: currentUserService.currentUser.has_viewed_launchpad_tut,
+          data_upload: currentUserService.currentUser.has_viewed_data_upload_tut
+        };
+      });
+    }
+  );
 }
 
 AppCtrl.prototype.globalClick = function ($event) {
@@ -97,6 +123,7 @@ angular
     '$timeout',
     '$window',
     '_',
+    'currentUserService',
     'pubSub',
     'settings',
     AppCtrl

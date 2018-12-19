@@ -5,14 +5,14 @@ function AboutDetailsCtrl (
   $log,
   $scope,
   $window,
+  currentUserService,
   dataSetAboutFactory,
   dataSetPermsService,
   dataSetTakeOwnershipService,
   fileRelationshipService
   ) {
   var vm = this;
-  vm.loggedIn = typeof $window.djangoApp !== 'undefined' &&
-      typeof $window.djangoApp.userName !== 'undefined';
+  vm.loggedIn = currentUserService.currentUser.id !== 0;
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetImportStatus = 'NONE';
@@ -134,6 +134,7 @@ angular
     '$log',
     '$scope',
     '$window',
+    'currentUserService',
     'dataSetAboutFactory',
     'dataSetPermsService',
     'dataSetTakeOwnershipService',

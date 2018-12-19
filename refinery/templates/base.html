@@ -28,13 +28,6 @@
     window.djangoApp = {
       debug: {{ DEBUG|yesno:"true,false,undefined" }},
       userId: '{{ user.id }}',
-      userName: '{{ user.username }}',
-      userFullName: '{{ user.first_name }} {{ user.last_name }}',
-      userprofileUUID: '{{ user.profile.uuid|escapejs }}',
-      userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
-      userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
-      launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
-      data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
@@ -50,9 +43,8 @@
       deploymentPlatform: '{{ REFINERY_DEPLOYMENT_PLATFORM }}'
     };
 
-    if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
+    if (window.djangoApp.userId === 'None') {
       window.djangoApp.userId = undefined;
-      window.djangoApp.userName = undefined;
     }
   </script>
 

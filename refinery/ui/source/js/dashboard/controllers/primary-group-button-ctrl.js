@@ -14,17 +14,19 @@
   PrimaryGroupButtonCtrl.$inject = [
     '$scope',
     '_',
+    'currentUserService',
     'primaryGroupService'
   ];
 
   function PrimaryGroupButtonCtrl (
     $scope,
     _,
+    currentUserService,
     primaryGroupService
   ) {
     var vm = this;
     vm.filterDataSet = filterDataSet;
-    vm.primaryGroup = primaryGroupService.primaryGroup;
+    vm.primaryGroup = currentUserService.currentUser.profile.primary_group;
     vm.primaryGroupButton = { selected: false };
     vm.updatePrimaryGroup = updatePrimaryGroup;
 
@@ -52,8 +54,9 @@
      * @param {obj} group - contains group name and id
     **/
     function updatePrimaryGroup (group) {
-      primaryGroupService.setPrimaryGroup(group).then(function () {
-        vm.primaryGroup = primaryGroupService.primaryGroup;
+      primaryGroupService.setPrimaryGroup(group).then(function (response) {
+        console.log(response);
+        // vm.primaryGroup = primaryGroupService.primaryGroup;
       });
     }
 
@@ -92,6 +95,13 @@
           }
         }
       );
+      $scope.$watchCollection(
+        function () {
+          return currentUserService.currentUser.profile.primary_group;
+        },
+        function (updatedGroup) {
+          vm.primaryGroup = updatedGroup;
+        });
     };
   }
 })();

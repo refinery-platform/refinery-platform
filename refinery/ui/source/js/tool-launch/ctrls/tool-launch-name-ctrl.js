@@ -15,7 +15,7 @@
     '$log',
     '$scope',
     '_',
-    'settings',
+    'currentUserService',
     'toolParamsService',
     'toolSelectService'
   ];
@@ -24,7 +24,7 @@
     $log,
     $scope,
     _,
-    settings,
+    currentUserService,
     toolParamsService,
     toolSelectService
   ) {
@@ -33,7 +33,7 @@
     vm.selectedTool = {};
     vm.toolType = '';
     vm.updateToolLaunchName = updateToolLaunchName;
-    vm.userName = settings.djangoApp.userName;
+    vm.userName = currentUserService.currentUser.username;
 
     /*
      * ---------------------------------------------------------
