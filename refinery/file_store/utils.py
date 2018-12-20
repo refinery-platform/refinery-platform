@@ -1,7 +1,9 @@
+import contextlib
 import logging
 import os
 import shutil
 import stat
+import urllib2
 import urlparse
 
 from django.conf import settings
@@ -12,7 +14,6 @@ from django.utils.text import get_valid_filename
 
 import boto3
 import botocore
-import requests
 from storages.backends.s3boto3 import S3Boto3Storage
 
 logger = logging.getLogger(__name__)
@@ -215,14 +216,11 @@ def get_file_size(file_location):
             return UNKNOWN_FILE_SIZE
     else:
         try:
-            response = requests.head(file_location)
-            response.raise_for_status()
-        except requests.exceptions.RequestException:
+            with contextlib.closing(urllib2.urlopen(file_location,
+                                                    timeout=30)) as response:
+                return int(response.info().getheader('Content-Length'))
+        except (urllib2.URLError, TypeError):
             return UNKNOWN_FILE_SIZE
-        else:
-            # Content-Length header is optional, so provide a default value
-            return int(response.headers.get('Content-Length',
-                                            UNKNOWN_FILE_SIZE))
 
 
 def make_dir(path):
