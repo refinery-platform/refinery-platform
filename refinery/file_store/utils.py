@@ -155,8 +155,7 @@ def get_file_size(file_location):
         bucket, key = parse_s3_url(file_location)
         try:
             return s3.head_object(Bucket=bucket, Key=key)['ContentLength']
-        except (botocore.exceptions.ClientError,
-                botocore.exceptions.ParamValidationError):
+        except botocore.exceptions.BotoCoreError:
             return UNKNOWN_FILE_SIZE
     else:
         try:
