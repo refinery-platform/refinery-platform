@@ -201,7 +201,7 @@ class FileStoreItem(models.Model):
                 try:
                     copy_s3_object(storage.bucket_name, self.datafile.name,
                                    storage.bucket_name, new_file_store_name)
-                except RuntimeError as exc:
+                except botocore.exceptions.BotoCoreError as exc:
                     logger.error("Renaming datafile '%s' failed: %s",
                                  self.datafile.name, exc)
                 else:
@@ -220,6 +220,8 @@ class FileStoreItem(models.Model):
                 else:
                     self.datafile.name = new_file_store_name
                     self.save()
+            logger.info("Renamed datafile '%s' to '%s'",
+                        self.datafile.name, new_name)
         else:
             logger.error(
                 "Error renaming datafile of FileStoreItem with UUID '%s': "
