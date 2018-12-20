@@ -76,8 +76,8 @@ PUBLIC_ACCESS
   }
 
   lifecycle_rule {
-    id      = "Delete non-current object versions and expired delete markers"
-    enabled = true
+    id                                     = "Delete non-current object versions and expired delete markers"
+    enabled                                = true
     # delete results of interrupted FileImportTask operations
     abort_incomplete_multipart_upload_days = 1
     expiration {
