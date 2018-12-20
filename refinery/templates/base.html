@@ -44,11 +44,12 @@
     };
 
     if (window.djangoApp.userId === 'None') {
-      window.djangoApp.userId = undefined;
+      window.djangoApp.userId = null;
     }
   </script>
 
   {% block head_html %}
+    <link href="{% static 'styles/dashboard.css' %}" rel="stylesheet">
   {% endblock %}
 
   <title>{{ REFINERY_INSTANCE_NAME }}{% block title %}{% endblock %}</title>
@@ -116,7 +117,6 @@
       </a>
       </div>
       <rp-main-nav-bar></rp-main-nav-bar>
-
     </div>
     </div>
   </div>
@@ -147,6 +147,7 @@
       </div>
     </div>
     {% block content %}
+      <ng-view></ng-view>
     {% endblock %}
   </div>
 

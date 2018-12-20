@@ -4,7 +4,6 @@ function AboutSharingCtrl (
   dataSetPermsService,
   userService,
   $scope,
-  $location,
   $window,
   $log,
   _
@@ -50,7 +49,6 @@ angular
     'dataSetPermsService',
     'userService',
     '$scope',
-    '$location',
     '$window',
     '$log',
     '_',

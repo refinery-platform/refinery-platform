@@ -1,7 +1,7 @@
 /**
  * Main Nav Bar Component
  * @namespace rpMainNavBar
- * @desc Main navbar compoenent for the base template
+ * @desc Main navbar component for the base template
  * @memberOf refineryApp.refineryDataSetNav
  */
 (function () {

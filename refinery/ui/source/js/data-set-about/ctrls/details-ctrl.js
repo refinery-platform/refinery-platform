@@ -1,7 +1,6 @@
 'use strict';
 
 function AboutDetailsCtrl (
-  $location,
   $log,
   $scope,
   $window,
@@ -130,7 +129,6 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutDetailsCtrl',
   [
-    '$location',
     '$log',
     '$scope',
     '$window',
