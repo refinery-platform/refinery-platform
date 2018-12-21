@@ -12,14 +12,14 @@
     beforeEach(inject(function (
       $componentController,
       $rootScope,
-      primaryGroupService
+      userProfileV2Service
     ) {
       scope = $rootScope.$new();
 
       $ctrl = $componentController('rpPrimaryGroupButton', { $scope: scope });
       $ctrl.filterCtrl = $componentController('rpDataSetsCard', { $scope: scope });
       spyParentFilter = spyOn($ctrl.filterCtrl, 'filterDataSets');
-      service = primaryGroupService;
+      service = userProfileV2Service;
     }));
 
     it('PrimaryGroupButtonCtrl should exist', function () {
@@ -74,10 +74,12 @@
 
       it('updatePrimaryGroup calls on correct service', function () {
         var mockResponse = false;
-        var serviceMock = spyOn(service, 'setPrimaryGroup').and.callFake(function () {
+        var serviceMock = spyOn(service, 'partial_update').and.callFake(function () {
           return {
-            then: function () {
-              mockResponse = true;
+            $promise: {
+              then: function () {
+                mockResponse = true;
+              }
             }
           };
         });

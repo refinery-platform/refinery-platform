@@ -22,10 +22,13 @@
     // expected api structure
     var anonUser = {
       id: null,
-      name: '',
       username: '',
-      profile: { uuid: '' },
-      primary_group: { id: null, name: '' },
+      first_name: '',
+      last_name: '',
+      profile: {
+        uuid: '',
+        primary_group: { id: null, name: '' }
+      },
       has_viewed_collaboration_tut: false,
       has_viewed_data_upload_tut: false,
       has_viewed_launchpad_tut: false
