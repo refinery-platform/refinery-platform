@@ -3,7 +3,7 @@
 
   describe('rpMainNavBar component unit test', function () {
     beforeEach(module('refineryApp'));
-    beforeEach(module('refineryDataSetNav'));
+    beforeEach(module('refineryMainNavBar'));
 
     var directiveElement;
 

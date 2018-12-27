@@ -8,7 +8,7 @@
   'use strict';
 
   angular
-    .module('refineryDataSetNav')
+    .module('refineryMainNavBar')
     .controller('MainNavBarCtrl', MainNavBarCtrl);
 
   MainNavBarCtrl.$inject = [

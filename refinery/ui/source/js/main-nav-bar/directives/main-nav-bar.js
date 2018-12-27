@@ -7,11 +7,11 @@
 (function () {
   'use strict';
   angular
-    .module('refineryDataSetNav')
+    .module('refineryMainNavBar')
     .component('rpMainNavBar', {
       controller: 'MainNavBarCtrl',
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/data-set-nav/partials/main-nav-bar.html');
+        return $window.getStaticUrl('partials/main-nav-bar/partials/main-nav-bar.html');
       }]
     });
 })();

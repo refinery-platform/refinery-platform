@@ -7,7 +7,7 @@
     var service;
 
     beforeEach(module('refineryApp'));
-    beforeEach(module('refineryDataSetNav'));
+    beforeEach(module('refineryMainNavBar'));
     beforeEach(inject(function (
       $rootScope,
       $controller,
