@@ -103,7 +103,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   'has_viewed_launchpad_tut', 'primary_group',
                   'primary_group_id', 'uuid')
 
-    def validate_primary_group(self, group):
+    def validate_primary_group_id(self, group):
         user = self.context.get('request').user
         if user.id in group.user_set.values_list('id', flat=True):
             pass

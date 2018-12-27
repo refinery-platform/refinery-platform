@@ -14,7 +14,7 @@
       $window
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/data-set-nav/partials/main-nav-bar.html'),
+        $window.getStaticUrl('partials/main-nav-bar/partials/main-nav-bar.html'),
         '<div id="main-nav-bar"></div>'
       );
       var scope = $rootScope.$new();

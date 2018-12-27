@@ -31,7 +31,7 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    UserProfileViewSet, WorkflowViewSet)
+                    UserViewSet, UserProfileViewSet, WorkflowViewSet)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -937,6 +937,31 @@ class WorkflowApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.content, self.mock_workflow_graph)
 
 
+class UserApiV2Tests(APIV2TestCase):
+    def setUp(self, **kwargs):
+        super(UserApiV2Tests, self).setUp(
+            api_base_name="user/",
+            view=UserViewSet.as_view()
+        )
+        self.user_lm = User.objects.create_user('lab_member',
+                                                'member@fake.com',
+                                                self.password)
+        self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
+        self.lab_group.user_set.add(self.user_lm)
+
+    def test_get_returns_current_user(self):
+        get_request = self.factory.get(self.url_root)
+        get_request.user = self.user_lm
+        force_authenticate(get_request, user=self.user_lm)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data.get('id'), self.user_lm.id)
+
+    def test_get_returns_401_for_anon_user(self):
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 401)
+
+
 class UserProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(UserProfileApiV2Tests, self).setUp(
@@ -954,7 +979,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def test_patch_primary_group_returns_success_status(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.user_lm.profile.uuid),
-            {"primary_group": self.lab_group.id}
+            {"primary_group_id": self.lab_group.id}
         )
         patch_request.user = self.user_lm
         force_authenticate(patch_request, user=self.user_lm)
@@ -964,18 +989,18 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def test_patch_primary_group_returns_success_group_id(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.user_lm.profile.uuid),
-            {"primary_group": self.lab_group.id}
+            {"primary_group_id": self.lab_group.id}
         )
         patch_request.user = self.user_lm
         force_authenticate(patch_request, user=self.user_lm)
         patch_response = self.view(patch_request, self.user_lm.profile.uuid)
-        self.assertEqual(patch_response.data.get('primary_group'),
+        self.assertEqual(patch_response.data.get('primary_group').get('id'),
                          self.lab_group.id)
 
     def test_patch_primary_group_success_updates_profile(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.user_lm.profile.uuid),
-            {"primary_group": self.lab_group.id}
+            {"primary_group_id": self.lab_group.id}
         )
         patch_request.user = self.user_lm
         force_authenticate(patch_request, user=self.user_lm)
@@ -986,7 +1011,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def test_patch_primary_group_returns_unauthorized_for_anon_user(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.user_lm.profile.uuid),
-            {"primary_group": self.lab_group.id}
+            {"primary_group_id": self.lab_group.id}
         )
         patch_response = self.view(patch_request, self.user_lm.profile.uuid)
         self.assertEqual(patch_response.status_code, 401)
@@ -994,7 +1019,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def test_patch_primary_group_returns_bad_request_for_invalid_group(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.user_lm.profile.uuid),
-            {"primary_group": 0}
+            {"primary_group_id": 0}
         )
         patch_request.user = self.user_lm
         force_authenticate(patch_request, user=self.user_lm)
@@ -1004,7 +1029,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def test_patch_primary_group_returns_bad_request_for_non_member(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.user_lm.profile.uuid),
-            {"primary_group": self.non_lab_group.id}
+            {"primary_group_id": self.non_lab_group.id}
         )
         patch_request.user = self.user_lm
         force_authenticate(patch_request, user=self.user_lm)
@@ -1114,8 +1139,8 @@ class EventApiV2Tests(APIV2TestCase):
 
 class CustomRegistrationViewTests(TestCase):
     @override_settings(
-        REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",  # noqa: E251
-        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"  # noqa: E251
+        REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",  # noqa: E501
+        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"  # noqa: E501
     )
     def test_user_registration_successful_recaptcha(self):
         username = "new-test-user"
