@@ -105,7 +105,8 @@
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
         "svgxuse/svgxuse.min.js",
-        "aws-sdk-js/dist/aws-sdk.min.js"
+        "aws-sdk-js/dist/aws-sdk.min.js",
+        "markdown/lib/markdown.js"
       ],
       "maps": [
         "angular/angular.min.js.map",

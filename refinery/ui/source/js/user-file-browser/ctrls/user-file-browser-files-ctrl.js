@@ -11,6 +11,7 @@
     '$log',
     '$q',
     '$scope',
+    '$window',
     '_',
     'userFileBrowserFactory',
     'userFileFiltersService',
@@ -25,6 +26,7 @@
       $log,
       $q,
       $scope,
+      $window,
       _,
       userFileBrowserFactory,
       userFileFiltersService,
@@ -35,6 +37,8 @@
     var vm = this;
     vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
     vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
+    vm.downloadCsv = downloadCsv;
+    vm.downloadCsvQuery = downloadCsvQuery;
 
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
@@ -96,37 +100,35 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
-    vm.downloadCsvQuery = function () {
+
+    /**
+     * @name downloadCsv
+     * @desc  VM method used to interact with the `/files_download`
+     * endpoint to get a .csv
+     * @memberOf UserFileBrowserFilesCtrl
+    **/
+    function downloadCsv () {
+      $window.location.href = '/files_download?' + downloadCsvQuery();
+    }
+
+    /**
+     * @name downloadCsvQuery
+     * @desc  VM method used to construct the query parameters to be sent
+     * to the `/files_download` endpoint
+     * @memberOf UserFileBrowserFilesCtrl
+    **/
+    function downloadCsvQuery () {
       return $httpParamSerializer({
-        fq: createFacetQuery(),
+        filter_attribute: userFileFiltersService,
         sort: userFileParamsService.sort(),
         limit: 100000000
       });
-    };
-    vm.downloadCsvPath = function () {
-      return '/files_download?' + vm.downloadCsvQuery();
-    };
-    vm.downloadCsvUrl = function () {
-      return $location.protocol() + '://'
-        + $location.host() + ':' + $location.port()
-        + vm.downloadCsvPath();
-    };
+    }
+
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
     };
-
-    // helper method to create facet query for solr
-    function createFacetQuery () {
-      var filters = Object.keys(userFileFiltersService).map(function (internalName) {
-        var fields = userFileFiltersService[internalName];
-        var queryStr = fields.map(function (field) {
-          return '(' + internalName + ':' + '"' + field + '")';
-        }).join(' OR ');
-        return ('(') + queryStr + (')');
-      });
-      return filters.join(' AND ');
-    }
 
     $scope.$watchCollection(
       function () {

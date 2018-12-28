@@ -18,6 +18,8 @@ from django.test import TestCase, override_settings
 
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
+
+from core.utils import get_absolute_url
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_mock_hg_19_data_set,
                                create_mock_isatab_9909_data_set,
@@ -1590,7 +1592,9 @@ class NodeIndexTests(APITestCase):
                                return_value='/media/file_store/test_file.txt'):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_download_url=get_absolute_url(
+                    self.file_store_item.get_datafile_url()
+                ),
                 expected_datafile=self.file_store_item.datafile
             )
 
@@ -1660,7 +1664,9 @@ class NodeIndexTests(APITestCase):
                                return_value='/media/file_store/test.txt'):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_download_url=get_absolute_url(
+                    self.file_store_item.get_datafile_url()
+                ),
                 expected_filetype=self.file_store_item.filetype,
                 expected_datafile=self.file_store_item.datafile
             )
@@ -1687,7 +1693,9 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(INPUT_CONNECTION, False)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_download_url=get_absolute_url(
+                    self.file_store_item.get_datafile_url()
+                ),
                 expected_datafile=self.file_store_item.datafile
             )
 
@@ -1699,7 +1707,9 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(INPUT_CONNECTION, True)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_download_url=get_absolute_url(
+                    self.file_store_item.get_datafile_url()
+                ),
                 expected_datafile=self.file_store_item.datafile
             )
 
@@ -1718,7 +1728,9 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_download_url=get_absolute_url(
+                    self.file_store_item.get_datafile_url()
+                ),
                 expected_datafile=self.file_store_item.datafile
             )
 

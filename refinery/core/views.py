@@ -35,6 +35,9 @@ from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import APIException
 from rest_framework.pagination import LimitOffsetPagination
@@ -1114,3 +1117,15 @@ def site_statistics(request, **kwargs):
             )
         )
     return response
+
+
+class ObtainAuthTokenValidSession(ObtainAuthToken):
+    """
+    Allow authenticated Users to obtain a DRF API V2 auth token
+    """
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        token, created = Token.objects.get_or_create(user=request.user)
+        return JsonResponse({'token': token.key})

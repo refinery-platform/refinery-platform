@@ -13,4 +13,6 @@ angular
   .constant('bootbox', window.bootbox)
   .constant('SparkMD5', window.SparkMD5)
   .constant('ListGraphVis', window.ListGraph)
+  .constant('MarkdownJS', window.markdown)
+  .constant('YouTube', window.YT)
   .constant('angular-intro', window['angular-intro']);

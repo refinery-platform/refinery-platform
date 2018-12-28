@@ -14,6 +14,7 @@
       'dndLists',
       'ui.grid',
       'ui.grid.autoResize',
+      'ui.grid.exporter',
       'ui.grid.infiniteScroll',
       'ui.grid.pinning',
       'ui.grid.resizeColumns',

@@ -29,10 +29,13 @@
       debug: {{ DEBUG|yesno:"true,false,undefined" }},
       userId: '{{ user.id }}',
       admins: '{{ ADMIN_EMAIL|safe }}',
+      refineryIntro: '{{ REFINERY_INTRO }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
+      refineryTwitter: '{{ REFINERY_TWITTER }}',
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
+      refineryVideos: '{{ REFINERY_VIDEOS }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
       satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }},
       staticUrl: '{{ STATIC_URL|escapejs }}',
@@ -174,6 +177,7 @@
   <script src="{% static "vendor/filesize/lib/filesize.min.js" %}"></script>
   <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script src="{% static "vendor/lodash-migrate/dist/lodash-migrate.min.js" %}"></script>
+  <script src="{% static "vendor/markdown/lib/markdown.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.

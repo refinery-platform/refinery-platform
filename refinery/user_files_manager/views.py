@@ -6,13 +6,22 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from rest_framework.authentication import (SessionAuthentication,
+                                           TokenAuthentication)
+
+from rest_framework.decorators import (api_view, authentication_classes,
+                                       permission_classes)
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from unidecode import unidecode
 
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.utils import format_solr_response, search_solr
+from data_set_manager.utils import (format_solr_response,
+                                    generate_solr_params_for_assay,
+                                    search_solr)
+
 
 from .utils import generate_solr_params_for_user
 
@@ -24,8 +33,16 @@ def user_files(request):
                               context_instance=RequestContext(request))
 
 
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def user_files_csv(request):
-    solr_response = _get_solr(request.GET, request.user.id)
+    assay_uuid = request.GET.get("assay_uuid")
+    if assay_uuid is not None:
+        solr_params = generate_solr_params_for_assay(request.GET, assay_uuid)
+        solr_response = search_solr(solr_params, 'data_set_manager')
+    else:
+        solr_response = _get_solr(request.GET, request.user.id)
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="user-files.csv"'

@@ -4,7 +4,7 @@ amqplib==1.0.2
 bioblend==0.9.0
 boto3==1.4.4
 celery==3.1.20
-certifi==2015.4.28
+certifi==2018.11.29
 cffi==1.9.1
 codecov==2.0.11
 coverage==4.0.3
@@ -53,7 +53,7 @@ python-magic==0.4.6
 python-memcached==1.57
 PyYAML==3.11
 readline==6.2.2
-requests==2.7.0
+requests==2.21.0
 six==1.10.0
 sqlparse==0.1.19
 supervisor==3.1.3

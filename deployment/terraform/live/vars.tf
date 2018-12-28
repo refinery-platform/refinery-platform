@@ -162,10 +162,26 @@ variable "refinery_google_recaptcha_secret_key" {
   default     = ""
 }
 
+variable "refinery_intro" {
+  description = "Mark-down to be displayed in the intro paragraph on the landing page."
+  default = "The refinery platform is for managing, analyzing, and visualizing data."
+}
+
 variable "refinery_s3_user_data" {
   description = "Whether or not to use S3 as user data file storage backend"
   default     = "false"
 }
+
+variable "refinery_twitter" {
+  description = "Twitter account to stream on intro page."
+  default     = ""
+}
+
+variable "refinery_videos" {
+  description = "Introduction and tutorial youtube video ids seperated by a comma."
+  default     = ""
+}
+
 variable "refinery_user_files_columns" {
   default = "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 }
