@@ -99,6 +99,10 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryDataSetAbout')).toEqual(true);
     });
 
+    it('should have "refineryMainNavBar" as a dependency', function () {
+      expect(hasModule('refineryMainNavBar')).toEqual(true);
+    });
+
     it('should have "refineryToolLaunch" as a dependency', function () {
       expect(hasModule('refineryToolLaunch')).toEqual(true);
     });

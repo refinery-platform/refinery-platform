@@ -2,7 +2,7 @@
  * Main Nav Bar Ctrl
  * @namespace MainNavBarCtrl
  * @desc Controller for main nav bar.
- * @memberOf refineryApp.refineryDataSetNav
+ * @memberOf refineryApp.refineryMainNavBar
  */
 (function () {
   'use strict';
@@ -44,7 +44,7 @@
     /**
      * @name getCurrentPath
      * @desc  Private method to get current path and set view path variable
-     * @memberOf refineryDataSetNav.refineryDataSetNav
+     * @memberOf refineryMainNavBar.getCurrentPath
     **/
     function getCurrentPath () {
       var absUrl = $location.absUrl();

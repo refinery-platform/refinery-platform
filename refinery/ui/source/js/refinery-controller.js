@@ -48,6 +48,25 @@ function AppCtrl (
     }
   );
 
+  $rootScope.$on('$reloadlessStateChangeSuccess', function () {
+    $timeout(function () {
+      if ($window.ga) {
+        var hash = $window.location.hash;
+        var path = $window.location.pathname;
+
+        if (hash.length > 2) {
+          path = path + hash;
+        }
+
+        $window.ga(
+          'send',
+          'pageview',
+          path
+        );
+      }
+    }, 0);
+  });
+
   $scope.isOnHomepage = location.pathname === '/';
   $scope.isntOnHomepage = location.pathname !== '/';
 

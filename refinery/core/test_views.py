@@ -947,8 +947,6 @@ class UserApiV2Tests(APIV2TestCase):
         self.user_lm = User.objects.create_user('lab_member',
                                                 'member@fake.com',
                                                 self.password)
-        self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
-        self.lab_group.user_set.add(self.user_lm)
 
     def test_get_returns_current_user(self):
         get_request = self.factory.get(self.url_root)
