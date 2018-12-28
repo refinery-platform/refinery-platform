@@ -71,7 +71,7 @@
         function () {
           vm.currentUser = currentUserService.currentUser;
           vm.userProfileUUID = vm.currentUser.profile.uuid;
-          vm.fullName = vm.currentUser.first_name + vm.currentUser.last_name;
+          vm.fullName = vm.currentUser.first_name + ' ' + vm.currentUser.last_name;
           vm.userName = vm.currentUser.username;
         }
       );
