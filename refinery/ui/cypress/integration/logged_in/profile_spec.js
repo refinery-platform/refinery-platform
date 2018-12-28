@@ -1,6 +1,7 @@
 describe('Profile', function() {
   it('Has profile', function() {
     cy.login_guest();
+    cy.get('.fa-user')
     cy.visible('GuestFirst GuestLast').click();
 
     cy.visible('Profile for guest');
