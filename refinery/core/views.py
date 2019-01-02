@@ -61,8 +61,12 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
+    return render(request, 'core/home.html')
+
+
+def explore(request):
     return render_to_response(
-        'core/home.html',
+        'core/explore.html',
         {
             'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
             'main_container_no_padding': True,
@@ -70,10 +74,6 @@ def home(request):
         },
         context_instance=RequestContext(request)
     )
-
-
-def home_v2(request):
-    return render(request, 'core/home_v2.html')
 
 
 def about(request):

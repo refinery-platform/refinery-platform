@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}
+{{ block.super }} - Home
+{% endblock %}
+
+{% block head_html %}
+<link href="{% static 'vendor/d3-list-graph/dist/listGraph.min.css' %}" rel="stylesheet">
+<link href="{% static 'styles/animate.css' %}" rel="stylesheet">
+<link href="{% static 'styles/treemap.css' %}" rel="stylesheet">
+<link href="{% static 'styles/dashboard.css' %}" rel="stylesheet">
+
+<script type="text/javascript">
+  // Global variables for the JavaScript world
+  window.djangoApp.numOntologiesImported = {{ num_ontologies_imported }};
+  window.djangoApp.publicGroupId = {{ public_group_id }};
+</script>
+{% endblock %}
+
+{% block subheader %}
+  <div class="page-header">
+    <h1>
+      Launch Pad
+    {% if user.is_authenticated %}
+      <small>
+        {% if user.first_name != "" or user.last_name != "" %}
+          {{ user.first_name }} {{ user.last_name }}
+        {% else %}
+          {{ user.username }}
+        {% endif %}
+      </small>
+      <div id="user-id" style="display:none;">{{ user.id }}</div>
+    {% endif %}
+  </h1>
+  </div>
+{% endblock %}
+
+{% block content %}
+{% if users %}
+  <!-- only super users get to see this -->
+  <!--
+  <h2>Users ({{ users|length}})</h2>
+    <ul>
+    {% for user in users %}
+        <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.profile.affiliation }}): {{ user.email }}</li>
+    {% endfor %}
+    </ul>
+   -->
+{% endif %}
+
+<div
+  class="refinery-dashboard"
+  ng-controller="DashboardCtrl as dashboard"
+  ui-view>
+</div>
+
+{% endblock %}
+
+{% block vendor_scripts_pre_d3_v3 %}
+  <script type="text/javascript" src="{% static "vendor/d3-v4/d3.min.js" %}"></script>
+  <script type="text/javascript">
+    window.d3V4 = d3;
+  </script>
+  <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/d3.listGraph.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/d3-list-graph/dist/listGraph.min.js" %}"></script>
+{% endblock %}
+
+{% block vendor_scripts %}
+  <script type="text/javascript" src="{% static "vendor/jquery-mousewheel/jquery.mousewheel.min.js" %}"></script>
+{% endblock %}
