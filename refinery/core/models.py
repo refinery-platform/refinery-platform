@@ -758,7 +758,6 @@ class DataSet(SharableResource):
         return bool(InvestigationLink.objects.filter(data_set=self))
 
     def get_nodes(self, assay=None, study=None):
-
         return Node.objects.filter(
             assay=assay or self.get_latest_assay(),
             study=study or self.get_latest_study()
