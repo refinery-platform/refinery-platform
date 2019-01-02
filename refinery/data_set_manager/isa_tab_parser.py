@@ -276,6 +276,8 @@ class IsaTabParser:
         self._current_file = None
         self._current_file_name = None
 
+        self.ontology_source_reference_data = []
+
     def _split_header(self, header):
         return [x.strip() for x in header.replace("]", "").strip().split("[")]
 
@@ -736,6 +738,15 @@ class IsaTabParser:
                     self._current_investigation = model_instance
                 if section_title == "STUDY":
                     self._current_study = model_instance
+            else:
+                # Ontology Source References are often come across first in
+                # the investigation file before the INVESTIGATION section.
+                # This means that we won't have an Investigation instance to
+                # satisfy the foreignKey of Ontology here. We'll temporarily
+                #  store the information we're parsing and create the
+                # Ontology instances after we have an Investigation
+                self.ontology_source_reference_data.append(model_parameters)
+
         # create an investigation even if no information is provided
         # (all fields empty, no tab after any field name)
         if columns == 0:
@@ -1045,6 +1056,13 @@ class IsaTabParser:
                 )
 
         self._current_investigation.save()
+
+        # Create Ontology instances now that we have an Investigation to
+        # associate them with
+        for ontology_params in self.ontology_source_reference_data:
+            ontology_params["investigation"] = self._current_investigation
+            Ontology.objects.create(**ontology_params)
+
         return self._current_investigation
 
     # Utility Functions
