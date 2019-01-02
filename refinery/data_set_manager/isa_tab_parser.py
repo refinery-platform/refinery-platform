@@ -90,8 +90,8 @@ class IsaTabParser:
             "model": Contact,
             "fields":
             {
-                "Investigation Person Last Name": "last_name",
                 "Investigation Person First Name": "first_name",
+                "Investigation Person Last Name": "last_name",
                 "Investigation Person Mid Initials": "middle_initials",
                 "Investigation Person Email": "email",
                 "Investigation Person Phone": "phone",
