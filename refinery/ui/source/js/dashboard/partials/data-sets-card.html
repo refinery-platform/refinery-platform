@@ -10,6 +10,7 @@
         </a>
         <!--ToDo: check perms first -->
         <a
+          ng-if="$ctrl.isLoggedIn"
           href="/data_set_manager/import/"
           class="btn btn-sm btn-primary p-l-1-2"
           id="import-button">
@@ -47,7 +48,7 @@
             name="searchQuery"
             ng-keyup="$event.keyCode == 13 ? $ctrl.searchDataSets($ctrl.searchQueryDataSets) : null">
       </div>
-      <div class="col-md-6 p-t-1-3">
+      <div class="col-md-6 p-t-1-3" ng-if="$ctrl.isLoggedIn">
         <rp-primary-group-button class="float-left p-r-1"></rp-primary-group-button>
         <div class="refinery-base btn btn-default btn-xs"
           ng-model="$ctrl.groupFilter['owned']"

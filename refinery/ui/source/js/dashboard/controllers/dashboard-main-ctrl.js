@@ -14,19 +14,23 @@
   DashboardMainCtrl.$inject = [
     'humanize',
     'groupInviteService',
-    'groupMemberService'
+    'groupMemberService',
+    'settings'
   ];
 
   function DashboardMainCtrl (
     humanize,
     groupInviteService,
-    groupMemberService
+    groupMemberService,
+    settings
   ) {
     var vm = this;
     vm.getGroups = getGroups;
     vm.groups = [];
     vm.groupInvites = {};
     vm.refreshEvents = false;
+    console.log(settings.djangoApp.userId);
+    vm.isLoggedIn = settings.djangoApp.userId !== undefined;
     activate();
 
     function activate () {

@@ -20,7 +20,8 @@
     '_',
     'DataSetSearchApi',
     'dataSetCardFactory',
-    'primaryGroupService'
+    'primaryGroupService',
+    'settings'
   ];
 
   function DataSetsCardCtrl (
@@ -31,7 +32,8 @@
     _,
     DataSetSearchApi,
     dataSetCardFactory,
-    primaryGroupService
+    primaryGroupService,
+    settings
   ) {
     var vm = this;
     vm.currentPage = 1;
@@ -40,6 +42,7 @@
     vm.filterDataSets = filterDataSets;
     vm.groupFilter = { selectedName: 'All' };
     vm.isFiltersEmpty = isFiltersEmpty;
+    vm.isLoggedIn = settings.djangoApp.userId !== undefined;
     vm.loadingDataSets = true;
     vm.numPages = 0;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
@@ -255,6 +258,11 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
+      if (!vm.isLoggedIn) {
+        vm.params.public = true;
+        vm.refreshDataSets();
+      }
+
       $scope.$watchCollection(
         function () {
           return vm.dashboardParentCtrl.groups;

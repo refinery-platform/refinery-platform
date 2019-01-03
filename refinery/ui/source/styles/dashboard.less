@@ -1930,6 +1930,12 @@ body.repo-mode .refinery-dashboard {
       border-bottom: 1px solid @gray-lighter-rgba;
     }
   }
+  .card-full-height {
+    height: @card-full-view !important;
+    .list-full-height {
+      height: ~"calc(@{card-full-view} - 42px)" !important;
+    }
+  }
 
   #dashboard-history-card {
     height: @card-bottom-half-view;
