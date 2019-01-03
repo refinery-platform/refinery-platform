@@ -43,7 +43,7 @@ class FileImportTask(celery.Task):
             raise celery.exceptions.Ignore()
 
         if item.datafile:
-            logger.info("Import stopped: data file '%s' already exists", item)
+            logger.info("Import canceled: data file '%s' already exists", item)
             return
 
         # exit if an import task is already running for this file
@@ -251,7 +251,7 @@ class FileImportTask(celery.Task):
                 )
         except (urllib2.URLError, botocore.exceptions.BotoCoreError) as exc:
             raise RuntimeError(
-                "Error transferring from '{}' to 's3://{}/{}': '{}'".format(
+                "Error transferring from '{}' to 's3://{}/{}': {}".format(
                     source_url, settings.MEDIA_BUCKET, file_store_name, exc
                 )
             )
