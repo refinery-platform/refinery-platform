@@ -125,14 +125,10 @@
         <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
       </a>
 
-        <button type="button" class="navbar-toggle collapsed"
-          data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
-          <span class="icon-bar"></span>
-        </button>
       </div>
 
       <div class="navbar-text pull-right" id="navbar-right">
-        <a href="/dashboard" class="pointer" tabindex=1>
+        <a href="/dashboard" class="pointer" tabindex=2>
           <i id="refinery-logout" class="fa fa-tachometer icon-only"></i>&nbsp;
           <span id="dashboard-icon-text">
             My Dashboard
@@ -140,7 +136,7 @@
         </a>
         &nbsp;&nbsp;&nbsp;&nbsp;
         <i class="fa fa-info-circle icon-only"></i>
-        <a href="{% url "about" %}" tabindex=4 class="pointer">About</a>
+        <a href="{% url "about" %}" tabindex=3 class="pointer">About</a>
       <!--   <a
            class="pointer"
            popover-placement="bottom"
@@ -154,11 +150,21 @@
          &nbsp;&nbsp;&nbsp;&nbsp;
          <span>
             <a rp-analysis-monitor-global-status-tooltip-hider
-              tabindex=8>
-               <span>
-                 <rp-analysis-monitor-global-status>
-                 </rp-analysis-monitor-global-status>
-               </span>
+              tabindex=4 class="pointer">
+              <a
+                uib-popover-template="'analysesgloballist.html'"
+                popover-trigger="'outsideClick'"
+                popover-title="Recent Analyses"
+                popover-append-to-body="true"
+                popover-placement="left"
+                popover-class="global-analysis-popover">
+                 <i class="fa fa-cogs pointer" id="global-analysis-status"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="left"
+                  title="View Recent Analyses"></i>
+                  Analyses
+               </a>
             </a>
          </span>
         &nbsp;&nbsp;&nbsp;&nbsp;
@@ -308,6 +314,15 @@
 
   {% block script %}
   {% endblock %}
+
+  <!-- Script for popup content in the tool status and analyses icon-->
+  <script type="text/ng-template" id="analysesgloballist.html">
+    <div>
+      <rp-analysis-monitor-global-status-popover>
+      </rp-analysis-monitor-global-status-popover>
+    </div>
+  </script>
+
 
   <script type="text/javascript">
     /**
