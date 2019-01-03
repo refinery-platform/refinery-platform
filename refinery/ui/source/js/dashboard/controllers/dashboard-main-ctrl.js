@@ -29,7 +29,6 @@
     vm.groups = [];
     vm.groupInvites = {};
     vm.refreshEvents = false;
-    console.log(settings.djangoApp.userId);
     vm.isLoggedIn = settings.djangoApp.userId !== undefined;
     activate();
 
