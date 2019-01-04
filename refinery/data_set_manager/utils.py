@@ -25,8 +25,8 @@ import core
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
-    Contact, Design, Factor, Node, Ontology, Protocol, ProtocolComponent,
-    ProtocolParameter, Publication, Study)
+    Contact, Design, Factor, Node, Ontology, Protocol, Publication, Study,
+    ProtocolComponent, ProtocolParameter)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 
@@ -1198,29 +1198,6 @@ class ISAToolsJSONCreator:
             )
           ]
 
-    def _create_components(self, protocol, study):
-        """
-        See: ProtocolComponent class
-            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2436
-        :param protocol:
-        :param study:
-        :return:
-        """
-        # TODO: Refinery has a ProtocolComponent class, but it is never used...
-        return [
-            {
-                "componentName": protocol_component.name,
-                "componentType": self._create_ontology_annotation(
-                    protocol_component.type, protocol_component.type_source,
-                    protocol_component.type_accession
-                ),
-
-            }
-            for protocol_component in ProtocolComponent.objects.filter(
-                protocol=protocol, study=study
-            )
-        ]
-
     def _create_datafiles(self, assay, study):
         datafiles = []
         for node in self.dataset.get_nodes(assay=assay, study=study):
@@ -1351,7 +1328,30 @@ class ISAToolsJSONCreator:
         """
         return []
 
-    def _create_protocol_parameters(self, protocol, study):
+    def _create_protocol_components(self, protocol):
+        """
+        See: ProtocolComponent class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2436
+        :param protocol:
+        :param study:
+        :return:
+        """
+        # TODO: Refinery has a ProtocolComponent class, but it is never used...
+        return [
+            {
+                "componentName": protocol_component.name,
+                "componentType": self._create_ontology_annotation(
+                    protocol_component.type, protocol_component.type_source,
+                    protocol_component.type_accession
+                ),
+
+            }
+            for protocol_component in ProtocolComponent.objects.filter(
+                protocol=protocol
+            )
+        ]
+
+    def _create_protocol_parameters(self, protocol):
         """
         See: ProtocolParameter class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L2283
@@ -1361,14 +1361,14 @@ class ISAToolsJSONCreator:
         """
         return [
             {
-                "@id": self._create_id("parameter", protocol.name),
+                "@id": self._create_id("parameter", protocol_parameter.name),
                 "parameterName": self._create_ontology_annotation(
                     protocol_parameter.name, protocol_parameter.name_source,
                     protocol_parameter.name_accession
                 ),
             }
             for protocol_parameter in ProtocolParameter.objects.filter(
-                protocol=protocol, study=study
+                protocol=protocol
             )
         ]
 
@@ -1391,9 +1391,8 @@ class ISAToolsJSONCreator:
                 "description": protocol.description,
                 "uri": protocol.uri,
                 "version": protocol.version,
-                "parameters": self._create_protocol_parameters(protocol,
-                                                               study),
-                "components": self._create_components(protocol, study),
+                "parameters": self._create_protocol_parameters(protocol),
+                "components": self._create_protocol_components(protocol),
 
             }
             for protocol in Protocol.objects.filter(study=study)
