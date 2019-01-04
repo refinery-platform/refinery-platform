@@ -1445,19 +1445,25 @@ class ISAToolsJSONCreator:
                 "characteristicCategories":
                     self._create_characteristic_categories(study),
                 "processSequence": self._create_process_sequence(study),
-                "unitCategories": self._create_unit_categories(study)
+                "unitCategories": self._create_unit_categories()
             }
             for study in Study.objects.filter(investigation=self.investigation)
         ]
 
-    def _create_unit_categories(self, study):
+    def _create_unit_categories(self):
         # TODO: Not sure where to get this information from
-        """
+        unit_categories = [
+            {
+                "@id": self._create_id("Unit", unit.value_unit),
+                "annotationValue": unit.value_unit,
+                "termAccession": unit.value_accession,
+                "termSource": unit.value_source
+            }
+            for unit in Attribute.objects.filter(value_unit__isnull=False)
+        ]
 
-        :param study:
-        :return:
-        """
-        return []
+        # Return a unique list of unit category dicts
+        return {d['@id']: d for d in unit_categories}.values()
 
     @staticmethod
     def _iso_format_date(date):

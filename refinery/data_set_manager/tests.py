@@ -1880,7 +1880,8 @@ class MetadataImportTestBase(IsaTabTestBase):
         self.test_user_directory = os.path.join(
             TEST_DATA_BASE_PATH, self.user.username
         )
-        os.mkdir(self.test_user_directory)
+        if not os.path.exists(self.test_user_directory):
+            os.mkdir(self.test_user_directory)
 
     def tearDown(self):
         with mock.patch.object(FileStoreItem, "terminate_file_import_task"):
