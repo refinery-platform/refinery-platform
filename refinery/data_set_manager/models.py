@@ -415,8 +415,6 @@ class Protocol(models.Model):
     type_source = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     uri = models.TextField(blank=True, null=True)
-    # protocol parameters: via FK
-    # protocol components: via FK
 
     def __unicode__(self):
         return unicode(self.name) + ": " + unicode(self.type)
@@ -426,7 +424,6 @@ class Protocol(models.Model):
 
 
 class ProtocolParameter(models.Model):
-    study = models.ForeignKey(Study)
     protocol = models.ForeignKey(Protocol)
     name = models.TextField(blank=True, null=True)
     name_accession = models.TextField(blank=True, null=True)
@@ -434,7 +431,6 @@ class ProtocolParameter(models.Model):
 
 
 class ProtocolComponent(models.Model):
-    study = models.ForeignKey(Study)
     protocol = models.ForeignKey(Protocol)
     name = models.TextField(blank=True, null=True)
     type = models.TextField(blank=True, null=True)
