@@ -22,7 +22,8 @@ import botocore
 from file_store.models import FileStoreItem
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
-                     ProtocolReferenceParameter, Publication, Study)
+                     ProtocolReferenceParameter, Publication, Study,
+                     ProtocolComponent, ProtocolParameter)
 from .utils import fix_last_column
 
 logger = logging.getLogger(__name__)
@@ -231,21 +232,17 @@ class IsaTabParser:
                 "Study Protocol Description": "description",
                 "Study Protocol URI": "uri",
                 "Study Protocol Version": "version",
-                # "Study Protocol Parameters Name": "parameter_name",
-                # TODO: should this be "Study Protocol Parameters Name
-                #  Accession Number"???
-                # "Study Protocol Parameters Name Term Accession Number":
-                #   "name_accession",
-                # TODO: should this be "Study Protocol Parameters Name Source
-                # REF"???
-                # "Study Protocol Parameters Name Term Source REF":
-                #   "name_source",
-                # "Study Protocol Components Name": "component_name",
-                # "Study Protocol Components Type": "component_type",
-                # "Study Protocol Components Type Term Accession Number":
-                #   "type_accession",
-                # "Study Protocol Components Type Term Source REF":
-                #   "type_source",
+                "Study Protocol Parameters Name": "parameter_name",
+                "Study Protocol Parameters Name Term Accession Number":
+                    "parameter_name_accession",
+                "Study Protocol Parameters Name Term Source REF":
+                    "parameter_name_source",
+                "Study Protocol Components Name": "component_name",
+                "Study Protocol Components Type": "component_type",
+                "Study Protocol Components Type Term Accession Number":
+                    "component_type_accession",
+                "Study Protocol Components Type Term Source REF":
+                    "component_type_source",
             },
             "references":
             {
@@ -731,14 +728,7 @@ class IsaTabParser:
                         pass
                         # TODO: log error referring to unknown reference_name
             # create model
-            if section_title != "ONTOLOGY SOURCE REFERENCE":
-                model_instance = model_class.objects.create(**model_parameters)
-                model_instance.save()
-                if section_title == "INVESTIGATION":
-                    self._current_investigation = model_instance
-                if section_title == "STUDY":
-                    self._current_study = model_instance
-            else:
+            if section_title == "ONTOLOGY SOURCE REFERENCE":
                 # Ontology Source References are often come across first in
                 # the investigation file before the INVESTIGATION section.
                 # This means that we won't have an Investigation instance to
@@ -746,6 +736,82 @@ class IsaTabParser:
                 #  store the information we're parsing and create the
                 # Ontology instances after we have an Investigation
                 self.ontology_source_reference_data.append(model_parameters)
+
+            else:
+                if section_title == "STUDY PROTOCOLS":
+                    protocol_parameter_names = model_parameters.pop(
+                        "parameter_name"
+                    ).split(";")
+                    protocol_parameter_name_term_accession_numbers = \
+                        model_parameters.pop(
+                            "parameter_name_accession"
+                        ).split(";")
+                    protocol_parameter_name_term_sources = \
+                        model_parameters.pop(
+                            "parameter_name_source"
+                        ).split(";")
+
+                    protocol_parameter_fields = zip(
+                        protocol_parameter_names,
+                        protocol_parameter_name_term_accession_numbers,
+                        protocol_parameter_name_term_sources
+                    )
+
+                    protocol_component_names = model_parameters.pop(
+                        "component_name"
+                    ).split(";")
+
+                    protocol_component_types = model_parameters.pop(
+                        "component_type"
+                    ).split(";")
+                    protocol_component_type_term_accession_numbers = \
+                        model_parameters.pop(
+                            "component_type_accession"
+                        ).split(";")
+                    protocol_component_type_term_sources = \
+                        model_parameters.pop(
+                            "component_type_source"
+                        ).split(";")
+
+                    protocol_component_fields = zip(
+                        protocol_component_names,
+                        protocol_component_types,
+                        protocol_component_type_term_accession_numbers,
+                        protocol_component_type_term_sources
+                    )
+
+                    protocol_instance = model_class.objects.create(
+                        **model_parameters
+                    )
+                    protocol_instance.save()
+
+                    for parameter_fields in protocol_parameter_fields:
+                        if not all(field == u"" for field in parameter_fields):
+                            ProtocolParameter.objects.create(
+                                protocol=protocol_instance,
+                                name=parameter_fields[0],
+                                name_accession=parameter_fields[1],
+                                name_source=parameter_fields[2]
+                            )
+
+                    for component_field in protocol_component_fields:
+                        if not all(field == u"" for field in component_field):
+                            ProtocolComponent.objects.create(
+                                protocol=protocol_instance,
+                                name=component_field[0],
+                                type=component_field[1],
+                                type_accession=component_field[2],
+                                type_source=component_field[3]
+                            )
+                else:
+                    model_instance = model_class.objects.create(
+                        **model_parameters
+                    )
+                    model_instance.save()
+                    if section_title == "INVESTIGATION":
+                        self._current_investigation = model_instance
+                    if section_title == "STUDY":
+                        self._current_study = model_instance
 
         # create an investigation even if no information is provided
         # (all fields empty, no tab after any field name)
