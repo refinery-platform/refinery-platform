@@ -1,37 +1,43 @@
-<div id="home-component">
-  <div class="row first-row">
-    <div class="col-md-6">
-      <ul id="home-intro" class="list-unstyled">
-        <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
-          <p ng-bind-html="htmlIntro"></p>
-        </li>
-      </ul>
-      <rp-video-carousel></rp-video-carousel>
-    </div>
-    <div class="col-md-6">
-      <rp-data-set-chart></rp-data-set-chart>
-      <div id="home-nav-buttons">
-        <a href="/accounts/register/"
-          class="btn btn-lg btn-primary nav-btn-series">
-          <i class="fa fa-user"></i> Register
-        </a>
-        <a href="/dashboard"
-          class="refinery-base btn btn-lg btn-default nav-btn-series">
-          <i class="fa fa-list"></i> View Data
-        </a>
-        <a href="/exploration"
-          class="refinery-base btn btn-lg btn-default nav-btn-series">
-          <i class="fa fa-compass"></i> Explore Data
-        </a>
+<div
+  class="refinery-panel refinery-panel-content jquery-full-height no-overflow"
+  id="home-component">
+  <div class="row">
+    <div class="col-md-5 first-col">
+      <div class="first-col-content scrollable-list">
+        <ul id="home-intro" class="list-unstyled p-t-1 m-t-1 p-r-1 m-r-1">
+          <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
+            <p ng-bind-html="htmlIntro"></p>
+          </li>
+        </ul>
+        <div id="home-nav-buttons p-l-1 m-l-1">
+          <a href="/accounts/register/"
+            class="refinery-base btn btn-lg btn-default nav-btn-series">
+            <i class="fa fa-user"></i> Register
+          </a>
+          <a href="/dashboard"
+            class="refinery-base btn btn-lg btn-default nav-btn-series">
+            <i class="fa fa-list"></i> View Files
+          </a>
+          <a href="/explore"
+            class="refinery-base btn btn-lg btn-default nav-btn-series">
+            <i class="fa fa-compass"></i> Explore Data
+          </a>
+        </div>
+        <div class="p-t-1 m-t-1">
+          <rp-video-carousel></rp-video-carousel>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="row p-t-1">
-    <div class="col-md-6">
-      <rp-twitter-feed></rp-twitter-feed>
+    <div class="col-md-5 second-col">
+      <div class="second-col-content scrollable-list">
+        <rp-data-set-chart></rp-data-set-chart>
+        <div class="p-t-1 m-t-1">
+          <rp-tool-list></rp-tool-list>
+        </div>
+      </div>
     </div>
-    <div class="col-md-6">
-      <rp-tool-list></rp-tool-list>
+    <div class="col-md-2">
+      <rp-twitter-feed></rp-twitter-feed>
     </div>
   </div>
 </div>

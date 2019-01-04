@@ -1,23 +1,30 @@
-<div id="home-video-carousel" class="carousel slide youtube-carousel"
-  data-ride="carousel" data-interval="false">
-  <div class="carousel-inner">
-    <div id="video-list"
-      class="video-container item" ng-class="{active: !$index}"
-      ng-repeat="videoId in videoIds track by $index">
-      <div class="youtube-video" id="{{ videoId }}"></div>
-      <div class="carousel-caption">Video {{ $index + 1 }}</div>
-    </div>
+<div id="video-carousel-section">
+  <div class="refinery-header">
+    <h3>
+      Features at a Glace
+    </h3>
   </div>
-  <div class="controls">
-    <a class="left carousel-control" ng-click="navPrev()">
-      <div>
-        <i class="fa fa-chevron-left"></i>
+  <div id="home-video-carousel" class="carousel slide youtube-carousel"
+    data-ride="carousel" data-interval="false">
+    <div class="carousel-inner">
+      <div id="video-list"
+        class="video-container item" ng-class="{active: !$index}"
+        ng-repeat="videoId in videoIds track by $index">
+        <div class="youtube-video" id="{{ videoId }}"></div>
+        <div class="carousel-caption">Video {{ $index + 1 }}</div>
       </div>
-    </a>
-    <a class="right carousel-control" ng-click="navNext()">
-      <div>
-        <i class="fa fa-chevron-right"></i>
-      </div>
-    </a>
+    </div>
+    <div class="controls">
+      <a class="left carousel-control" ng-click="navPrev()">
+        <div>
+          <i class="fa fa-chevron-left"></i>
+        </div>
+      </a>
+      <a class="right carousel-control" ng-click="navNext()">
+        <div>
+          <i class="fa fa-chevron-right"></i>
+        </div>
+      </a>
+    </div>
   </div>
 </div>

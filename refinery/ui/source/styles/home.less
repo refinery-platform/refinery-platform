@@ -1,19 +1,15 @@
+@bootstrap-path: 'bower_components/bootstrap/less';
+@import '@{bootstrap-path}/variables.less'; // Modify this for custom colors, font-sizes, etc
 @import "variables.less";
 
-@min-font: 14px;
-@max-font: 26px;
-@min-vp: 300px;
-@max-vp: 1400px;
-
+@card-full-view:  ~"calc(100vh - @{navbar-height} - 2em)";
 #refinery-home {
-  font-size: ~"calc(@{min-font} + (@{max-font} - @{min-font}) * ((100vw - @{min-vp}) / (@{max-vp} - @{min-vp})))";
   background-color: @white;
-  height: 100% !important;
-  margin-top: -@navbar-height;
-  margin-left: -10px;
-  margin-right: -10px;
+  height: @card-full-view;
+  margin-top: -30px;
 
   #home-component {
+    height: @card-full-view;
     padding-left: 2.5em;
     padding-right: 2.5em;
     .nav-btn-series {
@@ -23,36 +19,47 @@
 
   #home-ui-select {
     position: relative;
-    left: 80%;
+    left: 70%;
+    // bottom: -70%;
     padding-bottom: .5em;
   }
 
-  #home-intro {
-    width: 90%;
+  #home-chart {
+    width: 95%;
   }
+
 
   #home-nav-buttons {
     position: relative;
-    left: 15%;
+    // left: 15%;
   }
 
-  .first-row {
-    padding: 1em 1em 2em 1em;
+  #video-carousel-section {
+    width: 98%;
   }
 
-  .youtube-carousel{
+
+  #home-video-carousel {
+    width: 75% !important;
+    height: 75% !important;
+    position: relative;
+    // left: 15%;
+  }
+
+  .youtube-carousel {
     border: 4px solid @black;
     margin-left: 10px;
-    width: 70%;
+    width: 80%;
     height: 70%;
   }
 
   .video-container {
-     position: relative; /* keeps the aspect ratio */
-     padding-bottom: 56.25%; /* fine tunes the video positioning */
-     padding-top: 60px; overflow: hidden;
-     margin-bottom: -1px;
-     margin-right: -1px;
+    position: relative; /* keeps the aspect ratio */
+    padding-bottom: 56.25%; /* fine tunes the video positioning */
+    padding-top: 60px;
+    overflow: hidden;
+    margin-bottom: -1px;
+    margin-right: -1px;
   }
 
   .video-container iframe,
@@ -69,15 +76,15 @@
     bottom: auto !important;
   }
 
-  .carousel-control .fa-chevron-left{
+  .carousel-control .fa-chevron-left {
     position: absolute;
-    left:15%;
+    left: 15%;
     margin: 0;
   }
 
-  .carousel-control .fa-chevron-right{
+  .carousel-control .fa-chevron-right {
     position: absolute;
-    left:33%;
+    left: 33%;
     margin: 0;
   }
 
@@ -85,9 +92,9 @@
     background-image: none;
     color: #ffffff;
     top: 30%;
-    transform: translate(0,-50%);
-    -webkit-transform: translate(0,-50%);
-    -ms-transform: translate(0,-50%);
+    transform: translate(0, -50%);
+    -webkit-transform: translate(0, -50%);
+    -ms-transform: translate(0, -50%);
     opacity: 1;
   }
 
@@ -103,48 +110,79 @@
     font-size: 12px;
     text-align: center;
     opacity: 1;
-    padding:7px 30px 7px;
-    z-index:11;
-    pointer-events:none;
+    padding: 7px 30px 7px;
+    z-index: 11;
+    pointer-events: none;
   }
-}
 
-#files-bar-chart {
-  width: 100% !important;
-  height: 75% !important;
-}
-
-#home-twitter-feed {
-  height: 40vh;
-  width: 85%;
-  overflow: scroll;
-  border-bottom: 1px solid #eee;
-
-  .twitter-timeline {
-    height: 90%;
-    width: 85%;
+  #files-bar-chart {
+    width: 90% !important;
   }
-}
 
-#home-video-carousel {
-  width: 50% !important;
-  height: 50% !important;
-  position: relative;
-  left: 15%;
-}
+  #home-twitter-feed {
+    height: 98%;
+    width: 100%;
+    overflow: scroll;
+    border-bottom: 1px solid #eee;
 
-#home-tool-list {
-  height: 40vh;
-  width: 90%;
-  overflow: scroll;
-  > ul {
-    height: 90%;
-    width: 90%;
+    .twitter-timeline {
+      height: 95%;
+      width: 100%;
+    }
+  }
+
+  #home-tool-list {
+    height: 48vh;
+    width: 95%;
+  //  overflow: scroll;
+    > ul {
+      height: 90%;
+      width: 90%;
+    }
+  }
+
+  .first-col {
+    height: @card-full-view;
+    overflow: scroll;
+    .first-col-content {
+      height:  ~"calc(@{card-full-view} - .5em)";
+      width: 95%;
+    }
+  }
+
+  .second-col {
+    height: @card-full-view;
+    overflow: scroll;
+    .second-col-content {
+      height:  ~"calc(@{card-full-view} - .5em)";
+      width: 95%;
+    }
   }
 }
 @media screen and (min-width: 768px) {
 .carousel-caption {
   font-size: 18px;
   padding:15px 20px 15px;
+  }
+}
+
+@media (max-width: @screen-xs-max) {
+  #refinery-home {
+    font-size: .9em;
+  }
+}
+@media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
+  #refinery-home {
+    font-size: 1.0em;
+  }
+}
+@media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
+  #refinery-home {
+    font-size: 1.1em;
+  }
+}
+@media (min-width: @screen-lg-min) {
+  #refinery-home {
+    font-size: 1.2em;
   }
 }
