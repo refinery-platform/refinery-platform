@@ -265,11 +265,9 @@ class ProgressPercentage(object):
     """Callable for progress monitoring of file transfers
     https://boto3.readthedocs.io/en/stable/_modules/boto3/s3/transfer.html
     """
-    def __init__(self, file_location, task_id, min_percent=0, max_percent=100):
+    def __init__(self, file_location, task_id):
         self._file_size = get_file_size(file_location)
         self._import_task_id = task_id
-        self._min = min_percent
-        self._max = max_percent
         self._seen_so_far = 0
         self._lock = threading.Lock()
 
@@ -279,13 +277,12 @@ class ProgressPercentage(object):
             self._seen_so_far += bytes_amount
             # file size may not be available for some download objects
             if self._file_size > 0:
-                percentage = (self._seen_so_far * (self._max - self._min) /
-                              self._file_size + self._min)
+                percent_done = (self._seen_so_far / self._file_size) * 100
             else:
-                percentage = 0
+                percent_done = 0
             FileImportTask().update_state(
                 self._import_task_id, state='PROGRESS', meta={
-                    'percent_done': '{:.0f}'.format(percentage),
+                    'percent_done': '{:.0f}'.format(percent_done),
                     'current': self._seen_so_far, 'total': self._file_size
                 }
             )
