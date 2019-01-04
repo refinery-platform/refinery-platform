@@ -8,6 +8,7 @@ import csv
 import hashlib
 import json
 import logging
+import os
 import shutil
 import tempfile
 import time
@@ -1064,9 +1065,14 @@ def get_first_annotated_node_from_solr_name(solr_name, node):
     ).first()
 
 
-class ISAToolsDictCreator:
+class ISAToolsJSONCreatorError(RuntimeError):
+    pass
+
+
+class ISAToolsJSONCreator:
     """
-    Create a dict representation of an ISATab-based Refinery DataSet
+    Create a dict representation of an ISATab-based Refinery DataSet that
+    stisfies the ISA-JSON standard.
 
     Said dict will be utilized by the https://github.com/ISA-tools/isa-api
     to generate a new ISATab .zip file including any changes that have
@@ -1078,27 +1084,45 @@ class ISAToolsDictCreator:
         investigation = dataset.get_investigation()
         if not investigation.is_isa_tab_based():
             raise RuntimeError("Investigation is not derived from an ISATab")
+        self.dataset = dataset
         self.investigation = investigation
+        self.investigation_identifier = self.investigation.get_identifier()
+        self.attributes = Attribute.objects.filter(
+            node__in=self.dataset.get_nodes()
+        )
 
     def create(self):
         """
 
         :return:
         """
-        return {
-            "filename": self.investigation.get_isatab_file_name(),
-            "identifier": self.investigation.get_identifier(),
-            "title": self.investigation.get_title(),
-            "description": self.investigation.get_description(),
-            "submission_date": self.investigation.submission_date,
-            "public_release_date": self.investigation.release_date,
-            "ontology_source_references":
-                self._create_ontology_source_references(),
-            "publications": self._create_publications(self.investigation),
-            "contacts": self._create_contacts(self.investigation),
-            "studies": self._create_studies(),
-            "comments": self._create_comments()
-        }
+        return json.loads(
+            json.dumps(
+
+                {
+                    "@id": self._create_id("investigation",
+                                           self.investigation_identifier),
+                    "filename": self.investigation.get_isatab_file_name(),
+                    "identifier": self.investigation_identifier,
+                    "title": self.investigation.title,
+                    "description": self.investigation.description,
+                    "submissionDate": self._iso_format_date(
+                        self.investigation.submission_date
+                    ),
+                    "publicReleaseDate": self._iso_format_date(
+                        self.investigation.release_date
+                    ),
+                    "ontologySourceReferences":
+                        self._create_ontology_source_references(),
+                    "publications": self._create_publications(
+                        self.investigation
+                    ),
+                    "people": self._create_people(self.investigation),
+                    "studies": self._create_studies(),
+
+                }
+            ).replace('null', '""')
+        )
 
     def _create_assays(self, study):
         """
@@ -1112,29 +1136,67 @@ class ISAToolsDictCreator:
 
         return [
             {
-                "measurement_type": self._create_ontology_annotation(
+                "@id": self._create_id("assay", assay.file_name),
+                "measurementType": self._create_ontology_annotation(
                     assay.measurement, assay.measurement_source,
                     assay.measurement_accession
                 ),
-                "technology_type": self._create_ontology_annotation(
+                "technologyType": self._create_ontology_annotation(
                     assay.technology, assay.technology_source,
                     assay.technology_accession
                 ),
-                "technology_platform": assay.platform,
+                "technologyPlatform": assay.platform,
                 "filename": assay.file_name,
-                "materials": "",
-                "units": "",
-                "characteristic_categories": "",
-                "process_sequence": "",
-                "comments": self._create_comments(),
-                "graph": ""
+                "materials": self._create_materials(assay),
+                "characteristicCategories": [],
+                "processSequence": [],
+                "dataFiles": self._create_datafiles(assay, study),
+                "unitCategories": []
             }
             for assay in Assay.objects.filter(study=study)
         ]
 
-    def _create_comments(self):
-        # Do we even support these with the current parser implementation?
+    def _create_comments(self, node=None):
+        if node is not None:
+            try:
+                attribute = Attribute.objects.get(node=node)
+            except (Attribute.DoesNotExist,
+                    Attribute.MultipleObjectsReturned) as e:
+                raise ISAToolsJSONCreatorError(e)
+            else:
+                return [
+                    {
+                        "name": attribute.subtype,
+                        "value": attribute.value
+                    }
+                ]
+        # TODO Not sure if other types of comments are stored in the
+        # Attribute model or not
         return []
+
+    def _create_characteristic_categories(self, study):
+        # TODO: Not sure if I'm pulling out the correct information from the
+        #  Attribute model
+        """
+
+        :param study:
+        :return:
+        """
+        return [
+            {
+              "characteristicType": {
+                "annotationValue": attribute.type,
+                "termSource": "",
+                "termAccession": ""
+              },
+              "@id": "#characteristic_category/{}".format(
+                  self._spaces_to_underscores(attribute.type)
+              )
+            }
+            for attribute in self.attributes.filter(
+                type=Attribute.CHARACTERISTICS
+            )
+          ]
 
     def _create_components(self, protocol, study):
         """
@@ -1147,19 +1209,39 @@ class ISAToolsDictCreator:
         # TODO: Refinery has a ProtocolComponent class, but it is never used...
         return [
             {
-                "name": protocol_component.name,
-                "component_type": self._create_ontology_annotation(
+                "componentName": protocol_component.name,
+                "componentType": self._create_ontology_annotation(
                     protocol_component.type, protocol_component.type_source,
                     protocol_component.type_accession
                 ),
-                "comments": self._create_comments()
+
             }
             for protocol_component in ProtocolComponent.objects.filter(
                 protocol=protocol, study=study
             )
         ]
 
-    def _create_contacts(self, node_collection):
+    def _create_datafiles(self, assay, study):
+        datafiles = []
+        for node in self.dataset.get_nodes(assay=assay, study=study):
+            if node.type == Node.RAW_DATA_FILE:
+                datafile_name = os.path.basename(
+                    node.get_file_store_item().source
+                )
+                datafiles.append(
+                    {
+                        "@id": "#data/rawdatafile-{}".format(datafile_name),
+                        "name": datafile_name,
+                        "type": Node.RAW_DATA_FILE,
+                        "comments": self._create_comments(node=node)
+                    }
+                )
+        return datafiles
+
+    def _create_id(self, identifier, value):
+        return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
+
+    def _create_people(self, node_collection):
         """
         See: Person class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L883
@@ -1168,19 +1250,23 @@ class ISAToolsDictCreator:
         """
         return [
             {
-                "last_name": c.last_name,
-                "first_name": c.first_name,
-                "mid_initials": c.middle_initials,
-                "email": c.email,
-                "phone": c.phone,
-                "fax": c.fax,
-                "address": c.address,
-                "affiliation": c.affiliation,
-                "roles": [c.roles],  # Split on semicolon? See Contact model
-                # roles_accession and roles_source also exist here in Contact?
-                "comments": self._create_comments(),
+                "@id": self._create_id("person", contact.last_name),
+                "lastName": contact.last_name,
+                "firstName": contact.first_name,
+                "midInitials": contact.middle_initials,
+                "email": contact.email,
+                "phone": contact.phone,
+                "fax": contact.fax,
+                "address": contact.address,
+                "affiliation": contact.affiliation,
+                "roles": [
+                    self._create_ontology_annotation(
+                        person, contact.roles_source, contact.roles_accession
+                    )
+                    for person in contact.roles.split(";")  # See: Contact
+                ]
             }
-            for c in Contact.objects.filter(collection=node_collection)
+            for contact in Contact.objects.filter(collection=node_collection)
         ]
 
     def _create_design_descriptors(self, study):
@@ -1206,11 +1292,11 @@ class ISAToolsDictCreator:
         """
         return [
             {
-                "name": f.name,
-                "factor_type": self._create_ontology_annotation(
+                "@id": self._create_id("factor", f.name),
+                "factorName": f.name,
+                "factorType": self._create_ontology_annotation(
                     f.type, f.type_source, f.type_accession
-                ),
-                "comments": self._create_comments(),
+                )
             }
             for f in Factor.objects.filter(study=study)
         ]
@@ -1226,10 +1312,9 @@ class ISAToolsDictCreator:
         :return:
         """
         return {
-            "term": term,
-            "term_source": term_source,
-            "term_accession": term_accession,
-            "comments": self._create_comments(),
+            "annotationValue": term,
+            "termSource": term_source,
+            "termAccession": term_accession
         }
 
     def _create_ontology_source_references(self):
@@ -1243,13 +1328,28 @@ class ISAToolsDictCreator:
                 "name": ontology.name,
                 "version": ontology.version,
                 "description": ontology.description,
-                "file": ontology.file_name,
-                "comments": self._create_comments()
+                "file": ontology.file_name
             }
             for ontology in Ontology.objects.filter(
                 investigation=self.investigation
             )
         ]
+
+    def _create_materials(self, assay_or_study):
+        # TODO: finish this!!!
+        return {
+            "otherMaterials": [],
+            "samples": [],
+            "sources": []
+        }
+
+    def _create_process_sequence(self, study):
+        """
+
+        :param study:
+        :return:
+        """
+        return []
 
     def _create_protocol_parameters(self, protocol, study):
         """
@@ -1261,11 +1361,11 @@ class ISAToolsDictCreator:
         """
         return [
             {
-                "parameter_name": self._create_ontology_annotation(
+                "@id": self._create_id("parameter", protocol.name),
+                "parameterName": self._create_ontology_annotation(
                     protocol_parameter.name, protocol_parameter.name_source,
                     protocol_parameter.name_accession
                 ),
-                "comments": self._create_comments(),
             }
             for protocol_parameter in ProtocolParameter.objects.filter(
                 protocol=protocol, study=study
@@ -1282,8 +1382,9 @@ class ISAToolsDictCreator:
 
         return [
             {
+                "@id": self._create_id("protocol", protocol.name),
                 "name": protocol.name,
-                "protocol_type": self._create_ontology_annotation(
+                "protocolType": self._create_ontology_annotation(
                     protocol.type, protocol.type_source,
                     protocol.type_accession
                 ),
@@ -1293,29 +1394,30 @@ class ISAToolsDictCreator:
                 "parameters": self._create_protocol_parameters(protocol,
                                                                study),
                 "components": self._create_components(protocol, study),
-                "comments": self._create_comments()
+
             }
             for protocol in Protocol.objects.filter(study=study)
         ]
 
-    def _create_publications(self, node_collection):
+    def _create_publications(self, investigation_or_study):
         """
         See: Publication class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L751
-        :param node_collection:
+        :param investigation_or_study:
         :return:
         """
         return [
             {
-                "pubmed_id": p.pubmed_id,
+                "pubMedID": p.pubmed_id,
                 "doi": p.doi,
-                "author_list": p.authors,
+                "authorList": p.authors,
                 "title": p.title,
                 "status": self._create_ontology_annotation(
                     p.status, p.status_source, p.status_accession
                 ),
-                "comments": self._create_comments(),
-            } for p in Publication.objects.filter(collection=node_collection)
+            } for p in Publication.objects.filter(
+                collection=investigation_or_study
+            )
         ]
 
     def _create_studies(self):
@@ -1326,29 +1428,43 @@ class ISAToolsDictCreator:
         """
         return [
             {
+                "@id": self._create_id("study", study.identifier),
                 "identifier": study.identifier,
                 "title": study.title,
                 "description": study.description,
-                "submission_date": study.submission_date,
-                "public_release_date": study.release_date,
+                "submissionDate": self._iso_format_date(study.submission_date),
+                "publicReleaseDate": self._iso_format_date(study.release_date),
                 "filename": study.file_name,
-                "design_descriptors": self._create_design_descriptors(
-                    study
-                ),
                 "publications": self._create_publications(study),
-                "contacts": self._create_contacts(study),
+                "people": self._create_people(study),
                 "factors": self._create_factors(study),
                 "protocols": self._create_protocols(study),
                 "assays": self._create_assays(study),
-                "materials": "",
-                "sources": "",
-                "samples": "",
-                "other_material": "",
-                "units": "",
-                "characteristic_categories": "",
-                "process_sequence": "",
-                "comments": self._create_comments(),
-                "graph": ""
+                "studyDesignDescriptors":
+                    self._create_design_descriptors(study),
+                "materials": self._create_materials(study),
+                "characteristicCategories":
+                    self._create_characteristic_categories(study),
+                "processSequence": self._create_process_sequence(study),
+                "unitCategories": self._create_unit_categories(study)
             }
             for study in Study.objects.filter(investigation=self.investigation)
         ]
+
+    def _create_unit_categories(self, study):
+        # TODO: Not sure where to get this information from
+        """
+
+        :param study:
+        :return:
+        """
+        return []
+
+    @staticmethod
+    def _iso_format_date(date):
+        return date if date is None else date.isoformat()
+
+    @staticmethod
+    def _spaces_to_underscores(string):
+
+        return string.replace(" ", "_")
