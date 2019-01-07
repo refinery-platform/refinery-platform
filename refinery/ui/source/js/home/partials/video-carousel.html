@@ -1,7 +1,7 @@
 <div id="video-carousel-section">
   <div class="refinery-header">
     <h3>
-      Features at a Glace
+      Features at a Glance
     </h3>
   </div>
   <div id="home-video-carousel" class="carousel slide youtube-carousel"
@@ -11,7 +11,9 @@
         class="video-container item" ng-class="{active: !$index}"
         ng-repeat="videoId in videoIds track by $index">
         <div class="youtube-video" id="{{ videoId }}"></div>
-        <div class="carousel-caption">Video {{ $index + 1 }}</div>
+        <div class="carousel-caption">
+          Open Insights Lecture, Creating Explorable Visualization Design Spaces
+        </div>
       </div>
     </div>
     <div class="controls">

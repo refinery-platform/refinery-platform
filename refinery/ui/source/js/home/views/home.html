@@ -4,23 +4,39 @@
   <div class="row">
     <div class="col-md-5 cardless-col">
       <div class="col-content scrollable-list">
-        <ul id="home-intro" class="list-unstyled p-t-1 m-t-1 p-r-1 m-r-1">
+        <ul id="home-intro" class="list-unstyled p-r-1 m-r-1">
+           <div class="refinery-header">
+              <h3>
+                Welcome to the Stem Cell Commons
+              </h3>
+            </div>
           <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
             <p ng-bind-html="htmlIntro"></p>
           </li>
         </ul>
         <div id="home-nav-buttons p-l-1 m-l-1">
-          <a href="/accounts/register/"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-user"></i> Register
-          </a>
+          <span ng-if="!$ctrl.isLoggedIn">
+            <a href="/accounts/register/"
+              class="btn btn-primary nav-btn-series">
+              <i class="fa fa-pencil"></i>
+              <span class="minimize-button-text">
+                Register
+              </span>
+            </a>
+          </span>
           <a href="/dashboard"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-list"></i> View Files
+            class="refinery-base btn btn-default nav-btn-series">
+            <i class="fa fa-list"></i>
+            <span class="minimize-button-text">
+              Browse Files
+            </span>
           </a>
           <a href="/explore"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-compass"></i> Explore Data
+            class="refinery-base btn btn-default nav-btn-series">
+            <i class="fa fa-compass"></i>
+            <span class="minimize-button-text">
+              Explore Data
+            </span>
           </a>
         </div>
         <div class="p-t-1 m-t-1">

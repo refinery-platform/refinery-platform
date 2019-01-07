@@ -26,25 +26,18 @@
     }
   }
 
-  #home-ui-select {
-    position: relative;
-    left: 70%;
-    // bottom: -70%;
-    padding-bottom: .5em;
-  }
-
   #home-chart {
+    width: 90%;
+    .select-right {
+      position: relative;
+      left: 80%;
+    }
+  }
+
+  #home-tool-list {
+    margin-top: 1em;
+    padding-top: 2em;
     width: 95%;
-  }
-
-
-  #home-nav-buttons {
-    position: relative;
-    // left: 15%;
-  }
-
-  #files-bar-chart {
-    width: 90% !important;
   }
 
   #home-twitter-feed {
@@ -58,19 +51,8 @@
     }
   }
 
-  #home-tool-list {
-    margin-top: 1em;
-    padding-top: 1em;
-   // height: 48vh;
-   width: 95%;
-  //  overflow: scroll;
-    > ul {
-   //   height: 90%;
-   //   width: 90%;
-    }
-  }
 
-  // you-tube carousel css
+//******* you-tube carousel css ********//
   #video-carousel-section {
     width: 98%;
   }
@@ -79,7 +61,6 @@
     width: 75% !important;
     height: 75% !important;
     position: relative;
-    // left: 15%;
   }
 
   .youtube-carousel {
@@ -141,30 +122,61 @@
   }
 
   .carousel-caption {
-    bottom: 0;
-    font-size: 12px;
+    bottom: -15px; // overwrite bootstrap default
+    padding-left: 10px;
+    padding-right: 10px;
+    left: 0;
+    right: 0;
+    width: 100%;
     text-align: center;
     opacity: 1;
-    padding: 7px 30px 7px;
     z-index: 11;
     pointer-events: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
-@media screen and (min-width: 768px) {
-.carousel-caption {
-  font-size: 18px;
-  padding:15px 20px 15px;
+
+// custom to fix alignment issue with buttons pre-default screen
+@media (max-width: 1170px) {
+  .minimize-button-text {
+    display: none;
   }
 }
 
 @media (max-width: @screen-xs-max) {
   #refinery-home {
     font-size: .9em;
+    overflow: scroll;
+    #home-component {
+      margin-left: .5em;
+      padding-right: 0;
+      .cardless-col {
+        height: auto !important;
+        padding-top: 2em;
+        .col-content {
+          height: auto !important;
+        }
+      }
+    }
   }
 }
 @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
   #refinery-home {
     font-size: 1.0em;
+    overflow: scroll;
+    #home-component {
+      padding-left: .5em;
+      padding-right: 0;
+      .cardless-col {
+        height: auto !important;
+        padding-top: 2em;
+        .col-content {
+          height: auto !important;
+        }
+      }
+    }
   }
 }
 @media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
