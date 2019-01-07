@@ -1317,6 +1317,32 @@ class ISAToolsJSONCreator:
             "samples": [],
             "sources": []
         }
+    def _create_node_characteristics(self, node):
+        if node.is_root_node:
+            attributes = Attribute.objects.filter(
+                node=node, type=Attribute.CHARACTERISTICS
+            )
+        else:
+            attributes = Attribute.objects.filter(
+                node__in=node.parents_set.all(), type=Attribute.CHARACTERISTICS
+            )
+
+        node_charateristics = [
+            {
+                "value": self._create_ontology_annotation(
+                    attribute.value, attribute.value_source,
+                    attribute.value_accession
+                ),
+                "category": {
+                    "@id": self._create_id(
+                        "characteristic_category", attribute.subtype
+                    )
+                }
+            }
+            for attribute in attributes
+        ]
+        return node_charateristics
+
     def _create_other_materials(self, assay):
         # "Other Materials" correspond to Nodes of the following type
         # See: https://isa-specs.readthedocs.io/en/
