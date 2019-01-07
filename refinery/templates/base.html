@@ -125,22 +125,19 @@
         <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
       </a>
 
-        <button type="button" class="navbar-toggle collapsed"
-          data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
-          <span class="icon-bar"></span>
-        </button>
       </div>
 
       <div class="navbar-text pull-right" id="navbar-right">
-       {% if user.is_authenticated %}
-         <a href="/dashboard" class="pointer">
-           <i id="refinery-logout" class="fa fa-tachometer icon-only"></i>&nbsp;
-           <span id="dashboard-icon-text">
-             My Dashboard
-           </span>
-         </a>
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-         <a
+        <a href="/dashboard" class="pointer" tabindex=2>
+          <i class="fa fa-tachometer icon-only"></i>&nbsp;
+          <span id="dashboard-icon-text">
+            My Dashboard
+          </span>
+        </a>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <i class="fa fa-info-circle icon-only"></i>
+        <a href="{% url "about" %}" tabindex=3 class="pointer">About</a>
+      <!--   <a
            class="pointer"
            popover-placement="bottom"
            popover-trigger="'outsideClick'"
@@ -149,9 +146,28 @@
            <span id="help-icon-text">
               Help
            </span>
-         </a>
-         &nbsp;&nbsp;|&nbsp;&nbsp;
-      {% endif %}
+         </a> -->
+         &nbsp;&nbsp;&nbsp;&nbsp;
+         <span>
+            <a rp-analysis-monitor-global-status-tooltip-hider
+              tabindex=4 class="pointer">
+              <a
+                uib-popover-template="'analysesgloballist.html'"
+                popover-trigger="'outsideClick'"
+                popover-title="Recent Analyses"
+                popover-append-to-body="true"
+                popover-placement="left"
+                popover-class="global-analysis-popover">
+                 <i class="fa fa-cogs pointer" id="global-analysis-status"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="left"
+                  title="View Recent Analyses"></i>
+                  Analyses
+               </a>
+            </a>
+         </span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
 
         {% if user.is_authenticated %}
           <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
@@ -164,7 +180,7 @@
                 {{ user.username }}
               {% endif %}
             </span>
-          </a>&nbsp;&nbsp;|&nbsp;&nbsp;
+          </a>&nbsp;&nbsp;&nbsp;&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
@@ -178,9 +194,10 @@
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
             <a href="{{registration_url}}" tabindex=7>
+             <i class="fa fa-pencil"></i>&nbsp;
               Register
             </a>&nbsp;&nbsp;
-          &nbsp;&nbsp;|&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;
           {% endif %}
         <a href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">
           <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;
@@ -189,28 +206,6 @@
           </span>
       </a>
         {% endif %}
-        &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span>
-          <a rp-analysis-monitor-global-status-tooltip-hider
-            tabindex=8>
-             <span>
-               <rp-analysis-monitor-global-status>
-               </rp-analysis-monitor-global-status>
-             </span>
-          </a>
-      </span>
-      </div>
-      <div class="collapse navbar-collapse" id="navbarMain">
-        <ul class="nav navbar-nav">
-          <li class="{{ navbar_class_about }}">
-            <a href="{% url "about" %}" tabindex=4>About</a>
-          </li>
-          {% if REFINERY_CUSTOM_NAVBAR_ITEM %}
-             <li>
-               {{ REFINERY_CUSTOM_NAVBAR_ITEM|safe }}
-             </li>
-          {% endif %}
-        </ul>
       </div>
     </div>
     </div>
@@ -319,6 +314,15 @@
 
   {% block script %}
   {% endblock %}
+
+  <!-- Script for popup content in the tool status and analyses icon-->
+  <script type="text/ng-template" id="analysesgloballist.html">
+    <div>
+      <rp-analysis-monitor-global-status-popover>
+      </rp-analysis-monitor-global-status-popover>
+    </div>
+  </script>
+
 
   <script type="text/javascript">
     /**
