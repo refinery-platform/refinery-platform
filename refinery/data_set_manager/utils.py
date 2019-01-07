@@ -1417,6 +1417,60 @@ class ISAToolsJSONCreator:
             )
         ]
 
+    def _create_samples(self, assay_or_study):
+        is_study = isinstance(assay_or_study, Study)
+
+        if is_study:
+            nodes = Node.objects.filter(
+                study=assay_or_study, type__in=[Node.EXTRACT,
+                                                Node.LABELED_EXTRACT]
+            )
+            return [
+                {
+                    "@id": self._create_id(
+                        "sample", "sample-{}".format(node.name)
+                    ),
+                    "characteristics": self._create_node_characteristics(
+                        node
+                    ),
+                    "derivesFrom": [
+                        {
+                            "@id": self._create_id(
+                                "source", "source-{}".format(node.name)
+                            )
+                            for node in node.parents.all()
+                        }
+                    ],
+                    # TODO implement these two below
+                    "factorValues": [
+                        {
+                            "category": {
+                                "@id": "#factor/diet"
+                            },
+                            "value": {
+                                "annotationValue": "mediterranean diet",
+                                "termAccession": "",
+                                "termSource": ""
+                            }
+                        }
+                    ],
+                }
+                for node in nodes
+            ]
+        else:
+            nodes = Node.objects.filter(
+                assay=assay_or_study, type__in=[Node.EXTRACT,
+                                                Node.LABELED_EXTRACT]
+            )
+            return [
+                {
+                    "@id": self._create_id(
+                        "sample", "sample-{}".format(node.name)
+                    ),
+                }
+                for node in nodes
+            ]
+
     def _create_sources(self, study):
         return [
             {
