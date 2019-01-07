@@ -209,7 +209,7 @@ class IsaTabParser:
                     "measurement_source",
                 "Study Assay Technology Type": "technology",
                 "Study Assay Technology Type Term Accession Number":
-                    "technology",
+                    "technology_accession",
                 "Study Assay Technology Type Term Source REF":
                     "technology_source",
                 "Study Assay Technology Platform": "platform",
