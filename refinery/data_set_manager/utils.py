@@ -1317,6 +1317,26 @@ class ISAToolsJSONCreator:
             "samples": [],
             "sources": []
         }
+    def _create_other_materials(self, assay):
+        # "Other Materials" correspond to Nodes of the following type
+        # See: https://isa-specs.readthedocs.io/en/
+        #  latest/isajson.html#material-schema-json
+        node_types = [Node.EXTRACT, Node.LABELED_EXTRACT]
+
+        def create_extract_name(node):
+            return "extract-{}".format(node.name)
+
+        return [
+            {
+                "@id": self._create_id("material", create_extract_name(node)),
+                "characteristics": [],
+                "name": create_extract_name(node),
+                "type": node.type
+            }
+            for node in Node.objects.filter(
+                assay=assay, type__in=node_types
+            )
+        ]
 
     def _create_process_sequence(self, study):
         """
