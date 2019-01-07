@@ -1087,9 +1087,6 @@ class ISAToolsJSONCreator:
         self.dataset = dataset
         self.investigation = investigation
         self.investigation_identifier = self.investigation.get_identifier()
-        self.attributes = Attribute.objects.filter(
-            node__in=self.dataset.get_nodes()
-        )
 
     def create(self):
         """

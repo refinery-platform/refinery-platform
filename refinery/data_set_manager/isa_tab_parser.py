@@ -21,9 +21,9 @@ import botocore
 
 from file_store.models import FileStoreItem
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
-                     Node, Ontology, Protocol, ProtocolReference,
-                     ProtocolReferenceParameter, Publication, Study,
-                     ProtocolComponent, ProtocolParameter)
+                     Node, Ontology, Protocol, ProtocolComponent,
+                     ProtocolReference, ProtocolParameter,
+                     ProtocolReferenceParameter, Publication, Study)
 from .utils import fix_last_column
 
 logger = logging.getLogger(__name__)
