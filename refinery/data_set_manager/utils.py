@@ -1173,13 +1173,6 @@ class ISAToolsJSONCreator:
         return []
 
     def _create_characteristic_categories(self, study):
-        # TODO: Not sure if I'm pulling out the correct information from the
-        #  Attribute model
-        """
-
-        :param study:
-        :return:
-        """
         return [
             {
               "characteristicType": {
@@ -1577,7 +1570,6 @@ class ISAToolsJSONCreator:
         ]
 
     def _create_unit_categories(self):
-        # TODO: Not sure where to get this information from
         unit_categories = [
             {
                 "@id": self._create_id("Unit", unit.value_unit),
@@ -1597,5 +1589,4 @@ class ISAToolsJSONCreator:
 
     @staticmethod
     def _spaces_to_underscores(string):
-
         return string.replace(" ", "_")
