@@ -1388,7 +1388,6 @@ class ISAToolsJSONCreator:
         :param study:
         :return:
         """
-        # TODO: Refinery has a ProtocolComponent class, but it is never used...
         return [
             {
                 "componentName": protocol_component.name,
