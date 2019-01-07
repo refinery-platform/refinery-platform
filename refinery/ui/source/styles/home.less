@@ -15,6 +15,15 @@
     .nav-btn-series {
       margin: 1em 2em 1em 0;
     }
+
+    .cardless-col {
+      height:  ~"calc(@{card-full-view} - 1.1em)";
+      overflow: scroll;
+      .col-content {
+        height:  ~"calc(@{card-full-view} - 1.5em)";
+        width: 95%;
+      }
+    }
   }
 
   #home-ui-select {
@@ -34,10 +43,37 @@
     // left: 15%;
   }
 
+  #files-bar-chart {
+    width: 90% !important;
+  }
+
+  #home-twitter-feed {
+    height:  ~"calc(@{card-full-view} - 1.5em)";
+    width: 100%;
+    overflow: scroll;
+    border-bottom: 1px solid #eee;
+
+    .twitter-timeline {
+      width: 100%;
+    }
+  }
+
+  #home-tool-list {
+    margin-top: 1em;
+    padding-top: 1em;
+   // height: 48vh;
+   width: 95%;
+  //  overflow: scroll;
+    > ul {
+   //   height: 90%;
+   //   width: 90%;
+    }
+  }
+
+  // you-tube carousel css
   #video-carousel-section {
     width: 98%;
   }
-
 
   #home-video-carousel {
     width: 75% !important;
@@ -48,13 +84,12 @@
 
   .youtube-carousel {
     border: 4px solid @black;
-    margin-left: 10px;
     width: 80%;
-    height: 70%;
+    height: 100%;
   }
 
   .video-container {
-    position: relative; /* keeps the aspect ratio */
+   // position: relative; /* keeps the aspect ratio */
     padding-bottom: 56.25%; /* fine tunes the video positioning */
     padding-top: 60px;
     overflow: hidden;
@@ -113,50 +148,6 @@
     padding: 7px 30px 7px;
     z-index: 11;
     pointer-events: none;
-  }
-
-  #files-bar-chart {
-    width: 90% !important;
-  }
-
-  #home-twitter-feed {
-    height: 98%;
-    width: 100%;
-    overflow: scroll;
-    border-bottom: 1px solid #eee;
-
-    .twitter-timeline {
-      height: 95%;
-      width: 100%;
-    }
-  }
-
-  #home-tool-list {
-    height: 48vh;
-    width: 95%;
-  //  overflow: scroll;
-    > ul {
-      height: 90%;
-      width: 90%;
-    }
-  }
-
-  .first-col {
-    height: @card-full-view;
-    overflow: scroll;
-    .first-col-content {
-      height:  ~"calc(@{card-full-view} - .5em)";
-      width: 95%;
-    }
-  }
-
-  .second-col {
-    height: @card-full-view;
-    overflow: scroll;
-    .second-col-content {
-      height:  ~"calc(@{card-full-view} - .5em)";
-      width: 95%;
-    }
   }
 }
 @media screen and (min-width: 768px) {

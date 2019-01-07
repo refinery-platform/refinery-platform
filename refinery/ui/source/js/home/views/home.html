@@ -2,8 +2,8 @@
   class="refinery-panel refinery-panel-content jquery-full-height no-overflow"
   id="home-component">
   <div class="row">
-    <div class="col-md-5 first-col">
-      <div class="first-col-content scrollable-list">
+    <div class="col-md-5 cardless-col">
+      <div class="col-content scrollable-list">
         <ul id="home-intro" class="list-unstyled p-t-1 m-t-1 p-r-1 m-r-1">
           <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
             <p ng-bind-html="htmlIntro"></p>
@@ -28,16 +28,18 @@
         </div>
       </div>
     </div>
-    <div class="col-md-5 second-col">
-      <div class="second-col-content scrollable-list">
+    <div class="col-md-5 cardless-col">
+      <div class="col-content scrollable-list">
         <rp-data-set-chart></rp-data-set-chart>
-        <div class="p-t-1 m-t-1">
+        <div>
           <rp-tool-list></rp-tool-list>
         </div>
       </div>
     </div>
-    <div class="col-md-2">
-      <rp-twitter-feed></rp-twitter-feed>
+    <div class="col-md-2 cardless-col">
+      <div>
+        <rp-twitter-feed></rp-twitter-feed>
+      </div>
     </div>
   </div>
 </div>
