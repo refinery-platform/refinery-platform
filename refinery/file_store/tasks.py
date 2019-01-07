@@ -224,7 +224,7 @@ class FileImportTask(celery.Task):
                 copy_file_object(response, destination,
                                  ProgressPercentage(source_url,
                                                     self.request.id))
-        except (urllib2.URLError, EnvironmentError) as exc:
+        except EnvironmentError as exc:
             delete_file(file_store_path)
             raise RuntimeError("Error downloading from '{}': '{}'".format(
                 source_url, exc))
@@ -249,7 +249,7 @@ class FileImportTask(celery.Task):
                     response, settings.MEDIA_BUCKET, file_store_name,
                     ProgressPercentage(source_url, self.request.id)
                 )
-        except (urllib2.URLError, botocore.exceptions.BotoCoreError) as exc:
+        except (EnvironmentError, botocore.exceptions.BotoCoreError) as exc:
             raise RuntimeError(
                 "Error transferring from '{}' to 's3://{}/{}': {}".format(
                     source_url, settings.MEDIA_BUCKET, file_store_name, exc

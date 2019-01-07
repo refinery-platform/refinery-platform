@@ -162,7 +162,7 @@ def get_file_size(file_location):
             with contextlib.closing(urllib2.urlopen(file_location,
                                                     timeout=30)) as response:
                 return int(response.info().getheader('Content-Length'))
-        except (urllib2.URLError, TypeError):
+        except (EnvironmentError, TypeError):
             return UNKNOWN_FILE_SIZE
 
 
