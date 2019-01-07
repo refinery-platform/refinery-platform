@@ -1087,6 +1087,7 @@ class ISAToolsJSONCreator:
         self.dataset = dataset
         self.investigation = investigation
         self.investigation_identifier = self.investigation.get_identifier()
+        self.studies = Study.objects.filter(investigation=self.investigation)
 
     def create(self):
         """
@@ -1444,7 +1445,7 @@ class ISAToolsJSONCreator:
                 "processSequence": self._create_process_sequence(study),
                 "unitCategories": self._create_unit_categories()
             }
-            for study in Study.objects.filter(investigation=self.investigation)
+            for study in self.studies
         ]
 
     def _create_unit_categories(self):
