@@ -955,8 +955,6 @@ class IsaTabParser:
         self._current_file_name = file_name
         self._current_file = open(file_name, "rU")
 
-        section_title = None
-
         # read lines from the file until a section title is found
         while True:
             # 1. try to read the next line from the file
