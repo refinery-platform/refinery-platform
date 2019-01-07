@@ -20,7 +20,7 @@
     var service = chartDataService;
     var vm = this;
     vm.selectedAttribute = { select: {
-      name: 'Technology', solr_name: 'technology_Characteristics_generic_s'
+      name: 'Technology', solrName: 'technology_Characteristics_generic_s'
     } };
     vm.attributes = service.attributeNames;
     vm.updateAttribute = updateAttribute;
@@ -33,7 +33,7 @@
     function refreshDataSetChart () {
       chartDataService.getDataSets().then(function () {
         vm.attributes = service.attributeNames;
-        var field = vm.selectedAttribute.select.solr_name;
+        var field = vm.selectedAttribute.select.solrName;
         // initialized in the directive link
         vm.homeChart.data.datasets[0].data = service.attributeFields[field].countsArray;
         vm.homeChart.data.labels = service.attributeFields[field].fieldsArray;
@@ -49,6 +49,8 @@
     function updateAttribute (attribute) {
       vm.homeChart.data.datasets[0].data = service.attributeFields[attribute.solrName].countsArray;
       vm.homeChart.data.labels = service.attributeFields[attribute.solrName].fieldsArray;
+      console.log(attribute);
+      console.log(vm.selectedAttribute);
       vm.homeChart.update();
     }
 
