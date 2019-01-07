@@ -1311,12 +1311,18 @@ class ISAToolsJSONCreator:
         ]
 
     def _create_materials(self, assay_or_study):
-        # TODO: finish this!!!
-        return {
-            "otherMaterials": [],
-            "samples": [],
-            "sources": []
+        is_study = isinstance(assay_or_study, Study)
+
+        materials_dict = {
+            "otherMaterials": [] if is_study else
+            self._create_other_materials(assay_or_study),
+            "samples": self._create_samples(assay_or_study),
         }
+        if is_study:
+            materials_dict["sources"] = self._create_sources(assay_or_study)
+
+        return materials_dict
+
     def _create_node_characteristics(self, node):
         if node.is_root_node:
             attributes = Attribute.objects.filter(
