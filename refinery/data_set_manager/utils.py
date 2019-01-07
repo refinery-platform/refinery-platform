@@ -1183,17 +1183,23 @@ class ISAToolsJSONCreator:
         return [
             {
               "characteristicType": {
-                "annotationValue": attribute.type,
+                "annotationValue": characteristic_name,
                 "termSource": "",
                 "termAccession": ""
               },
-              "@id": "#characteristic_category/{}".format(
-                  self._spaces_to_underscores(attribute.type)
-              )
+              "@id": self._create_id("characteristic_category",
+                                     characteristic_name)
             }
-            for attribute in self.attributes.filter(
-                type=Attribute.CHARACTERISTICS
-            )
+
+            # Note the set comprehension below. There are issues with
+            # AnnotatedNode creation where many duplicates are created. Re:
+            # "Exponential Explosion" GitHub issue
+            for characteristic_name in {
+                annotated_node.attribute.subtype for annotated_node in
+                AnnotatedNode.objects.filter(
+                    study=study, attribute__type=Attribute.CHARACTERISTICS
+                )
+            }
           ]
 
     def _create_datafiles(self, assay, study):
