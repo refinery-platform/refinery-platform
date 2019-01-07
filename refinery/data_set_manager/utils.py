@@ -1198,19 +1198,22 @@ class ISAToolsJSONCreator:
 
     def _create_datafiles(self, assay, study):
         datafiles = []
-        for node in self.dataset.get_nodes(assay=assay, study=study):
-            if node.type == Node.RAW_DATA_FILE:
-                datafile_name = os.path.basename(
-                    node.get_file_store_item().source
-                )
-                datafiles.append(
-                    {
-                        "@id": "#data/rawdatafile-{}".format(datafile_name),
-                        "name": datafile_name,
-                        "type": Node.RAW_DATA_FILE,
-                        "comments": self._create_comments(node=node)
-                    }
-                )
+        for node in self.dataset.get_nodes(
+            assay=assay, study=study, type=Node.RAW_DATA_FILE
+        ):
+            datafile_name = os.path.basename(
+                node.get_file_store_item().source
+            )
+            datafiles.append(
+                {
+                    "@id": self._create_id(
+                        "data", "rawdatafile-{}".format(datafile_name)
+                    ),
+                    "name": datafile_name,
+                    "type": Node.RAW_DATA_FILE,
+                    "comments": self._create_comments(node=node)
+                }
+            )
         return datafiles
 
     def _create_id(self, identifier, value):
