@@ -584,6 +584,10 @@ class Node(models.Model):
     def is_orphan(self):
         return self.parents.count() == 0
 
+    @property
+    def is_root_node(self):
+        return not bool(self.parents.count())
+
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
