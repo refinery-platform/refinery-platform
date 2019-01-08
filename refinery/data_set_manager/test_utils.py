@@ -1,5 +1,8 @@
 import json
 
+from django.test.utils import override_settings
+import requests
+
 from core.models import DataSet
 from data_set_manager.models import Assay, Study
 from data_set_manager.tests import MetadataImportTestBase
@@ -7,6 +10,7 @@ from data_set_manager.utils import ISAToolsJSONCreator
 from factory_boy.utils import create_dataset_with_necessary_models
 
 
+@override_settings(CELERY_ALWAYS_EAGER=True)
 class ISAToolsJSONCreatorTests(MetadataImportTestBase):
     maxDiff = None
 
@@ -46,6 +50,7 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ISAToolsJSONCreator(non_isatab_dataset)
 
 
+@override_settings(CELERY_ALWAYS_EAGER=True)
 class ISATabExportIntegrationTests(MetadataImportTestBase):
     def test_bii_dataset_to_isa_json(self):
         self.maxDiff = None
