@@ -7,7 +7,7 @@ describe('Dashboard.state:', function () {
   var $rootScope;
   var $window = {
     location: {
-      pathname: '/'
+      pathname: '/explore/'
     }
   };
 
@@ -46,11 +46,6 @@ describe('Dashboard.state:', function () {
     });
 
     it('should be "launchPad" when path is empty', function () {
-      goTo('');
-      expect($state.current.name).toEqual('launchPad');
-    });
-
-    it('should be "launchPad" when path is "/"', function () {
       goTo('/');
       expect($state.current.name).toEqual('launchPad');
     });

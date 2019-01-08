@@ -34,13 +34,13 @@ angular
         )
         .state(
           'launchPad.preview', {
-            url: '/preview/{uuid}'
+            url: 'preview/{uuid}'
           },
           '/explore',
           true
         );
 
-      refineryUrlRouterProvider.otherwise('/', '/explore');
+      refineryUrlRouterProvider.otherwise('/', '/explore', true);
     }
   ]
 );
