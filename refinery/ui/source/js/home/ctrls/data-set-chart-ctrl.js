@@ -49,8 +49,6 @@
     function updateAttribute (attribute) {
       vm.homeChart.data.datasets[0].data = service.attributeFields[attribute.solrName].countsArray;
       vm.homeChart.data.labels = service.attributeFields[attribute.solrName].fieldsArray;
-      console.log(attribute);
-      console.log(vm.selectedAttribute);
       vm.homeChart.update();
     }
 

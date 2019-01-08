@@ -11,9 +11,9 @@
     .module('refineryHome')
     .directive('rpDataSetChart', rpDataSetChart);
 
-  rpDataSetChart.$inject = ['$timeout', '$window'];
+  rpDataSetChart.$inject = ['$window'];
 
-  function rpDataSetChart ($timeout, $window) {
+  function rpDataSetChart ($window) {
     return {
       restrict: 'AE',
       controller: 'DataSetChartCtrl as DSCtrl',
