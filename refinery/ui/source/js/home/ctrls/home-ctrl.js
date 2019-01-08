@@ -10,10 +10,11 @@
     .module('refineryHome')
     .controller('HomeCtrl', HomeCtrl);
 
-  HomeCtrl.$inject = ['_', 'MarkdownJS', '$window'];
+  HomeCtrl.$inject = ['_', 'MarkdownJS', '$window', 'settings'];
 
-  function HomeCtrl (_, MarkdownJS, $window) {
+  function HomeCtrl (_, MarkdownJS, $window, settings) {
     var vm = this;
+    vm.isLoggedIn = settings.djangoApp.userId !== undefined;
 
     vm.$onInit = function () {
       var djangoApp = $window.djangoApp;

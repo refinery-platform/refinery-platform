@@ -1,43 +1,61 @@
-<div id="home-component">
-  <div class="row p-t-1">
-    <div class="col-md-6">
-      <ul class="list-unstyled m-l-1-2 p-l-1-3 p-r-1-3">
-        <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
-          <p ng-bind-html="htmlIntro"></p>
-        </li>
-      </ul>
-      <rp-video-carousel></rp-video-carousel>
-    </div>
-    <div class="col-md-6">
-      <div class="row">
-        <div class="col-md-12">
-          <rp-data-set-chart></rp-data-set-chart>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-          <a href="/accounts/register/"
-            class="btn btn-lg btn-primary nav-btn-series">
-            <i class="fa fa-user"></i> Register
-          </a>
+<div
+  class="refinery-panel refinery-panel-content jquery-full-height no-overflow"
+  id="home-component">
+  <div class="row">
+    <div class="col-md-5 cardless-col">
+      <div class="col-content scrollable-list">
+        <ul id="home-intro" class="list-unstyled p-r-1 m-r-1">
+           <div class="refinery-header">
+              <h3>
+                Welcome to the Stem Cell Commons
+              </h3>
+            </div>
+          <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
+            <p ng-bind-html="htmlIntro"></p>
+          </li>
+        </ul>
+        <div id="home-nav-buttons p-l-1 m-l-1">
+          <span ng-if="!$ctrl.isLoggedIn">
+            <a href="/accounts/register/"
+              class="btn btn-primary nav-btn-series">
+              <i class="fa fa-pencil"></i>
+              <span class="minimize-button-text">
+                Register
+              </span>
+            </a>
+          </span>
           <a href="/dashboard"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-list"></i> View Data
+            class="refinery-base btn btn-default nav-btn-series">
+            <i class="fa fa-list"></i>
+            <span class="minimize-button-text">
+              Browse Files
+            </span>
           </a>
-          <a href="/exploration"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-compass"></i> Explore Data
+          <a href="/explore"
+            class="refinery-base btn btn-default nav-btn-series">
+            <i class="fa fa-compass"></i>
+            <span class="minimize-button-text">
+              Explore Data
+            </span>
           </a>
+        </div>
+        <div class="p-t-1 m-t-1">
+          <rp-video-carousel></rp-video-carousel>
         </div>
       </div>
     </div>
-  </div>
-  <div class="row p-t-1">
-    <div class="col-md-6 m-l-1-2 p-l-1-3 p-r-1-3">
-      <rp-twitter-feed></rp-twitter-feed>
+    <div class="col-md-5 cardless-col">
+      <div class="col-content scrollable-list">
+        <rp-data-set-chart></rp-data-set-chart>
+        <div>
+          <rp-tool-list></rp-tool-list>
+        </div>
+      </div>
     </div>
-    <div class="col-md-4">
-      <rp-tool-list></rp-tool-list>
+    <div class="col-md-2 cardless-col">
+      <div>
+        <rp-twitter-feed></rp-twitter-feed>
+      </div>
     </div>
   </div>
 </div>

@@ -130,13 +130,17 @@
       <div class="navbar-text pull-right" id="navbar-right">
         <a href="/dashboard" class="pointer" tabindex=2>
           <i class="fa fa-tachometer icon-only"></i>&nbsp;
-          <span id="dashboard-icon-text">
-            My Dashboard
-          </span>
+           <span class="navbar-text-min">
+             My Dashboard
+           </span>
         </a>
         &nbsp;&nbsp;&nbsp;&nbsp;
         <i class="fa fa-info-circle icon-only"></i>
-        <a href="{% url "about" %}" tabindex=3 class="pointer">About</a>
+        <a href="{% url "about" %}" tabindex=3 class="pointer">
+          <span class="navbar-text-min">
+            About
+          </span>
+        </a>
       <!--   <a
            class="pointer"
            popover-placement="bottom"
@@ -163,7 +167,9 @@
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="left"
                   title="View Recent Analyses"></i>
+                <span class="navbar-text-min">
                   Analyses
+                </span>
                </a>
             </a>
          </span>
@@ -173,7 +179,7 @@
           <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
              tabindex=5>
             <i class="fa fa-user"></i>
-            <span id="login-name-icon-text">
+            <span class="navbar-text-min">
               {% if user.first_name != "" or user.last_name != "" %}
                 {{ user.first_name }} {{ user.last_name }}
               {% else %}
@@ -184,8 +190,8 @@
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
-             <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
-            <span id="logout-icon-text">
+            <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
+            <span class="navbar-text-min">
               Logout
             </span>
           </a>
@@ -194,16 +200,12 @@
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
             <a href="{{registration_url}}" tabindex=7>
-             <i class="fa fa-pencil"></i>&nbsp;
-              Register
-            </a>&nbsp;&nbsp;
+              <i class="fa fa-pencil"></i>&nbsp;Register
+            </a>
           &nbsp;&nbsp;&nbsp;&nbsp;
           {% endif %}
         <a href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">
-          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;
-          <span id="login-icon-text">
-            Login
-          </span>
+          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;Login
       </a>
         {% endif %}
       </div>
