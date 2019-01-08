@@ -1,7 +1,6 @@
 import json
 
 from django.test.utils import override_settings
-import requests
 
 from core.models import DataSet
 from data_set_manager.models import Assay, Study
