@@ -18,7 +18,8 @@ angular
               );
             }
           },
-          '/'
+          '/explore',
+          true
         )
         .state(
           'launchPad.exploration', {
@@ -28,16 +29,18 @@ angular
             url: 'exploration?context&branchId&visibleDepth',
             reloadOnSearch: false
           },
-          '/'
+          '/explore',
+          true
         )
         .state(
           'launchPad.preview', {
-            url: 'preview/{uuid}'
+            url: '/preview/{uuid}'
           },
-          '/'
+          '/explore',
+          true
         );
 
-      refineryUrlRouterProvider.otherwise('/', '/');
+      refineryUrlRouterProvider.otherwise('/', '/explore');
     }
   ]
 );

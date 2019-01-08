@@ -3,7 +3,7 @@
 {% load static from staticfiles %}
 
 {% block title %}
-{{ block.super }} - Home
+{{ block.super }} - Exploration
 {% endblock %}
 
 {% block head_html %}
@@ -22,7 +22,7 @@
 {% block subheader %}
   <div class="page-header">
     <h1>
-      Launch Pad
+      Exploration
     {% if user.is_authenticated %}
       <small>
         {% if user.first_name != "" or user.last_name != "" %}
