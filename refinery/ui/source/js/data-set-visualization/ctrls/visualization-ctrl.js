@@ -16,6 +16,7 @@
     '$log',
     '$window',
     'settings',
+    'dataSetPermsService',
     'visualizationService'
   ];
 
@@ -24,6 +25,7 @@
     $log,
     $window,
     settings,
+    dataSetPermsService,
     visualizationService
   ) {
     var visService = visualizationService;
@@ -31,6 +33,7 @@
     vm.isOwner = isOwner;
     vm.relaunchTool = relaunchTool;
     vm.deleteTool = deleteTool;
+    vm.userPerms = dataSetPermsService.userPerms;
     vm.visRelaunchList = {};
     vm.visualizations = visService.visualizations;
     activate();
