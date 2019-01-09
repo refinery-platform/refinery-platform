@@ -135,6 +135,28 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             "#id/value_that_has_spaces",
         )
 
+    def test__create_materials_assay(self):
+        assay = Assay.objects.get(
+            study=self.isa_tools_json_creator.studies.first()
+        )
+        self.assertEqual(
+            ordered(
+                self.isa_tools_json_creator._create_materials(assay)
+            ),
+            ordered(
+                self.expected_isa_json["studies"][0]["assays"][0]["materials"]
+            ),
+        )
+
+    def test__create_materials_study(self):
+        self.assertEqual(
+            ordered(
+                self.isa_tools_json_creator._create_materials(
+                    self.isa_tools_json_creator.studies.first()
+                )
+            ),
+            ordered(self.expected_isa_json["studies"][0]["materials"]),
+        )
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
