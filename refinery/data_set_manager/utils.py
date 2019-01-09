@@ -1086,54 +1086,26 @@ class ISAToolsJSONCreator:
     def __init__(self, dataset):
         investigation = dataset.get_investigation()
         if not investigation.is_isa_tab_based():
-            raise RuntimeError("Investigation is not derived from an ISATab")
+            raise ISAToolsJSONCreatorError(
+                "Investigation is not derived from an ISATab"
+            )
         self.dataset = dataset
         self.investigation = investigation
         self.investigation_identifier = self.investigation.get_identifier()
         self.studies = Study.objects.filter(investigation=self.investigation)
 
     def create(self):
-        """
-
-        :return:
-        """
         return json.loads(
-            json.dumps(
-
-                {
-                    "@id": self._create_id("investigation",
-                                           self.investigation_identifier),
-                    "filename": self.investigation.get_isatab_file_name(),
-                    "identifier": self.investigation_identifier,
-                    "title": self.investigation.title,
-                    "description": self.investigation.description,
-                    "submissionDate": self._iso_format_date(
-                        self.investigation.submission_date
-                    ),
-                    "publicReleaseDate": self._iso_format_date(
-                        self.investigation.release_date
-                    ),
-                    "ontologySourceReferences":
-                        self._create_ontology_source_references(),
-                    "publications": self._create_publications(
-                        self.investigation
-                    ),
-                    "people": self._create_people(self.investigation),
-                    "studies": self._create_studies(),
-
-                }
-            ).replace('null', '""')
+            # Replace any `null` occurences with empty strings. The ISA JSON
+            # schemas consider null values to be invalid
+            json.dumps(self._create_investigation()).replace('null', '""')
         )
 
     def _create_assays(self, study):
         """
-        See: Assay class
-            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L1905
-        :param study:
-        :return:
+        See: Assay Schema - https://isa-specs.readthedocs.io/en/latest/isajson
+        .html#assay-schema-json
         """
-        # Will probably need to start retrieving Node information at this point
-        #   nodes = dataset.get_nodes(assay=a, study=s)
 
         return [
             {
@@ -1161,8 +1133,10 @@ class ISAToolsJSONCreator:
         if node is not None:
             try:
                 attribute = Attribute.objects.get(node=node)
-            except (Attribute.DoesNotExist,
-                    Attribute.MultipleObjectsReturned) as e:
+            except Attribute.DoesNotExist as e:
+                logger.debug(e)
+                return []
+            except Attribute.MultipleObjectsReturned as e:
                 raise ISAToolsJSONCreatorError(e)
             else:
                 return [
@@ -1178,11 +1152,9 @@ class ISAToolsJSONCreator:
     def _create_characteristic_categories(self, study):
         return [
             {
-              "characteristicType": {
-                "annotationValue": characteristic_name,
-                "termSource": "",
-                "termAccession": ""
-              },
+              "characteristicType": self._create_ontology_annotation(
+                  term=characteristic_name
+              ),
               "@id": self._create_id("characteristic_category",
                                      characteristic_name)
             }
@@ -1218,37 +1190,6 @@ class ISAToolsJSONCreator:
             )
         return datafiles
 
-    def _create_id(self, identifier, value):
-        return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
-
-    def _create_people(self, node_collection):
-        """
-        See: Person class
-            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L883
-        :param node_collection:
-        :return:
-        """
-        return [
-            {
-                "@id": self._create_id("person", contact.last_name),
-                "lastName": contact.last_name,
-                "firstName": contact.first_name,
-                "midInitials": contact.middle_initials,
-                "email": contact.email,
-                "phone": contact.phone,
-                "fax": contact.fax,
-                "address": contact.address,
-                "affiliation": contact.affiliation,
-                "roles": [
-                    self._create_ontology_annotation(
-                        person, contact.roles_source, contact.roles_accession
-                    )
-                    for person in contact.roles.split(";")  # See: Contact
-                ]
-            }
-            for contact in Contact.objects.filter(collection=node_collection)
-        ]
-
     def _create_design_descriptors(self, study):
         """
         See: DesignDescriptor class
@@ -1272,17 +1213,109 @@ class ISAToolsJSONCreator:
         """
         return [
             {
-                "@id": self._create_id("factor", f.name),
-                "factorName": f.name,
+                "@id": self._create_id("factor", factor.name),
+                "factorName": factor.name,
                 "factorType": self._create_ontology_annotation(
-                    f.type, f.type_source, f.type_accession
+                    factor.type, factor.type_source, factor.type_accession
                 )
             }
-            for f in Factor.objects.filter(study=study)
+            for factor in Factor.objects.filter(study=study)
         ]
 
-    def _create_ontology_annotation(self, term=None, term_source=None,
-                                    term_accession=None):
+    def _create_factor_values(self, node):
+        return [
+            {
+                "category": {
+                    "@id": self._create_id(
+                        "factor", annotated_node.attribute_subtype
+                    )
+                },
+                "value": {
+                    "annotationValue": annotated_node.attribute_value,
+                    "termAccession": "",
+                    "termSource": ""
+                }
+            } for annotated_node in AnnotatedNode.objects.filter(
+                node__name__startswith=node.name,
+                attribute__type=Attribute.FACTOR_VALUE
+            )
+        ]
+
+    def _create_id(self, identifier, value):
+        return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
+
+    def _create_investigation(self):
+        return {
+                "@id": self._create_id("investigation",
+                                       self.investigation_identifier),
+                "filename": self.investigation.get_isatab_file_name(),
+                "identifier": self.investigation_identifier,
+                "title": self.investigation.title,
+                "description": self.investigation.description,
+                "submissionDate": self._iso_format_date(
+                    self.investigation.submission_date
+                ),
+                "publicReleaseDate": self._iso_format_date(
+                    self.investigation.release_date
+                ),
+                "ontologySourceReferences":
+                    self._create_ontology_source_references(),
+                "publications": self._create_publications(self.investigation),
+                "people": self._create_people(self.investigation),
+                "studies": self._create_studies(),
+
+            }
+
+    def _create_materials(self, assay_or_study):
+        is_study = isinstance(assay_or_study, Study)
+
+        materials_dict = {
+            "otherMaterials": [] if is_study else
+            self._create_other_materials(assay_or_study),
+            "samples": self._create_samples(assay_or_study),
+        }
+        if is_study:
+            study = assay_or_study
+            materials_dict["sources"] = self._create_sources(study)
+
+        return materials_dict
+
+    def _create_characteristics(self, node):
+        characteristics = []
+        attributes = Attribute.objects.filter(
+            node__name__startswith=node.name,
+            node__type=node.type,
+            type=Attribute.CHARACTERISTICS
+        )
+
+        for attribute in attributes:
+            characteristic = {
+                "category": {
+                    "@id": self._create_id(
+                        "characteristic_category", attribute.subtype
+                    )
+                }
+            }
+
+            if attribute.value_unit:
+                characteristic["unit"] = {
+                    "@id": self._create_id(
+                        "Unit", attribute.value_unit
+                    )
+                }
+                characteristic["value"] = attribute.properly_casted_value
+            else:
+                characteristic["value"] = self._create_ontology_annotation(
+                    attribute.properly_casted_value,
+                    attribute.value_source,
+                    attribute.value_accession
+                )
+            characteristics.append(characteristic)
+
+        return characteristics
+
+    def _create_ontology_annotation(self, term="", term_source="",
+                                    term_accession=""):
         """
         See: OntologyAnnotation class
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L656
@@ -1292,9 +1325,9 @@ class ISAToolsJSONCreator:
         :return:
         """
         return {
-            "annotationValue": term,
-            "termSource": term_source,
-            "termAccession": term_accession
+            "annotationValue": term or "",
+            "termAccession": term_accession or "",
+            "termSource": term_source or ""
         }
 
     def _create_ontology_source_references(self):
@@ -1315,45 +1348,6 @@ class ISAToolsJSONCreator:
             )
         ]
 
-    def _create_materials(self, assay_or_study):
-        is_study = isinstance(assay_or_study, Study)
-
-        materials_dict = {
-            "otherMaterials": [] if is_study else
-            self._create_other_materials(assay_or_study),
-            "samples": self._create_samples(assay_or_study),
-        }
-        if is_study:
-            materials_dict["sources"] = self._create_sources(assay_or_study)
-
-        return materials_dict
-
-    def _create_node_characteristics(self, node):
-        if node.is_root_node:
-            attributes = Attribute.objects.filter(
-                node=node, type=Attribute.CHARACTERISTICS
-            )
-        else:
-            attributes = Attribute.objects.filter(
-                node__in=node.parents_set.all(), type=Attribute.CHARACTERISTICS
-            )
-
-        node_charateristics = [
-            {
-                "value": self._create_ontology_annotation(
-                    attribute.value, attribute.value_source,
-                    attribute.value_accession
-                ),
-                "category": {
-                    "@id": self._create_id(
-                        "characteristic_category", attribute.subtype
-                    )
-                }
-            }
-            for attribute in attributes
-        ]
-        return node_charateristics
-
     def _create_other_materials(self, assay):
         # "Other Materials" correspond to Nodes of the following type
         # See: https://isa-specs.readthedocs.io/en/
@@ -1373,6 +1367,39 @@ class ISAToolsJSONCreator:
             for node in Node.objects.filter(
                 assay=assay, type__in=node_types
             )
+        ]
+
+    def _create_people(self, node_collection):
+        """
+        See: Person class
+            github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L883
+        :param node_collection:
+        :return:
+        """
+        def handle_semicolon(string):
+            return "" if string == ";" else string
+
+        return [
+            {
+                "@id": self._create_id("person", contact.last_name),
+                "lastName": contact.last_name,
+                "firstName": contact.first_name,
+                "midInitials": contact.middle_initials,
+                "email": contact.email,
+                "phone": contact.phone,
+                "fax": contact.fax,
+                "address": contact.address,
+                "affiliation": contact.affiliation,
+                "roles": [
+                    self._create_ontology_annotation(
+                        person,
+                        handle_semicolon(contact.roles_source),
+                        handle_semicolon(contact.roles_accession)
+                    )
+                    for person in contact.roles.split(";")  # See: Contact
+                ]
+            }
+            for contact in Contact.objects.filter(collection=node_collection)
         ]
 
     def _create_process_sequence(self, study):
@@ -1476,19 +1503,18 @@ class ISAToolsJSONCreator:
     def _create_samples(self, assay_or_study):
         is_study = isinstance(assay_or_study, Study)
 
+        def create_sample_name(string):
+            return "sample-{}".format(string)
+
         if is_study:
-            nodes = Node.objects.filter(
-                study=assay_or_study, type__in=[Node.EXTRACT,
-                                                Node.LABELED_EXTRACT]
-            )
+            study = assay_or_study
+            nodes = Node.objects.filter(study=study, type=Node.SAMPLE)
             return [
                 {
                     "@id": self._create_id(
-                        "sample", "sample-{}".format(node.name)
+                        "sample", create_sample_name(node.name)
                     ),
-                    "characteristics": self._create_node_characteristics(
-                        node
-                    ),
+                    "characteristics": self._create_characteristics(node),
                     "derivesFrom": [
                         {
                             "@id": self._create_id(
@@ -1497,31 +1523,18 @@ class ISAToolsJSONCreator:
                             for node in node.parents.all()
                         }
                     ],
-                    # TODO implement these two below
-                    "factorValues": [
-                        {
-                            "category": {
-                                "@id": "#factor/diet"
-                            },
-                            "value": {
-                                "annotationValue": "mediterranean diet",
-                                "termAccession": "",
-                                "termSource": ""
-                            }
-                        }
-                    ],
+                    "factorValues": self._create_factor_values(node),
+                    "name": create_sample_name(node.name)
                 }
                 for node in nodes
             ]
         else:
-            nodes = Node.objects.filter(
-                assay=assay_or_study, type__in=[Node.EXTRACT,
-                                                Node.LABELED_EXTRACT]
-            )
+            assay = assay_or_study
+            nodes = Node.objects.filter(study=assay.study, type=Node.SAMPLE)
             return [
                 {
                     "@id": self._create_id(
-                        "sample", "sample-{}".format(node.name)
+                        "sample", create_sample_name(node.name)
                     ),
                 }
                 for node in nodes
