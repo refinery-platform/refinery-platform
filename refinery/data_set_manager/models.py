@@ -805,6 +805,17 @@ class Attribute(models.Model):
             unicode(self.value)
         )
 
+    @property
+    def properly_casted_value(self):
+        if self.value.isdigit():
+            return int(self.value)
+        try:
+            float_value = float(self.value)
+        except ValueError:
+            return self.value
+        else:
+            return float_value
+
 
 # non-ISA Tab
 class AttributeOrder(models.Model):
