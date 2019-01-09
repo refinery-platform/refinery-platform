@@ -9,6 +9,15 @@ from data_set_manager.utils import ISAToolsJSONCreator
 from factory_boy.utils import create_dataset_with_necessary_models
 
 
+def ordered(obj):
+    if isinstance(obj, dict):
+        return sorted((ordered(k), ordered(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return sorted(ordered(x) for x in obj)
+    else:
+        return obj
+
+
 @override_settings(CELERY_ALWAYS_EAGER=True)
 class ISAToolsJSONCreatorTests(MetadataImportTestBase):
     maxDiff = None
