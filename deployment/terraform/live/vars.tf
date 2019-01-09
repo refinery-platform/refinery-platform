@@ -67,6 +67,11 @@ variable "app_server_instance_type" {
   default     = "m3.medium"
 }
 
+variable "app_server_instance_count" {
+  description = "Number of app server instances to deploy"
+  default     = 1
+}
+
 variable "app_server_key_pair_name" {
   description = "Name of the SSH key pair to use for the app server instance"
   default     = ""
@@ -129,7 +134,7 @@ variable "refinery_banner" {
 
 variable "refinery_banner_anonymous_only" {
   description = "Whether to display refinery_banner to anonymous users only or everyone"
-  default = "false"
+  default     = "false"
 }
 
 variable "refinery_custom_navbar_item" {
@@ -164,7 +169,7 @@ variable "refinery_google_recaptcha_secret_key" {
 
 variable "refinery_intro" {
   description = "Mark-down to be displayed in the intro paragraph on the landing page."
-  default = "The refinery platform is for managing, analyzing, and visualizing data."
+  default     = "The refinery platform is for managing, analyzing, and visualizing data."
 }
 
 variable "refinery_s3_user_data" {
