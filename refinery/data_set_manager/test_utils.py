@@ -290,6 +290,14 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ordered(self.expected_isa_json["studies"][0]["protocols"]),
         )
 
+    def test__create_publications(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_publications(
+                self.isa_tools_json_creator.studies.first()
+            ),
+            self.expected_isa_json["studies"][0]["publications"],
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
