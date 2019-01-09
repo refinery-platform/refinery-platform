@@ -298,6 +298,31 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             self.expected_isa_json["studies"][0]["publications"],
         )
 
+    def test__create_samples_assay(self):
+        study = Study.objects.first()
+        assay = Assay.objects.get(study=study)
+
+        self.assertEqual(
+            ordered(self.isa_tools_json_creator._create_samples(assay)),
+            ordered(
+                self.expected_isa_json["studies"][0]["assays"][0]["materials"][
+                    "samples"
+                ]
+            ),
+        )
+
+    def test__create_samples_study(self):
+        self.assertEqual(
+            ordered(
+                self.isa_tools_json_creator._create_samples(
+                    self.isa_tools_json_creator.studies.first()
+                )
+            ),
+            ordered(
+                self.expected_isa_json["studies"][0]["materials"]["samples"]
+            ),
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
