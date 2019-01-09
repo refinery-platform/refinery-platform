@@ -3,7 +3,7 @@ import json
 from django.test.utils import override_settings
 
 from core.models import DataSet
-from data_set_manager.models import Assay, Study
+from data_set_manager.models import Assay, Node, Protocol, Study
 from data_set_manager.tests import MetadataImportTestBase
 from data_set_manager.utils import ISAToolsJSONCreator
 from factory_boy.utils import create_dataset_with_necessary_models
