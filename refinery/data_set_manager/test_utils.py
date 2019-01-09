@@ -192,6 +192,18 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ordered(expected_characteristics),
         )
 
+    def test__create_ontology_annotation(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_ontology_annotation(
+                "term", "term_source", "term_accession"
+            ),
+            {
+                "annotationValue": "term",
+                "termSource": "term_source",
+                "termAccession": "term_accession",
+            },
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
