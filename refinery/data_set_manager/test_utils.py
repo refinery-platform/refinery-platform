@@ -156,7 +156,7 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ordered(self.expected_isa_json["studies"][0]["materials"]),
         )
 
-    def test__create_node_characteristics_sample(self):
+    def test__create_characteristics_sample(self):
         node = Node.objects.filter(
             study=self.isa_tools_json_creator.studies.first(), type=Node.SAMPLE
         ).first()
@@ -174,7 +174,7 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ordered(expected_characteristics),
         )
 
-    def test__create_node_characteristics_source(self):
+    def test__create_characteristics_source(self):
         node = Node.objects.filter(
             study=self.isa_tools_json_creator.studies.first(), type=Node.SOURCE
         ).first()
