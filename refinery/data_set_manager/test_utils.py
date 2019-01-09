@@ -155,6 +155,43 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ),
             ordered(self.expected_isa_json["studies"][0]["materials"]),
         )
+
+    def test__create_node_characteristics_sample(self):
+        node = Node.objects.filter(
+            study=self.isa_tools_json_creator.studies.first(), type=Node.SAMPLE
+        ).first()
+
+        expected_characteristics = None
+        for sample in self.expected_isa_json["studies"][0]["materials"][
+            "samples"
+        ]:
+            if node.name in sample["@id"]:
+                expected_characteristics = sample["characteristics"]
+                break
+
+        self.assertEqual(
+            ordered(self.isa_tools_json_creator._create_characteristics(node)),
+            ordered(expected_characteristics),
+        )
+
+    def test__create_node_characteristics_source(self):
+        node = Node.objects.filter(
+            study=self.isa_tools_json_creator.studies.first(), type=Node.SOURCE
+        ).first()
+
+        expected_characteristics = None
+        for source in self.expected_isa_json["studies"][0]["materials"][
+            "sources"
+        ]:
+            if node.name in source["@id"]:
+                expected_characteristics = source["characteristics"]
+                break
+
+        self.assertEqual(
+            ordered(self.isa_tools_json_creator._create_characteristics(node)),
+            ordered(expected_characteristics),
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
