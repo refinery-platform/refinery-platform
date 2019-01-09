@@ -1071,14 +1071,17 @@ class ISAToolsJSONCreatorError(RuntimeError):
 
 class ISAToolsJSONCreator:
     """
-    Create a dict representation of an ISATab-based Refinery DataSet that
-    stisfies the ISA-JSON standard.
+    Create a dict representation of an ISA-Tab based Refinery DataSet that
+    satisfies the ISA-JSON standard.
 
-    Said dict will be utilized by the https://github.com/ISA-tools/isa-api
-    to generate a new ISATab .zip file including any changes that have
-    occurred during the lifetime of the DataSet including, but not limited to:
-    Analysis/Workflow derived results, metadata revisions (DataSet Node
-    contents as well as DataSet-level modifications (title updates etc.))
+    See: https://isa-specs.readthedocs.io/en/latest/isajson.html
+
+    Said dict will be utilized by:
+    https://github.com/scottx611x/isa-tab-exporter to generate a new ISA-Tab
+    .zip file including any changes that have occurred during the lifetime
+    of the DataSet including, but not limited to: Analysis/Workflow derived
+    results, metadata revisions (DataSet Node contents as well as
+    DataSet-level modifications (title updates etc.))
     """
     def __init__(self, dataset):
         investigation = dataset.get_investigation()
