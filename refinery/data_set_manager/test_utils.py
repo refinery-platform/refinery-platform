@@ -122,6 +122,19 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ],
         )
 
+    def test__create_id(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_id("id", "value"), "#id/value"
+        )
+
+    def test__create_id_replaces_spaces_with_underscores(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_id(
+                "id", "value that has spaces"
+            ),
+            "#id/value_that_has_spaces",
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
