@@ -86,6 +86,24 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ],
         )
 
+    def test__create_factors(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_factors(
+                self.isa_tools_json_creator.studies.first()
+            ),
+            [
+                {
+                    "@id": "#factor/diet",
+                    "factorName": u"diet",
+                    "factorType": {
+                        "annotationValue": u"diet",
+                        "termAccession": u"",
+                        "termSource": u"",
+                    },
+                }
+            ],
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
