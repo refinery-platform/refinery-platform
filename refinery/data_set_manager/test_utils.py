@@ -335,6 +335,10 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ),
         )
 
+    def test__create_unit_categories(self):
+        self.assertEqual(
+            ordered(self.isa_tools_json_creator._create_unit_categories()),
+            ordered(self.expected_isa_json["studies"][0]["unitCategories"]),
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
