@@ -72,7 +72,20 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ),
         )
 
-            )
+    def test__create_design_descriptors(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_design_descriptors(
+                self.isa_tools_json_creator.studies.first()
+            ),
+            [
+                {
+                    "annotationValue": u"Metagenomics",
+                    "termAccession": u"",
+                    "termSource": u"",
+                }
+            ],
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
