@@ -204,6 +204,15 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             },
         )
 
+    def test__create_ontology_source_references(self):
+        self.assertEqual(
+            ordered(
+                self.isa_tools_json_creator.
+                _create_ontology_source_references()
+            ),
+            ordered(self.expected_isa_json["ontologySourceReferences"]),
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
