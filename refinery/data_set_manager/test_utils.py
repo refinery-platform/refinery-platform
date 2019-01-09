@@ -15,9 +15,13 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
 
     def setUp(self):
         super(ISAToolsJSONCreatorTests, self).setUp()
-
-        with open(self.get_test_file_path('BII-S-7.zip')) as good_isa:
+        with open(self.get_test_file_path("BII-S-7.zip")) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
+
+        with open(
+            self.get_test_file_path("isa-json/BII-S-7.json")
+        ) as isa_json:
+            self.expected_isa_json = json.loads(isa_json.read())
 
         dataset = DataSet.objects.all().first()
         self.isa_tools_json_creator = ISAToolsJSONCreator(dataset)
