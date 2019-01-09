@@ -46,6 +46,18 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ordered(self.expected_isa_json["studies"][0]["assays"]),
         )
 
+    def test__create_comments(self):
+        study = self.isa_tools_json_creator.studies.first()
+        assay = Assay.objects.filter(study=study)
+        nodes = self.isa_tools_json_creator.dataset.get_nodes(
+            assay=assay, study=study, type=Node.RAW_DATA_FILE
+        )
+
+        self.assertEqual(
+            self.isa_tools_json_creator._create_comments(node=nodes.first()),
+            [{"name": u"Export", "value": u"yes"}],
+        )
+
         study = Study.objects.first()
         assay = Assay.objects.filter(study=study)
 
