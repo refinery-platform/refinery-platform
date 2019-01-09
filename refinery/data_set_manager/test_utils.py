@@ -36,6 +36,16 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
         self.isa_tools_json_creator = ISAToolsJSONCreator(dataset)
 
     def test_create_datafiles(self):
+    def test__create_assays(self):
+        self.assertEqual(
+            ordered(
+                self.isa_tools_json_creator._create_assays(
+                    self.isa_tools_json_creator.studies.first()
+                )
+            ),
+            ordered(self.expected_isa_json["studies"][0]["assays"]),
+        )
+
         study = Study.objects.first()
         assay = Assay.objects.filter(study=study)
 
