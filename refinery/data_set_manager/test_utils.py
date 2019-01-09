@@ -104,6 +104,24 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ],
         )
 
+    def test__create_factor_values(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_factor_values(
+                self.isa_tools_json_creator.dataset.get_nodes().first()
+            ),
+            [
+                {
+                    "category": {"@id": "#factor/diet"},
+                    "value": {
+                        "annotationValue": u"vegeterian diet (derived from "
+                        u"Sorghum, Millet, Black eyed pea)",
+                        "termAccession": "",
+                        "termSource": "",
+                    },
+                }
+            ],
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
