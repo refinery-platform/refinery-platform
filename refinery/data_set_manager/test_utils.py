@@ -34,8 +34,6 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
 
         dataset = DataSet.objects.all().first()
         self.isa_tools_json_creator = ISAToolsJSONCreator(dataset)
-        with open(self.get_test_file_path('isa-json/BII-S-7.json')) as f:
-            self.expected_isa_json_dict = json.loads(f.read())
 
     def test_create_datafiles(self):
         study = Study.objects.first()
