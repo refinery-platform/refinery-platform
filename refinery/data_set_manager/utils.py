@@ -1259,7 +1259,7 @@ class ISAToolsJSONCreator:
                     self.investigation.release_date
                 ),
                 "ontologySourceReferences":
-                    self._create_ontology_source_references(),
+                self._create_ontology_source_references(),
                 "publications": self._create_publications(self.investigation),
                 "people": self._create_people(self.investigation),
                 "studies": self._create_studies(),
