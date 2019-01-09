@@ -25,8 +25,9 @@ import core
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
-    Contact, Design, Factor, Node, Ontology, Protocol, Publication, Study,
-    ProtocolComponent, ProtocolParameter)
+    Contact, Design, Factor, Node, Ontology, Protocol, ProtocolComponent,
+    ProtocolParameter, Publication, Study
+)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 
