@@ -140,9 +140,7 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             study=self.isa_tools_json_creator.studies.first()
         )
         self.assertEqual(
-            ordered(
-                self.isa_tools_json_creator._create_materials(assay)
-            ),
+            ordered(self.isa_tools_json_creator._create_materials(assay)),
             ordered(
                 self.expected_isa_json["studies"][0]["assays"][0]["materials"]
             ),
