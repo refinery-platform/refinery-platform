@@ -230,6 +230,23 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ),
         )
 
+    def test__create_protocol_components(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_protocol_components(
+                Protocol.objects.last()
+            ),
+            [
+                {
+                    "componentType": {
+                        "annotationValue": u"DNA sequencer",
+                        "termAccession": u"",
+                        "termSource": u"",
+                    },
+                    "componentName": u"454 GS FLX Titanium",
+                }
+            ],
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
