@@ -247,6 +247,39 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             ],
         )
 
+    def test__create_protocol_parameters(self):
+        self.assertEqual(
+            self.isa_tools_json_creator._create_protocol_parameters(
+                Protocol.objects.last()
+            ),
+            [
+                {
+                    "parameterName": {
+                        "annotationValue": u"sequencing instrument",
+                        "termAccession": u"",
+                        "termSource": u"",
+                    },
+                    "@id": "#parameter/sequencing_instrument",
+                },
+                {
+                    "parameterName": {
+                        "annotationValue": u"quality scorer",
+                        "termAccession": u"",
+                        "termSource": u"",
+                    },
+                    "@id": "#parameter/quality_scorer",
+                },
+                {
+                    "parameterName": {
+                        "annotationValue": u"base caller",
+                        "termAccession": u"",
+                        "termSource": u"",
+                    },
+                    "@id": "#parameter/base_caller",
+                },
+            ],
+        )
+
         )
 
     def test_isa_tab_based_datasets_supported_only(self):
