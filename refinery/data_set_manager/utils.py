@@ -1528,14 +1528,16 @@ class ISAToolsJSONCreator:
             ]
 
     def _create_sources(self, study):
+        def create_source_name(string):
+            return "source-{}".format(string)
+
         return [
             {
                 "@id": self._create_id(
-                    "source", "source-{}".format(node.name)
+                    "source", create_source_name(node.name)
                 ),
-                "characteristics": self._create_node_characteristics(
-                    node
-                )
+                "characteristics": self._create_characteristics(node),
+                "name": create_source_name(node.name)
             }
             for node in Node.objects.filter(study=study, type=Node.SOURCE)
         ]
