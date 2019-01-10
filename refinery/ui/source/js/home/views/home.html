@@ -24,7 +24,7 @@
               </span>
             </a>
           </span>
-          <a href="/dashboard"
+          <a href="/files"
             class="refinery-base btn btn-default nav-btn-series">
             <i class="fa fa-list"></i>
             <span class="minimize-button-text">
@@ -35,12 +35,17 @@
             class="refinery-base btn btn-default nav-btn-series">
             <i class="fa fa-compass"></i>
             <span class="minimize-button-text">
-              Explore Data
+              Explore Data Sets
             </span>
           </a>
         </div>
         <div class="p-t-1 m-t-1">
           <rp-video-carousel></rp-video-carousel>
+        </div>
+        <div class="p-t-1 m-t-1">
+          <li ng-repeat="htmlIntro in $ctrl.htmlAbout">
+            <p ng-bind-html="htmlAbout"></p>
+          </li>
         </div>
       </div>
     </div>

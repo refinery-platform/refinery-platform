@@ -18,6 +18,8 @@
 
     vm.$onInit = function () {
       var djangoApp = $window.djangoApp;
+      console.log('in ctrl');
+      console.log(djangoApp);
       if (_.has(djangoApp, 'refineryIntro') && djangoApp.refineryIntro.length) {
         var introParagraphs = $window.djangoApp.refineryIntro.split('   ');
         vm.htmlIntros = [];
