@@ -118,6 +118,7 @@ resource "aws_iam_instance_profile" "app_server" {
 }
 
 resource "aws_instance" "app_server" {
+  count                  = "${var.instance_count}"
   ami                    = "ami-d05e75b8"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
@@ -294,7 +295,7 @@ locals {
   }
 }
 resource "aws_elb" "http" {
-  count           = "${var.ssl_certificate_id == "" ? 1 : 0}"
+  count           = "${var.ssl_certificate_id == "" && var.instance_count > 0 ? 1 : 0}"
   instances       = ["${aws_instance.app_server.id}"]
   idle_timeout    = 180  # seconds
   name            = "${var.resource_name_prefix}"
@@ -315,7 +316,7 @@ resource "aws_elb" "http" {
   }
 }
 resource "aws_elb" "https" {
-  count           = "${var.ssl_certificate_id == "" ? 0 : 1}"
+  count           = "${var.ssl_certificate_id != "" && var.instance_count > 0 ? 1 : 0}"
   instances       = ["${aws_instance.app_server.id}"]
   idle_timeout    = 180  # seconds
   name            = "${var.resource_name_prefix}"

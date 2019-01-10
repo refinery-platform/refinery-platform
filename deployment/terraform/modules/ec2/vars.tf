@@ -4,6 +4,7 @@ variable "upload_bucket_name" {}
 variable "media_bucket_name" {}
 variable "log_bucket_name" {}
 variable "identity_pool_id" {}
+variable "instance_count" {}
 variable "instance_type" {}
 variable "key_pair_name" {}
 variable "subnet_id" {}

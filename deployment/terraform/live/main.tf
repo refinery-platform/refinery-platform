@@ -105,6 +105,7 @@ module "web" {
   media_bucket_name                    = "${module.object_storage.media_bucket_name}"
   log_bucket_name                      = "${module.object_storage.log_bucket_name}"
   identity_pool_id                     = "${module.identity_pool.identity_pool_id}"
+  instance_count                       = "${var.app_server_instance_count}"
   instance_type                        = "${var.app_server_instance_type}"
   key_pair_name                        = "${var.app_server_key_pair_name}"
   subnet_id                            = "${module.vpc.public_subnet_id}"
