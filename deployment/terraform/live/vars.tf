@@ -78,6 +78,11 @@ variable "app_server_ssh_users" {
   default     = []
 }
 
+variable "docker_instance_count" {
+  description = "Number of Docker host instances to deploy"
+  default     = 1
+}
+
 variable "git_commit" {
   description = "Github repo code commit to use for deployment"
   default     = ""

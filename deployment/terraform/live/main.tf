@@ -65,12 +65,13 @@ module "identity_pool" {
 }
 
 module "docker_host" {
-  source               = "../modules/docker_host"
-  vpc_cidr_block       = "${var.vpc_cidr_block}"
-  private_subnet_id    = "${module.vpc.private_subnet_a_id}"
-  vpc_id               = "${module.vpc.vpc_id}"
-  resource_name_prefix = "${terraform.workspace}"
-  tags                 = "${local.tags}"
+  source                = "../modules/docker_host"
+  docker_instance_count = "${var.docker_instance_count}"
+  vpc_cidr_block        = "${var.vpc_cidr_block}"
+  private_subnet_id     = "${module.vpc.private_subnet_a_id}"
+  vpc_id                = "${module.vpc.vpc_id}"
+  resource_name_prefix  = "${terraform.workspace}"
+  tags                  = "${local.tags}"
 }
 
 module "vpc" {
@@ -139,4 +140,8 @@ module "web" {
   data_volume_snapshot_id              = "${var.data_volume_snapshot_id}"
   resource_name_prefix                 = "${terraform.workspace}"
   tags                                 = "${local.tags}"
+}
+
+output "docker" {
+  value = "${module.docker_host.docker_hostname}"
 }
