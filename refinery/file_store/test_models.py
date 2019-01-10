@@ -11,8 +11,9 @@ import mock
 from override_storage import override_storage
 
 from .models import (FileExtension, FileStoreItem, FileType,
-                     _get_extension_from_string, _map_source,
-                     generate_file_source_translator, get_temp_dir)
+                     _get_extension_from_string, _get_file_extension,
+                     _map_source, generate_file_source_translator,
+                     get_temp_dir)
 
 
 class FileStoreModuleTest(TestCase):
@@ -109,27 +110,6 @@ class FileStoreItemTest(TestCase):
         saved_item = FileStoreItem.objects.get(pk=new_item.pk)
         self.assertEqual(saved_item.filetype, self.file_type)
 
-    def test_get_remote_file_extension(self):
-        item = FileStoreItem(source=self.url_source)
-        self.assertEqual(item.get_file_extension(), self.file_extension)
-
-    def test_get_remote_file_multi_extension(self):
-        # TODO: replace with create() when migrations are no longer required
-        file_type = FileType.objects.get_or_create(name='FASTQ.GZ')[0]
-        file_extension = FileExtension.objects.get_or_create(
-            name='fastq.gz', filetype=file_type
-        )[0]
-        item = FileStoreItem(source='http://example.org/test.fastq.gz')
-        self.assertEqual(item.get_file_extension(), file_extension)
-
-    def test_get_remote_file_extension_with_multiple_period_file_name(self):
-        item = FileStoreItem(source='http://example.org/test.name.tdf')
-        self.assertEqual(item.get_file_extension(), self.file_extension)
-
-    def test_get_invalid_remote_file_extension(self):
-        item = FileStoreItem(source='http://example.org/test.name.invalid')
-        self.assertRaises(RuntimeError, item.get_file_extension)
-
     def test_file_source_map_translation(self):
         with override_settings(
                 REFINERY_FILE_SOURCE_MAP={
@@ -190,11 +170,6 @@ class FileStoreItemLocalFileTest(TestCase):
         self.item.save()
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.filetype, zip_file_type)
-
-    def test_get_local_file_extension(self):
-        self.item.datafile.save(self.file_name, ContentFile(''))
-        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
-        self.assertEqual(saved_item.get_file_extension(), self.file_extension)
 
     def test_delete_local_file_on_instance_delete(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
@@ -307,3 +282,44 @@ class FileImportTaskTerminationTest(TestCase):
         ) as mock_terminate_task:
             self.item.save()
             mock_terminate_task.assert_not_called()
+
+
+class FileExtensionTest(TestCase):
+
+    def setUp(self):
+        # TODO: replace with create() when migrations are no longer required
+        self.fastq_extension = FileExtension.objects.get_or_create(
+            name='fastq',
+            filetype=FileType.objects.get_or_create(name='FASTQ')[0]
+        )[0]
+        self.gz_extension = FileExtension.objects.get_or_create(
+            name='gz', filetype=FileType.objects.get_or_create(name='GZ')[0]
+        )[0]
+        self.fastq_gz_extension = FileExtension.objects.get_or_create(
+            name='fastq.gz',
+            filetype=FileType.objects.get_or_create(name='FASTQ.GZ')[0]
+        )[0]
+
+    def test_get_existing_extension(self):
+        self.assertEqual(_get_file_extension('fastq'), self.fastq_extension)
+        self.assertEqual(_get_file_extension('random.fastq'),
+                         self.fastq_extension)
+        self.assertEqual(_get_file_extension('gz'), self.gz_extension)
+        self.assertEqual(_get_file_extension('random.gz'), self.gz_extension)
+
+    def test_get_existing_multi_extension(self):
+        self.assertEqual(_get_file_extension('fastq.gz'),
+                         self.fastq_gz_extension)
+        self.assertEqual(_get_file_extension('random.fastq.gz'),
+                         self.fastq_gz_extension)
+
+    def test_get_blank_extension(self):
+        self.assertRaises(FileExtension.DoesNotExist, _get_file_extension, '')
+
+    def test_get_non_existing_extension(self):
+        self.assertRaises(FileExtension.DoesNotExist, _get_file_extension,
+                          'invalid')
+
+    def test_get_non_existing_multi_extension(self):
+        self.assertRaises(FileExtension.DoesNotExist, _get_file_extension,
+                          'invalid.extension')
