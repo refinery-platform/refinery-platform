@@ -1,3 +1,5 @@
 output "docker_hostname" {
-  value = "${var.docker_instance_count > 0 ? "tcp://${aws_instance.docker_host.0.private_ip}:${var.docker_tcp_port}" : ""}"
+  # workaround for resource not found error when count for that resource is 0
+  # https://github.com/hashicorp/terraform/issues/16681
+  value = "${element(concat(aws_instance.docker_host.*.private_ip, list("")), 0)}"
 }

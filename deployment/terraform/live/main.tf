@@ -141,7 +141,3 @@ module "web" {
   resource_name_prefix                 = "${terraform.workspace}"
   tags                                 = "${local.tags}"
 }
-
-output "docker" {
-  value = "${module.docker_host.docker_hostname}"
-}

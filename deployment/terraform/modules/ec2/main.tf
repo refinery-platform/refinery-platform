@@ -279,7 +279,7 @@ resource "aws_security_group" "app_server" {
   }
 }
 
-# workaround inability to specify blocks and parameters conditionally
+# workaround for inability to specify blocks and parameters conditionally
 # https://github.com/hashicorp/terraform/issues/14037
 locals {
   http_listener = {
