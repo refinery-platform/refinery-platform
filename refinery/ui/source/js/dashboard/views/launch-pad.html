@@ -115,7 +115,7 @@
               </button>
               <span id="dataUploadTutorialStep0">
                <a
-                href="./data_set_manager/import/"
+                href="/data_set_manager/import/"
                 class="no-underline btn"
                 id="import-button"
                 ng-if="dashboard.showUploadButton()">
@@ -415,7 +415,7 @@
                 <a
                   class="preview"
                   title="View content in File Browser"
-                  ng-href="data_sets/{{ dataSet.uuid }}"
+                  ng-href="/data_sets/{{ dataSet.uuid }}"
                   ng-if="!dashboard.settings.djangoApp.satoriDemo"
                   refinery-tooltip
                   refinery-tooltip-container="body"
@@ -579,7 +579,7 @@
               <a
                 class="preview"
                 title="View content in File Browser"
-                ng-href="data_sets/{{ dataSet.uuid }}"
+                ng-href="/data_sets/{{ dataSet.uuid }}"
                 ng-if="!dashboard.settings.djangoApp.satoriDemo"
                 refinery-tooltip
                 refinery-tooltip-container="body"
@@ -1062,7 +1062,7 @@
             ui-scroll="workflow in dashboard.workflows"
             buffer-size="50"
             adapter="dashboard.workflowsAdapter">
-            <a ng-href="workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
+            <a ng-href="/workflows/{{ workflow.uuid }}">{{ workflow.name }}</a>
           </li>
           <li ng-if="dashboard.workflowsAdapter.isLoading">
             <div class="refinery-request-loading">
