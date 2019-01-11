@@ -355,16 +355,6 @@ REFINERY_PUBLIC_GROUP_NAME = "Public"
 # DO NOT CHANGE THIS after initialization of your Refinery instance
 REFINERY_PUBLIC_GROUP_ID = 100
 
-# Base query for what kind of ArrayExpress studies to pull in
-# (e.g. only ChIP-Seq studies, or studies updated after a certain date)
-AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
-
-# prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be
-# accessed
-AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
-
-ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
-
 # relative to MEDIA_ROOT
 FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
 # absolute path to the file store root dir
