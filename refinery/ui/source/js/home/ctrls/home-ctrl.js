@@ -32,6 +32,9 @@
           vm.htmlAbouts[j] = MarkdownJS.toHTML(aboutParagraphs[j]);
         }
       }
+      if (_.has(djangoApp, 'refineryInstanceName') && djangoApp.refineryInstanceName.length) {
+        vm.instanceName = djangoApp.refineryInstanceName;
+      }
     };
   }
 })();

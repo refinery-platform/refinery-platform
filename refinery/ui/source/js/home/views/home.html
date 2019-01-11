@@ -8,7 +8,10 @@
           id="home-intro" class="list-unstyled section-content">
            <div class="refinery-header">
               <h3>
-                Welcome to the Stem Cell Commons
+                Welcome
+                <span ng-show="$ctrl.instanceName.length">
+                  to {{ $ctrl.instanceName }}
+                </span>
               </h3>
             </div>
           <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
