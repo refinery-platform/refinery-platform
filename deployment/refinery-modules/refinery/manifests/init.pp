@@ -12,7 +12,7 @@ file { "/home/${app_user}/.ssh/config":
   group  => $app_group,
 }
 
-file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
+file { ["${project_root}/import", "${project_root}/static"]:
   ensure => directory,
   owner  => $app_user,
   group  => $app_group,
