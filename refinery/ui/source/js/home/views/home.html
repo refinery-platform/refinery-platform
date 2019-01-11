@@ -5,7 +5,7 @@
     <div class="col-md-5 cardless-col">
       <div class="col-content scrollable-list">
         <ul ng-show="$ctrl.htmlAbouts.length"
-          id="home-intro" class="list-unstyled p-r-1 m-r-1">
+          id="home-intro" class="list-unstyled section-content">
            <div class="refinery-header">
               <h3>
                 Welcome to the Stem Cell Commons
@@ -15,13 +15,22 @@
             <p ng-bind-html="htmlIntro"></p>
           </li>
         </ul>
-        <div id="home-nav-buttons p-l-1 m-l-1">
+        <div id="home-nav-buttons" class="section-content">
           <span ng-if="!$ctrl.isLoggedIn">
             <a href="/accounts/register/"
               class="btn btn-primary nav-btn-series">
               <i class="fa fa-pencil"></i>
               <span class="minimize-button-text">
                 Register
+              </span>
+            </a>
+          </span>
+          <span ng-if="$ctrl.isLoggedIn">
+            <a href="/data_set_manager/import/"
+              class="btn btn-primary nav-btn-series">
+              <i class="fa fa-circle-plus"></i>
+              <span class="minimize-button-text">
+                Upload Data
               </span>
             </a>
           </span>
@@ -40,11 +49,11 @@
             </span>
           </a>
         </div>
-        <div class="p-t-1 m-t-1">
+        <div class="section-content">
           <rp-video-carousel></rp-video-carousel>
         </div>
-        <div class="p-t-1 m-t-1">
-          <ul ng-show="$ctrl.htmlAbouts.length" class="list-unstyled p-r-1 m-r-1">
+        <div>
+          <ul ng-show="$ctrl.htmlAbouts.length" class="list-unstyled section-content">
             <div class="refinery-header">
               <h3>
                   About
@@ -60,13 +69,13 @@
     <div class="col-md-5 cardless-col">
       <div class="col-content scrollable-list">
         <rp-data-set-chart></rp-data-set-chart>
-        <div>
+        <div class="section-content">
           <rp-tool-list></rp-tool-list>
         </div>
       </div>
     </div>
     <div class="col-md-2 cardless-col">
-      <div>
+      <div class="section-content">
         <rp-twitter-feed></rp-twitter-feed>
       </div>
     </div>

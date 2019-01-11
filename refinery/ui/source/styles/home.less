@@ -7,18 +7,12 @@
   background-color: @white;
   height: @card-full-view;
   margin-top: -30px;
-  p {
-    text-align: justify;
-  }
-  li {
-    text-align: justify;
-  }
 
   #home-component {
     height: @card-full-view;
     padding-left: 1em;
     padding-right: 1em;
-    padding-top: 1em;
+    padding-top: .8em;
     .nav-btn-series {
       margin: 1em 2em 1em 0;
     }
@@ -28,27 +22,24 @@
       overflow: scroll;
       .col-content {
         height:  ~"calc(@{card-full-view} - 1.5em)";
-        width: 95%;
       }
     }
+    .section-content {
+      padding: .5em .5em 0 1em;
+      margin-top: .5em;
+    }
   }
 
-  #home-chart {
-    width: 90%;
-    #home-chart-ui-select {
-    float: right
-    }
+  #home-chart-ui-select {
+    padding-bottom: .3em;
+    float: right;
     .ui-select-label {
-      display: inline-block;
-      font-weight: normal;
+      display: inline;
+      color: @gray-light;;
+      font-weight: 700;
       padding-right: .3em;
+      padding-top: .2em;
     }
-  }
-
-  #home-tool-list {
-    margin-top: 1em;
-    padding-top: 2em;
-    width: 95%;
   }
 
   #home-twitter-feed {
@@ -64,17 +55,12 @@
 
 
 //******* you-tube carousel css ********//
-  #video-carousel-section {
-    width: 98%;
-  }
-
   #home-video-carousel {
     position: relative;
   }
 
   .youtube-carousel {
     border: 4px solid @black;
-    width: 90%;
     height: 100%;
   }
 

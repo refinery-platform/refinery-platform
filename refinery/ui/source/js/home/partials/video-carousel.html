@@ -12,7 +12,7 @@
         ng-repeat="videoId in videoIds track by $index">
         <div class="youtube-video" id="{{ videoId }}"></div>
         <div class="carousel-caption">
-          Open Insights Lecture, Creating Explorable Visualization Design Spaces
+          {{ videoCaptions[$index] }}
         </div>
       </div>
     </div>
