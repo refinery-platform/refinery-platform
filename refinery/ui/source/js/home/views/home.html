@@ -4,17 +4,21 @@
   <div class="row">
     <div class="col-md-5 cardless-col">
       <div class="col-content scrollable-list">
-        <ul id="home-intro" class="list-unstyled p-r-1 m-r-1">
+        <ul ng-show="$ctrl.htmlAbouts.length"
+          id="home-intro" class="list-unstyled section-content">
            <div class="refinery-header">
               <h3>
-                Welcome to the Stem Cell Commons
+                Welcome
+                <span ng-show="$ctrl.instanceName.length">
+                  to {{ $ctrl.instanceName }}
+                </span>
               </h3>
             </div>
           <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
             <p ng-bind-html="htmlIntro"></p>
           </li>
         </ul>
-        <div id="home-nav-buttons p-l-1 m-l-1">
+        <div id="home-nav-buttons" class="section-content">
           <span ng-if="!$ctrl.isLoggedIn">
             <a href="/accounts/register/"
               class="btn btn-primary nav-btn-series">
@@ -24,7 +28,16 @@
               </span>
             </a>
           </span>
-          <a href="/dashboard"
+          <span ng-if="$ctrl.isLoggedIn">
+            <a href="/data_set_manager/import/"
+              class="btn btn-primary nav-btn-series">
+              <i class="fa fa-plus-circle"></i>
+              <span class="minimize-button-text">
+                Upload
+              </span>
+            </a>
+          </span>
+          <a href="/files"
             class="refinery-base btn btn-default nav-btn-series">
             <i class="fa fa-list"></i>
             <span class="minimize-button-text">
@@ -35,25 +48,37 @@
             class="refinery-base btn btn-default nav-btn-series">
             <i class="fa fa-compass"></i>
             <span class="minimize-button-text">
-              Explore Data
+              Explore Data Sets
             </span>
           </a>
         </div>
-        <div class="p-t-1 m-t-1">
+        <div class="section-content">
           <rp-video-carousel></rp-video-carousel>
+        </div>
+        <div>
+          <ul ng-show="$ctrl.htmlAbouts.length" class="list-unstyled section-content">
+            <div class="refinery-header">
+              <h3>
+                  About
+              </h3>
+            </div>
+            <li ng-repeat="htmlAbout in $ctrl.htmlAbouts">
+              <p ng-bind-html="htmlAbout"></p>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
     <div class="col-md-5 cardless-col">
       <div class="col-content scrollable-list">
         <rp-data-set-chart></rp-data-set-chart>
-        <div>
+        <div class="section-content">
           <rp-tool-list></rp-tool-list>
         </div>
       </div>
     </div>
     <div class="col-md-2 cardless-col">
-      <div>
+      <div class="section-content">
         <rp-twitter-feed></rp-twitter-feed>
       </div>
     </div>

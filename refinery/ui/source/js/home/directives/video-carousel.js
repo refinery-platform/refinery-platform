@@ -11,9 +11,9 @@
     .module('refineryHome')
     .directive('rpVideoCarousel', rpVideoCarousel);
 
-  rpVideoCarousel.$inject = ['$timeout', '$window', 'YouTube'];
+  rpVideoCarousel.$inject = ['_', '$timeout', '$window', 'YouTube', 'settings'];
 
-  function rpVideoCarousel ($timeout, $window, YouTube) {
+  function rpVideoCarousel (_, $timeout, $window, YouTube, settings) {
     return {
       restrict: 'E',
       templateUrl: function () {
@@ -22,7 +22,13 @@
       link: function (scope, elem) {
         // elem is the main carousel container
         var carouselDiv;
-        scope.videoIds = ['rdTkUVJYaE0', 'Dd2oZAZJ0-c', 'a11GSabhDfs'];
+        var djangoApp = settings.djangoApp;
+        if (_.has(djangoApp, 'refineryVideos') && djangoApp.refineryVideos.length) {
+          scope.videoIds = djangoApp.refineryVideos.split(',');
+        }
+        if (_.has(djangoApp, 'refineryVideoCaptions') && djangoApp.refineryVideoCaptions.length) {
+          scope.videoCaptions = djangoApp.refineryVideoCaptions.split('   ');
+        }
         var players = []; // list of video players
 
         /**

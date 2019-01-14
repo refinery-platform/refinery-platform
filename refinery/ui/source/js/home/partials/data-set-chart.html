@@ -1,23 +1,28 @@
-<div id="home-chart">
+<div id="home-chart" class="section-content">
   <div class="refinery-header">
     <h3>
-      Available Files (Top Five in Categories)
+      Data Overview
     </h3>
   </div>
-  <ui-select
-    append-to-body="true"
-    ng-model="DSCtrl.selectedAttribute.select"
-    on-select="DSCtrl.updateAttribute($item)"
-    theme="select2"
-    class="text-left select-right">
-     <ui-select-match placeholder="Select an attribute">
-       {{$select.selected.name }}
-     </ui-select-match>
-    <ui-select-choices
-      position="down"
-      repeat="attribute in DSCtrl.attributes | orderBy:'name' track by $index">
-      <span ng-bind-html="attribute.name"></span>
-    </ui-select-choices>
-  </ui-select>
+  <div id="home-chart-ui-select">
+    <label class="ui-select-label pull-left">
+      Top Five Categories
+    </label>
+    <ui-select
+      append-to-body="true"
+      ng-model="DSCtrl.selectedAttribute.select"
+      on-select="DSCtrl.updateAttribute($item)"
+      theme="select2"
+      class="select-right">
+      <ui-select-match placeholder="Select an attribute">
+         {{$select.selected.name }}
+      </ui-select-match>
+      <ui-select-choices
+        position="down"
+        repeat="attribute in DSCtrl.attributes | orderBy:'name' track by $index">
+        <span ng-bind-html="attribute.name"></span>
+      </ui-select-choices>
+    </ui-select>
+  </div>
   <canvas id="files-bar-chart"></canvas>
 </div>

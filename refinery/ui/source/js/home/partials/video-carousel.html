@@ -1,4 +1,4 @@
-<div id="video-carousel-section">
+<div id="video-carousel-section" ng-if="videoIds.length">
   <div class="refinery-header">
     <h3>
       Features at a Glance
@@ -12,18 +12,18 @@
         ng-repeat="videoId in videoIds track by $index">
         <div class="youtube-video" id="{{ videoId }}"></div>
         <div class="carousel-caption">
-          Open Insights Lecture, Creating Explorable Visualization Design Spaces
+          {{ videoCaptions[$index] }}
         </div>
       </div>
     </div>
     <div class="controls">
       <a class="left carousel-control" ng-click="navPrev()">
-        <div>
+        <div class="left-button">
           <i class="fa fa-chevron-left"></i>
         </div>
       </a>
       <a class="right carousel-control" ng-click="navNext()">
-        <div>
+        <div class="right-button">
           <i class="fa fa-chevron-right"></i>
         </div>
       </a>
