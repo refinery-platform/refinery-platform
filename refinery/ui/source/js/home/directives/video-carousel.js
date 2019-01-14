@@ -23,7 +23,6 @@
         // elem is the main carousel container
         var carouselDiv;
         var djangoApp = settings.djangoApp;
-        console.log(djangoApp);
         if (_.has(djangoApp, 'refineryVideos') && djangoApp.refineryVideos.length) {
           scope.videoIds = djangoApp.refineryVideos.split(',');
         }
