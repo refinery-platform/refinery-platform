@@ -1582,20 +1582,23 @@ class ISAToolsJSONCreator:
                 "characteristicCategories":
                     self._create_characteristic_categories(study),
                 "processSequence": self._create_process_sequence(study),
-                "unitCategories": self._create_unit_categories()
+                "unitCategories": self._create_unit_categories(study)
             }
             for study in self.studies
         ]
 
-    def _create_unit_categories(self):
+    def _create_unit_categories(self, study):
         unit_categories = [
             {
-                "@id": self._create_id("Unit", unit.value_unit),
-                "annotationValue": unit.value_unit,
-                "termAccession": unit.value_accession,
-                "termSource": unit.value_source
+                "@id": self._create_id("Unit",
+                                       annotated_node.attribute.value_unit),
+                "annotationValue": annotated_node.attribute.value_unit,
+                "termAccession": annotated_node.attribute.value_accession,
+                "termSource": annotated_node.attribute.value_source
             }
-            for unit in Attribute.objects.filter(value_unit__isnull=False)
+            for annotated_node in AnnotatedNode.objects.filter(
+                attribute__value_unit__isnull=False, study=study
+            )
         ]
 
         # Return a unique list of unit category dicts
