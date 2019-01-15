@@ -1813,19 +1813,6 @@ body.repo-mode .refinery-dashboard {
     text-overflow: ellisis;
   }
 
-  .scrollable-list {
-    overflow-y: scroll;
-    &::-webkit-scrollbar {
-      -webkit-appearance: none;
-      width: 7px;
-    }
-    &::-webkit-scrollbar-thumb {
-      border-radius: 4px;
-      background-color: rgba(0,0,0,.3);
-      -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
-    }
-  }
-
   .notification {
     background-color: @white;
   }
@@ -1887,9 +1874,10 @@ body.repo-mode .refinery-dashboard {
         float: right;
       }
       .fa-search {
-        right: 200px;
-        left: unset;
-        position: absolute;
+        position: unset; //override setting from launch pad
+      }
+      #dashboard-data-search {
+        width: 50%;
       }
       .btn {
         float: right;
@@ -1898,6 +1886,13 @@ body.repo-mode .refinery-dashboard {
       .fa-times-circle {
         right: 80px;
       }
+    }
+
+    #split-button {
+      width: 85%;
+      max-width: 400px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     #dashboard-data-set-list {
@@ -2062,6 +2057,18 @@ body.repo-mode .refinery-dashboard {
   @media (max-width: @screen-md-min) {
      #dashboard-collaboration-card {
        margin-top: 1.2em;
+     }
+     #split-button {
+      max-width: 175px !important;
+    }
+  }
+
+  @media (max-width: 1440px) {
+    .min-text-hide {
+      display: none;
+    }
+    #dashboard-data-search {
+        width: 33%;
      }
   }
 }

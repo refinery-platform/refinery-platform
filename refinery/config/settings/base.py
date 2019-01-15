@@ -355,16 +355,6 @@ REFINERY_PUBLIC_GROUP_NAME = "Public"
 # DO NOT CHANGE THIS after initialization of your Refinery instance
 REFINERY_PUBLIC_GROUP_ID = 100
 
-# Base query for what kind of ArrayExpress studies to pull in
-# (e.g. only ChIP-Seq studies, or studies updated after a certain date)
-AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
-
-# prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be
-# accessed
-AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
-
-ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
-
 # relative to MEDIA_ROOT
 FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
 # absolute path to the file store root dir
@@ -612,6 +602,8 @@ DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB = \
     get_setting("DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB")
 
+REFINERY_ABOUT = get_setting("REFINERY_ABOUT")
+
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
@@ -621,6 +613,7 @@ REFINERY_INTRO = get_setting("REFINERY_INTRO")
 
 REFINERY_TWITTER = get_setting("REFINERY_TWITTER")
 
+REFINERY_VIDEO_CAPTIONS = get_setting("REFINERY_VIDEO_CAPTIONS")
 REFINERY_VIDEOS = get_setting("REFINERY_VIDEOS")
 
 USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")

@@ -44,6 +44,7 @@ resource "aws_s3_bucket" "uploaded_files" {
   }
 
   lifecycle_rule {
+    id                                     = "Delete objects"
     enabled                                = true
     abort_incomplete_multipart_upload_days = 1
     expiration {
@@ -75,8 +76,10 @@ PUBLIC_ACCESS
   }
 
   lifecycle_rule {
-    id      = "Delete non-current object versions and expired delete markers"
-    enabled = true
+    id                                     = "Delete non-current object versions and expired delete markers"
+    enabled                                = true
+    # delete results of interrupted FileImportTask operations
+    abort_incomplete_multipart_upload_days = 1
     expiration {
       expired_object_delete_marker = true
     }

@@ -24,6 +24,7 @@ resource "aws_security_group" "allow_docker" {
 }
 
 resource "aws_instance" "docker_host" {
+  count                  = "${var.docker_instance_count}"
   ami                    = "ami-2757f631"
   subnet_id              = "${var.private_subnet_id}"
   instance_type          = "t2.medium"

@@ -126,10 +126,13 @@ class FileStoreItem(models.Model):
         if not self.filetype:
             # set file type using file extension
             try:
-                extension = self.get_file_extension()
-            except RuntimeError as exc:
+                extension = _get_file_extension(self.get_extension())
+            except FileExtension.DoesNotExist as exc:
                 logger.warn("Could not assign type to file '%s': %s",
                             self, exc)
+            except FileExtension.MultipleObjectsReturned as exc:
+                logger.critical("Could not assign type to file '%s': %s",
+                                self, exc)
             else:
                 self.filetype = extension.filetype
 
@@ -143,29 +146,10 @@ class FileStoreItem(models.Model):
             return self.datafile.size
         except ValueError:  # no datafile
             return 0
-        except (EnvironmentError, botocore.exceptions.ClientError,
-                botocore.exceptions.ParamValidationError) as exc:
+        except (EnvironmentError, botocore.exceptions.BotoCoreError) as exc:
             # file is missing
             logger.critical("Error getting size for '%s': %s", self, exc)
             return 0
-
-    def get_file_extension(self):
-        """Return FileExtension object based on datafile name or source"""
-        extension = self.get_extension()
-        try:
-            return FileExtension.objects.get(name=extension)
-        except FileExtension.DoesNotExist:
-            extension = _get_extension_from_string(extension)
-            try:
-                return FileExtension.objects.get(name=extension)
-            except FileExtension.DoesNotExist as exc:
-                raise RuntimeError(
-                    "Extension '{}' is not valid: {}".format(extension, exc)
-                )
-            except FileExtension.MultipleObjectsReturned as exc:
-                raise RuntimeError(exc)
-        except FileExtension.MultipleObjectsReturned as exc:
-            raise RuntimeError(exc)
 
     def get_extension(self):
         """Return extension of datafile name or file name in source"""
@@ -175,14 +159,14 @@ class FileStoreItem(models.Model):
             return _get_extension_from_string(self.source)
 
     def delete_datafile(self, save_instance=True):
-        """Delete datafile on disk and cancel file import"""
+        """Delete file from disk or S3 bucket and cancel file import"""
         self.terminate_file_import_task()
         if self.datafile:
             file_name = self.datafile.name
             try:
                 self.datafile.delete(save=save_instance)
-            except (EnvironmentError, botocore.exceptions.ClientError,
-                    botocore.exceptions.ParamValidationError) as exc:
+            except (EnvironmentError,
+                    botocore.exceptions.BotoCoreError) as exc:
                 logger.error("Error deleting file '%s': %s", file_name, exc)
             else:
                 logger.info("Deleted datafile '%s'", file_name)
@@ -201,7 +185,7 @@ class FileStoreItem(models.Model):
                 try:
                     copy_s3_object(storage.bucket_name, self.datafile.name,
                                    storage.bucket_name, new_file_store_name)
-                except RuntimeError as exc:
+                except botocore.exceptions.BotoCoreError as exc:
                     logger.error("Renaming datafile '%s' failed: %s",
                                  self.datafile.name, exc)
                 else:
@@ -220,6 +204,8 @@ class FileStoreItem(models.Model):
                 else:
                     self.datafile.name = new_file_store_name
                     self.save()
+            logger.info("Renamed datafile '%s' to '%s'",
+                        self.datafile.name, new_name)
         else:
             logger.error(
                 "Error renaming datafile of FileStoreItem with UUID '%s': "
@@ -292,3 +278,13 @@ def _get_extension_from_string(path):
     if len(file_name_parts) > 2:  # two or more periods in file name
         return '.'.join(file_name_parts[-2:])
     return file_name_parts[-1]  # one period in file name
+
+
+def _get_file_extension(extension):
+    """Return FileExtension object for a given file name or extension string"""
+    try:
+        return FileExtension.objects.get(name=extension)
+    except FileExtension.DoesNotExist:
+        if not extension:
+            raise
+        return _get_file_extension('.'.join(extension.split('.')[1:]))

@@ -1,43 +1,86 @@
-<div id="home-component">
-  <div class="row p-t-1">
-    <div class="col-md-6">
-      <ul class="list-unstyled m-l-1-2 p-l-1-3 p-r-1-3">
-        <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
-          <p ng-bind-html="htmlIntro"></p>
-        </li>
-      </ul>
-      <rp-video-carousel></rp-video-carousel>
-    </div>
-    <div class="col-md-6">
-      <div class="row">
-        <div class="col-md-12">
-          <rp-data-set-chart></rp-data-set-chart>
+<div
+  class="refinery-panel refinery-panel-content jquery-full-height no-overflow"
+  id="home-component">
+  <div class="row">
+    <div class="col-md-5 cardless-col">
+      <div class="col-content scrollable-list">
+        <ul ng-show="$ctrl.htmlAbouts.length"
+          id="home-intro" class="list-unstyled section-content">
+           <div class="refinery-header">
+              <h3>
+                Welcome
+                <span ng-show="$ctrl.instanceName.length">
+                  to {{ $ctrl.instanceName }}
+                </span>
+              </h3>
+            </div>
+          <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
+            <p ng-bind-html="htmlIntro"></p>
+          </li>
+        </ul>
+        <div id="home-nav-buttons" class="section-content">
+          <span ng-if="!$ctrl.isLoggedIn">
+            <a href="/accounts/register/"
+              class="btn btn-primary nav-btn-series">
+              <i class="fa fa-pencil"></i>
+              <span class="minimize-button-text">
+                Register
+              </span>
+            </a>
+          </span>
+          <span ng-if="$ctrl.isLoggedIn">
+            <a href="/data_set_manager/import/"
+              class="btn btn-primary nav-btn-series">
+              <i class="fa fa-plus-circle"></i>
+              <span class="minimize-button-text">
+                Upload
+              </span>
+            </a>
+          </span>
+          <a href="/files"
+            class="refinery-base btn btn-default nav-btn-series">
+            <i class="fa fa-list"></i>
+            <span class="minimize-button-text">
+              Browse Files
+            </span>
+          </a>
+          <a href="/explore"
+            class="refinery-base btn btn-default nav-btn-series">
+            <i class="fa fa-compass"></i>
+            <span class="minimize-button-text">
+              Explore Data Sets
+            </span>
+          </a>
+        </div>
+        <div class="section-content">
+          <rp-video-carousel></rp-video-carousel>
+        </div>
+        <div>
+          <ul ng-show="$ctrl.htmlAbouts.length" class="list-unstyled section-content">
+            <div class="refinery-header">
+              <h3>
+                  About
+              </h3>
+            </div>
+            <li ng-repeat="htmlAbout in $ctrl.htmlAbouts">
+              <p ng-bind-html="htmlAbout"></p>
+            </li>
+          </ul>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-          <a href="/accounts/register/"
-            class="btn btn-lg btn-primary nav-btn-series">
-            <i class="fa fa-user"></i> Register
-          </a>
-          <a href="/dashboard"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-list"></i> View Data
-          </a>
-          <a href="/exploration"
-            class="refinery-base btn btn-lg btn-default nav-btn-series">
-            <i class="fa fa-compass"></i> Explore Data
-          </a>
+    </div>
+    <div class="col-md-5 cardless-col">
+      <div class="col-content scrollable-list">
+        <rp-data-set-chart></rp-data-set-chart>
+        <div class="section-content">
+          <rp-tool-list></rp-tool-list>
         </div>
       </div>
     </div>
-  </div>
-  <div class="row p-t-1">
-    <div class="col-md-6 m-l-1-2 p-l-1-3 p-r-1-3">
-      <rp-twitter-feed></rp-twitter-feed>
-    </div>
-    <div class="col-md-4">
-      <rp-tool-list></rp-tool-list>
+    <div class="col-md-2 cardless-col">
+      <div class="section-content">
+        <rp-twitter-feed></rp-twitter-feed>
+      </div>
     </div>
   </div>
 </div>

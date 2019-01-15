@@ -49,6 +49,8 @@
               borderWidth: 1
             },
             options: {
+              defaultFontFamily: "'Source Sans Pro', 'Helvetica Neue'," +
+              " 'Helvetica', 'Arial', 'sans-serif'",
               legend: { display: false },
               tooltips: {
                 callbacks: {
@@ -84,8 +86,7 @@
           domChart.onclick = function (e) {
             var activePoint = ctrl.homeChart.getElementAtEvent(e);
             if (activePoint.length && activePoint[0]._model) {
-               // TODO: after move to home, can use $location
-              $window.location.href = '/files/#?' + ctrl.selectedAttribute.select.solr_name +
+              $window.location.href = '/files/#?' + ctrl.selectedAttribute.select.solrName +
                 '=' + activePoint[0]._model.label.join(' ');
             }
           };

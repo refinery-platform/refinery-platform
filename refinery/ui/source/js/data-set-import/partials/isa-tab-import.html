@@ -126,7 +126,7 @@
         ng-click="isaTabImport.confirmImport()"
         ng-disabled="(!isaTabImport.file && !isaTabImport.urlToFile) ||
         isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
-         || isaTabImport.fileStatus !== 'none'">
+         || isaTabImport.fileStatus !== 'none' || isaTabImport.isImporting">
         Submit
       </button>
       <span class="m-l-1 float-left" ng-if="isaTabImport.showFileUpload">

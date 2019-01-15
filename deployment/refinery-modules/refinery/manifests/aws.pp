@@ -41,13 +41,6 @@ file { '/data/import':
   mode => "0755",
 }
 ->
-file { '/data/isa-tab':
-  ensure => directory,
-  owner => "$app_user",
-  group => "$app_user",
-  mode => "0755",
-}
-->
 file { "/data/solr":
   ensure => directory,
   owner => "$app_user",

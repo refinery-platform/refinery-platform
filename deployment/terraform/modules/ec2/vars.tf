@@ -4,6 +4,7 @@ variable "upload_bucket_name" {}
 variable "media_bucket_name" {}
 variable "log_bucket_name" {}
 variable "identity_pool_id" {}
+variable "instance_count" {}
 variable "instance_type" {}
 variable "key_pair_name" {}
 variable "subnet_id" {}
@@ -32,10 +33,7 @@ variable "refinery_custom_navbar_item" {}
 variable "refinery_google_analytics_id" {}
 variable "refinery_google_recaptcha_site_key" {}
 variable "refinery_google_recaptcha_secret_key" {}
-variable "refinery_intro" {}
 variable "refinery_s3_user_data" {}
-variable "refinery_twitter" {}
-variable "refinery_videos" {}
 variable "refinery_welcome_email_subject" {}
 variable "refinery_welcome_email_message" {}
 variable "refinery_user_files_columns" {}
