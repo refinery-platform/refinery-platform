@@ -737,72 +737,10 @@ class IsaTabParser:
                 # Ontology instances after we have an Investigation
                 self.ontology_source_reference_data.append(model_parameters)
 
+            elif section_title == "STUDY PROTOCOLS":
+                self._create_protocol_and_related_models(model_parameters)
             else:
-                if section_title == "STUDY PROTOCOLS":
-                    protocol_parameter_names = model_parameters.pop(
-                        "parameter_name"
-                    ).split(";")
-                    protocol_parameter_name_term_accession_numbers = \
-                        model_parameters.pop(
-                            "parameter_name_accession"
-                        ).split(";")
-                    protocol_parameter_name_term_sources = \
-                        model_parameters.pop(
-                            "parameter_name_source"
-                        ).split(";")
 
-                    protocol_parameter_fields = zip(
-                        protocol_parameter_names,
-                        protocol_parameter_name_term_accession_numbers,
-                        protocol_parameter_name_term_sources
-                    )
-
-                    protocol_component_names = model_parameters.pop(
-                        "component_name"
-                    ).split(";")
-
-                    protocol_component_types = model_parameters.pop(
-                        "component_type"
-                    ).split(";")
-                    protocol_component_type_term_accession_numbers = \
-                        model_parameters.pop(
-                            "component_type_accession"
-                        ).split(";")
-                    protocol_component_type_term_sources = \
-                        model_parameters.pop(
-                            "component_type_source"
-                        ).split(";")
-
-                    protocol_component_fields = zip(
-                        protocol_component_names,
-                        protocol_component_types,
-                        protocol_component_type_term_accession_numbers,
-                        protocol_component_type_term_sources
-                    )
-
-                    protocol_instance = model_class.objects.create(
-                        **model_parameters
-                    )
-                    protocol_instance.save()
-
-                    for parameter_fields in protocol_parameter_fields:
-                        if not all(field == u"" for field in parameter_fields):
-                            ProtocolParameter.objects.create(
-                                protocol=protocol_instance,
-                                name=parameter_fields[0],
-                                name_accession=parameter_fields[1],
-                                name_source=parameter_fields[2]
-                            )
-
-                    for component_field in protocol_component_fields:
-                        if not all(field == u"" for field in component_field):
-                            ProtocolComponent.objects.create(
-                                protocol=protocol_instance,
-                                name=component_field[0],
-                                type=component_field[1],
-                                type_accession=component_field[2],
-                                type_source=component_field[3]
-                            )
                 else:
                     model_instance = model_class.objects.create(
                         **model_parameters
@@ -819,6 +757,45 @@ class IsaTabParser:
             if section_title == "INVESTIGATION":
                 model_instance = Investigation.objects.create()
                 self._current_investigation = model_instance
+
+    def _create_protocol_and_related_models(self, model_parameters):
+        def get_model_parameters(parameter_names):
+            return [
+                model_parameters.pop(parameter_name).split(";")
+                for parameter_name in parameter_names
+            ]
+
+        protocol_parameter_fields = zip(
+            *get_model_parameters(["parameter_name",
+                                   "parameter_name_accession",
+                                   "parameter_name_source"])
+        )
+        protocol_component_fields = zip(
+            *get_model_parameters(["component_name", "component_type",
+                                   "component_type_accession",
+                                   "component_type_source"])
+        )
+
+        protocol_instance = Protocol.objects.create(**model_parameters)
+
+        for parameter_fields in protocol_parameter_fields:
+            if not all(field == u"" for field in parameter_fields):
+                ProtocolParameter.objects.create(
+                    protocol=protocol_instance,
+                    name=parameter_fields[0],
+                    name_accession=parameter_fields[1],
+                    name_source=parameter_fields[2]
+                )
+
+        for component_field in protocol_component_fields:
+            if not all(field == u"" for field in component_field):
+                ProtocolComponent.objects.create(
+                    protocol=protocol_instance,
+                    name=component_field[0],
+                    type=component_field[1],
+                    type_accession=component_field[2],
+                    type_source=component_field[3]
+                )
 
     # parse an investigation section
     def _parse_investigation_file_section(self, section_title):
