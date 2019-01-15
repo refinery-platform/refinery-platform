@@ -10,7 +10,6 @@ $django_root = "${project_root}/refinery"
 $requirements = "${project_root}/requirements.txt"
 $requirements_aws = "${project_root}/requirements-aws.txt"
 $data_dir = '/data'
-$isa_tab_dir = "${data_dir}/isa-tab"
 $media_root = "${data_dir}/media"
 $import_dir = "${data_dir}/import"
 $solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
