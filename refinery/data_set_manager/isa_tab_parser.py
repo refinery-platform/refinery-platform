@@ -740,16 +740,15 @@ class IsaTabParser:
             elif section_title == "STUDY PROTOCOLS":
                 self._create_protocol_and_related_models(model_parameters)
             else:
+                # TODO: This abstraction isn't very helpful. Its hard to
+                # distinguish the model being used and its respective
+                # parameters without dropping into a debugger
+                model_instance = model_class.objects.create(**model_parameters)
 
-                else:
-                    model_instance = model_class.objects.create(
-                        **model_parameters
-                    )
-                    model_instance.save()
-                    if section_title == "INVESTIGATION":
-                        self._current_investigation = model_instance
-                    if section_title == "STUDY":
-                        self._current_study = model_instance
+                if section_title == "INVESTIGATION":
+                    self._current_investigation = model_instance
+                if section_title == "STUDY":
+                    self._current_study = model_instance
 
         # create an investigation even if no information is provided
         # (all fields empty, no tab after any field name)
