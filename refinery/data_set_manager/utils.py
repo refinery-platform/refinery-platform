@@ -1143,7 +1143,7 @@ class ISAToolsJSONCreator:
                 return [
                     {
                         "name": attribute.subtype,
-                        "value": attribute.value
+                        "value": attribute.properly_casted_value
                     }
                 ]
         # TODO Not sure if other types of comments are stored in the
