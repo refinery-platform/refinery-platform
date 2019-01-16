@@ -1,6 +1,7 @@
 from __future__ import division
 import contextlib
 import os
+import tempfile
 import threading
 import urllib2
 import urlparse
@@ -11,7 +12,7 @@ import botocore
 import celery
 import requests
 
-from .models import FileStoreItem, get_temp_dir
+from .models import FileStoreItem
 from .utils import (S3MediaStorage, SymlinkedFileSystemStorage,
                     copy_file_object, copy_s3_object, delete_file,
                     delete_s3_object, download_s3_object, get_file_size,
@@ -97,7 +98,7 @@ class FileImportTask(celery.Task):
         logger.debug("Transferring from '%s' to '%s'",
                      source_path, file_store_path)
         if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
-                                   get_temp_dir())):
+                                   tempfile.gettempdir())):
             move_file(source_path, file_store_path)
         else:
             if symlink:
@@ -140,7 +141,7 @@ class FileImportTask(celery.Task):
         logger.info("Finished transferring from '%s' to 's3://%s/%s'",
                     source_path, settings.MEDIA_BUCKET, file_store_name)
 
-        if source_path.startswith(get_temp_dir()):
+        if source_path.startswith(tempfile.gettempdir()):
             delete_file(source_path)
 
         return file_store_name

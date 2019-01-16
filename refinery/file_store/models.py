@@ -31,7 +31,6 @@ logger = logging.getLogger(__name__)
 
 # create data storage directories
 make_dir(settings.FILE_STORE_BASE_DIR)
-make_dir(settings.FILE_STORE_TEMP_DIR)
 
 
 def _map_source(source):
@@ -253,11 +252,6 @@ class FileStoreItem(models.Model):
         # unintended side-effects
         self.datafile = None
         self.save()
-
-
-def get_temp_dir():
-    """Return the absolute path to the file store temp dir"""
-    return settings.FILE_STORE_TEMP_DIR
 
 
 # post_delete is safer than pre_delete
