@@ -1438,6 +1438,10 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                       context.exception.message)
         self.assertTrue(_are_workflow_outputs_present_mock.called)
 
+    def test_workflow_description_is_set_from_tool_definition_annotation(self):
+        self.create_workflow_tool_definition()
+        self.assertEqual(self.td.description, self.td.workflow.description)
+
 
 class ToolDefinitionTests(ToolManagerTestBase):
     def setUp(self):

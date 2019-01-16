@@ -114,6 +114,7 @@ def create_tool_definition(annotation_data):
         workflow = WorkflowFactory(
             uuid=str(uuid.uuid4()),
             name=annotation_data["name"],
+            description=annotation["description"],
             summary="Workflow for: {}".format(annotation_data["name"]),
             internal_id=annotation_data["galaxy_workflow_id"],
             workflow_engine=workflow_engine,
