@@ -127,7 +127,8 @@ def delete_s3_object(bucket, key):
     logger.debug("Deleting 's3://%s/%s'",  bucket, key)
     try:
         s3.delete_object(Bucket=bucket, Key=key)
-    except botocore.exceptions.BotoCoreError as exc:
+    except (botocore.exceptions.BotoCoreError,
+            botocore.exceptions.ClientError) as exc:
         logger.error("Error deleting 's3://%s/%s': %s", bucket, key, exc)
     else:
         logger.info("Deleted 's3://%s/%s'", bucket, key)
@@ -155,7 +156,8 @@ def get_file_size(file_location):
         bucket, key = parse_s3_url(file_location)
         try:
             return s3.head_object(Bucket=bucket, Key=key)['ContentLength']
-        except botocore.exceptions.BotoCoreError:
+        except (botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError):
             return UNKNOWN_FILE_SIZE
     else:
         try:

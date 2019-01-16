@@ -134,7 +134,8 @@ class FileImportTask(celery.Task):
                     source_file_object, settings.MEDIA_BUCKET, file_store_name,
                     ProgressPercentage(source_path, self.request.id)
                 )
-        except (EnvironmentError, botocore.exceptions.BotoCoreError) as exc:
+        except (EnvironmentError, botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError) as exc:
             raise RuntimeError("Error copying from '{}': {}".format(
                 source_path, exc))
         logger.info("Finished transferring from '%s' to 's3://%s/%s'",
@@ -160,7 +161,8 @@ class FileImportTask(celery.Task):
                 download_s3_object(source_bucket, source_key, destination,
                                    ProgressPercentage(source_url,
                                                       self.request.id))
-        except (EnvironmentError, botocore.exceptions.BotoCoreError) as exc:
+        except (EnvironmentError, botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError) as exc:
             delete_file(file_store_path)
             raise RuntimeError(
                 "Error downloading from '{}' to '{}': {}".format(
@@ -190,7 +192,8 @@ class FileImportTask(celery.Task):
                 file_store_name, ProgressPercentage(source_url,
                                                     self.request.id)
             )
-        except botocore.exceptions.BotoCoreError as exc:
+        except (botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError) as exc:
             raise RuntimeError(
                 "Error copying from '{}' to 's3://{}/{}': {}".format(
                     source_url, settings.MEDIA_BUCKET, file_store_name, exc
@@ -249,7 +252,8 @@ class FileImportTask(celery.Task):
                     response, settings.MEDIA_BUCKET, file_store_name,
                     ProgressPercentage(source_url, self.request.id)
                 )
-        except (EnvironmentError, botocore.exceptions.BotoCoreError) as exc:
+        except (EnvironmentError, botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError) as exc:
             raise RuntimeError(
                 "Error transferring from '{}' to 's3://{}/{}': {}".format(
                     source_url, settings.MEDIA_BUCKET, file_store_name, exc
