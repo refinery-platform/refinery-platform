@@ -12,14 +12,10 @@ from override_storage import override_storage
 
 from .models import (FileExtension, FileStoreItem, FileType,
                      _get_extension_from_string, _get_file_extension,
-                     _map_source, generate_file_source_translator,
-                     get_temp_dir)
+                     _map_source, generate_file_source_translator)
 
 
 class FileStoreModuleTest(TestCase):
-
-    def test_get_temp_dir(self):
-        self.assertEqual(get_temp_dir(), settings.FILE_STORE_TEMP_DIR)
 
     def test_get_extension_from_file(self):
         self.assertEqual(_get_extension_from_string('test.fastq'), 'fastq')
