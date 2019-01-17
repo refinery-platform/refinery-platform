@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -32,8 +33,8 @@ from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
                      DataSet, Event, ExtendedGroup, InvestigationLink,
-                     Project, SiteStatistics, Tutorials, UserProfile,
-                     Workflow, WorkflowEngine)
+                     Project, SiteProfile, SiteStatistics, Tutorials,
+                     UserProfile, Workflow, WorkflowEngine)
 from .tasks import collect_site_statistics
 
 
@@ -995,6 +996,27 @@ class ShareableResourceTest(TestCase):
         self.data_set.set_owner(self.user)
         user_perms = get_perms(self.user, self.data_set)
         self.assertTrue('share_dataset' in user_perms)
+
+
+class SiteProfileUnitTests(TestCase):
+    def setUp(self):
+        self.current_site = Site.objects.get_current()
+        self.site_dict = {
+            'site': self.current_site,
+            'about_markdown': 'Test text for about markdown.',
+            'intro_markdown': 'Test text for intro markdown.',
+            'twitter_username': 'twitterFakeName',
+            'yt_videos': '[{yt_id: "#fakeID", caption: "mock caption"}]'
+        }
+        self.site_profile = SiteProfile.objects.create(site=self.current_site)
+
+    def test_site_profile_created(self):
+        self.assertEqual(self.site_profile.site, self.current_site)
+
+    def test_site_profile_creates_blank_fields(self):
+        self.assertEqual(self.site_profile.about_markdown, '')
+        self.assertEqual(self.site_profile.twitter_username, '')
+        self.assertEqual(self.site_profile.yt_videos, '')
 
 
 class SiteStatisticsUnitTests(TestCase):

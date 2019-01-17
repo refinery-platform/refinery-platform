@@ -2221,7 +2221,6 @@ class SiteProfile(models.Model):
 
     site = models.OneToOneField(Site, related_name='profile')
     repo_mode_home_page_html = models.TextField(blank=True)
-
     about_markdown = models.TextField(blank=True)
     intro_markdown = models.TextField(blank=True)
     twitter_username = models.CharField(max_length=100, blank=True)
