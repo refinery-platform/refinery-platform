@@ -51,10 +51,11 @@ from data_set_manager.models import Attribute
 
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, SiteStatistics,
-                     UserProfile, Workflow, WorkflowEngine)
+                     ExtendedGroup, Invitation, Ontology, SiteProfile,
+                     SiteStatistics, UserProfile, Workflow, WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
-                          UserProfileSerializer, WorkflowSerializer)
+                          SiteProfileSerializer, UserProfileSerializer,
+                          WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations)
 
 logger = logging.getLogger(__name__)
@@ -1040,6 +1041,68 @@ class OpenIDToken(APIView):
         return Response(token)
 
 
+class SiteProfileViewSet(APIView):
+    """API endpoint that allows for UserProfiles to be edited.
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: about_markdown
+              description: Markdown paragraph
+              type: string
+              paramType: form
+              required: false
+            - name: intro_markdown
+              description: Markdown paragraph
+              type: string
+              paramType: form
+              required: false
+            - name: twitter_username
+              description: twitter user name to display twitter feed
+              type: string
+              paramType: form
+              required: false
+            - name: yt_videos
+              description: string object with video ids and captions
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ["get", "patch"]
+
+    def get(self, request):
+        site_profile = SiteProfile.objects.get(site=get_current_site(request))
+        serializer = SiteProfileSerializer(site_profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        if not request.user.is_superuser():
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        site_profile = SiteProfile.objects.all(site=request.get_current_site())
+        serializer = SiteProfileSerializer(site_profile,
+                                           data=request.data,
+                                           partial=True,
+                                           context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
 class UserProfileViewSet(APIView):
     """API endpoint that allows for UserProfiles to be edited.
      ---
@@ -1073,8 +1136,7 @@ class UserProfileViewSet(APIView):
 
         serializer = UserProfileSerializer(request.user.profile,
                                            data=request.data,
-                                           partial=True,
-                                           context={'request': request})
+                                           partial=True)
 
         if serializer.is_valid():
             serializer.save()

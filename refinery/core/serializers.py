@@ -4,7 +4,7 @@ from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import DataSet, Event, User, UserProfile, Workflow
+from .models import DataSet, Event, SiteProfile, User, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,31 @@ class DataSetSerializer(serializers.ModelSerializer):
         )
         instance.slug = validated_data.get('slug', instance.slug)
 
+        instance.save()
+        return instance
+
+
+class SiteProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteProfile
+        fields = ('about_markdown', 'site', 'intro_markdown',
+                  'twitter_username',
+                  'yt_videos')
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `DataSet` instance, given the
+        validated data.
+        """
+        instance.about_markdown = validated_data.get('about_markdown',
+                                                     instance.about_markdown)
+        instance.intro_markdown = validated_data.get('intro_markdown',
+                                                     instance.intro_markdown)
+        instance.twitter_username = validated_data.get(
+            'twitter_username',  instance.twitter_username
+        )
+        instance.yt_videos = validated_data.get('yt_videos',
+                                                instance.yt_videos)
         instance.save()
         return instance
 
