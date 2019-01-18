@@ -33,7 +33,7 @@ $deployment_platform = 'aws'
 # set by Facter:
 # $email_host_user, $email_host_password, $site_name, $site_url, $docker_host
 
-# See code in refinery-modules/refinery/...
+# See code in puppet/refinery/...
 include refinery
 include refinery::apache2
 include refinery::aws
