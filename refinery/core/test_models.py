@@ -33,8 +33,8 @@ from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
                      DataSet, Event, ExtendedGroup, InvestigationLink,
-                     Project, SiteProfile, SiteStatistics, Tutorials,
-                     UserProfile, Workflow, WorkflowEngine)
+                     Project, SiteProfile, SiteStatistics, SiteVideo,
+                     Tutorials, UserProfile, Workflow, WorkflowEngine)
 from .tasks import collect_site_statistics
 
 
@@ -1001,22 +1001,33 @@ class ShareableResourceTest(TestCase):
 class SiteProfileUnitTests(TestCase):
     def setUp(self):
         self.current_site = Site.objects.get_current()
-        self.site_dict = {
-            'site': self.current_site,
-            'about_markdown': 'Test text for about markdown.',
-            'intro_markdown': 'Test text for intro markdown.',
-            'twitter_username': 'twitterFakeName',
-            'yt_videos': '[{yt_id: "#fakeID", caption: "mock caption"}]'
-        }
         self.site_profile = SiteProfile.objects.create(site=self.current_site)
 
-    def test_site_profile_created(self):
+    def test_site_profile_created_fk(self):
         self.assertEqual(self.site_profile.site, self.current_site)
 
     def test_site_profile_creates_blank_fields(self):
         self.assertEqual(self.site_profile.about_markdown, '')
         self.assertEqual(self.site_profile.twitter_username, '')
-        self.assertEqual(self.site_profile.yt_videos, '')
+
+
+class SiteVideoUnitTests(TestCase):
+    def setUp(self):
+        self.current_site = Site.objects.get_current()
+        self.site_profile = SiteProfile.objects.create(site=self.current_site)
+        self.source_id_1 = 'yt_id_5'
+        self.site_video = SiteVideo.objects.create(
+            site_profile=self.site_profile, source_id=self.source_id_1
+        )
+
+    def test_site_profile_creates_blank_fields(self):
+        self.assertEqual(self.site_video.caption, '')
+        self.assertEqual(self.site_video.source, '')
+
+    def test_site_returns_videos(self):
+        self.site_profile.refresh_from_db()
+        self.assertEqual(self.site_profile.sitevideo_set.all()[0],
+                         self.site_video)
 
 
 class SiteStatisticsUnitTests(TestCase):

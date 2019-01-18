@@ -1090,8 +1090,7 @@ class SiteProfileViewSet(APIView):
         site_profile = SiteProfile.objects.all(site=request.get_current_site())
         serializer = SiteProfileSerializer(site_profile,
                                            data=request.data,
-                                           partial=True,
-                                           context={'request': request})
+                                           partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -1136,7 +1135,8 @@ class UserProfileViewSet(APIView):
 
         serializer = UserProfileSerializer(request.user.profile,
                                            data=request.data,
-                                           partial=True)
+                                           partial=True,
+                                           context={'request': request})
 
         if serializer.is_valid():
             serializer.save()

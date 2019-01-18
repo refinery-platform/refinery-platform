@@ -2224,7 +2224,6 @@ class SiteProfile(models.Model):
     about_markdown = models.TextField(blank=True)
     intro_markdown = models.TextField(blank=True)
     twitter_username = models.CharField(max_length=100, blank=True)
-    yt_videos = models.TextField(blank=True)
 
     def __unicode__(self):
         return self.site.name
@@ -2342,6 +2341,13 @@ class SiteStatistics(models.Model):
             get_aggregate_sum("users_created"),
             get_aggregate_sum("unique_user_logins")
         ]
+
+
+class SiteVideo(models.Model):
+    caption = models.TextField(blank=True)
+    site_profile = models.ForeignKey(SiteProfile)
+    source = models.CharField(max_length=100, blank=True)
+    source_id = models.CharField(max_length=100)
 
 
 class Event(models.Model):

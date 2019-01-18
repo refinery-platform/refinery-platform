@@ -11,6 +11,16 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='SiteVideo',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False,
+                                        auto_created=True, primary_key=True)),
+                ('caption', models.TextField(blank=True)),
+                ('source', models.CharField(max_length=100, blank=True)),
+                ('source_id', models.CharField(max_length=100)),
+            ],
+        ),
         migrations.AddField(
             model_name='siteprofile',
             name='about_markdown',
@@ -27,8 +37,8 @@ class Migration(migrations.Migration):
             field=models.CharField(max_length=100, blank=True),
         ),
         migrations.AddField(
-            model_name='siteprofile',
-            name='yt_videos',
-            field=models.TextField(blank=True),
+            model_name='sitevideo',
+            name='site_profile',
+            field=models.ForeignKey(to='core.SiteProfile'),
         ),
     ]
