@@ -172,6 +172,11 @@ variable "refinery_google_recaptcha_secret_key" {
   default     = ""
 }
 
+variable "refinery_isa_tab_export_url" {
+  description = "URL for ISA-Tab exporting"
+  default     = ""
+}
+
 variable "refinery_s3_user_data" {
   description = "Whether or not to use S3 as user data file storage backend"
   default     = "false"
