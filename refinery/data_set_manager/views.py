@@ -10,6 +10,7 @@ import os
 import shutil
 import traceback
 import urlparse
+import tempfile
 
 from django import forms
 from django.conf import settings
@@ -34,8 +35,7 @@ from rest_framework.views import APIView
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (FileStoreItem, generate_file_source_translator,
-                               get_temp_dir)
+from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
 from file_store.utils import parse_s3_url
 
@@ -171,7 +171,7 @@ class ImportISATabFileForm(forms.Form):
 
 
 def import_by_file(file_obj):
-    temp_file_path = os.path.join(get_temp_dir(), file_obj.name)
+    temp_file_path = os.path.join(tempfile.gettempdir(), file_obj.name)
     try:
         _handle_uploaded_file(file_obj, temp_file_path)
     except IOError as exc:
@@ -187,7 +187,7 @@ def import_by_url(url):
     # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
     parsed_url = urlparse.urlparse(url)
     file_name = parsed_url.path.split('/')[-1]
-    temp_file_path = os.path.join(get_temp_dir(), file_name)
+    temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
     try:
         # TODO: refactor download_file to take file handle instead
         # of path
@@ -250,7 +250,7 @@ class ProcessISATabView(View):
             return response
         u = urlparse.urlparse(url)
         file_name = u.path.split('/')[-1]
-        temp_file_path = os.path.join(get_temp_dir(), file_name)
+        temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
         try:
             # TODO: refactor download_file to take file handle instead of path
             download_file(url, temp_file_path)
