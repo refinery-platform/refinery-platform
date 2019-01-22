@@ -1,20 +1,23 @@
 import logging
 import urllib2
 
+import requests
 from django.conf import settings
 from django.db import transaction
 from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
                          JsonResponse)
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
 from rest_framework.decorators import detail_route
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 
 from core.models import DataSet
+from data_set_manager.utils import (ISAToolsJSONCreator,
+                                    ISAToolsJSONCreatorError)
 
 from .models import ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
@@ -25,24 +28,29 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
+def get_data_set_instance_from_query_params(request):
+    try:
+        data_set_uuid = request.query_params["data_set_uuid"]
+    except (AttributeError, KeyError) as e:
+        return HttpResponseBadRequest("Must specify a DataSet "
+                                      "UUID: {}".format(e))
+    try:
+        data_set = DataSet.objects.get(uuid=data_set_uuid)
+    except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
+        return HttpResponseBadRequest(
+            "Couldn't fetch DataSet with UUID: {} {}".format(data_set_uuid, e)
+        )
+    return data_set
+
+
 class ToolManagerViewSetBase(ModelViewSet):
     def __init__(self, **kwargs):
         super(ToolManagerViewSetBase, self).__init__(**kwargs)
         self.data_set = None
 
     def list(self, request, *args, **kwargs):
-        try:
-            data_set_uuid = self.request.query_params["data_set_uuid"]
-        except (AttributeError, KeyError) as e:
-            return HttpResponseBadRequest("Must specify a DataSet "
-                                          "UUID: {}".format(e))
-        try:
-            self.data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            return HttpResponseBadRequest(
-                "Couldn't fetch DataSet with UUID: {} {}"
-                .format(data_set_uuid, e)
-            )
+        self.data_set = get_data_set_instance_from_query_params(request)
+
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
             return super(ToolManagerViewSetBase, self).list(request)
         return HttpResponseForbidden(
@@ -268,3 +276,33 @@ def render_vis_tool_error_template(
             "visualization_tool_name": visualization_tool_name
         }, status=status
     )
+
+
+class ISATabExportViewSet(ViewSet):
+    http_method_names = ['get']
+
+    def export_isa_tab_to_zip(self, request):
+        data_set = get_data_set_instance_from_query_params(request)
+
+        try:
+            isa_tools_dict = ISAToolsJSONCreator(data_set).create()
+        except ISAToolsJSONCreatorError as e:
+            return HttpResponseBadRequest(e)
+
+        post_data = {
+            "isatab_filename": "{}.zip".format(
+                data_set.get_investigation().get_identifier()
+            ),
+            "isatab_contents": isa_tools_dict,
+        }
+        try:
+            response = requests.post(settings.REFINERY_ISA_TAB_EXPORT_URL,
+                                     json=post_data)
+        except requests.RequestException as e:
+            logger.error(e)
+            return HttpResponseServerError(e)
+
+        if response.status_code // 100 in [4, 5]:  # any 4xx or 5xx status code
+            logger.error(response.content)
+            return HttpResponseBadRequest(response.content)
+        return response.content
