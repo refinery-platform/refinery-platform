@@ -1,4 +1,5 @@
 import csv
+import json
 import logging
 import urllib
 from urlparse import urljoin
@@ -52,10 +53,11 @@ from data_set_manager.models import Attribute
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, SiteProfile,
-                     SiteStatistics, UserProfile, Workflow, WorkflowEngine)
+                     SiteStatistics, SiteVideo, UserProfile, Workflow,
+                     WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
-                          SiteProfileSerializer, UserProfileSerializer,
-                          WorkflowSerializer)
+                          SiteProfileSerializer, SiteVideoSerializer,
+                          UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations)
 
 logger = logging.getLogger(__name__)
@@ -1082,12 +1084,39 @@ class SiteProfileViewSet(APIView):
         return Response(serializer.data)
 
     def patch(self, request):
-        if not request.user.is_superuser():
+        if not request.user.is_superuser:
             return Response(
                 self.request.user, status=status.HTTP_401_UNAUTHORIZED
             )
 
-        site_profile = SiteProfile.objects.all(site=request.get_current_site())
+        site_profile = SiteProfile.objects.get(
+            site=get_current_site(request)
+        )
+        # remove unlisted videos
+        if request.data.get('site_videos'):
+            db_site_videos = SiteVideo.objects.filter(
+                site_profile=site_profile
+            )
+            new_video_list = json.loads(request.data.getlist('site_videos')[0])
+            update_video_list = [vid.get('source_id')
+                                 for vid in new_video_list]
+            for video in db_site_videos:
+                if video.source_id not in update_video_list:
+                    video.delete()
+            for new_video_data in new_video_list:
+                try:
+                    db_video = SiteVideo.objects.get(
+                        source_id=new_video_data.get('source_id')
+                    )
+                except:
+                    vid_serializer = SiteVideoSerializer(data=new_video_data)
+                else:
+                    vid_serializer = SiteVideoSerializer(db_video,
+                                                         data=new_video_data,
+                                                         partial=True)
+                if vid_serializer.is_valid():
+                    vid_serializer.save()
+
         serializer = SiteProfileSerializer(site_profile,
                                            data=request.data,
                                            partial=True)

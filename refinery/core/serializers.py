@@ -88,6 +88,9 @@ class SiteVideoSerializer(serializers.ModelSerializer):
         model = SiteVideo
         fields = ('caption', 'site_profile', 'source', 'source_id')
 
+    def create(self, validated_data):
+        return SiteProfile(**validated_data)
+
     def partial_update(self, instance, validated_data):
         instance.caption = validated_data.get('caption', instance.caption)
         instance.source = validated_data.get('source', instance.source)
@@ -98,7 +101,12 @@ class SiteVideoSerializer(serializers.ModelSerializer):
 
 
 class SiteProfileSerializer(serializers.ModelSerializer):
-    site_videos = SiteVideoSerializer()
+    site_videos = serializers.SerializerMethodField()
+
+    def get_site_videos(self, site_profile):
+        site_videos = site_profile.sitevideo_set.all()
+        serializer = SiteVideoSerializer(site_videos, many=True)
+        return serializer.data
 
     class Meta:
         model = SiteProfile
@@ -117,11 +125,6 @@ class SiteProfileSerializer(serializers.ModelSerializer):
         instance.twitter_username = validated_data.get(
             'twitter_username',  instance.twitter_username
         )
-        videos = validated_data.get('site_videos', instance.site_videos)
-        for video in videos:
-            db_site_video = SiteVideo.objects.get(id=video.id)
-            SiteVideoSerializer(db_site_video, data=video)
-
         instance.save()
         return instance
 
