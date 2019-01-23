@@ -1096,11 +1096,16 @@ class ISAJSONCreator:
         self.studies = Study.objects.filter(investigation=self.investigation)
 
     def create(self):
-        return json.loads(
-            # Replace any `null` occurences with empty strings. The ISA JSON
-            # schemas consider null values to be invalid
-            json.dumps(self._create_investigation()).replace('null', '""')
-        )
+        return {
+            "isatab_filename": "{}.zip".format(
+                self.dataset.get_investigation().get_identifier() or "ISA-Tab"
+            ),
+            "isatab_contents": json.loads(
+                # Replace any `null` occurrences with empty strings.
+                # The ISA JSON schemas consider null values to be invalid
+                json.dumps(self._create_investigation()).replace('null', '""')
+            ),
+        }
 
     def _create_assays(self, study):
         """

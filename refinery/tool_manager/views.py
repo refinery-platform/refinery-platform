@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import transaction
 from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
                          JsonResponse)
-from django.http.response import HttpResponse, HttpResponseServerError
+from django.http.response import HttpResponse
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
@@ -16,8 +16,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
 from core.models import DataSet
-from data_set_manager.utils import (ISAToolsJSONCreator,
-                                    ISAToolsJSONCreatorError)
+from data_set_manager.utils import (ISAJSONCreator,
+                                    ISAJSONCreatorError)
 
 from .models import ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
@@ -290,20 +290,20 @@ class ISATabExportViewSet(ViewSet):
         except RuntimeError as e:
             return HttpResponseBadRequest(e)
 
-        post_data = {
-            "isatab_filename": "{}.zip".format(
-                data_set.get_investigation().get_identifier()
-            ),
-            "isatab_contents": isa_tools_dict,
-        }
         try:
-            response = requests.post(settings.REFINERY_ISA_TAB_EXPORT_URL,
-                                     json=post_data)
-        except requests.RequestException as e:
-            logger.error(e)
-            return HttpResponseServerError(e)
+            isa_json = ISAJSONCreator(data_set).create()
+        except ISAJSONCreatorError as e:
+            return HttpResponseBadRequest(e)
+
+        post_response = requests.post(
+            settings.REFINERY_ISA_TAB_EXPORT_URL, json=isa_json
+        )
+        response = HttpResponse(
+            content=post_response.content,
+            status=post_response.status_code,
+            content_type=post_response.headers['Content-Type']
+        )
 
         if response.status_code // 100 in [4, 5]:  # any 4xx or 5xx status code
             logger.error(response.content)
-            return HttpResponseBadRequest(response.content)
-        return response.content
+        return response
