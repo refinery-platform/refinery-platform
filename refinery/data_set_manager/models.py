@@ -42,7 +42,30 @@ General:
 """
 
 
-class NodeCollection(models.Model):
+class Comment(models.Model):
+    """Representation of a Comment within an ISA-Tab archive"""
+    name = models.TextField()
+    value = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return unicode(self.name + ": " + self.value)
+
+
+class Commentable(models.Model):
+
+    """
+    Reserved for ISA-Tab components that are allowed to have comments
+    according to the ISA-JSON standard.
+    See: isa-specs.readthedocs.io/en/latest/isajson.html?highlight=comments
+    """
+    comments = models.ManyToManyField(Comment, blank=True,
+                                      default=Comment.objects.none())
+
+    class Meta:
+        abstract = True
+
+
+class NodeCollection(Commentable):
     """Base class for Investigation and Study
     """
     uuid = UUIDField(unique=True, auto=True)
@@ -108,7 +131,7 @@ class NodeCollection(models.Model):
             return dateString
 
 
-class Publication(models.Model):
+class Publication(Commentable):
     """Investigation or Study Publication (ISA-Tab Spec 4.1.2.2, 4.1.3.3)"""
     collection = models.ForeignKey(NodeCollection)
     title = models.TextField(blank=True, null=True)
@@ -124,7 +147,7 @@ class Publication(models.Model):
         return unicode(self.authors) + ": " + unicode(self.title)
 
 
-class Contact(models.Model):
+class Contact(Commentable):
     """Investigation or Study Contact (ISA-Tab Spec 4.1.2.3, 4.1.3.7)"""
     collection = models.ForeignKey(NodeCollection)
     last_name = models.TextField(blank=True, null=True)
@@ -207,8 +230,11 @@ class Investigation(NodeCollection):
     def get_assay(self):
         try:
             return Assay.objects.get(study=self.get_study())
-        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+        except Assay.DoesNotExist as e:
             raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+        except Assay.MultipleObjectsReturned as e:
+            raise RuntimeError("Study has multiple assays which is "
+                               "currently unsupported: {}".format(e))
 
     def get_assay_count(self):
         studies = self.study_set.all()
@@ -299,7 +325,7 @@ def _investigation_delete(sender, instance, **kwargs):
     instance.get_file_store_item().delete()
 
 
-class Ontology(models.Model):
+class Ontology(Commentable):
     """Ontology Source Reference (ISA-Tab Spec 4.1.1)"""
     investigation = models.ForeignKey(Investigation)
     name = models.TextField(blank=True, null=True)
@@ -358,7 +384,7 @@ class Design(models.Model):
         return unicode(self.type)
 
 
-class Factor(models.Model):
+class Factor(Commentable):
     """Study Factor (ISA-Tab Spec 4.1.3.4)"""
     study = models.ForeignKey(Study)
     name = models.TextField(blank=True, null=True)
@@ -370,7 +396,7 @@ class Factor(models.Model):
         return unicode(self.name) + ": " + unicode(self.type)
 
 
-class Assay(models.Model):
+class Assay(Commentable):
     """Study Assay (ISA-Tab Spec 4.1.3.5)"""
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study)
@@ -398,7 +424,7 @@ class Assay(models.Model):
         return retstr
 
 
-class Protocol(models.Model):
+class Protocol(Commentable):
     """Study Protocol (ISA-Tab Spec 4.1.3.6)"""
     study = models.ForeignKey(Study)
     uuid = UUIDField(unique=True, auto=True)
@@ -423,7 +449,7 @@ class Protocol(models.Model):
         ordering = ['id']
 
 
-class ProtocolParameter(models.Model):
+class ProtocolParameter(Commentable):
     protocol = models.ForeignKey(Protocol)
     name = models.TextField(blank=True, null=True)
     name_accession = models.TextField(blank=True, null=True)
@@ -438,7 +464,7 @@ class ProtocolComponent(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
 
-class Node(models.Model):
+class Node(Commentable):
     # allowed node types
     SOURCE = "Source Name"
     SAMPLE = "Sample Name"
