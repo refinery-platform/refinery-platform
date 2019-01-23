@@ -750,12 +750,6 @@ class IsaTabParser:
                 if section_title == "STUDY":
                     self._current_study = model_instance
 
-        # create an investigation even if no information is provided
-        # (all fields empty, no tab after any field name)
-        if columns == 0:
-            if section_title == "INVESTIGATION":
-                model_instance = Investigation.objects.create()
-                self._current_investigation = model_instance
 
     def _create_protocol_and_related_models(self, model_parameters):
         def get_model_parameters(parameter_names):
