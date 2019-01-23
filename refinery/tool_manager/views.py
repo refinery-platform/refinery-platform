@@ -298,12 +298,12 @@ class ISATabExportViewSet(ViewSet):
         post_response = requests.post(
             settings.REFINERY_ISA_TAB_EXPORT_URL, json=isa_json
         )
-        response = HttpResponse(
+
+        if post_response.status_code // 100 in [4, 5]:  # any 4xx or 5xx
+            logger.error(post_response.content)
+
+        return HttpResponse(
             content=post_response.content,
             status=post_response.status_code,
             content_type=post_response.headers['Content-Type']
         )
-
-        if response.status_code // 100 in [4, 5]:  # any 4xx or 5xx status code
-            logger.error(response.content)
-        return response
