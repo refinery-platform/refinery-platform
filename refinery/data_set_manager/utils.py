@@ -1066,11 +1066,11 @@ def get_first_annotated_node_from_solr_name(solr_name, node):
     ).first()
 
 
-class ISAToolsJSONCreatorError(RuntimeError):
+class ISAJSONCreatorError(RuntimeError):
     pass
 
 
-class ISAToolsJSONCreator:
+class ISAJSONCreator:
     """
     Create a dict representation of an ISA-Tab based Refinery DataSet that
     satisfies the ISA-JSON standard.
@@ -1087,8 +1087,8 @@ class ISAToolsJSONCreator:
     def __init__(self, dataset):
         investigation = dataset.get_investigation()
         if not investigation.is_isa_tab_based():
-            raise ISAToolsJSONCreatorError(
-                "Investigation is not derived from an ISATab"
+            raise ISAJSONCreatorError(
+                "Investigation is not derived from an ISA-Tab"
             )
         self.dataset = dataset
         self.investigation = investigation
@@ -1138,7 +1138,7 @@ class ISAToolsJSONCreator:
                 logger.debug(e)
                 return []
             except Attribute.MultipleObjectsReturned as e:
-                raise ISAToolsJSONCreatorError(e)
+                raise ISAJSONCreatorError(e)
             else:
                 return [
                     {
