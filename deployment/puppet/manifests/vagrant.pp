@@ -34,7 +34,7 @@ exec { 'activate_user':
 }
 
 
-# See code in refinery-modules/refinery/...
+# See code in puppet/refinery/...
 include refinery
 include refinery::apache2
 include refinery::docker
