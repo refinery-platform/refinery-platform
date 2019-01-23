@@ -5,7 +5,7 @@ from django.test.utils import override_settings
 from core.models import DataSet
 from data_set_manager.models import Assay, Node, Protocol, Study
 from data_set_manager.tests import MetadataImportTestBase
-from data_set_manager.utils import ISAToolsJSONCreator
+from data_set_manager.utils import ISAJSONCreator
 from factory_boy.utils import create_dataset_with_necessary_models
 
 
@@ -19,11 +19,11 @@ def ordered(obj):
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
-class ISAToolsJSONCreatorTests(MetadataImportTestBase):
+class ISAJSONCreatorTests(MetadataImportTestBase):
     maxDiff = None
 
     def setUp(self):
-        super(ISAToolsJSONCreatorTests, self).setUp()
+        super(ISAJSONCreatorTests, self).setUp()
         with open(self.get_test_file_path("BII-S-7.zip")) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
 
@@ -33,7 +33,7 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
             self.expected_isa_json = json.loads(isa_json.read())
 
         dataset = DataSet.objects.all().first()
-        self.isa_tools_json_creator = ISAToolsJSONCreator(dataset)
+        self.isa_tools_json_creator = ISAJSONCreator(dataset)
 
     def test__create_comments(self):
         study = self.isa_tools_json_creator.studies.first()
@@ -336,7 +336,7 @@ class ISAToolsJSONCreatorTests(MetadataImportTestBase):
     def test_isa_tab_based_datasets_supported_only(self):
         non_isatab_dataset = create_dataset_with_necessary_models()
         with self.assertRaises(RuntimeError):
-            ISAToolsJSONCreator(non_isatab_dataset)
+            ISAJSONCreator(non_isatab_dataset)
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
@@ -347,6 +347,6 @@ class ISATabExportIntegrationTests(MetadataImportTestBase):
             self.post_isa_tab(isa_tab_file=good_isa)
 
         dataset = DataSet.objects.all().first()
-        ISAToolsJSONCreator(dataset).create()
+        ISAJSONCreator(dataset).create()
 
         # TODO More involved testing
