@@ -1273,7 +1273,6 @@ def _check_data_set_ownership(user, data_set_uuid):
 
 
 class ISATabExportViewSet(ViewSet):
-    # TODO: Move this and corresponding URL to data_set_manager
     http_method_names = ['get']
     authentication_classes = (SessionAuthentication,)
     permission_classes = (IsAuthenticated,)
