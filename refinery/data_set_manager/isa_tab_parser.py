@@ -750,7 +750,6 @@ class IsaTabParser:
                 if section_title == "STUDY":
                     self._current_study = model_instance
 
-
     def _create_protocol_and_related_models(self, model_parameters):
         def get_model_parameters(parameter_names):
             return [
