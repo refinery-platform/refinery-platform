@@ -1,7 +1,6 @@
 import logging
 import urllib2
 
-import requests
 from django.conf import settings
 from django.db import transaction
 from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
@@ -10,17 +9,12 @@ from django.http.response import HttpResponse
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import detail_route
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ViewSet
+from rest_framework.viewsets import ModelViewSet
 
-from core.models import DataSet
-from data_set_manager.utils import (ISAJSONCreator,
-                                    ISAJSONCreatorError)
-
+from core.utils import get_data_set_instance_from_query_params
 from .models import ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import (
@@ -28,20 +22,6 @@ from .utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def get_data_set_instance_from_query_params(request):
-    try:
-        data_set_uuid = request.query_params["data_set_uuid"]
-    except (AttributeError, KeyError) as e:
-        raise RuntimeError("Must specify a DataSet UUID: {}".format(e))
-    try:
-        data_set = DataSet.objects.get(uuid=data_set_uuid)
-    except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch DataSet with UUID: {} {}".format(data_set_uuid, e)
-        )
-    return data_set
 
 
 class ToolManagerViewSetBase(ModelViewSet):
@@ -280,40 +260,3 @@ def render_vis_tool_error_template(
             "visualization_tool_name": visualization_tool_name
         }, status=status
     )
-
-
-class ISATabExportViewSet(ViewSet):
-    http_method_names = ['get']
-    authentication_classes = (SessionAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    @staticmethod
-    def export_isa_tab_to_zip(request):
-        """
-        Given a data_set_uuid as a query parameter, a DataSet instance is
-        fetched, converted to ISA-JSON, and then POSTed to the
-        REFINERY_ISA_TAB_EXPORT_URL to generate and return a new ISA-Tab
-        archive to the user
-        """
-        try:
-            data_set = get_data_set_instance_from_query_params(request)
-        except RuntimeError as e:
-            return HttpResponseBadRequest(e)
-
-        try:
-            isa_json = ISAJSONCreator(data_set).create()
-        except ISAJSONCreatorError as e:
-            return HttpResponseBadRequest(e)
-
-        post_response = requests.post(
-            settings.REFINERY_ISA_TAB_EXPORT_URL, json=isa_json
-        )
-
-        if post_response.status_code // 100 in [4, 5]:  # any 4xx or 5xx
-            logger.error(post_response.content)
-
-        return HttpResponse(
-            content=post_response.content,
-            status=post_response.status_code,
-            content_type=post_response.headers['Content-Type']
-        )

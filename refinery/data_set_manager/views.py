@@ -12,6 +12,7 @@ import traceback
 import urlparse
 import tempfile
 
+import requests
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -28,12 +29,16 @@ from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from guardian.shortcuts import get_perms
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import APIException
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
-from core.utils import get_absolute_url
+from core.utils import (get_absolute_url,
+                        get_data_set_instance_from_query_params)
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
@@ -46,10 +51,11 @@ from .serializers import (AssaySerializer, AttributeOrderSerializer,
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (
-    customize_attribute_response, format_solr_response,
-    generate_solr_params_for_assay, get_first_annotated_node_from_solr_name,
-    get_owner_from_assay, initialize_attribute_order_ranks,
-    is_field_in_hidden_list, search_solr, update_attribute_order_ranks
+    ISAJSONCreator, ISAJSONCreatorError, customize_attribute_response,
+    format_solr_response, generate_solr_params_for_assay,
+    get_first_annotated_node_from_solr_name, get_owner_from_assay,
+    initialize_attribute_order_ranks, is_field_in_hidden_list, search_solr,
+    update_attribute_order_ranks
 )
 
 logger = logging.getLogger(__name__)
@@ -1263,4 +1269,42 @@ def _check_data_set_ownership(user, data_set_uuid):
     if user != data_set.get_owner():
         return HttpResponseForbidden(
             "Metadata revision is only allowed for Data Set owners"
+        )
+
+
+class ISATabExportViewSet(ViewSet):
+    # TODO: Move this and corresponding URL to data_set_manager
+    http_method_names = ['get']
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    @staticmethod
+    def export_isa_tab_to_zip(request):
+        """
+        Given a data_set_uuid as a query parameter, a DataSet instance is
+        fetched, converted to ISA-JSON, and then POSTed to the
+        REFINERY_ISA_TAB_EXPORT_URL to generate and return a new ISA-Tab
+        archive to the user
+        """
+        try:
+            data_set = get_data_set_instance_from_query_params(request)
+        except RuntimeError as e:
+            return HttpResponseBadRequest(e)
+
+        try:
+            isa_json = ISAJSONCreator(data_set).create()
+        except ISAJSONCreatorError as e:
+            return HttpResponseBadRequest(e)
+
+        post_response = requests.post(
+            settings.REFINERY_ISA_TAB_EXPORT_URL, json=isa_json
+        )
+
+        if post_response.status_code // 100 in [4, 5]:  # any 4xx or 5xx
+            logger.error(post_response.content)
+
+        return HttpResponse(
+            content=post_response.content,
+            status=post_response.status_code,
+            content_type=post_response.headers['Content-Type']
         )
