@@ -285,6 +285,12 @@ class ISATabExportViewSet(ViewSet):
 
     @staticmethod
     def export_isa_tab_to_zip(request):
+        """
+        Given a data_set_uuid as a query parameter, a DataSet instance is
+        fetched, converted to ISA-JSON, and then POSTed to the
+        REFINERY_ISA_TAB_EXPORT_URL to generate and return a new ISA-Tab
+        archive to the user
+        """
         try:
             data_set = get_data_set_instance_from_query_params(request)
         except RuntimeError as e:
