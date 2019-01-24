@@ -10,8 +10,10 @@ from django.http.response import HttpResponse
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import detail_route
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
@@ -282,6 +284,8 @@ def render_vis_tool_error_template(
 
 class ISATabExportViewSet(ViewSet):
     http_method_names = ['get']
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     @staticmethod
     def export_isa_tab_to_zip(request):
