@@ -1098,15 +1098,14 @@ class SiteProfileViewSet(APIView):
                 site_profile=site_profile
             )
             new_video_list = json.loads(request.data.getlist('site_videos')[0])
-            update_video_list = [vid.get('source_id')
-                                 for vid in new_video_list]
+            update_video_list = [vid.get('id') for vid in new_video_list]
             for video in db_site_videos:
-                if video.source_id not in update_video_list:
+                if video.id not in update_video_list:
                     video.delete()
             for new_video_data in new_video_list:
                 try:
                     db_video = SiteVideo.objects.get(
-                        source_id=new_video_data.get('source_id')
+                        id=new_video_data.get('id')
                     )
                 except:
                     vid_serializer = SiteVideoSerializer(data=new_video_data)

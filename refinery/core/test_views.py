@@ -1061,19 +1061,21 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             "caption": self.site_video_1.caption,
             "site_profile": self.site_profile.id,
             "source": self.site_video_1.source,
-            "source_id": self.site_video_1.source_id
+            "source_id": self.site_video_1.source_id,
+            "id": self.site_video_1.id
         }
         site_video_2_data = {
             "caption": self.site_video_2.caption,
             "site_profile": self.site_profile.id,
             "source": self.site_video_2.source,
-            "source_id": self.site_video_2.source_id
+            "source_id": self.site_video_2.source_id,
+            "id": self.site_video_2.id
         }
         site_video_3_data = {
             "caption": "Video caption three.",
             "site_profile": self.site_profile.id,
             "source": "youtube",
-            "source_id": "yt_34v"
+            "source_id": "yt_349v"
         }
         patch_request = self.factory.patch(
             self.url_root,
@@ -1092,7 +1094,8 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             "caption": self.site_video_2.caption,
             "site_profile": self.site_profile.id,
             "source": self.site_video_2.source,
-            "source_id": self.site_video_2.source_id
+            "source_id": self.site_video_2.source_id,
+            "id": self.site_video_2.id,
         }
         patch_request = self.factory.patch(
             self.url_root,
@@ -1110,7 +1113,8 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             "caption": new_caption,
             "site_profile": self.site_profile.id,
             "source": self.site_video_1.source,
-            "source_id": self.site_video_1.source_id
+            "source_id": self.site_video_1.source_id,
+            "id": self.site_video_1.id
         }
         patch_request = self.factory.patch(
             self.url_root,

@@ -86,10 +86,10 @@ class DataSetSerializer(serializers.ModelSerializer):
 class SiteVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteVideo
-        fields = ('caption', 'site_profile', 'source', 'source_id')
+        fields = ('caption', 'site_profile', 'source', 'source_id', 'id')
 
     def create(self, validated_data):
-        return SiteProfile(**validated_data)
+        return SiteVideo.objects.create(**validated_data)
 
     def partial_update(self, instance, validated_data):
         instance.caption = validated_data.get('caption', instance.caption)
