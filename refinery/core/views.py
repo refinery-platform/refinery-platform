@@ -1044,7 +1044,7 @@ class OpenIDToken(APIView):
 
 
 class SiteProfileViewSet(APIView):
-    """API endpoint that allows for UserProfiles to be edited.
+    """API endpoint that allows for SiteProfileViewSet to be edited.
      ---
     #YAML
 
@@ -1069,8 +1069,8 @@ class SiteProfileViewSet(APIView):
               type: string
               paramType: form
               required: false
-            - name: yt_videos
-              description: string object with video ids and captions
+            - name: site_videos
+              description: string object with source, source ids, and captions
               type: string
               paramType: form
               required: false
@@ -1089,20 +1089,31 @@ class SiteProfileViewSet(APIView):
                 self.request.user, status=status.HTTP_401_UNAUTHORIZED
             )
 
-        site_profile = SiteProfile.objects.get(
-            site=get_current_site(request)
-        )
+        try:
+            site_profile = SiteProfile.objects.get(
+                site=get_current_site(request)
+            )
+        except SiteProfile.DoesNotExist as e:
+            logger.error("Site profile for the current site does not exist.")
+            return HttpResponseNotFound(e)
+        except SiteProfile.MultipleObjectsReturned:
+            logger.critical("Multiple site profiles for current site error.")
+            return HttpResponseServerError(e)
+
+        site_videos = request.data.get('site_videos')
         # remove unlisted videos
-        if request.data.get('site_videos'):
+        if site_videos is not None:
             db_site_videos = SiteVideo.objects.filter(
                 site_profile=site_profile
             )
             new_video_list = json.loads(request.data.getlist('site_videos')[0])
-            update_video_list = [vid.get('id') for vid in new_video_list]
+            new_video_list_ids = [vid.get('id') for vid in new_video_list]
+            # delete unused videos
             for video in db_site_videos:
-                if video.id not in update_video_list:
+                if video.id not in new_video_list_ids:
                     video.delete()
-            for new_video_data in new_video_list:
+            # add new videos or update exisiting videos
+            for new_video_data in new_video_list_ids:
                 try:
                     db_video = SiteVideo.objects.get(
                         id=new_video_data.get('id')

@@ -947,11 +947,6 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             view=SiteProfileViewSet.as_view()
         )
         self.current_site = Site.objects.get_current()
-        self.site_profile_dict = {
-            'about_markdown': 'About the platform paragraph.',
-            'intro_markdown': 'The refinery platform intro paragraph.',
-            'twitter_username': 'Mock_twitter_name'
-        }
         self.site_profile = SiteProfile.objects.create(
             site=self.current_site,
             about_markdown='About the platform paragraph.',
@@ -973,34 +968,30 @@ class SiteProfileApiV2Tests(APIV2TestCase):
 
         username = password = "admin"
         self.admin_user = User.objects.create_superuser(username, '', password)
+        self.get_request = self.factory.get(self.url_root)
 
     def test_get_returns_200_status_for_anon_user(self):
-        get_request = self.factory.get(self.url_root)
-        get_response = self.view(get_request)
+        get_response = self.view(self.get_request)
         self.assertEqual(get_response.status_code, 200)
 
     def test_get_returns_site_profile(self):
-        get_request = self.factory.get(self.url_root)
-        get_response = self.view(get_request)
+        get_response = self.view(self.get_request)
         self.assertEqual(get_response.data.get('site'), self.current_site.id)
 
     def test_get_returns_site_markdown_fields(self):
-        get_request = self.factory.get(self.url_root)
-        get_response = self.view(get_request)
+        get_response = self.view(self.get_request)
         self.assertEqual(get_response.data.get('about_markdown'),
                          self.site_profile.about_markdown)
         self.assertEqual(get_response.data.get('intro_markdown'),
                          self.site_profile.intro_markdown)
 
     def test_get_returns_twitter_username(self):
-        get_request = self.factory.get(self.url_root)
-        get_response = self.view(get_request)
+        get_response = self.view(self.get_request)
         self.assertEqual(get_response.data.get('twitter_username'),
                          self.site_profile.twitter_username)
 
     def test_get_returns_site_videos(self):
-        get_request = self.factory.get(self.url_root)
-        get_response = self.view(get_request)
+        get_response = self.view(self.get_request)
         response_videos = [video.get('source_id') for video in
                            get_response.data.get('site_videos')]
         self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
