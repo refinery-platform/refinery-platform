@@ -155,7 +155,7 @@ class SiteStatisticsAdmin(AdminFieldPopulator):
 
 
 class SiteVideoAdmin(AdminFieldPopulator):
-    list_display = ['site_profile']
+    pass
 
 
 class EventAdmin(AdminFieldPopulator):

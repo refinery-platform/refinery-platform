@@ -1097,7 +1097,7 @@ class SiteProfileViewSet(APIView):
             logger.error("Site profile for the current site does not exist.")
             return HttpResponseNotFound(e)
         except SiteProfile.MultipleObjectsReturned:
-            logger.critical("Multiple site profiles for current site error.")
+            logger.error("Multiple site profiles for current site error.")
             return HttpResponseServerError(e)
 
         site_videos = request.data.get('site_videos')
@@ -1118,7 +1118,11 @@ class SiteProfileViewSet(APIView):
                     db_video = SiteVideo.objects.get(
                         id=new_video_data.get('id')
                     )
-                except:
+                except SiteVideo.MultipleObjectsReturned as e:
+                    logger.error("Duplicate site videos found for id %s."
+                                 % new_video_data.get('id'))
+                    return HttpResponseServerError(e)
+                except SiteVideo.DoesNotExist:
                     vid_serializer = SiteVideoSerializer(data=new_video_data)
                 else:
                     vid_serializer = SiteVideoSerializer(db_video,
