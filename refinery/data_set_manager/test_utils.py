@@ -4,6 +4,7 @@ from django.test.utils import override_settings
 
 from core.models import DataSet
 from data_set_manager.models import Assay, Node, Protocol, Study
+from data_set_manager.tasks import parse_isatab
 from data_set_manager.tests import MetadataImportTestBase
 from data_set_manager.utils import ISAJSONCreator
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -22,18 +23,25 @@ def ordered(obj):
 class ISAJSONCreatorTests(MetadataImportTestBase):
     maxDiff = None
 
-    def setUp(self):
-        super(ISAJSONCreatorTests, self).setUp()
-        with open(self.get_test_file_path("BII-S-7.zip")) as good_isa:
-            self.post_isa_tab(isa_tab_file=good_isa)
-
-        with open(
-            self.get_test_file_path("isa-json/BII-S-7.json")
-        ) as isa_json:
-            self.expected_isa_json = json.loads(isa_json.read())
+    @classmethod
+    def setUpTestData(cls):
+        # Set up data for the whole TestCase
+        parse_isatab(
+            username="test",
+            public=False,
+            path="data_set_manager/test-data/BII-S-7.zip"
+        )
 
         dataset = DataSet.objects.all().first()
-        self.isa_tools_json_creator = ISAJSONCreator(dataset)
+        cls.isa_tools_json_creator = ISAJSONCreator(dataset)
+
+        with open(
+            "data_set_manager/test-data/isa-json/BII-S-7.json"
+        ) as isa_json:
+            cls.expected_isa_json = json.loads(isa_json.read())
+
+    def setUp(self):
+        super(ISAJSONCreatorTests, self).setUp()
 
     def test__create_comments(self):
         study = self.isa_tools_json_creator.studies.first()
