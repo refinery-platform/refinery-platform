@@ -4,7 +4,7 @@
   <div class="row">
     <div class="col-md-5 cardless-col">
       <div class="col-content scrollable-list">
-        <ul ng-show="$ctrl.htmlAbouts.length"
+        <ul ng-show="$ctrl.htmlIntroList.length"
           id="home-intro" class="list-unstyled section-content">
            <div class="refinery-header">
               <h3>
@@ -14,8 +14,8 @@
                 </span>
               </h3>
             </div>
-          <li ng-repeat="htmlIntro in $ctrl.htmlIntros">
-            <p ng-bind-html="htmlIntro"></p>
+          <li ng-repeat="htmlIntro in $ctrl.htmlIntroList">
+            <div ng-bind-html="htmlIntro"></div>
           </li>
         </ul>
         <div id="home-nav-buttons" class="section-content">
@@ -56,13 +56,14 @@
           <rp-video-carousel></rp-video-carousel>
         </div>
         <div>
-          <ul ng-show="$ctrl.htmlAbouts.length" class="list-unstyled section-content">
+          <ul ng-show="$ctrl.htmlAboutList.length" class="list-unstyled
+          section-content">
             <div class="refinery-header">
               <h3>
                   About
               </h3>
             </div>
-            <li ng-repeat="htmlAbout in $ctrl.htmlAbouts">
+            <li ng-repeat="htmlAbout in $ctrl.htmlAboutList">
               <p ng-bind-html="htmlAbout"></p>
             </li>
           </ul>

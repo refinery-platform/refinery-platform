@@ -14,7 +14,7 @@
 
   function siteProfileService ($resource, settings) {
     var siteProfile = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/site_profile/',
+      settings.appRoot + settings.refineryApiV2 + '/site_profiles/',
       {},
       {
         query: {

@@ -11,9 +11,9 @@
     .module('refineryHome')
     .directive('rpVideoCarousel', rpVideoCarousel);
 
-  rpVideoCarousel.$inject = ['_', '$timeout', '$window', 'YouTube', 'settings'];
+  rpVideoCarousel.$inject = ['_', '$timeout', '$window', 'YouTube', 'homeConfigService'];
 
-  function rpVideoCarousel (_, $timeout, $window, YouTube, settings) {
+  function rpVideoCarousel (_, $timeout, $window, YouTube, homeConfigService) {
     return {
       restrict: 'E',
       templateUrl: function () {
@@ -22,13 +22,6 @@
       link: function (scope, elem) {
         // elem is the main carousel container
         var carouselDiv;
-        var djangoApp = settings.djangoApp;
-        if (_.has(djangoApp, 'refineryVideos') && djangoApp.refineryVideos.length) {
-          scope.videoIds = djangoApp.refineryVideos.split(',');
-        }
-        if (_.has(djangoApp, 'refineryVideoCaptions') && djangoApp.refineryVideoCaptions.length) {
-          scope.videoCaptions = djangoApp.refineryVideoCaptions.split('   ');
-        }
         var players = []; // list of video players
 
         /**
@@ -99,6 +92,15 @@
           carouselDiv = elem.find('#home-video-carousel');
           onYouTubeIframeAPIReady();
         }, 0);
+
+        scope.$watchCollection(
+          function () {
+            return homeConfigService.homeConfig;
+          },
+          function (updatedHomeConfig) {
+            scope.videoList = updatedHomeConfig.site_videos;
+          }
+        );
       }
     };
   }

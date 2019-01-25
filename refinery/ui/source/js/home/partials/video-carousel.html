@@ -1,4 +1,4 @@
-<div id="video-carousel-section" ng-if="videoIds.length">
+<div id="video-carousel-section" ng-if="videoList.length">
   <div class="refinery-header">
     <h3>
       Features at a Glance
@@ -9,10 +9,10 @@
     <div class="carousel-inner">
       <div id="video-list"
         class="video-container item" ng-class="{active: !$index}"
-        ng-repeat="videoId in videoIds track by $index">
-        <div class="youtube-video" id="{{ videoId }}"></div>
+        ng-repeat="video in videoList track by $index">
+        <div class="youtube-video" id="{{ video.id }}"></div>
         <div class="carousel-caption">
-          {{ videoCaptions[$index] }}
+          {{ video.caption }}
         </div>
       </div>
     </div>
