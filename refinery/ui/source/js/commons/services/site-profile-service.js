@@ -13,7 +13,7 @@
   siteProfileService.$inject = ['$resource', 'settings'];
 
   function siteProfileService ($resource, settings) {
-    var toolDefinitions = $resource(
+    var siteProfile = $resource(
       settings.appRoot + settings.refineryApiV2 + '/site_profile/',
       {},
       {
@@ -26,6 +26,6 @@
       }
     );
 
-    return toolDefinitions;
+    return siteProfile;
   }
 })();
