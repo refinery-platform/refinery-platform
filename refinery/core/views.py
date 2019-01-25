@@ -1113,7 +1113,7 @@ class SiteProfileViewSet(APIView):
                 if video.id not in new_video_list_ids:
                     video.delete()
             # add new videos or update exisiting videos
-            for new_video_data in new_video_list_ids:
+            for new_video_data in new_video_list:
                 try:
                     db_video = SiteVideo.objects.get(
                         id=new_video_data.get('id')
