@@ -11,7 +11,8 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
                     ObtainAuthTokenValidSession, OpenIDToken,
-                    UserProfileViewSet, WorkflowViewSet, site_statistics)
+                    SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet,
+                    site_statistics)
 
 urlpatterns = patterns(
     'core.views',
@@ -78,5 +79,6 @@ core_router.urls.extend([
         AnalysesViewSet.as_view()),
     url(r'^openid_token/$',
         OpenIDToken.as_view(), name="openid-token"),
-    url(r'^obtain-auth-token/', ObtainAuthTokenValidSession.as_view())
+    url(r'^obtain-auth-token/', ObtainAuthTokenValidSession.as_view()),
+    url(r'^site_profiles/$', SiteProfileViewSet.as_view()),
 ])
