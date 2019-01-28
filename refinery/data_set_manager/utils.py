@@ -1183,9 +1183,7 @@ class ISAJSONCreator:
         for node in self.dataset.get_nodes(
             assay=assay, study=study, type=Node.RAW_DATA_FILE
         ):
-            datafile_name = os.path.basename(
-                node.get_file_store_item().source
-            )
+            datafile_name = os.path.basename(node.get_file_store_item().source)
             datafiles.append(
                 {
                     "@id": self._create_id(
