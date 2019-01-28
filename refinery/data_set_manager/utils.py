@@ -1168,8 +1168,9 @@ class ISAJSONCreator:
             }
 
             # Note the set comprehension below. There are issues with
-            # AnnotatedNode creation where many duplicates are created. Re:
-            # "Exponential Explosion" GitHub issue
+            # AnnotatedNode creation where many duplicates are created.
+            # See the "Exponential Explosion" GitHub issue:
+            # github.com/refinery-platform/refinery-platform/issues/2427
             for characteristic_name in {
                 annotated_node.attribute.subtype for annotated_node in
                 AnnotatedNode.objects.filter(
