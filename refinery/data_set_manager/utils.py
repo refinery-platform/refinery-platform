@@ -1116,6 +1116,9 @@ class ISAJSONCreator:
         return [
             {
                 "@id": self._create_id("assay", assay.file_name),
+                "comments": self._create_comments_from_commentable_model(
+                    assay
+                ),
                 "measurementType": self._create_ontology_annotation(
                     assay.measurement, assay.measurement_source,
                     assay.measurement_accession
@@ -1135,25 +1138,24 @@ class ISAJSONCreator:
             for assay in Assay.objects.filter(study=study)
         ]
 
-    def _create_comments(self, node=None):
-        if node is not None:
-            try:
-                attribute = Attribute.objects.get(node=node)
-            except Attribute.DoesNotExist as e:
-                logger.debug(e)
-                return []
-            except Attribute.MultipleObjectsReturned as e:
-                raise ISAJSONCreatorError(e)
-            else:
-                return [
-                    {
-                        "name": attribute.subtype,
-                        "value": attribute.properly_casted_value
-                    }
-                ]
-        # TODO Not sure if other types of comments are stored in the
-        # Attribute model or not
-        return []
+    def _create_comment(self, name, value):
+        return {"name": name, "value": value}
+
+    def _create_comments_from_commentable_model(self, model_instance):
+        logger.debug("Creating ISA-JSON comments for %s", model_instance)
+        return [
+            self._create_comment(comment.name, comment.value)
+            for comment in model_instance.comments.all()
+        ]
+
+    def _create_comments_from_node(self, node):
+        comment_attributes = Attribute.objects.filter(node=node,
+                                                      type=Attribute.COMMENT)
+        return [
+            self._create_comment(attribute.subtype,
+                                 attribute.properly_casted_value)
+            for attribute in comment_attributes
+        ]
 
     def _create_characteristic_categories(self, study):
         return [
@@ -1191,7 +1193,7 @@ class ISAJSONCreator:
                     ),
                     "name": datafile_name,
                     "type": Node.RAW_DATA_FILE,
-                    "comments": self._create_comments(node=node)
+                    "comments": self._create_comments_from_node(node)
                 }
             )
         return datafiles
@@ -1254,6 +1256,9 @@ class ISAJSONCreator:
         return {
                 "@id": self._create_id("investigation",
                                        self.investigation_identifier),
+                "comments": self._create_comments_from_commentable_model(
+                    self.investigation
+                ),
                 "filename": self.investigation.get_isatab_file_name(),
                 "identifier": self.investigation_identifier,
                 "title": self.investigation.title,
@@ -1388,6 +1393,9 @@ class ISAJSONCreator:
         return [
             {
                 "@id": self._create_id("person", contact.last_name),
+                "comments": self._create_comments_from_commentable_model(
+                    contact
+                ),
                 "lastName": contact.last_name,
                 "firstName": contact.first_name,
                 "midInitials": contact.middle_initials,
@@ -1616,3 +1624,8 @@ class ISAJSONCreator:
     @staticmethod
     def _spaces_to_underscores(string):
         return string.replace(" ", "_")
+
+    def _update_dict_with_comments(self, model_instance, model_dict):
+        if model_instance.comments.exists():
+            model_dict["comments"] = \
+                self._create_comments_from_commentable_model(model_instance)
