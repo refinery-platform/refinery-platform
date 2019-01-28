@@ -49,9 +49,9 @@ Thumbs.db
 supervisord.conf
 codekit-config.json
 .vagrant/
-/deployment/.librarian/
-/deployment/.tmp/
-/deployment/Puppetfile.lock
+/deployment/puppet/.librarian/
+/deployment/puppet/.tmp/
+/deployment/puppet/Puppetfile.lock
 /deployment/aws-config/config.yaml
 /deployment/aws-config/tags.yaml
 /refinery/celerybeat-schedule*

@@ -1,4 +1,5 @@
 import csv
+import json
 import logging
 import urllib
 from urlparse import urljoin
@@ -51,9 +52,11 @@ from data_set_manager.models import Attribute
 
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, SiteStatistics,
-                     UserProfile, Workflow, WorkflowEngine)
+                     ExtendedGroup, Invitation, Ontology, SiteProfile,
+                     SiteStatistics, SiteVideo, UserProfile, Workflow,
+                     WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
+                          SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations)
 
@@ -1038,6 +1041,108 @@ class OpenIDToken(APIView):
         token["Region"] = settings.REFINERY_AWS_REGION
 
         return Response(token)
+
+
+class SiteProfileViewSet(APIView):
+    """API endpoint that allows for SiteProfileViewSet to be edited.
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: about_markdown
+              description: Markdown paragraph
+              type: string
+              paramType: form
+              required: false
+            - name: intro_markdown
+              description: Markdown paragraph
+              type: string
+              paramType: form
+              required: false
+            - name: twitter_username
+              description: twitter user name to display twitter feed
+              type: string
+              paramType: form
+              required: false
+            - name: site_videos
+              description: string object with source, source ids, and captions
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ["get", "patch"]
+
+    def get(self, request):
+        site_profile = SiteProfile.objects.get(site=get_current_site(request))
+        serializer = SiteProfileSerializer(site_profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        if not request.user.is_superuser:
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            site_profile = SiteProfile.objects.get(
+                site=get_current_site(request)
+            )
+        except SiteProfile.DoesNotExist as e:
+            logger.error("Site profile for the current site does not exist.")
+            return HttpResponseNotFound(e)
+        except SiteProfile.MultipleObjectsReturned:
+            logger.error("Multiple site profiles for current site error.")
+            return HttpResponseServerError(e)
+
+        site_videos = request.data.get('site_videos')
+        # remove unlisted videos
+        if site_videos is not None:
+            db_site_videos = SiteVideo.objects.filter(
+                site_profile=site_profile
+            )
+            new_video_list = json.loads(request.data.getlist('site_videos')[0])
+            new_video_list_ids = [vid.get('id') for vid in new_video_list]
+            # delete unused videos
+            for video in db_site_videos:
+                if video.id not in new_video_list_ids:
+                    video.delete()
+            # add new videos or update exisiting videos
+            for new_video_data in new_video_list:
+                try:
+                    db_video = SiteVideo.objects.get(
+                        id=new_video_data.get('id')
+                    )
+                except SiteVideo.MultipleObjectsReturned as e:
+                    logger.error("Duplicate site videos found for id %s."
+                                 % new_video_data.get('id'))
+                    return HttpResponseServerError(e)
+                except SiteVideo.DoesNotExist:
+                    vid_serializer = SiteVideoSerializer(data=new_video_data)
+                else:
+                    vid_serializer = SiteVideoSerializer(db_video,
+                                                         data=new_video_data,
+                                                         partial=True)
+                if vid_serializer.is_valid():
+                    vid_serializer.save()
+
+        serializer = SiteProfileSerializer(site_profile,
+                                           data=request.data,
+                                           partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserProfileViewSet(APIView):

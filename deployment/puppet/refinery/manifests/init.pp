@@ -7,7 +7,7 @@ user { $::app_user: ensure => present, }
 
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
-  source => "${deployment_root}/ssh-config",
+  source => "${deployment_root}/puppet/templates/ssh-config",
   owner  => $app_user,
   group  => $app_group,
 }

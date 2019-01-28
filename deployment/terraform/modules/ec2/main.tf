@@ -204,10 +204,10 @@ export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 
 # configure librarian-puppet
 /usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
-su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet install' ubuntu
+su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
+/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/aws.pp
 EOF
 }
 
