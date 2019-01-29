@@ -10,7 +10,7 @@
       <div id="video-list"
         class="video-container item" ng-class="{active: !$index}"
         ng-repeat="video in videoList track by $index">
-        <div class="youtube-video" id="{{ video.id }}"></div>
+        <div class="youtube-video" id="{{ video.source_id }}"></div>
         <div class="carousel-caption">
           {{ video.caption }}
         </div>

@@ -36,18 +36,8 @@
     */
     function activate () {
       homeConfigService.getConfigs().then(function () {
-        var introParagraphs = homeConfigService.homeConfig.intro_markdown.split('   ');
-        vm.htmlIntroList = [];
-        for (var i = 0; i < introParagraphs.length; i++) {
-          vm.htmlIntroList[i] = MarkdownJS.toHTML(introParagraphs[i]);
-        }
-
-        var aboutParagraphs = homeConfigService.homeConfig.about_markdown.split('   ');
-        vm.htmlAboutList = [];
-        for (var j = 0; j < aboutParagraphs.length; j++) {
-          vm.htmlAboutList[j] = MarkdownJS.toHTML(aboutParagraphs[j]);
-        }
-        console.log(vm.htmlAboutList);
+        vm.htmlIntro = MarkdownJS.toHTML(homeConfigService.homeConfig.intro_markdown);
+        vm.htmlAbout = MarkdownJS.toHTML(homeConfigService.homeConfig.about_markdown);
       });
     }
 
