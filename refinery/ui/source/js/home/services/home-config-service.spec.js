@@ -18,7 +18,7 @@
       rootScope = $rootScope;
     }));
 
-    it('factory and tools variables should exist', function () {
+    it('factory and config variables should exist', function () {
       expect(factory).toBeDefined();
       expect(factory.homeConfig).toEqual({ aboutMarkdown: '', introMarkdown: '' });
     });
