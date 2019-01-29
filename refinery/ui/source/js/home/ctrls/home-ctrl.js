@@ -12,6 +12,7 @@
 
   HomeCtrl.$inject = [
     '_',
+    '$log',
     'MarkdownJS',
     '$window',
     'homeConfigService',
@@ -20,6 +21,7 @@
 
   function HomeCtrl (
     _,
+    $log,
     MarkdownJS,
     $window,
     homeConfigService,
@@ -27,6 +29,8 @@
   ) {
     var vm = this;
     vm.isLoggedIn = settings.djangoApp.userId !== undefined;
+    vm.aboutHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.aboutMarkdown);
+    vm.introHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.introMarkdown);
 
     activate();
     /*
@@ -35,12 +39,22 @@
      * -----------------------------------------------------------------------------
     */
     function activate () {
-      homeConfigService.getConfigs().then(function () {
-        vm.htmlIntro = MarkdownJS.toHTML(homeConfigService.homeConfig.intro_markdown);
-        vm.htmlAbout = MarkdownJS.toHTML(homeConfigService.homeConfig.about_markdown);
-      });
+      refreshConfigs();
     }
 
+    /**
+     * @name refreshConfigs
+     * @desc Private method to initalize the custom text on homepage
+     * @memberOf refineryHome.refreshConfigs
+    **/
+    function refreshConfigs () {
+      homeConfigService.getConfigs().then(function () {
+        vm.aboutHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.aboutMarkdown);
+        vm.introHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.introMarkdown);
+      }, function (error) {
+        $log.error('Error retrieving home configs: ' + error);
+      });
+    }
 
     vm.$onInit = function () {
       var djangoApp = $window.djangoApp;

@@ -15,11 +15,14 @@
   ];
 
   function homeConfigService (siteProfileService) {
-    var homeConfig = {};
+    var homeConfig = {
+      aboutMarkdown: '',
+      introMarkdown: ''
+    };
 
     var service = {
       getConfigs: getConfigs,
-      homeConfig: homeConfig,
+      homeConfig: homeConfig
     };
 
     return service;
@@ -29,13 +32,17 @@
     * Method Definitions
     * ---------------------------
     */
+    /**
+     * @name getConfigs
+     * @desc Grab and store site profile configs for the homepage's text
+     * @memberOf refineryHome.getConfigs
+    **/
     function getConfigs () {
       var configs = siteProfileService.query();
       configs.$promise.then(function (response) {
-        console.log(response);
-        angular.copy(response, homeConfig);
+        homeConfig.aboutMarkdown = response.about_markdown;
+        homeConfig.introMarkdown = response.intro_markdown;
       });
-
       return configs.$promise;
     }
   }

@@ -63,7 +63,7 @@ describe('Common.service.siteProfileV2Service: unit tests', function () {
         .expectPATCH(
           refinerySettings.appRoot +
           refinerySettings.refineryApiV2 +
-          '/site_profile/',
+          '/site_profiles/',
           param
       ).respond(202, mockResponse);
 
