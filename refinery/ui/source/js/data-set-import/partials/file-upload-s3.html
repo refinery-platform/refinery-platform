@@ -11,7 +11,7 @@
     <div class="row fileupload-buttonbar v-centered-row">
       <div class="col-lg-4">
         <!-- The fileinput-button span is used to style the file input field as button -->
-        <button
+        <div
           class="refinery-base btn btn-default btn-sm fileinput-button"
           ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1"
           ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() || FileCtrl
@@ -26,7 +26,7 @@
             ngf-multiple="true"
             ng-disabled="!FileCtrl.isUploadConfigured() || FileCtrl.areUploadsInProgress()"
           >
-        </button>
+        </div>
 
         <button
           class="active-group refinery-base btn btn-default btn-sm start"
