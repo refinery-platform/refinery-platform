@@ -98,7 +98,7 @@
             return homeConfigService.homeConfig;
           },
           function (updatedHomeConfig) {
-            scope.videoList = updatedHomeConfig.site_videos;
+            scope.videoList = updatedHomeConfig.siteVideos;
           }
         );
       }

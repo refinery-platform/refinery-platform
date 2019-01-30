@@ -17,7 +17,9 @@
   function homeConfigService (siteProfileService) {
     var homeConfig = {
       aboutMarkdown: '',
-      introMarkdown: ''
+      introMarkdown: '',
+      siteVideos: [],
+      twitterUsername: '',
     };
 
     var service = {
@@ -42,6 +44,8 @@
       configs.$promise.then(function (response) {
         homeConfig.aboutMarkdown = response.about_markdown;
         homeConfig.introMarkdown = response.intro_markdown;
+        homeConfig.twitter_username = response.twitter_username;
+        angular.copy(response.site_videos, homeConfig.siteVideos);
       });
       return configs.$promise;
     }
