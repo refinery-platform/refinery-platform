@@ -26,8 +26,8 @@ import core
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
     Contact, Design, Factor, Node, Ontology, Protocol, ProtocolComponent,
-    ProtocolParameter, Publication, Study
-)
+    ProtocolParameter, ProtocolReference, ProtocolReferenceParameter,
+    Publication, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 
@@ -1095,6 +1095,10 @@ class ISAJSONCreator:
         self.investigation_identifier = self.investigation.get_identifier()
         self.studies = Study.objects.filter(investigation=self.investigation)
 
+        self.create_comments = False
+        self.current_protocol_reference_index = None
+        self.current_protocol_references = None
+
     def create(self):
         return {
             "isatab_filename": "{}.zip".format(
@@ -1131,7 +1135,9 @@ class ISAJSONCreator:
                 "filename": assay.file_name,
                 "materials": self._create_materials(assay),
                 "characteristicCategories": [],
-                "processSequence": [],
+                "processSequence": self._create_process_sequence_assay(
+                    assay, study
+                ),
                 "dataFiles": self._create_datafiles(assay, study),
                 "unitCategories": []
             }
@@ -1139,7 +1145,7 @@ class ISAJSONCreator:
         ]
 
     def _create_comment(self, name, value):
-        return {"name": name, "value": value}
+        return {"name": name, "value": str(value)}
 
     def _create_comments_from_commentable_model(self, model_instance):
         logger.debug("Creating ISA-JSON comments for %s", model_instance)
@@ -1218,16 +1224,18 @@ class ISAJSONCreator:
         :param study:
         :return:
         """
-        return [
-            {
+        factors = []
+        for factor in Factor.objects.filter(study=study):
+            factor_dict = {
                 "@id": self._create_id("factor", factor.name),
                 "factorName": factor.name,
                 "factorType": self._create_ontology_annotation(
                     factor.type, factor.type_source, factor.type_accession
                 )
             }
-            for factor in Factor.objects.filter(study=study)
-        ]
+            self._update_dict_with_comments(factor, factor_dict),
+            factors.append(factor_dict)
+        return factors
 
     def _create_factor_values(self, node):
         return [
@@ -1250,6 +1258,18 @@ class ISAJSONCreator:
 
     def _create_id(self, identifier, value):
         return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
+
+    def _create_id_from_node(self, node):
+        node_types_to_id_values_map = {
+            Node.SAMPLE: ("sample", "sample-{}".format(node.name)),
+            Node.SOURCE: ("source", "source-{}".format(node.name)),
+            Node.EXTRACT: ("material", "extract-{}".format(node.name)),
+            Node.RAW_DATA_FILE: ("data", "rawdatafile-{}".format(node.name))
+        }
+        try:
+            return self._create_id(*node_types_to_id_values_map[node.type])
+        except KeyError as e:
+            raise ISAJSONCreatorError(e)
 
     def _create_investigation(self):
         return {
@@ -1324,6 +1344,55 @@ class ISAJSONCreator:
 
         return characteristics
 
+    def _create_next_process(self, node, process):
+        next_process = None
+        next_protocol_reference = None
+
+        if self.current_protocol_reference_index == \
+                len(self.current_protocol_references) - 1:
+
+            next_protocol_references = \
+                ProtocolReference.objects.filter(
+                    node__in=node.children_set.all()
+                ).order_by("pk")
+
+            if next_protocol_references.exists():
+                next_protocol_reference = next_protocol_references.first()
+                next_process = {
+                    "@id": self._create_id(
+                        "process",
+                        next_protocol_reference.protocol.name +
+                        str(next_protocol_reference.id)
+                    )
+                }
+        else:
+            next_protocol_reference = self.current_protocol_references[
+                self.current_protocol_reference_index + 1
+            ]
+
+            next_process = {
+                "@id": self._create_id(
+                    "process",
+                    next_protocol_reference.protocol.name +
+                    str(next_protocol_reference.id)
+                )
+            }
+
+        if next_protocol_reference == self.current_protocol_references[-1]:
+            if node.type == Node.EXTRACT:
+                assay_node = node.children_set.all().filter(
+                    type=Node.ASSAY
+                ).first()
+
+                if assay_node:
+                    next_process = {
+                        "@id": self._create_id("process", assay_node.name)
+                    }
+                    self.create_comments = True
+
+        if next_process is not None:
+            process["nextProcess"] = next_process
+
     def _create_ontology_annotation(self, term="", term_source="",
                                     term_accession=""):
         """
@@ -1346,17 +1415,20 @@ class ISAJSONCreator:
             github.com/ISA-tools/isa-api/blob/master/isatools/model.py#L545
         :return:
         """
-        return [
-            {
+        ontology_source_references = []
+        for ontology in Ontology.objects.filter(
+            investigation=self.investigation
+        ):
+            ontology_dict = {
                 "name": ontology.name,
                 "version": ontology.version,
                 "description": ontology.description,
                 "file": ontology.file_name
             }
-            for ontology in Ontology.objects.filter(
-                investigation=self.investigation
-            )
-        ]
+            self._update_dict_with_comments(ontology, ontology_dict)
+            ontology_source_references.append(ontology_dict)
+
+        return ontology_source_references
 
     def _create_other_materials(self, assay):
         # "Other Materials" correspond to Nodes of the following type
@@ -1415,13 +1487,161 @@ class ISAJSONCreator:
             for contact in Contact.objects.filter(collection=node_collection)
         ]
 
-    def _create_process_sequence(self, study):
-        """
+    def _create_previous_process(self, node, process):
+        previous_process = None
 
-        :param study:
-        :return:
-        """
-        return []
+        if self.current_protocol_reference_index == 0:
+            prior_protocol_references = \
+                ProtocolReference.objects.filter(
+                    node__in=node.parents_set.all()
+                ).exclude(node__type__in=[Node.SOURCE]).order_by("pk")
+
+            if prior_protocol_references.exists():
+                prior_protocol_reference = \
+                    prior_protocol_references.last()
+
+                previous_process = {
+                    "@id": self._create_id(
+                        "process",
+                        prior_protocol_reference.protocol.name +
+                        str(prior_protocol_reference.id)
+                    )
+                }
+        else:
+            prior_protocol_reference = self.current_protocol_references[
+                self.current_protocol_reference_index - 1
+            ]
+
+            previous_process = {
+                "@id": self._create_id(
+                    "process",
+                    prior_protocol_reference.protocol.name +
+                    str(prior_protocol_reference.id)
+                )
+            }
+
+        if previous_process is not None:
+            process["previousProcess"] = previous_process
+
+    def _create_process(self, protocol_reference, node=None):
+        assay_node = None
+
+        process_id = (
+            self._create_id(
+                "process", protocol_reference.protocol.name +
+                str(protocol_reference.id)
+            )
+        )
+
+        if node is not None and node.type == Node.EXTRACT:
+            last_protocol_reference = self.current_protocol_references[-1]
+            if protocol_reference == last_protocol_reference:
+                assay_node = node.children_set.all().filter(
+                    type=Node.ASSAY
+                ).first()
+
+                if assay_node:
+                    process_id = self._create_id("process", assay_node.name)
+                    self.create_comments = True
+
+        process = {
+            "@id": process_id,
+            "date": self._iso_format_date(protocol_reference.date),
+            "name": assay_node.name if assay_node else "",
+            "executesProtocol": {
+                "@id": self._create_id(
+                    "protocol", protocol_reference.protocol.name
+                )
+            },
+            "parameterValues":
+                self._create_protocol_reference_parameters(protocol_reference),
+            "performer": protocol_reference.performer or ""
+        }
+
+        if node is not None:
+            self._create_next_process(node, process)
+            self._create_previous_process(node, process)
+
+            process["comments"] = (
+                self._create_comments_from_node(node)
+                if self.create_comments else []
+            )
+            self.create_comments = False  # Reset create_comments flag
+
+        if assay_node is not None:
+            input_nodes = []
+        else:
+            input_nodes = [protocol_reference.node]
+        process["inputs"] = self._create_process_sequence_inputs(input_nodes)
+
+        if assay_node is not None:
+            last_protocol_reference = self.current_protocol_references[-1]
+            if protocol_reference == last_protocol_reference:
+                output_nodes = assay_node.children_set.all()
+            else:
+                output_nodes = []
+        else:
+            output_nodes = protocol_reference.node.children_set.all().exclude(
+                type=Node.ASSAY
+            )
+
+        process["outputs"] = self._create_process_sequence_outputs(
+            output_nodes
+        )
+
+        return process
+
+    def _create_process_sequence_assay(self, assay, study, nodes=None,
+                                       process_sequence=None):
+        if process_sequence is None:
+            process_sequence = []
+            nodes = self.dataset.get_nodes(study=study,
+                                           type=Node.SAMPLE).order_by("pk")
+
+        for node in nodes:
+            if node.type != Node.SAMPLE and node.assay != assay:
+                continue
+
+            self.current_protocol_references = list(
+                ProtocolReference.objects.filter(node=node).order_by("pk")
+            )
+
+            for index, protocol_reference in enumerate(
+                self.current_protocol_references
+            ):
+                self.current_protocol_reference_index = index
+                process = self._create_process(protocol_reference, node=node)
+                process_sequence.append(process)
+
+            self._create_process_sequence_assay(
+                assay, study, nodes=node.children_set.all(),
+                process_sequence=process_sequence
+            )
+            continue
+
+        return process_sequence
+
+    def _create_process_sequence_inputs(self, input_nodes):
+        return [
+            {"@id": self._create_id_from_node(node)} for node in input_nodes
+        ]
+
+    def _create_process_sequence_outputs(self, output_nodes):
+        return [
+            {"@id": self._create_id_from_node(node)} for node in output_nodes
+        ]
+
+    def _create_process_sequence_study(self, study):
+        process_sequence = []
+
+        for protocol_reference in ProtocolReference.objects.filter(
+            node__type=Node.SOURCE,
+            protocol__in=Protocol.objects.filter(study=study)
+        ):
+            process = self._create_process(protocol_reference)
+            process_sequence.append(process)
+
+        return process_sequence
 
     def _create_protocol_components(self, protocol):
         """
@@ -1453,18 +1673,48 @@ class ISAJSONCreator:
         :param study:
         :return:
         """
-        return [
-            {
+        protocol_parameters = []
+        for protocol_parameter in ProtocolParameter.objects.filter(
+            protocol=protocol
+        ):
+            protocol_parameter_dict = {
                 "@id": self._create_id("parameter", protocol_parameter.name),
                 "parameterName": self._create_ontology_annotation(
                     protocol_parameter.name, protocol_parameter.name_source,
                     protocol_parameter.name_accession
                 ),
             }
-            for protocol_parameter in ProtocolParameter.objects.filter(
-                protocol=protocol
+            self._update_dict_with_comments(protocol_parameter,
+                                            protocol_parameter_dict)
+            protocol_parameters.append(protocol_parameter_dict)
+        return protocol_parameters
+
+    def _create_protocol_reference_parameters(self, protocol_reference):
+        parameter_values = []
+        protocol_reference_parameters = \
+            ProtocolReferenceParameter.objects.filter(
+                protocol_reference=protocol_reference
             )
-        ]
+        for protocol_reference_parameter in protocol_reference_parameters:
+            parameter_value = (protocol_reference_parameter.value if not
+                               protocol_reference_parameter.value_unit else
+                               protocol_reference_parameter.value_unit)
+            parameter_values.append(
+                {
+                    "category": {
+                        "@id": self._create_id(
+                            "parameter",
+                            protocol_reference_parameter.name
+                        )
+                    },
+                    "value": self._create_ontology_annotation(
+                        parameter_value,
+                        protocol_reference_parameter.value_source,
+                        protocol_reference_parameter.value_accession
+                    )
+                }
+            )
+        return parameter_values
 
     def _create_protocols(self, study):
         """
@@ -1473,9 +1723,9 @@ class ISAJSONCreator:
         :param study:
         :return:
         """
-
-        return [
-            {
+        protocols = []
+        for protocol in Protocol.objects.filter(study=study):
+            protocol_dict = {
                 "@id": self._create_id("protocol", protocol.name),
                 "name": protocol.name,
                 "protocolType": self._create_ontology_annotation(
@@ -1489,8 +1739,11 @@ class ISAJSONCreator:
                 "components": self._create_protocol_components(protocol),
 
             }
-            for protocol in Protocol.objects.filter(study=study)
-        ]
+
+            self._update_dict_with_comments(protocol, protocol_dict)
+
+            protocols.append(protocol_dict)
+        return protocols
 
     def _create_publications(self, investigation_or_study):
         """
@@ -1499,19 +1752,24 @@ class ISAJSONCreator:
         :param investigation_or_study:
         :return:
         """
-        return [
-            {
-                "pubMedID": p.pubmed_id,
-                "doi": p.doi,
-                "authorList": p.authors,
-                "title": p.title,
-                "status": self._create_ontology_annotation(
-                    p.status, p.status_source, p.status_accession
-                ),
-            } for p in Publication.objects.filter(
+        publications = []
+        for publication in Publication.objects.filter(
                 collection=investigation_or_study
-            )
-        ]
+        ):
+            publication_dict = {
+                "pubMedID": publication.pubmed_id,
+                "doi": publication.doi,
+                "authorList": publication.authors,
+                "title": publication.title,
+                "status": self._create_ontology_annotation(
+                    publication.status, publication.status_source,
+                    publication.status_accession
+                ),
+            }
+            self._update_dict_with_comments(publication, publication_dict)
+            publications.append(publication_dict)
+
+        return publications
 
     def _create_samples(self, assay_or_study):
         is_study = isinstance(assay_or_study, Study)
@@ -1596,7 +1854,7 @@ class ISAJSONCreator:
                 "materials": self._create_materials(study),
                 "characteristicCategories":
                     self._create_characteristic_categories(study),
-                "processSequence": self._create_process_sequence(study),
+                "processSequence": self._create_process_sequence_study(study),
                 "unitCategories": self._create_unit_categories(study)
             }
             for study in self.studies
@@ -1616,12 +1874,13 @@ class ISAJSONCreator:
             )
         ]
 
-        # Return a unique list of unit category dicts
+        # Return a unique list of unit category dicts; This doubles back to
+        # the Annotated Node Exponential Explosion issue
         return {d['@id']: d for d in unit_categories}.values()
 
     @staticmethod
     def _iso_format_date(date):
-        return date if date is None else date.isoformat()
+        return "" if date is None else date.isoformat()
 
     @staticmethod
     def _spaces_to_underscores(string):
