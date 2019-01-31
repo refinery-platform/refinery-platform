@@ -52,7 +52,6 @@ class Comment(models.Model):
 
 
 class Commentable(models.Model):
-
     """
     Reserved for ISA-Tab components that are allowed to have comments
     according to the ISA-JSON standard.
