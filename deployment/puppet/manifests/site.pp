@@ -31,7 +31,19 @@ node default {
     rds_endpoint_address   => $refinery::params::rds_endpoint_address,
   }
 
+  class { 'refinery::django':
+    deployment_platform    => $refinery::params::deployment_platform,
+    app_user               => $refinery::params::app_user,
+    app_group              => $refinery::params::app_group,
+    project_root           => $refinery::params::project_root,
+    django_root            => $refinery::params::django_root,
+    django_settings_module => $refinery::params::django_settings_module,
+    virtualenv             => $refinery::params::virtualenv,
+  }
+
   class { 'refinery::ui':
+    deployment_platform    => $refinery::params::deployment_platform,
+    project_root           => $refinery::params::project_root,
     ui_app_root            => $refinery::params::ui_app_root,
     app_user               => $refinery::params::app_user,
     app_group              => $refinery::params::app_group,

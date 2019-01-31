@@ -1,4 +1,6 @@
 class refinery::ui (
+  $deployment_platform,
+  $project_root,
   $ui_app_root,
   $app_user,
   $app_group,
@@ -6,6 +8,15 @@ class refinery::ui (
   $django_root,
   $django_settings_module,
 ) {
+  if $deployment_platform == 'vagrant' {
+    file { 'static_files_dir':
+      ensure => directory,
+      path   => "${project_root}/static",
+      owner  => $app_user,
+      group  => $app_group,
+    }
+  }
+
   apt::source { 'nodejs':
     ensure   => 'present',
     comment  => 'Nodesource NodeJS repo.',
@@ -72,6 +83,9 @@ class refinery::ui (
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
-    require     => Class['::refinery::python'],
+    require     => [
+      Class['::refinery::python'],
+      File['static_files_dir'],
+    ]
   }
 }
