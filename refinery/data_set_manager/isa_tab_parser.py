@@ -20,9 +20,9 @@ from django.core.files import File
 import botocore
 
 from file_store.models import FileStoreItem
-from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
-                     Node, Ontology, Protocol, ProtocolComponent,
-                     ProtocolReference, ProtocolParameter,
+from .models import (Assay, Attribute, Comment, Contact, Design, Factor,
+                     Investigation, Node, Ontology, Protocol,
+                     ProtocolComponent, ProtocolReference, ProtocolParameter,
                      ProtocolReferenceParameter, Publication, Study)
 from .utils import fix_last_column
 
@@ -273,7 +273,11 @@ class IsaTabParser:
         self._current_file = None
         self._current_file_name = None
 
-        self.ontology_source_reference_data = []
+        self.current_comments = {}
+        self.ontology_source_reference_data = {
+            "comments": None,
+            "model_parameters": []
+        }
 
     def _split_header(self, header):
         return [x.strip() for x in header.replace("]", "").strip().split("[")]
@@ -502,7 +506,8 @@ class IsaTabParser:
 
             protocol_reference = ProtocolReference.objects.create(
                 node=self._current_node,
-                protocol=protocol)
+                protocol=protocol
+            )
             self._current_protocol_reference = protocol_reference
 
             row.popleft()
@@ -669,6 +674,30 @@ class IsaTabParser:
                 self._current_node = None
                 self._parse_node(headers, row)
 
+    def _create_comments(self, columns):
+        """
+        Creates Comment instances to be associated with a given Section's model
+        """
+        if not columns[0].startswith("Comment["):
+            return
+
+        regex_result = re.search('\[(.+?)\]', columns[0])
+        if regex_result:
+            comment_name = regex_result.group(1)
+        else:
+            raise ParserException(
+                "Invalid Comment specified: {}".format(columns[0])
+            )
+
+        for index, comment_value in enumerate(columns[1:]):
+            if self.current_comments.get(index) is None:
+                self.current_comments[index] = []
+
+            comment, created = Comment.objects.get_or_create(
+                name=comment_name, value=comment_value
+            )
+            self.current_comments[index].append(comment)
+
     def _create_investigation_file_section_model(self, section_title, fields):
         try:
             section = self.SECTIONS[section_title]
@@ -735,14 +764,21 @@ class IsaTabParser:
                 # satisfy the foreignKey of Ontology here. We'll temporarily
                 #  store the information we're parsing and create the
                 # Ontology instances after we have an Investigation
-                self.ontology_source_reference_data.append(model_parameters)
+                self.ontology_source_reference_data["model_parameters"].append(
+                    model_parameters
+                )
+                if not self.ontology_source_reference_data.get("comments"):
+                    self.ontology_source_reference_data["comments"] = \
+                        self.current_comments
 
             elif section_title == "STUDY PROTOCOLS":
-                self._create_protocol_and_related_models(model_parameters)
+                self._create_protocol_and_related_models(model_parameters,
+                                                         self.current_comments)
             else:
-                # TODO: This abstraction isn't very helpful. Its hard to
-                # distinguish the model being used and its respective
-                # parameters without dropping into a debugger
+                logger.debug(
+                    "Creating `%s` instance from the following parameters: %s",
+                    model_class.__name__, model_parameters
+                )
                 model_instance = model_class.objects.create(**model_parameters)
 
                 if section_title == "INVESTIGATION":
@@ -750,7 +786,13 @@ class IsaTabParser:
                 if section_title == "STUDY":
                     self._current_study = model_instance
 
-    def _create_protocol_and_related_models(self, model_parameters):
+                for comment in self.current_comments.get(column, []):
+                    model_instance.comments.add(comment)
+
+        # Reset the current comments for the next Section to be parsed
+        self.current_comments = {}
+
+    def _create_protocol_and_related_models(self, model_parameters, comments):
         def get_model_parameters(parameter_names):
             return [
                 model_parameters.pop(parameter_name).split(";")
@@ -769,6 +811,8 @@ class IsaTabParser:
         )
 
         protocol_instance = Protocol.objects.create(**model_parameters)
+        for comment in comments:
+            protocol_instance.comments.add(comment)
 
         for parameter_fields in protocol_parameter_fields:
             if not all(field == u"" for field in parameter_fields):
@@ -826,6 +870,9 @@ class IsaTabParser:
                 continue
             # 3. split line on tab
             columns = line.split("\t")
+
+            self._create_comments(columns)
+
             # 4. identify row type
             if (self._adjust_string_case(columns[0].strip()) in
                     self._adjust_list_case(self.SECTIONS)):
@@ -1092,9 +1139,16 @@ class IsaTabParser:
 
         # Create Ontology instances now that we have an Investigation to
         # associate them with
-        for ontology_params in self.ontology_source_reference_data:
+        for index, ontology_params in \
+                enumerate(
+                    self.ontology_source_reference_data["model_parameters"]
+                ):
             ontology_params["investigation"] = self._current_investigation
-            Ontology.objects.create(**ontology_params)
+            ontology = Ontology.objects.create(**ontology_params)
+            for comment in self.ontology_source_reference_data["comments"].get(
+                    index, []
+            ):
+                ontology.comments.add(comment)
 
         return self._current_investigation
 
