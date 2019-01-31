@@ -51,7 +51,9 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
         )
 
         self.assertEqual(
-            self.isa_tools_json_creator._create_comments(node=nodes.first()),
+            self.isa_tools_json_creator._create_comments_from_node(
+                node=nodes.first()
+            ),
             [{"name": u"Export", "value": u"yes"}],
         )
 
@@ -225,7 +227,18 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
                 self.expected_isa_json["studies"][0]["assays"][0]["materials"][
                     "otherMaterials"
                 ]
+            )
+
+        )
+
+    def test__create_people(self):
+        self.assertEqual(
+            ordered(
+                self.isa_tools_json_creator._create_people(
+                    self.isa_tools_json_creator.studies.first()
+                )
             ),
+            ordered(self.expected_isa_json["studies"][0]["people"])
         )
 
     def test__create_protocol_components(self):
@@ -351,10 +364,8 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
 class ISATabExportIntegrationTests(MetadataImportTestBase):
     def test_bii_dataset_to_isa_json(self):
         self.maxDiff = None
-        with open(self.get_test_file_path('BII-S-7.zip')) as good_isa:
+        with open(self.get_test_file_path("BII-S-7.zip")) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
 
         dataset = DataSet.objects.all().first()
         ISAJSONCreator(dataset).create()
-
-        # TODO More involved testing

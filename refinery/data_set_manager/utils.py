@@ -1580,6 +1580,9 @@ class ISAJSONCreator:
                 "identifier": study.identifier,
                 "title": study.title,
                 "description": study.description,
+                "comments": self._create_comments_from_commentable_model(
+                    study
+                ),
                 "submissionDate": self._iso_format_date(study.submission_date),
                 "publicReleaseDate": self._iso_format_date(study.release_date),
                 "filename": study.file_name,
