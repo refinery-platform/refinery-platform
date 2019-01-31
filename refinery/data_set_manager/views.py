@@ -1312,5 +1312,5 @@ class ISATabExportViewSet(ViewSet):
         return HttpResponse(
             content=post_response.content,
             status=post_response.status_code,
-            content_type=post_response.headers['Content-Type']
+            content_type=post_response.headers.get("Content-Type")
         )
