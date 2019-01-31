@@ -1295,9 +1295,16 @@ class ISATabExportViewSet(ViewSet):
         except ISAJSONCreatorError as e:
             return HttpResponseBadRequest(e)
 
-        post_response = requests.post(
-            settings.REFINERY_ISA_TAB_EXPORT_URL, json=isa_json
-        )
+        try:
+            post_response = requests.post(
+                settings.REFINERY_ISA_TAB_EXPORT_URL, json=isa_json
+            )
+        except requests.ConnectionError:
+            return HttpResponseBadRequest(
+                "Unable to connect to ISA-Tab export service at: {}".format(
+                    settings.REFINERY_ISA_TAB_EXPORT_URL
+                )
+            )
 
         if post_response.status_code // 100 in [4, 5]:  # any 4xx or 5xx
             logger.error(post_response.content)
