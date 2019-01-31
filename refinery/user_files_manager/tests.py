@@ -181,16 +181,9 @@ class UserFilesUtilsTests(TestCase):
                               'technology_Characteristics_generic_s',
                               'cell_type_Characteristics_generic_s',
                               'organism_Characteristics_generic_s',
-                              'antibody_Factor_Value_generic_s',
                               'genotype_Characteristics_generic_s',
-                              'cell_type_Factor_Value_generic_s',
                               'filetype_Characteristics_generic_s',
-                              'filetype_Factor_Value_generic_s',
-                              'organism_Factor_Value_generic_s',
-                              'experimenter_Factor_Value_generic_s',
-                              'genotype_Factor_Value_generic_s',
-                              'experimenter_Characteristics_generic_s',
-                              'technology_Factor_Value_generic_s']
+                              'experimenter_Characteristics_generic_s']
                              )
 
     def test_generate_solr_params_for_user_returns_json_fields(self):
@@ -204,19 +197,12 @@ class UserFilesUtilsTests(TestCase):
                               'django_id',
                               'REFINERY_DOWNLOAD_URL_s',
                               'filetype_Characteristics_generic_s',
-                              'filetype_Factor_Value_generic_s',
                               'organism_Characteristics_generic_s',
-                              'organism_Factor_Value_generic_s',
                               'technology_Characteristics_generic_s',
-                              'technology_Factor_Value_generic_s',
                               'genotype_Characteristics_generic_s',
-                              'genotype_Factor_Value_generic_s',
                               'cell_type_Characteristics_generic_s',
-                              'cell_type_Factor_Value_generic_s',
                               'antibody_Characteristics_generic_s',
-                              'antibody_Factor_Value_generic_s',
-                              'experimenter_Characteristics_generic_s',
-                              'experimenter_Factor_Value_generic_s']
+                              'experimenter_Characteristics_generic_s']
                              )
 
     def test_generate_solr_params_for_user_returns_json_filter(self):
