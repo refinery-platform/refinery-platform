@@ -46,4 +46,13 @@ node default {
     django_root         => $refinery::params::django_root,
     solr_lib_dir        => $refinery::params::solr_lib_dir,
   }
+
+  class { 'refinery::neo4j':
+    deployment_platform    => $refinery::params::deployment_platform,
+    app_user               => $refinery::params::app_user,
+    app_group              => $refinery::params::app_group,
+    django_root            => $refinery::params::django_root,
+    django_settings_module => $refinery::params::django_settings_module,
+    virtualenv             => $refinery::params::virtualenv,
+  }
 }
