@@ -525,7 +525,7 @@ def generate_solr_params(
     field_limit = []  # limit attributes to return
     facet_fields_obj = {}  # requested facets formatted for solr
     if facets_from_config:
-        # Twice as many facets as necessary, but easier than the alternative.
+        # Design choice to leave out _factor to avoid duplicate attributes
         for facet in settings.USER_FILES_FACETS.split(","):
             facet_template = '{0}_Characteristics{1}'
             facet_field = ','.join(

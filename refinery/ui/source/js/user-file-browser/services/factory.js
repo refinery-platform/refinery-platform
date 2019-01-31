@@ -85,7 +85,7 @@
     }
 
     function mapInternalToDisplay (internal) {
-      return internal.replace(/_(Characteristics|Factor_Value)_generic_s/, '');
+      return internal.replace(/_(Characteristics)_generic_s/, '');
     }
 
     function createData (solrNodes) {
@@ -95,8 +95,6 @@
         var internalNames = Object.keys(node);
         internalNames.forEach(function (internalName) {
           var display = mapInternalToDisplay(internalName);
-          // TODO: Name collisions might happen here:
-          // organism_Characteristics vs organism_Factor_Value
           row[display] = node[internalName];
         });
         row[URL] = row.name;
@@ -114,7 +112,7 @@
           var lowerCaseNames = facetObjArr.map(function (nameCount) {
             return nameCount.name.toLowerCase();
           }).join(' ');
-          // "foo_Characteristic" and "foo_Factor_Value" both map to "foo".
+          // "foo_Characteristic" map to "foo".
           var display = mapInternalToDisplay(attributeName);
           if (!angular.isDefined(filters[display])) {
             filters[display] = {
