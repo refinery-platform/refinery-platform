@@ -10,17 +10,25 @@
     .module('refineryHome')
     .controller('TwitterFeedCtrl', TwitterFeedCtrl);
 
-  TwitterFeedCtrl.$inject = ['_', '$window'];
+  TwitterFeedCtrl.$inject = ['_', '$scope', '$window', 'homeConfigService'];
 
-  function TwitterFeedCtrl (_, $window) {
+  function TwitterFeedCtrl (_, $scope, $window, homeConfigService) {
     var vm = this;
     vm.twitterId = '';
 
-    vm.$onInit = function () {
-      var djangoApp = $window.djangoApp;
-      if (_.has(djangoApp, 'refineryTwitter') && djangoApp.refineryTwitter.length) {
-        vm.twitterId = djangoApp.refineryTwitter;
+
+  /*
+   * -----------------------------------------------------------------------------
+   * Watchers
+   * -----------------------------------------------------------------------------
+   */
+    $scope.$watchCollection(
+      function () {
+        return homeConfigService.homeConfig;
+      },
+      function (updatedHomeConfig) {
+        vm.twitterId = updatedHomeConfig.twitter_username;
       }
-    };
+    );
   }
 })();

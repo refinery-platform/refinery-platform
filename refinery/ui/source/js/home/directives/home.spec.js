@@ -9,14 +9,21 @@
 
     beforeEach(inject(function (
       $compile,
+      $httpBackend,
       $rootScope,
       $templateCache,
-      $window
+      $window,
+      settings
     ) {
       $templateCache.put(
         $window.getStaticUrl('partials/home/views/home.html'),
         '<div id="home-main">/div>'
       );
+      $httpBackend
+        .expectGET(
+          settings.appRoot +
+          settings.refineryApiV2 + '/site_profiles/'
+        ).respond(200, []);
 
       var scope = $rootScope.$new();
       var template = '<rp-home></rp-home>';
