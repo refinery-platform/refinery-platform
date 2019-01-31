@@ -176,15 +176,15 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_json_facet(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertListEqual(query.get('json').get('facet').keys(),
-                             ['antibody_Characteristics_generic_s',
-                              'technology_Characteristics_generic_s',
-                              'cell_type_Characteristics_generic_s',
-                              'organism_Characteristics_generic_s',
-                              'genotype_Characteristics_generic_s',
-                              'filetype_Characteristics_generic_s',
-                              'experimenter_Characteristics_generic_s']
-                             )
+        self.assertItemsEqual(query.get('json').get('facet').keys(),
+                              ['antibody_Characteristics_generic_s',
+                               'technology_Characteristics_generic_s',
+                               'cell_type_Characteristics_generic_s',
+                               'organism_Characteristics_generic_s',
+                               'genotype_Characteristics_generic_s',
+                               'filetype_Characteristics_generic_s',
+                               'experimenter_Characteristics_generic_s']
+                              )
 
     def test_generate_solr_params_for_user_returns_json_fields(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
