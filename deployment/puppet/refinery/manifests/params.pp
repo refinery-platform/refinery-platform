@@ -23,6 +23,16 @@ class refinery::params (
     default => undef,
   }
 
+  $rds_superuser_password = $deployment_platform ? {
+    'aws'   => $::rds_superuser_password,
+    default => undef,
+  }
+
+  $rds_endpoint_address = $deployment_platform ? {
+    'aws'   => $::rds_endpoint_address,
+    default => undef,
+  }
+
   $site_name = $deployment_platform ? {
     'aws'   => $::site_name,
     default => 'Refinery',
@@ -32,6 +42,13 @@ class refinery::params (
     'aws'   => $::site_url,
     default => '192.168.50.50:8000',
   }
+
+  $conf_mode = $deployment_platform ? {
+    'aws'   => 'aws',
+    default => 'dev',
+  }
+
+  $django_settings_module = "config.settings.${conf_mode}"
 
   $project_root = $deployment_platform ? {
     'aws'   => '/srv/refinery-platform',
@@ -44,13 +61,6 @@ class refinery::params (
 
   $ui_app_root = "${django_root}/ui"
 
-  $requirements = "${project_root}/requirements.txt"
-
-  $requirements_aws = $deployment_platform ? {
-    'aws'   => "${project_root}/requirements-aws.txt",
-    default => undef,
-  }
-
   $data_dir = $deployment_platform ? {
     'aws'   => '/data',
     default => undef,
@@ -61,21 +71,6 @@ class refinery::params (
     default => "${project_root}/media",
   }
 
-  $conf_mode = $deployment_platform ? {
-    'aws'   => 'aws',
-    default => 'dev',
-  }
-
-  $django_settings_module = "config.settings.${conf_mode}"
-
-  $solr_custom_synonyms_file = "${django_root}
-    /solr/core/conf/custom-synonyms.txt"
-
-  $solr_lib_dir = $deployment_platform ? {
-    'aws'   => '/opt/solr/server/solr-webapp/webapp/WEB-INF/lib',
-    default => "${django_root}/solr/lib",
-  }
-
   $solr_data_set_manager_data = $deployment_platform ? {
     'aws'   => "${data_dir}/solr/data_set_manager",
     default => undef,
@@ -84,6 +79,13 @@ class refinery::params (
   $solr_core_data = $deployment_platform ? {
     'aws'   => "${data_dir}/solr/core",
     default => undef,
+  }
+
+  $solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
+
+  $solr_lib_dir = $deployment_platform ? {
+    'aws'   => '/opt/solr/server/solr-webapp/webapp/WEB-INF/lib',
+    default => "${django_root}/solr/lib",
   }
 
   $email_host = $deployment_platform ? {
