@@ -1309,8 +1309,14 @@ class ISATabExportViewSet(ViewSet):
         if post_response.status_code // 100 in [4, 5]:  # any 4xx or 5xx
             logger.error(post_response.content)
 
-        return HttpResponse(
+        response = HttpResponse(
             content=post_response.content,
             status=post_response.status_code,
             content_type=post_response.headers.get("Content-Type")
         )
+
+        if post_response.status_code == 200:
+            response["Content-Disposition"] = post_response.headers.get(
+                "Content-Disposition"
+            )
+        return response
