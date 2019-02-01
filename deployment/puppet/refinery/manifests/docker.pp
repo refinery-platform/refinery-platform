@@ -1,7 +1,7 @@
 class refinery::docker (
-  $deployment_platform,
-  $app_user,
-  $docker_host,
+  $deployment_platform = $refinery::params::deployment_platform,
+  $app_user            = $refinery::params::app_user,
+  $docker_host         = $refinery::params::docker_host,
 ) {
   if $deployment_platform != 'aws' {
     class { '::docker':

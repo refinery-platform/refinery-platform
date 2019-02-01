@@ -1,10 +1,10 @@
 class refinery::python (
-  $deployment_platform,
-  $app_user,
-  $app_group,
-  $virtualenv,
-  $project_root,
-  $django_root,
+  $deployment_platform = $refinery::params::deployment_platform,
+  $app_user            = $refinery::params::app_user,
+  $app_group           = $refinery::params::app_group,
+  $virtualenv          = $refinery::params::virtualenv,
+  $project_root        = $refinery::params::project_root,
+  $django_root         = $refinery::params::django_root,
 ) {
 
   class { '::python':

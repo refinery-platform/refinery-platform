@@ -1,4 +1,15 @@
-class refinery inherits refinery::params {
+class refinery (
+  $deployment_platform        = $refinery::params::deployment_platform,
+  $app_user                   = $refinery::params::app_user,
+  $app_group                  = $refinery::params::app_group,
+  $project_root               = $refinery::params::project_root,
+  $django_root                = $refinery::params::django_root,
+  $django_settings_module     = $refinery::params::django_settings_module,
+  $virtualenv                 = $refinery::params::virtualenv,
+  $solr_data_set_manager_data = $refinery::params::solr_data_set_manager_data,
+  $solr_core_data             = $refinery::params::solr_core_data,
+  $docker_host                = $refinery::params::docker_host,
+) {
   sysctl { 'vm.swappiness': value => '10' }  # for better performance
 
   class { 'timezone':  # to make logs easier to read

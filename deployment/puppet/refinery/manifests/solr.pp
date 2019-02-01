@@ -1,8 +1,8 @@
 class refinery::solr (
-  $deployment_platform,
-  $app_user,
-  $django_root,
-  $solr_lib_dir,
+  $deployment_platform = $refinery::params::deployment_platform,
+  $app_user            = $refinery::params::app_user,
+  $django_root         = $refinery::params::django_root,
+  $solr_lib_dir        = $refinery::params::solr_lib_dir,
 ) {
   $solr_version = '5.3.1'
   $solr_archive = "solr-${solr_version}.tgz"

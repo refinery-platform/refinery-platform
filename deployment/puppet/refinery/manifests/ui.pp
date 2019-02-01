@@ -1,12 +1,12 @@
 class refinery::ui (
-  $deployment_platform,
-  $project_root,
-  $ui_app_root,
-  $app_user,
-  $app_group,
-  $virtualenv,
-  $django_root,
-  $django_settings_module,
+  $deployment_platform    = $refinery::params::deployment_platform,
+  $project_root           = $refinery::params::project_root,
+  $ui_app_root            = $refinery::params::ui_app_root,
+  $app_user               = $refinery::params::app_user,
+  $app_group              = $refinery::params::app_group,
+  $virtualenv             = $refinery::params::virtualenv,
+  $django_root            = $refinery::params::django_root,
+  $django_settings_module = $refinery::params::django_settings_module,
 ) {
   if $deployment_platform == 'vagrant' {
     file { 'static_files_dir':

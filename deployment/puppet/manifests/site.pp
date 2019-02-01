@@ -13,67 +13,17 @@ node default {
 
   class { 'refinery': }
 
-  class { 'refinery::python':
-    deployment_platform => $refinery::params::deployment_platform,
-    app_user            => $refinery::params::app_user,
-    app_group           => $refinery::params::app_group,
-    virtualenv          => $refinery::params::virtualenv,
-    project_root        => $refinery::params::project_root,
-    django_root         => $refinery::params::django_root,
-  }
+  class { 'refinery::python': }
 
-  class { 'refinery::postgresql':
-    deployment_platform    => $refinery::params::deployment_platform,
-    db_name                => $refinery::params::db_name,
-    db_user                => $refinery::params::db_user,
-    db_user_password       => $refinery::params::db_user_password,
-    rds_superuser_password => $refinery::params::rds_superuser_password,
-    rds_endpoint_address   => $refinery::params::rds_endpoint_address,
-  }
+  class { 'refinery::postgresql': }
 
-  class { 'refinery::django':
-    deployment_platform    => $refinery::params::deployment_platform,
-    app_user               => $refinery::params::app_user,
-    app_group              => $refinery::params::app_group,
-    project_root           => $refinery::params::project_root,
-    django_root            => $refinery::params::django_root,
-    django_settings_module => $refinery::params::django_settings_module,
-    django_admin_password  => $refinery::params::django_admin_password,
-    site_name              => $refinery::params::site_name,
-    site_url               => $refinery::params::site_url,
-    virtualenv             => $refinery::params::virtualenv,
-  }
+  class { 'refinery::django': }
 
-  class { 'refinery::ui':
-    deployment_platform    => $refinery::params::deployment_platform,
-    project_root           => $refinery::params::project_root,
-    ui_app_root            => $refinery::params::ui_app_root,
-    app_user               => $refinery::params::app_user,
-    app_group              => $refinery::params::app_group,
-    virtualenv             => $refinery::params::virtualenv,
-    django_root            => $refinery::params::django_root,
-    django_settings_module => $refinery::params::django_settings_module,
-  }
+  class { 'refinery::ui': }
 
-  class { 'refinery::solr':
-    deployment_platform => $refinery::params::deployment_platform,
-    app_user            => $refinery::params::app_user,
-    django_root         => $refinery::params::django_root,
-    solr_lib_dir        => $refinery::params::solr_lib_dir,
-  }
+  class { 'refinery::solr': }
 
-  class { 'refinery::neo4j':
-    deployment_platform    => $refinery::params::deployment_platform,
-    app_user               => $refinery::params::app_user,
-    app_group              => $refinery::params::app_group,
-    django_root            => $refinery::params::django_root,
-    django_settings_module => $refinery::params::django_settings_module,
-    virtualenv             => $refinery::params::virtualenv,
-  }
+  class { 'refinery::neo4j': }
 
-  class { 'refinery::docker':
-    deployment_platform => $refinery::params::deployment_platform,
-    app_user            => $refinery::params::app_user,
-    docker_host         => $refinery::params::docker_host,
-  }
+  class { 'refinery::docker': }
 }

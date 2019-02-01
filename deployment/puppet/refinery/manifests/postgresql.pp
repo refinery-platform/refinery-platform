@@ -1,10 +1,10 @@
 class refinery::postgresql (
-  $deployment_platform,
-  $db_name,
-  $db_user,
-  $db_user_password,
-  $rds_superuser_password,
-  $rds_endpoint_address,
+  $deployment_platform    = $refinery::params::deployment_platform,
+  $db_name                = $refinery::params::db_name,
+  $db_user                = $refinery::params::db_user,
+  $db_user_password       = $refinery::params::db_user_password,
+  $rds_superuser_password = $refinery::params::rds_superuser_password,
+  $rds_endpoint_address   = $refinery::params::rds_endpoint_address,
 ) {
   # Postgres versioning scheme provides latest point releases when
   # specifying major version: https://www.postgresql.org/support/versioning/
