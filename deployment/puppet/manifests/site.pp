@@ -38,6 +38,9 @@ node default {
     project_root           => $refinery::params::project_root,
     django_root            => $refinery::params::django_root,
     django_settings_module => $refinery::params::django_settings_module,
+    django_admin_password  => $refinery::params::django_admin_password,
+    site_name              => $refinery::params::site_name,
+    site_url               => $refinery::params::site_url,
     virtualenv             => $refinery::params::virtualenv,
   }
 
@@ -66,5 +69,11 @@ node default {
     django_root            => $refinery::params::django_root,
     django_settings_module => $refinery::params::django_settings_module,
     virtualenv             => $refinery::params::virtualenv,
+  }
+
+  class { 'refinery::docker':
+    deployment_platform => $refinery::params::deployment_platform,
+    app_user            => $refinery::params::app_user,
+    docker_host         => $refinery::params::docker_host,
   }
 }

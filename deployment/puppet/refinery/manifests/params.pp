@@ -2,6 +2,7 @@ class refinery::params (
   $deployment_platform
 ) {
   # based on https://docs.puppet.com/puppet/3/lang_classes.html#appendix-smart-parameter-defaults
+  # all globals are set as Facter environment variables by Terraform
   $app_user = $deployment_platform ? {
     'aws'   => 'ubuntu',
     default => 'vagrant',
@@ -50,12 +51,15 @@ class refinery::params (
 
   $django_settings_module = "config.settings.${conf_mode}"
 
+  $django_admin_password = $deployment_platform ? {
+    'aws'   => $::admin_password,
+    default => 'refinery',
+  }
+
   $project_root = $deployment_platform ? {
     'aws'   => '/srv/refinery-platform',
     default => "/${app_user}",
   }
-
-  $deployment_root = "${project_root}/deployment"
 
   $django_root = "${project_root}/refinery"
 
