@@ -827,14 +827,14 @@ class IsaTabParser:
                     name_source=parameter_fields[2]
                 )
 
-        for component_field in protocol_component_fields:
-            if not all(field == u"" for field in component_field):
+        for component_fields in protocol_component_fields:
+            if not all(field == u"" for field in component_fields):
                 ProtocolComponent.objects.create(
                     protocol=protocol_instance,
-                    name=component_field[0],
-                    type=component_field[1],
-                    type_accession=component_field[2],
-                    type_source=component_field[3]
+                    name=component_fields[0],
+                    type=component_fields[1],
+                    type_accession=component_fields[2],
+                    type_source=component_fields[3]
                 )
 
     # parse an investigation section
