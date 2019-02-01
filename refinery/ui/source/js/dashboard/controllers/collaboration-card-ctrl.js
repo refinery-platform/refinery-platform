@@ -26,7 +26,7 @@
   ) {
     var vm = this;
     vm.userGroups = [];
-    vm.invitation = {};
+    vm.invitations = [];
     vm.openGroupAdd = openGroupAdd;
     vm.openGroupEditor = openGroupEditor;
     vm.openGroupMemberAdd = openGroupMemberAdd;

@@ -13,6 +13,7 @@
 
   DashboardMainCtrl.$inject = [
     'humanize',
+    '_',
     'groupInviteService',
     'groupMemberService',
     'settings'
@@ -20,6 +21,7 @@
 
   function DashboardMainCtrl (
     humanize,
+    _,
     groupInviteService,
     groupMemberService,
     settings
@@ -61,9 +63,10 @@
       groupInviteService.query({
         group_id: groupID
       }).$promise.then(function (data) {
-        if (data.objects.length) {
-          vm.groupInvites[groupID] = data.objects;
+        if (!_.has(vm.groupInvites, 'groupID')) {
+          vm.groupInvites[groupID] = [];
         }
+        angular.copy(data.objects, vm.groupInvites[groupID]);
       });
     }
   }
