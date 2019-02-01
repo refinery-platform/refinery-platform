@@ -1613,6 +1613,7 @@ class ISAJSONCreator:
                 process = self._create_process(protocol_reference, node=node)
                 process_sequence.append(process)
 
+            # Recursive call
             self._create_process_sequence_assay(
                 assay, study, nodes=node.children_set.all(),
                 process_sequence=process_sequence
