@@ -25,33 +25,26 @@
         .toEqual([]);
       });
 
-      it('handles matching duplicates', function () {
+      it('returns correct response', function () {
         expect(factory.createData([{
           name: 'http://example.com/foo.bar',
-          organism_Characteristics_generic_s: 'dog',
-          organism_Factor_Value_generic_s: 'dog'
+          organism_Characteristics_generic_s: 'dog'
         }]))
         .toEqual([{
           url: 'http://example.com/foo.bar',
-          name: 'http://example.com/foo.bar', // TODO: This could be removed?
+          name: 'http://example.com/foo.bar',
           organism: 'dog'
         }]);
-
-        // TODO: and what if they don't match?
       });
     });
 
     describe('createFilters', function () {
-      it('handles duplicates', function () {
+      it('creates filters', function () {
         expect(factory.createFilters(
           {
             organism_Characteristics_generic_s: [
               { name: 'mouse', count: 1 },
               { name: 'cat', count: 2 }
-            ],
-            organism_Factor_Value_generic_s: [
-              { name: 'mouse', count: 3 },
-              { name: 'dog', count: 4 }
             ]
           }
         )).toEqual(
@@ -59,11 +52,9 @@
             organism: {
               facetObj: [
                 { name: 'mouse', count: 1, assocAttribute: 'organism_Characteristics_generic_s' },
-                { name: 'cat', count: 2, assocAttribute: 'organism_Characteristics_generic_s' },
-                { name: 'mouse', count: 3, assocAttribute: 'organism_Factor_Value_generic_s' },
-                { name: 'dog', count: 4, assocAttribute: 'organism_Factor_Value_generic_s' }
+                { name: 'cat', count: 2, assocAttribute: 'organism_Characteristics_generic_s' }
               ],
-              lowerCaseNames: ' mouse cat mouse dog' // This is ok: Just used for substring search.
+              lowerCaseNames: ' mouse cat'
             }
           }
         );
