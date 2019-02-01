@@ -827,7 +827,7 @@ class Attribute(models.Model):
         )
 
     @property
-    def properly_casted_value(self):
+    def properly_cast_value(self):
         if self.value.isdigit():
             return int(self.value)
         try:

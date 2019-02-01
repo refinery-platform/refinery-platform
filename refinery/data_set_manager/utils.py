@@ -1159,7 +1159,7 @@ class ISAJSONCreator:
                                                       type=Attribute.COMMENT)
         return [
             self._create_comment(attribute.subtype,
-                                 attribute.properly_casted_value)
+                                 attribute.properly_cast_value)
             for attribute in comment_attributes
         ]
 
@@ -1333,10 +1333,10 @@ class ISAJSONCreator:
                         "Unit", attribute.value_unit
                     )
                 }
-                characteristic["value"] = attribute.properly_casted_value
+                characteristic["value"] = attribute.properly_cast_value
             else:
                 characteristic["value"] = self._create_ontology_annotation(
-                    attribute.properly_casted_value,
+                    attribute.properly_cast_value,
                     attribute.value_source,
                     attribute.value_accession
                 )
