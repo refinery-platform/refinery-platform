@@ -132,7 +132,7 @@ class refinery (
       Class['refinery::ui'],
       Class['refinery::solr'],
       Class['refinery::neo4j'],
-      Class['rabbitmq'],
+      Class['::rabbitmq'],
       Service['memcached'],
     ],
   }

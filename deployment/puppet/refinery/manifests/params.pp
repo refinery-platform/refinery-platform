@@ -2,7 +2,7 @@ class refinery::params (
   $deployment_platform
 ) {
   # based on https://docs.puppet.com/puppet/3/lang_classes.html#appendix-smart-parameter-defaults
-  # all globals are set as Facter environment variables by Terraform
+  # all globals are set via Facter environment variables by Terraform
   $app_user = $deployment_platform ? {
     'aws'   => 'ubuntu',
     default => 'vagrant',
@@ -42,6 +42,11 @@ class refinery::params (
   $site_url = $deployment_platform ? {
     'aws'   => $::site_url,
     default => '192.168.50.50:8000',
+  }
+
+  $refinery_url_scheme = $deployment_platform ? {
+    'aws'   => $::refinery_url_scheme,
+    default => 'http',
   }
 
   $conf_mode = $deployment_platform ? {

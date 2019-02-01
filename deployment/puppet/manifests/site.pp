@@ -17,6 +17,8 @@ node default {
 
   class { 'refinery::postgresql': }
 
+  class { 'refinery::apache2': }
+
   class { 'refinery::django': }
 
   class { 'refinery::ui': }

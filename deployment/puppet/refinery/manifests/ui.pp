@@ -19,7 +19,7 @@ class refinery::ui (
 
   apt::source { 'nodejs':
     ensure   => 'present',
-    comment  => 'Nodesource NodeJS repo.',
+    comment  => 'Nodesource NodeJS repo',
     location => 'https://deb.nodesource.com/node_6.x',
     release  => 'trusty',
     repos    => 'main',
@@ -78,14 +78,17 @@ class refinery::ui (
     group     => $app_group,
   }
   ->
-  exec { "collectstatic":
+  exec { 'collectstatic':
     command     => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
-    require     => [
-      Class['::refinery::python'],
-      File['static_files_dir'],
-    ]
+    require     => $deployment_platform ? {
+      'aws'   => Class['refinery::python'],
+      default => [
+        Class['refinery::python'],
+        File['static_files_dir'],
+      ]
+    }
   }
 }
