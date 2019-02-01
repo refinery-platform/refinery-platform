@@ -116,7 +116,7 @@
           },
           headerCellClass: function (grid) {
             return addNonEditCellClass(attribute.attribute_type, grid);
-          },
+          }
         };
 
         if (columnName === 'Download') {
@@ -135,7 +135,7 @@
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
           colProperty.cellTemplate = _cellTemplate;
           tempCustomColumnNames.push(colProperty);
-        } else if (!columnName.toLowerCase().includes('datafile')) {
+        } else if (columnName.toLowerCase().indexOf('datafile') < 0) {
           tempCustomColumnNames.push(colProperty);
         }
       });
@@ -289,7 +289,7 @@
         visible: isToolSelected,
         cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);}
       };
     }
      /**
@@ -322,7 +322,7 @@
         visible: isToolSelected,
         cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);}
       };
     }
 
@@ -347,7 +347,7 @@
         cellTemplate: _cellTemplate,
         cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);}
       };
     }
 
