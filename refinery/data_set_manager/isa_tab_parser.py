@@ -772,6 +772,10 @@ class IsaTabParser:
                         self.current_comments
 
             elif section_title == "STUDY PROTOCOLS":
+                # The STUDY_PROTOCOLS section actually contains
+                # parameters that need to be distributed to a few separate
+                # models. Those currently being: Protocol,
+                # ProtocolParameter, and ProtocolComponent
                 self._create_protocol_and_related_models(model_parameters,
                                                          self.current_comments)
             else:
