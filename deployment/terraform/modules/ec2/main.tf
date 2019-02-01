@@ -206,7 +206,7 @@ export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/aws.pp
+/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/site.pp
 EOF
 }
 
