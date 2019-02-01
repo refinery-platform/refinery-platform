@@ -10,7 +10,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import RequestSite, Site, get_current_site
+from django.contrib.sites.models import RequestSite, Site
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
@@ -177,7 +178,10 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404(UserProfile, uuid=query).user
 
-    return render_to_response('core/user.html', {'profile_user': user},
+    # return all non-manager groups in profile
+    groups = user.groups.exclude(name__contains='Managers')
+    return render_to_response('core/user.html',
+                              {'profile_user': user, 'user_groups': groups},
                               context_instance=RequestContext(request))
 
 

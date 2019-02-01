@@ -57,11 +57,11 @@
 					<h3>Groups</h3>
 				</span>
 			</div>
-		    <p>
-			{% for group in profile_user.groups.all %}
-		       	<a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
-		   	{% endfor %}
-		   	</p>
+      <p>
+        {% for group in user_groups %}
+          <a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
+        {% endfor %}
+      </p>
 		{% endif %}
 
 		<div class="refinery-header">
