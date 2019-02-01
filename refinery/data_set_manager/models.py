@@ -257,7 +257,7 @@ class Investigation(NodeCollection):
                                       "ISATabs are supported")
 
         zipped_filenames = \
-            zipfile.ZipFile(self.get_file_store_item().source).namelist()
+            zipfile.ZipFile(self.get_file_store_item().datafile).namelist()
 
         for base_file_name in [os.path.basename(n) for n in zipped_filenames]:
             if re.match("i_.*\.txt", base_file_name):
