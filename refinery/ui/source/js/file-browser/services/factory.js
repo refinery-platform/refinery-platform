@@ -143,14 +143,19 @@
       return customColumnNames;
     }
 
-    // Helper method which makes display_names uniquey by adding attribute_type
+    // Helper method which makes display_names unique by adding attribute_type
     function createUniqueDisplayNames (outInd) {
       for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
-        if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name) {
+        if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name &&
+            assayAttributes[inInd].attribute_type !== assayAttributes[outInd].attribute_type) {
           assayAttributes[outInd].display_name = assayAttributes[outInd]
               .display_name + '-' + assayAttributes[outInd].attribute_type;
           assayAttributes[inInd].display_name = assayAttributes[inInd]
               .display_name + '-' + assayAttributes[inInd].attribute_type;
+        } else if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name &&
+          assayAttributes[inInd].attribute_type === assayAttributes[outInd].attribute_type) {
+          // TODO add unit tests
+          assayAttributes.splice(inInd, 1);
         }
       }
     }
