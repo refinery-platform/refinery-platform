@@ -1079,7 +1079,17 @@ class SiteProfileViewSet(APIView):
     http_method_names = ["get", "patch"]
 
     def get(self, request):
-        site_profile = SiteProfile.objects.get(site=get_current_site(request))
+        try:
+            site_profile = SiteProfile.objects.get(
+                site=get_current_site(request)
+            )
+        except SiteProfile.DoesNotExist as e:
+            logger.error("Site profile for the current site does not exist.")
+            return HttpResponseNotFound(e)
+        except SiteProfile.MultipleObjectsReturned:
+            logger.error("Multiple site profiles for current site error.")
+            return HttpResponseServerError(e)
+
         serializer = SiteProfileSerializer(site_profile)
         return Response(serializer.data)
 

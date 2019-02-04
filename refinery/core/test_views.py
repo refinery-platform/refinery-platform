@@ -970,6 +970,11 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         self.admin_user = User.objects.create_superuser(username, '', password)
         self.get_request = self.factory.get(self.url_root)
 
+    def test_get_returns_404_status_for_missing_site_profiles(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request)
+        self.assertEqual(get_response.status_code, 404)
+
     def test_get_returns_200_status_for_anon_user(self):
         get_response = self.view(self.get_request)
         self.assertEqual(get_response.status_code, 200)
