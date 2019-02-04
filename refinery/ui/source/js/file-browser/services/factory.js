@@ -1,3 +1,9 @@
+/**
+ * File Browser Factory
+ * @namespace fileBrowserFactory
+ * @desc Main services which formats the api response to grid data and columns
+ * @memberOf refineryFileBrowser.fileBrowserFactory
+ */
 (function () {
   'use strict';
 
@@ -143,7 +149,8 @@
       return customColumnNames;
     }
 
-    // Helper method which makes display_names unique by adding attribute_type
+    // Helper method which makes display_names unique by adding
+    // attribute_type or removing the attribute if the object is a duplidate
     function createUniqueDisplayNames (outInd) {
       for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
         if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name &&
@@ -154,8 +161,7 @@
               .display_name + '-' + assayAttributes[inInd].attribute_type;
         } else if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name &&
           assayAttributes[inInd].attribute_type === assayAttributes[outInd].attribute_type) {
-          // TODO add unit tests
-          assayAttributes.splice(inInd, 1);
+          angular.copy(assayAttributes.splice(inInd, 1));
         }
       }
     }
@@ -171,7 +177,13 @@
       return arrayOfObjs;
     }
 
-
+    /**
+     * @name getAssayFiles
+     * @desc Get data and formats it for appropriate
+     * @memberOf refineryFileBrowser.getAssayFiles
+     * @param {object} unencodeParams - params for api request
+     * @param {str} scrollDirection - up or down to page data accordingly for cont strolling
+    **/
     function getAssayFiles (unencodeParams, scrollDirection) {
       var params = {};
       var additionalAssayFiles = [];
