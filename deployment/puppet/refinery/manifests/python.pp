@@ -10,8 +10,6 @@ class refinery::python {
   $virtualenv_dependencies = [
     'build-essential',
     'libncurses5-dev',
-    'libldap2-dev',
-    'libsasl2-dev',
     'libffi-dev',  # for SSL modules
     'libpq-dev',  # for PostgreSQL
   ]
