@@ -1127,12 +1127,6 @@ class UserViewTest(TestCase):
         self.user = User.objects.create_user(self.username,
                                              'test@fake.com',
                                              self.password)
-        self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
-        self.non_lab_group = ExtendedGroup.objects.create(name="Test Group")
-        self.lab_group.user_set.add(self.user)
-        self.non_lab_group.user_set.add(self.user)
-        self.lab_group.manager_group.user_set.add(self.user)
-        # add user to manager group
         self.client = Client()
 
     def test_returns_200_status_with_correct_template(self):
@@ -1151,14 +1145,6 @@ class UserViewTest(TestCase):
         get_request.user = get_anonymous_user()
         with self.assertRaises(Http404):
             user(get_request, '')
-
-    # def test_returns_only_non_manager_groups(self):
-    #     get_request = self.client.get(
-    #         'users/{}/'.format(self.user.profile.uuid)
-    #     )
-    #     get_request.user = self.user
-    #     response = user(get_request, self.user.username)
-    #     self.assertEqual(response.status_code, 200)
 
 
 class UserProfileApiV2Tests(APIV2TestCase):

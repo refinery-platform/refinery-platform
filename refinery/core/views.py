@@ -59,7 +59,8 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
 from .serializers import (DataSetSerializer, EventSerializer,
                           SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations)
+from .utils import (api_error_response, get_data_sets_annotations,
+                    get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +180,7 @@ def user(request, query):
         user = get_object_or_404(UserProfile, uuid=query).user
 
     # return all non-manager groups in profile
-    groups = user.groups.exclude(name__contains='Managers')
+    groups = get_non_manager_groups_for_user(user)
     return render(request,
                   'core/user.html',
                   {'profile_user': user, 'user_groups': groups})
