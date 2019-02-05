@@ -180,9 +180,9 @@ def user(request, query):
 
     # return all non-manager groups in profile
     groups = user.groups.exclude(name__contains='Managers')
-    return render_to_response('core/user.html',
-                              {'profile_user': user, 'user_groups': groups},
-                              context_instance=RequestContext(request))
+    return render(request,
+                  'core/user.html',
+                  {'profile_user': user, 'user_groups': groups})
 
 
 @login_required()
