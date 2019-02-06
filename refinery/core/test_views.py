@@ -7,11 +7,13 @@ from cuser.middleware import CuserMiddleware
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
-from django.test import override_settings
+from django.http import Http404
+from django.test import Client, override_settings
 from django.test.testcases import TestCase
 from django.utils.functional import SimpleLazyObject
 
 from guardian.shortcuts import get_groups_with_perms
+from guardian.utils import get_anonymous_user
 import mock
 import mockcache as memcache
 from rest_framework.test import (
@@ -34,7 +36,7 @@ from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
                     ObtainAuthTokenValidSession, SiteProfileViewSet,
-                    UserProfileViewSet, WorkflowViewSet)
+                    UserProfileViewSet, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -1116,6 +1118,33 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         self.assertEqual(
             patch_response.data.get('site_videos')[0].get('caption'),
             new_caption)
+
+
+class UserViewTest(TestCase):
+    def setUp(self, **kwargs):
+        self.username = 'test_user'
+        self.password = '12345@'
+        self.user = User.objects.create_user(self.username,
+                                             'test@fake.com',
+                                             self.password)
+        self.client = Client()
+
+    def test_returns_200_status_with_correct_template(self):
+        get_request = self.client.get(
+            'users/{}/'.format(self.user.profile.uuid)
+        )
+        get_request.user = self.user
+        with self.assertTemplateUsed('core/user.html'):
+            response = user(get_request, self.user.username)
+            self.assertEqual(response.status_code, 200)
+
+    def test_raises_404_status_for_anon(self):
+        get_request = self.client.get(
+            'users/{}/'.format(self.user.profile.uuid)
+        )
+        get_request.user = get_anonymous_user()
+        with self.assertRaises(Http404):
+            user(get_request, '')
 
 
 class UserProfileApiV2Tests(APIV2TestCase):
