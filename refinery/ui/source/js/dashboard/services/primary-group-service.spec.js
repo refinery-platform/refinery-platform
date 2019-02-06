@@ -4,6 +4,7 @@
   describe('Primary Group Service', function () {
     var mockApiService;
     var mockGroup = { name: 'Group Lab', id: '101' };
+    var refinerySettings;
     var rootScope;
     var service;
 
@@ -22,6 +23,7 @@
         userprofilePrimaryGroup: 'None',
         userprofilePrimaryGroupID: ''
       };
+      refinerySettings = settings;
       mockApiService = spyOn(userProfileV2Service, 'partial_update').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockGroup);
@@ -56,6 +58,18 @@
       rootScope.$apply();
       expect(typeof promiseResponse.then).toEqual('function');
       expect(successData).toBe(mockGroup);
+    });
+
+    it('updatePrimaryGroup updates primary group', function () {
+      refinerySettings.djangoApp.userprofilePrimaryGroup = 'New Group';
+      refinerySettings.djangoApp.userprofilePrimaryGroupID = 4;
+      service.updatePrimaryGroup();
+      expect(service.primaryGroup.name).toEqual(
+        refinerySettings.djangoApp.userprofilePrimaryGroup
+      );
+      expect(service.primaryGroup.id).toEqual(
+        refinerySettings.djangoApp.userprofilePrimaryGroupID
+      );
     });
   });
 })();

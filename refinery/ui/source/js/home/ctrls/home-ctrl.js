@@ -10,28 +10,54 @@
     .module('refineryHome')
     .controller('HomeCtrl', HomeCtrl);
 
-  HomeCtrl.$inject = ['_', 'MarkdownJS', '$window', 'settings'];
+  HomeCtrl.$inject = [
+    '_',
+    '$log',
+    'MarkdownJS',
+    '$window',
+    'homeConfigService',
+    'settings'
+  ];
 
-  function HomeCtrl (_, MarkdownJS, $window, settings) {
+  function HomeCtrl (
+    _,
+    $log,
+    MarkdownJS,
+    $window,
+    homeConfigService,
+    settings
+  ) {
     var vm = this;
     vm.isLoggedIn = settings.djangoApp.userId !== undefined;
+    vm.aboutHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.aboutMarkdown);
+    vm.introHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.introMarkdown);
+
+    activate();
+    /*
+     * -----------------------------------------------------------------------------
+     * Methods
+     * -----------------------------------------------------------------------------
+    */
+    function activate () {
+      refreshConfigs();
+    }
+
+    /**
+     * @name refreshConfigs
+     * @desc Private method to initalize the custom text on homepage
+     * @memberOf refineryHome.refreshConfigs
+    **/
+    function refreshConfigs () {
+      homeConfigService.getConfigs().then(function () {
+        vm.aboutHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.aboutMarkdown);
+        vm.introHTML = MarkdownJS.toHTML(homeConfigService.homeConfig.introMarkdown);
+      }, function (error) {
+        $log.error('Error retrieving home configs: ' + error);
+      });
+    }
 
     vm.$onInit = function () {
       var djangoApp = $window.djangoApp;
-      if (_.has(djangoApp, 'refineryIntro') && djangoApp.refineryIntro.length) {
-        var introParagraphs = djangoApp.refineryIntro.split('   ');
-        vm.htmlIntros = [];
-        for (var i = 0; i < introParagraphs.length; i++) {
-          vm.htmlIntros[i] = MarkdownJS.toHTML(introParagraphs[i]);
-        }
-      }
-      if (_.has(djangoApp, 'refineryAbout') && djangoApp.refineryAbout.length) {
-        var aboutParagraphs = djangoApp.refineryAbout.split('   ');
-        vm.htmlAbouts = [];
-        for (var j = 0; j < aboutParagraphs.length; j++) {
-          vm.htmlAbouts[j] = MarkdownJS.toHTML(aboutParagraphs[j]);
-        }
-      }
       if (_.has(djangoApp, 'refineryInstanceName') && djangoApp.refineryInstanceName.length) {
         vm.instanceName = djangoApp.refineryInstanceName;
       }

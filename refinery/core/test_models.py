@@ -1278,6 +1278,34 @@ class UserCreateTest(TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
+class UserProfileTest(TestCase):
+    def setUp(self):
+        self.username = self.password = 'test_user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.group = ExtendedGroup.objects.create(name="Mock Primary Group",
+                                                  is_public=True)
+        self.userprofile = UserProfile.objects.get(user=self.user)
+        self.userprofile.primary_group = self.group
+        self.userprofile.save()
+        self.group.user_set.add(self.user)
+
+    def test_deleting_a_primary_group_nulls_the_primary_group_field(self):
+        self.assertEqual(self.userprofile.primary_group, self.group)
+        ExtendedGroup.objects.get(id=self.group.id).delete()
+        self.userprofile.refresh_from_db()
+        self.assertEqual(self.userprofile.primary_group, None)
+
+    def test_nulling_primary_group_field_does_not_effect_group(self):
+        self.userprofile.primary_group = None
+        self.userprofile.save()
+        self.userprofile.refresh_from_db()
+        self.assertEqual(self.userprofile.primary_group, None)
+        self.assertEqual(1,
+                         len(ExtendedGroup.objects.filter(id=self.group.id)))
+
+
 class UserTutorialsTest(TestCase):
     """
     This test ensures that whenever a UserProfile instance is created,

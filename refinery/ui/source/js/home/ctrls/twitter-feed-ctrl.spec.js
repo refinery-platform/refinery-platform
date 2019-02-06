@@ -4,23 +4,21 @@
   describe('Controller: Twitter Feed Ctrl', function () {
     var ctrl;
     var scope;
-    var window;
+    var service;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryHome'));
     beforeEach(inject(function (
       $controller,
       $rootScope,
-      $window
+      homeConfigService
     ) {
       scope = $rootScope.$new();
+      service = homeConfigService;
+      angular.copy({ twitter_username: 'oldMockUsername' }, service.homeConfig);
       ctrl = $controller('TwitterFeedCtrl', {
         $scope: scope
       });
-      window = $window;
-      window.djangoApp = {
-        refineryTwitter: 'testId'
-      };
     }));
 
     it('TwitterFeedCtrl ctrl should exist', function () {
@@ -28,8 +26,12 @@
     });
 
     it('sets view data twitterId', function () {
-      ctrl.$onInit();
-      expect(ctrl.twitterId).toEqual(window.djangoApp.refineryTwitter);
+      expect(ctrl.twitterId).toEqual('');
+    });
+
+    it('watches twitterusername and updates twitterId', function () {
+      scope.$apply();
+      expect(ctrl.twitterId).toEqual(service.homeConfig.twitter_username);
     });
   });
 })();

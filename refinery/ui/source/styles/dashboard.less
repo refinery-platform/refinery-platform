@@ -1889,8 +1889,7 @@ body.repo-mode .refinery-dashboard {
     }
 
     #split-button {
-      width: 85%;
-      max-width: 400px;
+      max-width: 180px;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -1983,7 +1982,7 @@ body.repo-mode .refinery-dashboard {
     }
 
     #group-main-list{
-      height: ~"calc(@{card-bottom-half-view} - 95px)";
+      height: ~"calc(@{card-bottom-half-view} - 32px)";
     }
 
     .dashboard-member-list {
@@ -2060,6 +2059,18 @@ body.repo-mode .refinery-dashboard {
      }
      #split-button {
       max-width: 175px !important;
+    }
+  }
+
+  @media (max-width: @screen-xs-max) {
+     #dashboard-collaboration-card {
+       margin-top: 1.2em;
+     }
+    #primary-group-div {
+      width:100%;
+    }
+    #search-interface-dashboard {
+      margin-top: 5px;
     }
   }
 

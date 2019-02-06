@@ -8,7 +8,6 @@
           class="no-underline btn btn-sm">
           <i class="fa fa-list"></i> List
         </a>
-        <!--ToDo: check perms first -->
         <a
           ng-if="$ctrl.isLoggedIn"
           href="/data_set_manager/import/"
@@ -23,7 +22,8 @@
     <div class="card-sub-header">
       <div class="col-lg-9 col-md-12 col-sm-12 p-t-1-3" ng-if="$ctrl
       .isLoggedIn">
-        <rp-primary-group-button class="float-left p-r-1"></rp-primary-group-button>
+        <rp-primary-group-button id='primary-group-div' class="float-left p-r-1">
+        </rp-primary-group-button>
         <div class="refinery-base btn btn-default btn-xs"
           ng-model="$ctrl.groupFilter['owned']"
           ng-change="$ctrl.filterDataSets('owned')"

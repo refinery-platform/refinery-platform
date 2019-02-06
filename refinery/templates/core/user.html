@@ -45,11 +45,7 @@
       <div class="refinery-subheader">
         <h4>Password</h4>
       </div>
-      {% if REFINERY_EXTERNAL_AUTH %}
-        <p>{{ REFINERY_EXTERNAL_AUTH_MESSAGE|safe }}</p>
-      {% else %}
-        <p><i class="fa fa-key"></i>&nbsp;<a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
-      {% endif %}
+      <p><i class="fa fa-key"></i>&nbsp;<a href="{% url 'django.contrib.auth.views.password_change' %}">Change Password?</a></p>
     {% endif %}
 		{% if profile_user.groups.count > 0 %}
 			<div class="refinery-header">
@@ -57,11 +53,11 @@
 					<h3>Groups</h3>
 				</span>
 			</div>
-		    <p>
-			{% for group in profile_user.groups.all %}
-		       	<a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
-		   	{% endfor %}
-		   	</p>
+      <p>
+        {% for group in user_groups %}
+          <a href="{% url 'group' group.extendedgroup.uuid %}">{{ group.name }}</a></br>
+        {% endfor %}
+      </p>
 		{% endif %}
 
 		<div class="refinery-header">

@@ -1,7 +1,7 @@
 <div class="ngCellText text-align-center ui-grid-cell-contents" ng-class="col.colIndex()">
   <div ng-if="$ctrl.fileStatus != 'PENDING'">
     <div class="btn-group" uib-dropdown dropdown-append-to-body>
-        <button id="split-button" type="button"
+        <div id="split-button" type="button"
           class="refinery-base btn btn-default btn-xs"
           ng-disabled="$ctrl.fileStatus == 'N/A'">
           <span ng-if="$ctrl.fileStatus != 'N/A'" title="Download File {{ $ctrl.fileStatus }}">
@@ -12,7 +12,7 @@
           <span ng-if="$ctrl.fileStatus == 'N/A'" title="File not available for download">
             <i class="fa fa-bolt fa-lg p-l-1-3"></i>
           </span>
-        </button>
+        </div>
         <button type="button" class="refinery-base  btn btn-default btn-xs"
           ng-disabled="($ctrl.fileStatus == 'N/A' && !$ctrl.dataSet.is_owner) ||
           ($ctrl.fileStatus == 'N/A' && !$ctrl.dataSet.is_clean)"

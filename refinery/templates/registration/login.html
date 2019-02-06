@@ -61,9 +61,7 @@
             <input class="refinery-base btn btn-default"
               type="submit" value="Login" />
             <input type="hidden" name="next" value="{{ next }}" />
-            {% if not REFINERY_EXTERNAL_AUTH %}
-              &nbsp;<a href="/accounts/password/reset">Forgot password?</a>
-            {% endif %}
+            <a href="/accounts/password/reset">Forgot password?</a>
           </p>
 				</form>
 				<p>
