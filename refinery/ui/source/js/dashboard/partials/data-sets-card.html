@@ -154,7 +154,7 @@
         <span ng-if="$ctrl.dataSets.length">
           {{ $ctrl.totalDataSets }} data sets
         </span>
-        <span ng-if="$ctrl.searchQueryDataSets.length > 0 && $ctrl.isFiltersEmpty()">
+        <span ng-if="$ctrl.searchedDataSets">
           <button
             class="refinery-base btn btn-default btn-xs m-l-1-2"
             ng-click="$ctrl.resetDataSetSearch()">
