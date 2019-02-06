@@ -48,7 +48,7 @@
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.itemsPerPage = 5;
+    vm.itemsPerPage = 20;
     vm.pageStartOffset = 0;
     vm.pageChangedUpdate = pageChangedUpdate;
     vm.params = { limit: vm.itemsPerPage, offset: vm.pageStartOffset };
