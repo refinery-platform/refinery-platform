@@ -449,18 +449,6 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Use external authentication system like django-auth-ldap (disables password
-# management URLs)
-REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
-# Message to display on password management pages when REFINERY_EXTERNAL_AUTH
-# is set to True
-REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
-
-"""
-# external tool status settings
-TIMEOUT = get_setting("TIMEOUT")
-"""
-
 # Directory for custom libraries
 LIBS_DIR = get_setting("LIBS_DIR")
 
