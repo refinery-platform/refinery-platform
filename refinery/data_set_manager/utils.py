@@ -1264,16 +1264,18 @@ class ISAJSONCreator:
         return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
 
     def _create_id_from_node(self, node):
-        node_types_to_id_values_map = {
-            Node.SAMPLE: ("sample", "sample-{}".format(node.name)),
-            Node.SOURCE: ("source", "source-{}".format(node.name)),
-            Node.EXTRACT: ("material", "extract-{}".format(node.name)),
-            Node.RAW_DATA_FILE: ("data", "rawdatafile-{}".format(node.name))
-        }
-        try:
-            return self._create_id(*node_types_to_id_values_map[node.type])
-        except KeyError as e:
-            raise ISAJSONCreatorError(e)
+        value_prefix = node.type.lower().replace("name", "").replace(" ", "")
+
+        if "File" in node.type:
+            identifier = "data"
+        elif "Extract" in node.type:
+            identifier = "material"
+        else:
+            identifier = value_prefix
+
+        return self._create_id(
+            identifier, "{}-{}".format(value_prefix, node.name)
+        )
 
     def _create_investigation(self):
         return {
