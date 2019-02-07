@@ -751,6 +751,26 @@ class Node(Commentable):
             self, using="data_set_manager"
         )
 
+    def get_comment_attributes(self):
+        """
+        Retrieve Attributes of type Attribute.COMMENT for a given Node and
+        said Nodes parents
+        """
+
+        # Note: that the .distinct('subtype', 'value') is required by both
+        # the query and the return value to be able to perform a union of both
+        # QuerySets
+        comment_attributes = Attribute.objects.filter(
+            node=self, type=Attribute.COMMENT
+        ).distinct('subtype', 'value')
+
+        for parent_node in self.parents_set.all():
+            comment_attributes = (
+                comment_attributes | parent_node.get_comment_attributes()
+            )
+
+        return comment_attributes.distinct('subtype', 'value')
+
 
 @receiver(pre_delete, sender=Node)
 def _node_delete(sender, instance, *args, **kwargs):
