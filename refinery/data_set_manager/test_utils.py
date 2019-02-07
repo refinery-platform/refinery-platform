@@ -21,12 +21,9 @@ def ordered(obj):
         return obj
 
 
-TEST_ISA_TAB_NAME = "isa_16410_959845"
-
-
-@override_settings(CELERY_ALWAYS_EAGER=True)
-class ISAJSONCreatorTests(MetadataImportTestBase):
+class ISAJSONCreatorTestMixin(object):
     maxDiff = None
+    TEST_ISA_TAB_NAME = None
 
     @classmethod
     def setUpTestData(cls):
@@ -34,7 +31,9 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
         parse_isatab(
             username="test",
             public=False,
-            path="data_set_manager/test-data/{}.zip".format(TEST_ISA_TAB_NAME)
+            path="data_set_manager/test-data/{}.zip".format(
+                cls.TEST_ISA_TAB_NAME
+            )
         )
 
         dataset = DataSet.objects.all().first()
@@ -42,13 +41,10 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
 
         with open(
             "data_set_manager/test-data/isa-json/{}.json".format(
-                TEST_ISA_TAB_NAME
+                cls.TEST_ISA_TAB_NAME
             )
         ) as isa_json:
             cls.expected_isa_json = json.loads(isa_json.read())
-
-    def setUp(self):
-        super(ISAJSONCreatorTests, self).setUp()
 
     def test__create_comments(self):
         node = Node.objects.create(study=Study.objects.first())
@@ -423,11 +419,18 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
-class ISATabExportIntegrationTests(MetadataImportTestBase):
-    def test_bii_dataset_to_isa_json(self):
-        self.maxDiff = None
-        with open(self.get_test_file_path("BII-S-7.zip")) as good_isa:
-            self.post_isa_tab(isa_tab_file=good_isa)
+class BioinformaticsInstituteISAJSONCreatorTests(ISAJSONCreatorTestMixin,
+                                                 MetadataImportTestBase):
+    @classmethod
+    def setUpClass(cls):
+        cls.TEST_ISA_TAB_NAME = "BII-S-7"
+        super(BioinformaticsInstituteISAJSONCreatorTests, cls).setUpClass()
 
-        dataset = DataSet.objects.all().first()
-        ISAJSONCreator(dataset).create()
+
+@override_settings(CELERY_ALWAYS_EAGER=True)
+class StemCellCommonsISAJSONCreatorTests(ISAJSONCreatorTestMixin,
+                                         MetadataImportTestBase):
+    @classmethod
+    def setUpClass(cls):
+        cls.TEST_ISA_TAB_NAME = "isa_16410_959845"
+        super(StemCellCommonsISAJSONCreatorTests, cls).setUpClass()
