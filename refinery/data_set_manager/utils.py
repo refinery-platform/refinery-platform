@@ -1155,11 +1155,9 @@ class ISAJSONCreator:
         ]
 
     def _create_comments_from_node(self, node):
-        comment_attributes = Attribute.objects.filter(node=node,
-                                                      type=Attribute.COMMENT)
+        comment_attributes = node.get_comment_attributes()
         return [
-            self._create_comment(attribute.subtype,
-                                 attribute.properly_cast_value)
+            self._create_comment(attribute.subtype, attribute.value)
             for attribute in comment_attributes
         ]
 
