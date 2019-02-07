@@ -236,7 +236,7 @@
       if (query && query.length > 1) {
         vm.loadingDataSets = true;
         var apiRequest = new DataSetSearchApi(query);
-        apiRequest(100).then(function (response) {
+        apiRequest(200).then(function (response) {
           vm.dataSets = response.data;
           angular.copy(response.data, dataSetCardFactory.dataSets);
           dataSetCardFactory.dataSetStats.totalCount = response.data.length;
