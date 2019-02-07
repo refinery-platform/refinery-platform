@@ -1450,20 +1450,15 @@ class ISAJSONCreator:
         # "Other Materials" correspond to Nodes of the following type
         # See: https://isa-specs.readthedocs.io/en/
         #  latest/isajson.html#material-schema-json
-        node_types = [Node.EXTRACT, Node.LABELED_EXTRACT]
-
-        def create_extract_name(node):
-            return "extract-{}".format(node.name)
-
         return [
             {
-                "@id": self._create_id("material", create_extract_name(node)),
+                "@id": self._create_id_from_node(node),
                 "characteristics": [],
-                "name": create_extract_name(node),
+                "name": "extract-{}".format(node.name),
                 "type": node.type
             }
             for node in Node.objects.filter(
-                assay=assay, type__in=node_types
+                assay=assay, type__in=Node.EXTRACTS
             )
         ]
 
@@ -1797,28 +1792,21 @@ class ISAJSONCreator:
     def _create_samples(self, assay_or_study):
         is_study = isinstance(assay_or_study, Study)
 
-        def create_sample_name(string):
-            return "sample-{}".format(string)
-
         if is_study:
             study = assay_or_study
             nodes = Node.objects.filter(study=study, type=Node.SAMPLE)
             return [
                 {
-                    "@id": self._create_id(
-                        "sample", create_sample_name(node.name)
-                    ),
+                    "@id": self._create_id_from_node(node),
                     "characteristics": self._create_characteristics(node),
                     "derivesFrom": [
                         {
-                            "@id": self._create_id(
-                                "source", "source-{}".format(node.name)
-                            )
-                            for node in node.parents.all()
+                            "@id": self._create_id_from_node(parent_node)
+                            for parent_node in node.parents.all()
                         }
                     ],
                     "factorValues": self._create_factor_values(node),
-                    "name": create_sample_name(node.name)
+                    "name": "sample-{}".format(node.name)
                 }
                 for node in nodes
             ]
@@ -1826,25 +1814,16 @@ class ISAJSONCreator:
             assay = assay_or_study
             nodes = Node.objects.filter(study=assay.study, type=Node.SAMPLE)
             return [
-                {
-                    "@id": self._create_id(
-                        "sample", create_sample_name(node.name)
-                    ),
-                }
+                {"@id": self._create_id_from_node(node)}
                 for node in nodes
             ]
 
     def _create_sources(self, study):
-        def create_source_name(string):
-            return "source-{}".format(string)
-
         return [
             {
-                "@id": self._create_id(
-                    "source", create_source_name(node.name)
-                ),
+                "@id": self._create_id_from_node(node),
                 "characteristics": self._create_characteristics(node),
-                "name": create_source_name(node.name)
+                "name": "source-{}".format(node.name)
             }
             for node in Node.objects.filter(study=study, type=Node.SOURCE)
         ]

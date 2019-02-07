@@ -469,6 +469,7 @@ class Node(Commentable):
     SAMPLE = "Sample Name"
     EXTRACT = "Extract Name"
     LABELED_EXTRACT = "Labeled Extract Name"
+    EXTRACTS = [EXTRACT, LABELED_EXTRACT]
 
     SCAN = "Scan Name"
     NORMALIZATION = "Normalization Name"
