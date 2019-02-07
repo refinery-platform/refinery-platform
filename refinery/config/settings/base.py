@@ -449,42 +449,11 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Use external authentication system like django-auth-ldap (disables password
-# management URLs)
-REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
-# Message to display on password management pages when REFINERY_EXTERNAL_AUTH
-# is set to True
-REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
-
-"""
-# external tool status settings
-TIMEOUT = get_setting("TIMEOUT")
-"""
-
 # Directory for custom libraries
 LIBS_DIR = get_setting("LIBS_DIR")
 
 # Java settings
 JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
-
-if REFINERY_EXTERNAL_AUTH:
-    # enable LDAP authentication
-    try:
-        from django_auth_ldap.config import LDAPSearch
-    except ImportError:
-        logger.info("Failed to configure LDAP authentication")
-    else:
-        AUTH_LDAP_SERVER_URI = get_setting("AUTH_LDAP_SERVER_URI")
-        AUTH_LDAP_BIND_DN = get_setting("AUTH_LDAP_BIND_DN")
-        AUTH_LDAP_BIND_PASSWORD = get_setting("AUTH_LDAP_BIND_PASSWORD")
-        AUTH_LDAP_USER_SEARCH = LDAPSearch(get_setting("AUTH_LDAP_BASE_DN"),
-                                           get_setting("AUTH_LDAP_SCOPE"),
-                                           get_setting("AUTH_LDAP_FILTERSTR"))
-        # populate Django user profile from the LDAP directory
-        AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
-        AUTHENTICATION_BACKENDS += (
-            'core.models.RefineryLDAPBackend',
-        )
 
 CACHES = {
     'default': {

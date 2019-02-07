@@ -24,7 +24,6 @@ from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
-from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Sum
 from django.db.models.fields import IntegerField
@@ -38,7 +37,6 @@ from django.utils import timezone
 from bioblend import galaxy
 from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
-from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (
@@ -94,7 +92,8 @@ class UserProfile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
-    primary_group = models.ForeignKey(Group, blank=True, null=True)
+    primary_group = models.ForeignKey(Group, on_delete=models.SET_NULL,
+                                      blank=True, null=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
@@ -1885,53 +1884,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 
 
 post_save.connect(create_manager_group, sender=ExtendedGroup)
-
-
-class RefineryLDAPBackend(LDAPBackend):
-    """Custom LDAP authentication class"""
-
-    def get_or_create_user(self, username, ldap_user):
-        """Send a welcome email to new users"""
-        (user, created) = super(RefineryLDAPBackend, self).get_or_create_user(
-            username,
-            ldap_user
-        )
-        # the fields in the new User instance are not populated yet, so need
-        # to get email address from an attribute in ldap_user
-        if created:
-            try:
-                email_attr_name = settings.AUTH_LDAP_USER_ATTR_MAP['email']
-            except KeyError:
-                logger.error(
-                    "Cannot send welcome email to user '%s': key 'email' does "
-                    "not exist in AUTH_LDAP_USER_ATTR_MAP settings variable",
-                    username
-                )
-                return user, created
-            try:
-                email_address_list = ldap_user.attrs.data[email_attr_name]
-            except KeyError:
-                logger.error(
-                    "Cannot send welcome email to user '%s': attribute '%s'"
-                    " was not provided by the LDAP server",
-                    username, email_attr_name
-                )
-                return user, created
-            try:
-                send_mail(settings.REFINERY_WELCOME_EMAIL_SUBJECT,
-                          settings.REFINERY_WELCOME_EMAIL_MESSAGE,
-                          settings.DEFAULT_FROM_EMAIL, email_address_list)
-            except smtplib.SMTPException as exc:
-                logger.error(
-                    "Cannot send welcome email to: %s: SMTP server error: %s",
-                    email_address_list, exc
-                )
-            except socket.error as exc:
-                logger.error(
-                    "Cannot send welcome email to: %s: %s",
-                    email_address_list, exc
-                )
-        return user, created
 
 
 class GroupManagement(object):

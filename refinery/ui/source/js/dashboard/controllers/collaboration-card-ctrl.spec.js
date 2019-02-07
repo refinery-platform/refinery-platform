@@ -40,7 +40,7 @@
 
     it('Variables should be initialized', function () {
       expect(ctrl.userGroups).toEqual([]);
-      expect(ctrl.invitation).toEqual({});
+      expect(ctrl.invitations).toEqual([]);
     });
 
     describe('openGroupAdd', function () {

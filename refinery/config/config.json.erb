@@ -6,17 +6,6 @@
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"
     <%= @site_url ? ', "' + @site_url +  '"' : "" %>
     ],
-  "AUTH_LDAP_BASE_DN": "OU=Domain Users,DC=Domain",
-  "AUTH_LDAP_BIND_DN": "",
-  "AUTH_LDAP_BIND_PASSWORD": "",
-  "AUTH_LDAP_FILTERSTR": "(uid=%(user)s)",
-  "AUTH_LDAP_SCOPE": 2,
-  "AUTH_LDAP_SERVER_URI": "ldap://auth.example.org",
-  "AUTH_LDAP_USER_ATTR_MAP": {
-    "email": "mail",
-    "first_name": "givenName",
-    "last_name": "sn"
-  },
   "AUTO_LOGIN": [],
   "BROKER_URL": "amqp://guest:guest@localhost:5672//",
   "CELERYD_MAX_TASKS_PER_CHILD": 100,
@@ -100,8 +89,6 @@
   "REFINERY_CUSTOM_NAVBAR_ITEM": "<%= @refinery_custom_navbar_item || "" %>",
   "REFINERY_DATA_IMPORT_DIR": "<%= @import_dir || "/import" %>",
   "REFINERY_DOCKER_HOST": "<%= @docker_host || "" %>",
-  "REFINERY_EXTERNAL_AUTH": false,
-  "REFINERY_EXTERNAL_AUTH_MESSAGE": "",
   "REFINERY_FILE_SOURCE_MAP": {},
   "REFINERY_GALAXY_ANALYSIS_CLEANUP": "on_success",
   "REFINERY_GOOGLE_ANALYTICS_ID": "<%= @refinery_google_analytics_id || "" %>",

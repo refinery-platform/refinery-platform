@@ -983,6 +983,14 @@ def api_error_response(error_message, http_status_code):
     return Response({'Error': error_message}, status=http_status_code)
 
 
+def get_non_manager_groups_for_user(user):
+    """
+    :param user: model instance
+    :return: array of (non-manager) ExtendedGroup objects
+    """
+    return user.groups.exclude(name__contains='Managers')
+
+
 def get_resources_for_user(user, resource_type):
     return get_objects_for_user(
         user if user.is_authenticated()
