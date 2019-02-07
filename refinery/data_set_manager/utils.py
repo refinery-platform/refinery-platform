@@ -1301,6 +1301,16 @@ class ISAJSONCreator:
             "studies": self._create_studies(),
         }
 
+    def _create_investigation_identifier(self):
+        identifier = self.investigation.get_identifier()
+        if identifier.isdigit():
+            # Many SCC ISA-TABs will throw the error:
+            # isatools.errors.ISAModelAttributeError:
+            #   Investigation.identifier must be a string
+            # Without putting quotes around Investigation identifiers
+            # comprised of only digits
+            return "\"{}\"".format(identifier)
+        return identifier
 
     def _create_materials(self, assay_or_study):
         is_study = isinstance(assay_or_study, Study)
