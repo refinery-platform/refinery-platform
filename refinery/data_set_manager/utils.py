@@ -1188,7 +1188,13 @@ class ISAJSONCreator:
         for node in self.dataset.get_nodes(
             assay=assay, study=study, type=Node.RAW_DATA_FILE
         ):
-            datafile_name = os.path.basename(node.get_file_store_item().source)
+            file_store_item = node.get_file_store_item()
+
+            if file_store_item.has_url_source():
+                datafile_name = file_store_item.source
+            else:
+                datafile_name = os.path.basename(file_store_item.source)
+
             datafiles.append(
                 {
                     "@id": self._create_id(
