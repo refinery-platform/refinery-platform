@@ -1279,28 +1279,28 @@ class ISAJSONCreator:
 
     def _create_investigation(self):
         return {
-                "@id": self._create_id("investigation",
-                                       self.investigation_identifier),
-                "comments": self._create_comments_from_commentable_model(
-                    self.investigation
-                ),
-                "filename": self.investigation.get_isatab_file_name(),
-                "identifier": self.investigation_identifier,
-                "title": self.investigation.title,
-                "description": self.investigation.description,
-                "submissionDate": self._iso_format_date(
-                    self.investigation.submission_date
-                ),
-                "publicReleaseDate": self._iso_format_date(
-                    self.investigation.release_date
-                ),
-                "ontologySourceReferences":
-                self._create_ontology_source_references(),
-                "publications": self._create_publications(self.investigation),
-                "people": self._create_people(self.investigation),
-                "studies": self._create_studies(),
+            "@id": self._create_id("investigation",
+                                   self.investigation_identifier),
+            "comments": self._create_comments_from_commentable_model(
+                self.investigation
+            ),
+            "filename": self.investigation.get_isatab_file_name(),
+            "identifier": self._create_investigation_identifier(),
+            "title": self.investigation.title,
+            "description": self.investigation.description,
+            "submissionDate": self._iso_format_date(
+                self.investigation.submission_date
+            ),
+            "publicReleaseDate": self._iso_format_date(
+                self.investigation.release_date
+            ),
+            "ontologySourceReferences":
+            self._create_ontology_source_references(),
+            "publications": self._create_publications(self.investigation),
+            "people": self._create_people(self.investigation),
+            "studies": self._create_studies(),
+        }
 
-            }
 
     def _create_materials(self, assay_or_study):
         is_study = isinstance(assay_or_study, Study)
