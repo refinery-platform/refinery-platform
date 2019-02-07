@@ -3,7 +3,9 @@ import json
 from django.test.utils import override_settings
 
 from core.models import DataSet
-from data_set_manager.models import Assay, Node, Protocol, Study
+from data_set_manager.models import (AnnotatedNode, Assay, Attribute, Node,
+                                     Protocol, ProtocolComponent, Study,
+                                     ProtocolParameter)
 from data_set_manager.tasks import parse_isatab
 from data_set_manager.tests import MetadataImportTestBase
 from data_set_manager.utils import ISAJSONCreator
@@ -19,6 +21,9 @@ def ordered(obj):
         return obj
 
 
+TEST_ISA_TAB_NAME = "isa_16410_959845"
+
+
 @override_settings(CELERY_ALWAYS_EAGER=True)
 class ISAJSONCreatorTests(MetadataImportTestBase):
     maxDiff = None
@@ -29,14 +34,16 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
         parse_isatab(
             username="test",
             public=False,
-            path="data_set_manager/test-data/BII-S-7.zip"
+            path="data_set_manager/test-data/{}.zip".format(TEST_ISA_TAB_NAME)
         )
 
         dataset = DataSet.objects.all().first()
         cls.isa_tools_json_creator = ISAJSONCreator(dataset)
 
         with open(
-            "data_set_manager/test-data/isa-json/BII-S-7.json"
+            "data_set_manager/test-data/isa-json/{}.json".format(
+                TEST_ISA_TAB_NAME
+            )
         ) as isa_json:
             cls.expected_isa_json = json.loads(isa_json.read())
 
@@ -44,22 +51,36 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
         super(ISAJSONCreatorTests, self).setUp()
 
     def test__create_comments(self):
-        study = self.isa_tools_json_creator.studies.first()
-        assay = Assay.objects.filter(study=study)
-        nodes = self.isa_tools_json_creator.dataset.get_nodes(
-            assay=assay, study=study, type=Node.RAW_DATA_FILE
+        node = Node.objects.create(study=Study.objects.first())
+        Attribute.objects.create(
+            node=node, type=Attribute.COMMENT, subtype="Test A",
+            value="test a value"
+        )
+        Attribute.objects.create(
+            node=node, type=Attribute.COMMENT, subtype="Test B",
+            value="test b value"
+        )
+        Attribute.objects.create(
+            node=node, type=Attribute.COMMENT, subtype="Test C",
+            value="test c value"
         )
 
         self.assertEqual(
-            self.isa_tools_json_creator._create_comments_from_node(
-                node=nodes.first()
+            ordered(
+                self.isa_tools_json_creator._create_comments_from_node(
+                    node=node
+                )
             ),
-            [{"name": u"Export", "value": u"yes"}],
+            ordered(
+                [{'name': u'Test A', 'value': 'test a value'},
+                 {'name': u'Test B', 'value': 'test b value'},
+                 {'name': u'Test C', 'value': 'test c value'}]
+            )
         )
 
     def test__create_datafiles(self):
         study = Study.objects.first()
-        assay = Assay.objects.filter(study=study)
+        assay = Assay.objects.get(study=study)
 
         self.assertEqual(
             ordered(
@@ -74,47 +95,57 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
 
     def test__create_design_descriptors(self):
         self.assertEqual(
-            self.isa_tools_json_creator._create_design_descriptors(
-                self.isa_tools_json_creator.studies.first()
+            ordered(
+                self.isa_tools_json_creator._create_design_descriptors(
+                    self.isa_tools_json_creator.studies.first()
+                )
             ),
-            [
-                {
-                    "annotationValue": u"Metagenomics",
-                    "termAccession": u"",
-                    "termSource": u"",
-                }
-            ],
+            ordered(
+                self.expected_isa_json["studies"][0]["studyDesignDescriptors"]
+            )
         )
 
     def test__create_factors(self):
         self.assertEqual(
-            self.isa_tools_json_creator._create_factors(
-                self.isa_tools_json_creator.studies.first()
+            ordered(
+                self.isa_tools_json_creator._create_factors(
+                    self.isa_tools_json_creator.studies.first()
+                )
             ),
-            [
-                {
-                    "@id": "#factor/diet",
-                    "factorName": u"diet",
-                    "factorType": {
-                        "annotationValue": u"diet",
-                        "termAccession": u"",
-                        "termSource": u"",
-                    },
-                }
-            ],
+            ordered(self.expected_isa_json["studies"][0]["factors"])
         )
 
     def test__create_factor_values(self):
+        study = Study.objects.first()
+        assay = Assay.objects.get(study=study)
+        node = Node.objects.create(study=study, name="Test Node")
+        attribute = Attribute.objects.create(
+            node=node, type=Attribute.FACTOR_VALUE, subtype="diet",
+            value="vegeterian diet "
+                  "(derived from Sorghum, Millet, Black eyed pea)"
+        )
+        AnnotatedNode.objects.create(
+            node_id=node.id,
+            attribute_id=attribute.id,
+            study=study,
+            assay=assay,
+            node_uuid=node.uuid,
+            node_file_uuid=node.file_uuid,
+            node_type=node.type,
+            node_name=node.name,
+            attribute_type=attribute.type,
+            attribute_subtype=attribute.subtype,
+            attribute_value=attribute.value,
+            attribute_value_unit=attribute.value_unit
+        )
         self.assertEqual(
-            self.isa_tools_json_creator._create_factor_values(
-                self.isa_tools_json_creator.dataset.get_nodes().first()
-            ),
+            self.isa_tools_json_creator._create_factor_values(node),
             [
                 {
                     "category": {"@id": "#factor/diet"},
                     "value": {
                         "annotationValue": u"vegeterian diet (derived from "
-                        u"Sorghum, Millet, Black eyed pea)",
+                                           u"Sorghum, Millet, Black eyed pea)",
                         "termAccession": "",
                         "termSource": "",
                     },
@@ -242,10 +273,17 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
         )
 
     def test__create_protocol_components(self):
+        protocol = Protocol.objects.create(study=Study.objects.first())
+        ProtocolComponent.objects.create(
+            protocol=protocol,
+            name="454 GS FLX Titanium",
+            type="DNA sequencer",
+            type_source="",
+            type_accession=""
+        )
+
         self.assertEqual(
-            self.isa_tools_json_creator._create_protocol_components(
-                Protocol.objects.last()
-            ),
+            self.isa_tools_json_creator._create_protocol_components(protocol),
             [
                 {
                     "componentType": {
@@ -259,36 +297,60 @@ class ISAJSONCreatorTests(MetadataImportTestBase):
         )
 
     def test__create_protocol_parameters(self):
+        protocol = Protocol.objects.create(study=Study.objects.first())
+        ProtocolParameter.objects.create(
+            protocol=protocol,
+            name="sequencing instrument",
+            name_source="",
+            name_accession=""
+        )
+
+        ProtocolParameter.objects.create(
+            protocol=protocol,
+            name="quality scorer",
+            name_source="",
+            name_accession=""
+        )
+
+        ProtocolParameter.objects.create(
+            protocol=protocol,
+            name="base caller",
+            name_source="",
+            name_accession=""
+        )
+
         self.assertEqual(
-            self.isa_tools_json_creator._create_protocol_parameters(
-                Protocol.objects.last()
-            ),
-            [
-                {
-                    "parameterName": {
-                        "annotationValue": u"sequencing instrument",
-                        "termAccession": u"",
-                        "termSource": u"",
+            ordered(self.isa_tools_json_creator._create_protocol_parameters(
+                protocol
+            )),
+            ordered(
+                [
+                    {
+                        "parameterName": {
+                            "annotationValue": u"sequencing instrument",
+                            "termAccession": u"",
+                            "termSource": u"",
+                        },
+                        "@id": "#parameter/sequencing_instrument",
                     },
-                    "@id": "#parameter/sequencing_instrument",
-                },
-                {
-                    "parameterName": {
-                        "annotationValue": u"quality scorer",
-                        "termAccession": u"",
-                        "termSource": u"",
+                    {
+                        "parameterName": {
+                            "annotationValue": u"quality scorer",
+                            "termAccession": u"",
+                            "termSource": u"",
+                        },
+                        "@id": "#parameter/quality_scorer",
                     },
-                    "@id": "#parameter/quality_scorer",
-                },
-                {
-                    "parameterName": {
-                        "annotationValue": u"base caller",
-                        "termAccession": u"",
-                        "termSource": u"",
+                    {
+                        "parameterName": {
+                            "annotationValue": u"base caller",
+                            "termAccession": u"",
+                            "termSource": u"",
+                        },
+                        "@id": "#parameter/base_caller",
                     },
-                    "@id": "#parameter/base_caller",
-                },
-            ],
+                ]
+            )
         )
 
     def test__create_protocols(self):
