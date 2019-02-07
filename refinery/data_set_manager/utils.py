@@ -1477,6 +1477,19 @@ class ISAJSONCreator:
         def handle_semicolon(string):
             return "" if string == ";" else string
 
+        def create_roles(contact):
+            roles = []
+            for role in contact.roles.split(";"):
+                role_ontology_annotation = self._create_ontology_annotation(
+                    role,
+                    handle_semicolon(contact.roles_source),
+                    handle_semicolon(contact.roles_accession)
+                )
+                if not all(not value for value in
+                           role_ontology_annotation.values()):
+                    roles.append(role_ontology_annotation)
+            return roles
+
         return [
             {
                 "@id": self._create_id("person", contact.last_name),
@@ -1491,14 +1504,7 @@ class ISAJSONCreator:
                 "fax": contact.fax,
                 "address": contact.address,
                 "affiliation": contact.affiliation,
-                "roles": [
-                    self._create_ontology_annotation(
-                        person,
-                        handle_semicolon(contact.roles_source),
-                        handle_semicolon(contact.roles_accession)
-                    )
-                    for person in contact.roles.split(";")  # See: Contact
-                ]
+                "roles": create_roles(contact)
             }
             for contact in Contact.objects.filter(collection=node_collection)
         ]
