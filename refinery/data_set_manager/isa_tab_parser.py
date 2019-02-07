@@ -693,6 +693,8 @@ class IsaTabParser:
             if self.current_comments.get(index) is None:
                 self.current_comments[index] = []
 
+            if comment_value == u'""':
+                comment_value = u''
             comment, created = Comment.objects.get_or_create(
                 name=comment_name, value=comment_value
             )
