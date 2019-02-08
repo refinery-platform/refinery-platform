@@ -1,3 +1,9 @@
+/**
+ * File Browser Factory
+ * @namespace fileBrowserFactory
+ * @desc Main services which formats the api response to grid data and columns
+ * @memberOf refineryFileBrowser.fileBrowserFactory
+ */
 (function () {
   'use strict';
 
@@ -116,7 +122,7 @@
           },
           headerCellClass: function (grid) {
             return addNonEditCellClass(attribute.attribute_type, grid);
-          },
+          }
         };
 
         if (columnName === 'Download') {
@@ -135,7 +141,7 @@
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
           colProperty.cellTemplate = _cellTemplate;
           tempCustomColumnNames.push(colProperty);
-        } else if (columnName !== 'Datafile') {
+        } else if (columnName.toLowerCase().indexOf('datafile') < 0) {
           tempCustomColumnNames.push(colProperty);
         }
       });
@@ -143,14 +149,19 @@
       return customColumnNames;
     }
 
-    // Helper method which makes display_names uniquey by adding attribute_type
+    // Helper method which makes display_names unique by adding
+    // attribute_type or removing the attribute if the object is a duplidate
     function createUniqueDisplayNames (outInd) {
       for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
-        if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name) {
+        if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name &&
+            assayAttributes[inInd].attribute_type !== assayAttributes[outInd].attribute_type) {
           assayAttributes[outInd].display_name = assayAttributes[outInd]
               .display_name + '-' + assayAttributes[outInd].attribute_type;
           assayAttributes[inInd].display_name = assayAttributes[inInd]
               .display_name + '-' + assayAttributes[inInd].attribute_type;
+        } else if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name &&
+          assayAttributes[inInd].attribute_type === assayAttributes[outInd].attribute_type) {
+          angular.copy(assayAttributes.splice(inInd, 1));
         }
       }
     }
@@ -166,7 +177,13 @@
       return arrayOfObjs;
     }
 
-
+    /**
+     * @name getAssayFiles
+     * @desc Get data and formats it for appropriate
+     * @memberOf refineryFileBrowser.getAssayFiles
+     * @param {object} unencodeParams - params for api request
+     * @param {str} scrollDirection - up or down to page data accordingly for cont strolling
+    **/
     function getAssayFiles (unencodeParams, scrollDirection) {
       var params = {};
       var additionalAssayFiles = [];
@@ -289,7 +306,7 @@
         visible: isToolSelected,
         cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);}
       };
     }
      /**
@@ -322,7 +339,7 @@
         visible: isToolSelected,
         cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);}
       };
     }
 
@@ -347,7 +364,7 @@
         cellTemplate: _cellTemplate,
         cellEditableCondition: false,
         cellClass: function (grid) { return addNonEditCellClass('Internal', grid);},
-        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);},
+        headerCellClass: function (grid) {return addNonEditCellClass('Internal', grid);}
       };
     }
 

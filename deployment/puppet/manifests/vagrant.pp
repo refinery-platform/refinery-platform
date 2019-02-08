@@ -9,7 +9,6 @@ $project_root = "/${app_user}"
 $deployment_root = "${project_root}/deployment"
 $django_root = "${project_root}/refinery"
 $requirements = "${project_root}/requirements.txt"
-$isa_tab_dir = "${project_root}/isa-tab"
 $media_root = "${project_root}/media"
 $import_dir = "${project_root}/import"
 $solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
@@ -35,7 +34,7 @@ exec { 'activate_user':
 }
 
 
-# See code in refinery-modules/refinery/...
+# See code in puppet/refinery/...
 include refinery
 include refinery::apache2
 include refinery::docker

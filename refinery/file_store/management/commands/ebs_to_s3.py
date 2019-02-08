@@ -45,8 +45,8 @@ class Command(BaseCommand):
             try:
                 s3.upload_file(item.datafile.path, settings.MEDIA_BUCKET, key,
                                ExtraArgs=S3_WRITE_ARGS)
-            except (EnvironmentError, botocore.exceptions.ClientError,
-                    botocore.exceptions.ParamValidationError) as exc:
+            except (EnvironmentError, botocore.exceptions.BotoCoreError,
+                    botocore.exceptions.ClientError) as exc:
                 raise CommandError(
                     "Error uploading from '{}' to 's3://{}/{}': {}".format(
                         item.datafile.path, settings.MEDIA_BUCKET, key, exc

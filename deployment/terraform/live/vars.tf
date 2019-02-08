@@ -67,6 +67,11 @@ variable "app_server_instance_type" {
   default     = "m3.medium"
 }
 
+variable "app_server_instance_count" {
+  description = "Number of app server instances to deploy"
+  default     = 1
+}
+
 variable "app_server_key_pair_name" {
   description = "Name of the SSH key pair to use for the app server instance"
   default     = ""
@@ -76,6 +81,11 @@ variable "app_server_ssh_users" {
   type        = "list"
   description = "Github usernames to be allowed SSH access to the app server instance"
   default     = []
+}
+
+variable "docker_instance_count" {
+  description = "Number of Docker host instances to deploy"
+  default     = 1
 }
 
 variable "git_commit" {
@@ -129,7 +139,7 @@ variable "refinery_banner" {
 
 variable "refinery_banner_anonymous_only" {
   description = "Whether to display refinery_banner to anonymous users only or everyone"
-  default = "false"
+  default     = "false"
 }
 
 variable "refinery_custom_navbar_item" {
@@ -162,24 +172,9 @@ variable "refinery_google_recaptcha_secret_key" {
   default     = ""
 }
 
-variable "refinery_intro" {
-  description = "Mark-down to be displayed in the intro paragraph on the landing page."
-  default = "The refinery platform is for managing, analyzing, and visualizing data."
-}
-
 variable "refinery_s3_user_data" {
   description = "Whether or not to use S3 as user data file storage backend"
   default     = "false"
-}
-
-variable "refinery_twitter" {
-  description = "Twitter account to stream on intro page."
-  default     = ""
-}
-
-variable "refinery_videos" {
-  description = "Introduction and tutorial youtube video ids seperated by a comma."
-  default     = ""
 }
 
 variable "refinery_user_files_columns" {

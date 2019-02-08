@@ -15,18 +15,20 @@
     '$log',
     '$scope',
     '$uibModal',
-    'groupInviteService'
+    'groupInviteService',
+    'primaryGroupService'
   ];
 
   function CollaborationCardCtrl (
     $log,
     $scope,
     $uibModal,
-    groupInviteService
+    groupInviteService,
+    primaryGroupService
   ) {
     var vm = this;
     vm.userGroups = [];
-    vm.invitation = {};
+    vm.invitations = [];
     vm.openGroupAdd = openGroupAdd;
     vm.openGroupEditor = openGroupEditor;
     vm.openGroupMemberAdd = openGroupMemberAdd;
@@ -72,6 +74,7 @@
       modalInstance.result.then(function (response) {
         if (response === 'success') {
           vm.dashboardParentCtrl.getGroups();
+          primaryGroupService.updatePrimaryGroup();
         }
       });
     }

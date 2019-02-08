@@ -14,9 +14,8 @@ import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
-from django_docker_engine.container_managers.docker_engine import (
-    ExpectedPortMissing, NoPortsOpen
-)
+from django_docker_engine.container_managers.docker_engine import \
+    DockerEngineManagerError
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
@@ -468,7 +467,8 @@ class Tool(OwnableResource):
                 self.container_name
             )
             return True
-        except (ExpectedPortMissing, NotFound, NoPortsOpen):
+        except (DockerEngineManagerError, NotFound) as exc:
+            logger.debug(exc)
             return False
 
     def is_visualization(self):

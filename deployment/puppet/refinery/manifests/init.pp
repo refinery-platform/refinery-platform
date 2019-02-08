@@ -7,12 +7,12 @@ user { $::app_user: ensure => present, }
 
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
-  source => "${deployment_root}/ssh-config",
+  source => "${deployment_root}/puppet/templates/ssh-config",
   owner  => $app_user,
   group  => $app_group,
 }
 
-file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
+file { ["${project_root}/import", "${project_root}/static"]:
   ensure => directory,
   owner  => $app_user,
   group  => $app_group,

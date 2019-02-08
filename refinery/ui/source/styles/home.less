@@ -10,8 +10,9 @@
 
   #home-component {
     height: @card-full-view;
-    padding-left: 2.5em;
-    padding-right: 2.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    padding-top: .8em;
     .nav-btn-series {
       margin: 1em 2em 1em 0;
     }
@@ -21,23 +22,24 @@
       overflow: scroll;
       .col-content {
         height:  ~"calc(@{card-full-view} - 1.5em)";
-        width: 95%;
       }
     }
-  }
-
-  #home-chart {
-    width: 90%;
-    .select-right {
-      position: relative;
-      left: 80%;
+    .section-content {
+      padding: .5em .5em 0 1em;
+      margin-top: 1em;
     }
   }
 
-  #home-tool-list {
-    margin-top: 1em;
-    padding-top: 2em;
-    width: 95%;
+  #home-chart-ui-select {
+    padding-bottom: .3em;
+    float: right;
+    .ui-select-label {
+      display: inline;
+      color: @gray-light;;
+      font-weight: 700;
+      padding-right: .3em;
+      padding-top: .2em;
+    }
   }
 
   #home-twitter-feed {
@@ -53,26 +55,18 @@
 
 
 //******* you-tube carousel css ********//
-  #video-carousel-section {
-    width: 98%;
-  }
-
   #home-video-carousel {
-    width: 75% !important;
-    height: 75% !important;
     position: relative;
   }
 
   .youtube-carousel {
-    border: 4px solid @black;
-    width: 80%;
+    border: 4px solid @gray;
     height: 100%;
   }
 
   .video-container {
    // position: relative; /* keeps the aspect ratio */
     padding-bottom: 56.25%; /* fine tunes the video positioning */
-    padding-top: 60px;
     overflow: hidden;
     margin-bottom: -1px;
     margin-right: -1px;
@@ -88,26 +82,22 @@
     height: 100%;
   }
 
-  .carousel-control {
-    bottom: auto !important;
-  }
-
   .carousel-control .fa-chevron-left {
-    position: absolute;
-    left: 15%;
-    margin: 0;
+    position: relative;
+    top: 35%;
+    left: -10%;
   }
 
   .carousel-control .fa-chevron-right {
-    position: absolute;
-    left: 33%;
-    margin: 0;
+    position: relative;
+    top: 35%;
+    right: -10%;
   }
 
   .carousel-control.left, .carousel-control.right {
     background-image: none;
     color: #ffffff;
-    top: 30%;
+    top: 50%;
     transform: translate(0, -50%);
     -webkit-transform: translate(0, -50%);
     -ms-transform: translate(0, -50%);
@@ -121,10 +111,44 @@
     opacity: 0.6;
   }
 
+  .left-button {
+    height:70px;
+    width:35px;
+    border-radius: 0 90px 90px 0;
+    top: 50%;
+    -webkit-transform: translate(0,-50%);
+    -ms-transform: translate(0,-50%);
+    transform: translate(0,-50%);
+    -moz-border-radius: 0 90px 90px 0;
+    -webkit-border-radius: 0 90px 90px 0;
+    background-color: @gray;
+    display: inline-block;
+    position: relative;
+    float:left;
+    /*subpixel bug*/
+    margin-left: -1px;
+  }
+
+  .right-button {
+    height:70px;
+    width:35px;
+    border-radius: 90px 0 0 90px;
+    top: 50%;
+    -webkit-transform: translate(0,-50%);
+    -ms-transform: translate(0,-50%);
+    transform: translate(0,-50%);
+    -moz-border-radius: 90px 0 0 90px;
+    -webkit-border-radius: 90px 0 0 90px;
+    background-color: @gray;
+    display: inline-block;
+    position: relative;
+    float:right;
+    /*subpixel bug*/
+    margin-right: -1px;
+  }
+
   .carousel-caption {
-    bottom: -15px; // overwrite bootstrap default
-    padding-left: 10px;
-    padding-right: 10px;
+    bottom: 0; // overwrite bootstrap default
     left: 0;
     right: 0;
     width: 100%;
@@ -135,6 +159,9 @@
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    position: absolute;
+    background-color: @gray;
+    padding: 15px 10px 15px 10px;
   }
 }
 
@@ -160,6 +187,10 @@
         }
       }
     }
+    .carousel-caption {
+      padding-bottom: 5px;
+      padding-top: 5px;
+    }
   }
 }
 @media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
@@ -179,12 +210,12 @@
     }
   }
 }
-@media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
+@media (min-width: @screen-md-min) and (max-width: 1440px) {
   #refinery-home {
     font-size: 1.1em;
   }
 }
-@media (min-width: @screen-lg-min) {
+@media (min-width: 1441px) {
   #refinery-home {
     font-size: 1.2em;
   }

@@ -11,9 +11,9 @@
     .module('refineryHome')
     .directive('rpVideoCarousel', rpVideoCarousel);
 
-  rpVideoCarousel.$inject = ['$timeout', '$window', 'YouTube'];
+  rpVideoCarousel.$inject = ['_', '$timeout', '$window', 'YouTube', 'homeConfigService'];
 
-  function rpVideoCarousel ($timeout, $window, YouTube) {
+  function rpVideoCarousel (_, $timeout, $window, YouTube, homeConfigService) {
     return {
       restrict: 'E',
       templateUrl: function () {
@@ -22,7 +22,6 @@
       link: function (scope, elem) {
         // elem is the main carousel container
         var carouselDiv;
-        scope.videoIds = ['rdTkUVJYaE0', 'Dd2oZAZJ0-c', 'a11GSabhDfs'];
         var players = []; // list of video players
 
         /**
@@ -93,6 +92,15 @@
           carouselDiv = elem.find('#home-video-carousel');
           onYouTubeIframeAPIReady();
         }, 0);
+
+        scope.$watchCollection(
+          function () {
+            return homeConfigService.homeConfig;
+          },
+          function (updatedHomeConfig) {
+            scope.videoList = updatedHomeConfig.siteVideos;
+          }
+        );
       }
     };
   }

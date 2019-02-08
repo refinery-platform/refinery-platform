@@ -10,7 +10,6 @@ $django_root = "${project_root}/refinery"
 $requirements = "${project_root}/requirements.txt"
 $requirements_aws = "${project_root}/requirements-aws.txt"
 $data_dir = '/data'
-$isa_tab_dir = "${data_dir}/isa-tab"
 $media_root = "${data_dir}/media"
 $import_dir = "${data_dir}/import"
 $solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
@@ -34,7 +33,7 @@ $deployment_platform = 'aws'
 # set by Facter:
 # $email_host_user, $email_host_password, $site_name, $site_url, $docker_host
 
-# See code in refinery-modules/refinery/...
+# See code in puppet/refinery/...
 include refinery
 include refinery::apache2
 include refinery::aws

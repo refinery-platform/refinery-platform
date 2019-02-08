@@ -35,13 +35,10 @@
       launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
-      refineryIntro: '{{ REFINERY_INTRO }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
-      refineryTwitter: '{{ REFINERY_TWITTER }}',
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
-      refineryVideos: '{{ REFINERY_VIDEOS }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
       satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }},
       staticUrl: '{{ STATIC_URL|escapejs }}',
@@ -220,12 +217,6 @@
       </div>
     </div>
   </nav>
-
-  {% if REFINERY_BANNER %}
-      {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
-          <div class="alert alert-warning text-center">{{ REFINERY_BANNER|safe }}</div>
-      {% endif %}
-  {% endif %}
 
   <div class="container-fluid {% if main_container_no_padding %}p-l-0 p-r-0{% endif %}">
     <div class="row" hidden id="warning-ie-not-supported">

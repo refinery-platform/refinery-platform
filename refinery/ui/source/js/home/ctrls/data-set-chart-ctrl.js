@@ -11,9 +11,10 @@
     .module('refineryHome')
     .controller('DataSetChartCtrl', DataSetChartCtrl);
 
-  DataSetChartCtrl.$inject = ['$scope', 'chartDataService'];
+  DataSetChartCtrl.$inject = ['_', '$scope', 'chartDataService'];
 
   function DataSetChartCtrl (
+    _,
     $scope,
     chartDataService
   ) {
@@ -35,9 +36,11 @@
         vm.attributes = service.attributeNames;
         var field = vm.selectedAttribute.select.solrName;
         // initialized in the directive link
-        vm.homeChart.data.datasets[0].data = service.attributeFields[field].countsArray;
-        vm.homeChart.data.labels = service.attributeFields[field].fieldsArray;
-        vm.homeChart.update();
+        if (_.has(service.attributeFields, field)) {
+          vm.homeChart.data.datasets[0].data = service.attributeFields[field].countsArray;
+          vm.homeChart.data.labels = service.attributeFields[field].fieldsArray;
+          vm.homeChart.update();
+        }
       });
     }
 

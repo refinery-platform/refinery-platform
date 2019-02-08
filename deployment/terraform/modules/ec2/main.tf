@@ -118,6 +118,7 @@ resource "aws_iam_instance_profile" "app_server" {
 }
 
 resource "aws_instance" "app_server" {
+  count                  = "${var.instance_count}"
   ami                    = "ami-d05e75b8"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
@@ -191,24 +192,21 @@ export FACTER_REFINERY_CUSTOM_NAVBAR_ITEM="${var.refinery_custom_navbar_item}"
 export FACTER_REFINERY_GOOGLE_ANALYTICS_ID="${var.refinery_google_analytics_id}"
 export FACTER_REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="${var.refinery_google_recaptcha_site_key}"
 export FACTER_REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="${var.refinery_google_recaptcha_secret_key}"
-export FACTER_REFINERY_INTRO="${var.refinery_intro}"
 export FACTER_REFINERY_S3_USER_DATA="${var.refinery_s3_user_data}"
 export FACTER_REFINERY_S3_MEDIA_BUCKET_NAME="${var.media_bucket_name}"
 export FACTER_REFINERY_S3_STATIC_BUCKET_NAME="${var.static_bucket_name}"
 export FACTER_REFINERY_S3_UPLOAD_BUCKET_NAME="${var.upload_bucket_name}"
-export FACTER_REFINERY_TWITTER="${var.refinery_twitter}"
 export FACTER_REFINERY_URL_SCHEME="${var.ssl_certificate_id == "" ? "http" : "https"}"
-export FACTER_REFINERY_VIDEOS="${var.refinery_videos}"
 export FACTER_REFINERY_WELCOME_EMAIL_SUBJECT="${var.refinery_welcome_email_subject}"
 export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE="${var.refinery_welcome_email_message}"
 export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 
 # configure librarian-puppet
 /usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
-su -c 'cd /srv/refinery-platform/deployment && /usr/local/bin/librarian-puppet install' ubuntu
+su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/modules /srv/refinery-platform/deployment/manifests/aws.pp
+/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/aws.pp
 EOF
 }
 
@@ -279,7 +277,7 @@ resource "aws_security_group" "app_server" {
   }
 }
 
-# workaround inability to specify blocks and parameters conditionally
+# workaround for inability to specify blocks and parameters conditionally
 # https://github.com/hashicorp/terraform/issues/14037
 locals {
   http_listener = {
@@ -297,7 +295,7 @@ locals {
   }
 }
 resource "aws_elb" "http" {
-  count           = "${var.ssl_certificate_id == "" ? 1 : 0}"
+  count           = "${var.ssl_certificate_id == "" && var.instance_count > 0 ? 1 : 0}"
   instances       = ["${aws_instance.app_server.id}"]
   idle_timeout    = 180  # seconds
   name            = "${var.resource_name_prefix}"
@@ -318,7 +316,7 @@ resource "aws_elb" "http" {
   }
 }
 resource "aws_elb" "https" {
-  count           = "${var.ssl_certificate_id == "" ? 0 : 1}"
+  count           = "${var.ssl_certificate_id != "" && var.instance_count > 0 ? 1 : 0}"
   instances       = ["${aws_instance.app_server.id}"]
   idle_timeout    = 180  # seconds
   name            = "${var.resource_name_prefix}"

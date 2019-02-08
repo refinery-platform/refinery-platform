@@ -355,26 +355,12 @@ REFINERY_PUBLIC_GROUP_NAME = "Public"
 # DO NOT CHANGE THIS after initialization of your Refinery instance
 REFINERY_PUBLIC_GROUP_ID = 100
 
-# Base query for what kind of ArrayExpress studies to pull in
-# (e.g. only ChIP-Seq studies, or studies updated after a certain date)
-AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
-
-# prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be
-# accessed
-AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
-
-ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
-
 # relative to MEDIA_ROOT
 FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
 # absolute path to the file store root dir
 FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
-FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
 # for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
 FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
-# move uploaded files into file store quickly instead of copying
-FILE_UPLOAD_TEMP_DIR = get_setting('FILE_UPLOAD_TEMP_DIR',
-                                   default=FILE_STORE_TEMP_DIR)
 # always keep uploaded files on disk
 FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
                                           default=0)
@@ -463,42 +449,11 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Use external authentication system like django-auth-ldap (disables password
-# management URLs)
-REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
-# Message to display on password management pages when REFINERY_EXTERNAL_AUTH
-# is set to True
-REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
-
-"""
-# external tool status settings
-TIMEOUT = get_setting("TIMEOUT")
-"""
-
 # Directory for custom libraries
 LIBS_DIR = get_setting("LIBS_DIR")
 
 # Java settings
 JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
-
-if REFINERY_EXTERNAL_AUTH:
-    # enable LDAP authentication
-    try:
-        from django_auth_ldap.config import LDAPSearch
-    except ImportError:
-        logger.info("Failed to configure LDAP authentication")
-    else:
-        AUTH_LDAP_SERVER_URI = get_setting("AUTH_LDAP_SERVER_URI")
-        AUTH_LDAP_BIND_DN = get_setting("AUTH_LDAP_BIND_DN")
-        AUTH_LDAP_BIND_PASSWORD = get_setting("AUTH_LDAP_BIND_PASSWORD")
-        AUTH_LDAP_USER_SEARCH = LDAPSearch(get_setting("AUTH_LDAP_BASE_DN"),
-                                           get_setting("AUTH_LDAP_SCOPE"),
-                                           get_setting("AUTH_LDAP_FILTERSTR"))
-        # populate Django user profile from the LDAP directory
-        AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
-        AUTHENTICATION_BACKENDS += (
-            'core.models.RefineryLDAPBackend',
-        )
 
 CACHES = {
     'default': {
@@ -616,12 +571,6 @@ REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
-
-REFINERY_INTRO = get_setting("REFINERY_INTRO")
-
-REFINERY_TWITTER = get_setting("REFINERY_TWITTER")
-
-REFINERY_VIDEOS = get_setting("REFINERY_VIDEOS")
 
 USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")

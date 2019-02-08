@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -32,8 +33,8 @@ from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
                      DataSet, Event, ExtendedGroup, InvestigationLink,
-                     Project, SiteStatistics, Tutorials, UserProfile,
-                     Workflow, WorkflowEngine)
+                     Project, SiteProfile, SiteStatistics, SiteVideo,
+                     Tutorials, UserProfile, Workflow, WorkflowEngine)
 from .tasks import collect_site_statistics
 
 
@@ -997,6 +998,38 @@ class ShareableResourceTest(TestCase):
         self.assertTrue('share_dataset' in user_perms)
 
 
+class SiteProfileUnitTests(TestCase):
+    def setUp(self):
+        self.current_site = Site.objects.get_current()
+        self.site_profile = SiteProfile.objects.create(site=self.current_site)
+
+    def test_site_profile_created_fk(self):
+        self.assertEqual(self.site_profile.site, self.current_site)
+
+    def test_site_profile_creates_blank_fields(self):
+        self.assertEqual(self.site_profile.about_markdown, '')
+        self.assertEqual(self.site_profile.twitter_username, '')
+
+
+class SiteVideoUnitTests(TestCase):
+    def setUp(self):
+        self.current_site = Site.objects.get_current()
+        self.site_profile = SiteProfile.objects.create(site=self.current_site)
+        self.source_id_1 = 'yt_id_5'
+        self.site_video = SiteVideo.objects.create(
+            site_profile=self.site_profile, source_id=self.source_id_1
+        )
+
+    def test_site_profile_creates_blank_fields(self):
+        self.assertEqual(self.site_video.caption, '')
+        self.assertEqual(self.site_video.source, '')
+
+    def test_site_returns_videos(self):
+        self.site_profile.refresh_from_db()
+        self.assertEqual(self.site_profile.sitevideo_set.all()[0],
+                         self.site_video)
+
+
 class SiteStatisticsUnitTests(TestCase):
     def setUp(self):
         # Simulate a day of user activity
@@ -1243,6 +1276,34 @@ class UserCreateTest(TestCase):
         new_user = User.objects.get(username=self.username)
         self.assertEqual(
             new_user.groups.filter(name=self.public_group_name).count(), 1)
+
+
+class UserProfileTest(TestCase):
+    def setUp(self):
+        self.username = self.password = 'test_user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.group = ExtendedGroup.objects.create(name="Mock Primary Group",
+                                                  is_public=True)
+        self.userprofile = UserProfile.objects.get(user=self.user)
+        self.userprofile.primary_group = self.group
+        self.userprofile.save()
+        self.group.user_set.add(self.user)
+
+    def test_deleting_a_primary_group_nulls_the_primary_group_field(self):
+        self.assertEqual(self.userprofile.primary_group, self.group)
+        ExtendedGroup.objects.get(id=self.group.id).delete()
+        self.userprofile.refresh_from_db()
+        self.assertEqual(self.userprofile.primary_group, None)
+
+    def test_nulling_primary_group_field_does_not_effect_group(self):
+        self.userprofile.primary_group = None
+        self.userprofile.save()
+        self.userprofile.refresh_from_db()
+        self.assertEqual(self.userprofile.primary_group, None)
+        self.assertEqual(1,
+                         len(ExtendedGroup.objects.filter(id=self.group.id)))
 
 
 class UserTutorialsTest(TestCase):

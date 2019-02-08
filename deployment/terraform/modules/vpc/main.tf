@@ -66,7 +66,7 @@ resource "aws_nat_gateway" "docker_nat" {
   allocation_id = "${aws_eip.docker_nat.id}"
   subnet_id     = "${aws_subnet.public_subnet.id}"
   depends_on    = ["aws_internet_gateway.public_gateway"]
-  tags = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
+  tags          = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_route_table" "private_route_table" {

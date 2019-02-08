@@ -1874,17 +1874,24 @@ body.repo-mode .refinery-dashboard {
         float: right;
       }
       .fa-search {
-        right: 200px;
-        left: unset;
-        position: absolute;
+        position: unset; //override setting from launch pad
+      }
+      #dashboard-data-search {
+        width: 50%;
       }
       .btn {
         float: right;
         margin: 0 0 0 1em;
       }
       .fa-times-circle {
-        right: 80px;
+        right: 90px;
       }
+    }
+
+    #split-button {
+      max-width: 180px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     #dashboard-data-set-list {
@@ -1975,7 +1982,7 @@ body.repo-mode .refinery-dashboard {
     }
 
     #group-main-list{
-      height: ~"calc(@{card-bottom-half-view} - 95px)";
+      height: ~"calc(@{card-bottom-half-view} - 32px)";
     }
 
     .dashboard-member-list {
@@ -2049,6 +2056,33 @@ body.repo-mode .refinery-dashboard {
   @media (max-width: @screen-md-min) {
      #dashboard-collaboration-card {
        margin-top: 1.2em;
+     }
+     #split-button {
+      max-width: 175px !important;
+    }
+  }
+
+  @media (max-width: @screen-xs-max) {
+     #dashboard-collaboration-card {
+       margin-top: 1.2em;
+     }
+    #primary-group-div {
+      width:100%;
+    }
+    #search-interface-dashboard {
+      margin-top: 5px;
+      .fa-times-circle {
+        right: 60px;
+      }
+    }
+  }
+
+  @media (max-width: 1440px) {
+    .min-text-hide {
+      display: none;
+    }
+    #dashboard-data-search {
+        width: 33%;
      }
   }
 }

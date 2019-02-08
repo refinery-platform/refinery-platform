@@ -23,16 +23,6 @@
   <div class="page-header">
     <h1>
       Exploration
-    {% if user.is_authenticated %}
-      <small>
-        {% if user.first_name != "" or user.last_name != "" %}
-          {{ user.first_name }} {{ user.last_name }}
-        {% else %}
-          {{ user.username }}
-        {% endif %}
-      </small>
-      <div id="user-id" style="display:none;">{{ user.id }}</div>
-    {% endif %}
   </h1>
   </div>
 {% endblock %}
@@ -49,6 +39,11 @@
     </ul>
    -->
 {% endif %}
+  {% if REFINERY_BANNER %}
+      {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
+          <div class="alert alert-warning text-center">{{ REFINERY_BANNER|safe }}</div>
+      {% endif %}
+  {% endif %}
 
 <div
   class="refinery-dashboard"
