@@ -45,6 +45,7 @@
     var vm = this;
     vm.downloadCsv = downloadCsv;
     vm.downloadCsvQuery = downloadCsvQuery;
+    vm.refreshUserFiles = refreshUserFiles;
     vm.gridOptions = gridOptionsService;
     vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
     vm.sortChanged = sortChanged;
@@ -52,12 +53,11 @@
 
     activate();
 
-    /*
+   /*
    * ---------------------------------------------------------
    * Methods Definitions
    * ---------------------------------------------------------
    */
-
     function activate () {
       refreshUserFiles();
     }
@@ -99,7 +99,6 @@
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
     };
-
 
     /**
      * @name refreshUserFiles

@@ -34,16 +34,24 @@
     userFileFiltersService,
     userFileSortsService
   ) {
+    var direction;
     var promise = $q.defer();
+    var sort;
     var vm = this;
     vm.attributeFilters = userFileBrowserFactory.attributeFilters;
+    vm.foldedDown = {};
     // sync the attribute filter order with grid column order
     vm.orderColumns = settings.djangoApp.userFilesColumns;
+
+   /*
+   * ---------------------------------------------------------
+   * Methods Definitions
+   * ---------------------------------------------------------
+   */
     vm.togglePanel = function (attribute) {
       vm.foldedDown[attribute] = ! vm.foldedDown[attribute];
     };
 
-    vm.foldedDown = {};
     vm.isDown = function (attribute, search) {
       var attributeObj = vm.attributeFilters[attribute];
       return vm.foldedDown[attribute] ||
@@ -93,8 +101,6 @@
       return set;
     }
 
-    var sort;
-    var direction;
     angular.forEach($location.search(), function (values, key) {
       if (key === 'sort') {
         sort = values;
