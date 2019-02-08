@@ -1145,10 +1145,9 @@ class IsaTabParser:
 
         # Create Ontology instances now that we have an Investigation to
         # associate them with
-        for index, ontology_params in \
-                enumerate(
-                    self.ontology_source_reference_data["model_parameters"]
-                ):
+        for index, ontology_params in enumerate(
+            self.ontology_source_reference_data["model_parameters"]
+        ):
             ontology_params["investigation"] = self._current_investigation
             ontology = Ontology.objects.create(**ontology_params)
             for comment in self.ontology_source_reference_data["comments"].get(
