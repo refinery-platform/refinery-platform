@@ -1,3 +1,9 @@
+/**
+ * User File Browser Files Ctrl
+ * @namespace UserFileBrowserFilesCtrl
+ * @desc Main controller for user files data.
+ * @memberOf refineryApp.refineryUserFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -34,28 +40,27 @@
       userFileSortsService,
       gridOptionsService
   ) {
+    gridOptionsService.appScopeProvider = vm;
+    var promise = $q.defer();
     var vm = this;
-    vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
-    vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
     vm.downloadCsv = downloadCsv;
     vm.downloadCsvQuery = downloadCsvQuery;
+    vm.gridOptions = gridOptionsService;
+    vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
+    vm.sortChanged = sortChanged;
+    vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
 
-    var promise = $q.defer();
-    var getUserFiles = userFileBrowserFactory.getUserFiles;
-    getUserFiles().then(function (solr) {
-      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
-        cullEmptyAttributes(solr.facet_field_counts)
-      );
-      userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
-      userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
+    activate();
 
-      gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
-      promise.resolve();
-    }, function () {
-      $log.error('/files/ request failed');
-      promise.reject();
-    });
+    /*
+   * ---------------------------------------------------------
+   * Methods Definitions
+   * ---------------------------------------------------------
+   */
 
+    function activate () {
+      refreshUserFiles();
+    }
     // helper method to cull out attributes with no fields
     function cullEmptyAttributes (facetCountObj) {
       _.each(facetCountObj, function (counts, facetName) {
@@ -66,40 +71,6 @@
 
       return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'name');
     }
-
-    vm.sortChanged = function (grid, sortColumns) {
-      var sortUrlParam = 'sort';
-      var directionUrlParam = 'direction';
-      if (typeof sortColumns !== 'undefined' && sortColumns.length > 0) {
-        // NOTE: With the current config, you can only sort on one column
-        var column = sortColumns[0];
-        // If a hash is used with $location.search, it clears all params
-        $location.search(sortUrlParam, column.field);
-        $location.search(directionUrlParam, column.sort.direction);
-        userFileSortsService.fields[0] = {
-          name: column.field,
-          direction: column.sort.direction
-        };
-
-        // TODO: This is copy-and-paste
-        getUserFiles().then(function (solr) {
-          // TODO: Should there be something that wraps up this "then"? It is repeated.
-          // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
-          gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
-          userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
-          userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
-          promise.resolve();
-        }, function () {
-          $log.error('/files/ request failed');
-          promise.reject();
-        });
-      } else {
-        $location.search(sortUrlParam, null);
-        $location.search(directionUrlParam, null);
-      }
-    };
-
-    gridOptionsService.appScopeProvider = vm;
 
     /**
      * @name downloadCsv
@@ -125,11 +96,66 @@
       });
     }
 
-    vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
     };
 
+
+    /**
+     * @name refreshUserFiles
+     * @desc  Uses service to update the data in grid
+     * @memberOf refineryUserFileBrowser.refreshUserFiles
+    **/
+    function refreshUserFiles () {
+      userFileBrowserFactory.getUserFiles().then(function (solr) {
+        gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
+          cullEmptyAttributes(solr.facet_field_counts)
+        );
+        userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
+        userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
+
+        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        promise.resolve();
+      }, function () {
+        $log.error('/files/ request failed');
+        promise.reject();
+      });
+    }
+
+    function sortChanged (grid, sortColumns) {
+      var sortUrlParam = 'sort';
+      var directionUrlParam = 'direction';
+      if (typeof sortColumns !== 'undefined' && sortColumns.length > 0) {
+        // NOTE: With the current config, you can only sort on one column
+        var column = sortColumns[0];
+        // If a hash is used with $location.search, it clears all params
+        $location.search(sortUrlParam, column.field);
+        $location.search(directionUrlParam, column.sort.direction);
+        userFileSortsService.fields[0] = {
+          name: column.field,
+          direction: column.sort.direction
+        };
+
+        refreshUserFiles.getUserFiles().then(function (solr) {
+          gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+          userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
+          userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
+          promise.resolve();
+        }, function () {
+          $log.error('/files/ request failed');
+          promise.reject();
+        });
+      } else {
+        $location.search(sortUrlParam, null);
+        $location.search(directionUrlParam, null);
+      }
+    }
+
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
     $scope.$watchCollection(
       function () {
         return userFileBrowserFactory.dataSetNodes;

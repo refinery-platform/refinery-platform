@@ -1,3 +1,9 @@
+/**
+ * User File Browser Filters Ctrl
+ * @namespace UserFileBrowserFiltersCtrl
+ * @desc Main controller for user files filter.
+ * @memberOf refineryApp.refineryUserFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -9,6 +15,7 @@
     '$location',
     '$log',
     '$q',
+    '$scope',
     'settings',
     'gridOptionsService',
     'userFileBrowserFactory',
@@ -20,13 +27,16 @@
     $location,
     $log,
     $q,
+    $scope,
     settings,
     gridOptionsService,
     userFileBrowserFactory,
     userFileFiltersService,
     userFileSortsService
   ) {
+    var promise = $q.defer();
     var vm = this;
+    vm.attributeFilters = userFileBrowserFactory.attributeFilters;
     // sync the attribute filter order with grid column order
     vm.orderColumns = settings.djangoApp.userFilesColumns;
     vm.togglePanel = function (attribute) {
@@ -49,8 +59,7 @@
       var set = filterSet(attribute, value);
       $location.search(attribute, set);
 
-      getUserFiles().then(function (solr) {
-        // TODO: Should there be something that wraps up this "then"? It is repeated.
+      userFileBrowserFactory.getUserFiles().then(function (solr) {
         vm.attributeFilters =
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
 
@@ -108,15 +117,15 @@
       };
     }
 
-    var promise = $q.defer();
-    var getUserFiles = userFileBrowserFactory.getUserFiles;
-
-    getUserFiles().then(function (solr) {
-      vm.attributeFilters = userFileBrowserFactory.createFilters(solr.facet_field_counts);
-      promise.resolve();
-    }, function () {
-      $log.error('/files/ request failed');
-      promise.reject();
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    $scope.$watchCollection(function () {
+      return userFileBrowserFactory.attributeFilters;
+    }, function (updatedFilters) {
+      vm.attributeFilters = updatedFilters;
     });
   }
 })();
