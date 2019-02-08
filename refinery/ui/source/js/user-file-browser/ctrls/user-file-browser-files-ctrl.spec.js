@@ -3,6 +3,7 @@
 
   describe('Controller: UserFileBrowserFilesCtrl', function () {
     var ctrl;
+    var factory;
     var scope;
     var window;
 
@@ -12,8 +13,10 @@
     beforeEach(inject(function (
       $controller,
       $rootScope,
-      $window
+      $window,
+      userFileBrowserFactory
     ) {
+      factory = userFileBrowserFactory;
       scope = $rootScope.$new();
       window = $window;
       ctrl = $controller('UserFileBrowserFilesCtrl', {
@@ -49,6 +52,22 @@
       expect(window.location.href).toEqual(
         '/files_download?filter_attribute=%7B%7D&limit=100000000&sort='
       );
+    });
+
+    describe('refreshUserFiles', function () {
+      it('called the correct service', function () {
+        var mockServiceResponse = false;
+        spyOn(factory, 'getUserFiles').and.callFake(function () {
+          return {
+            then: function () {
+              mockServiceResponse = true;
+            }
+          };
+        });
+        expect(mockServiceResponse).toEqual(false);
+        ctrl.refreshUserFiles();
+        expect(mockServiceResponse).toEqual(true);
+      });
     });
   });
 })();

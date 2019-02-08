@@ -22,9 +22,11 @@
       nodesCount: 0,
       totalNodesCount: 0
     };
+    var attributeFilters = [];
     var URL = 'url';
 
     var service = {
+      attributeFilters: attributeFilters,
       createColumnDefs: createColumnDefs,
       createData: createData,
       createFilters: createFilters,
@@ -136,8 +138,8 @@
 
     function getUserFiles () {
       var userFile = userFileService.query();
-      userFile.$promise.then(function (/* response */) {
-        // TODO: addNodeDetailtoUserFiles();
+      userFile.$promise.then(function (response) {
+        angular.copy(createFilters(response.facet_field_counts), attributeFilters);
       }, function (error) {
         $log.error(error);
       });
