@@ -119,7 +119,7 @@ resource "aws_iam_instance_profile" "app_server" {
 
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
-  ami                    = "ami-d05e75b8"
+  ami                    = "ami-03597b1b84c02cf7b"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
