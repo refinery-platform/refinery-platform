@@ -9,7 +9,7 @@ class refinery::django (
   $site_name              = $refinery::params::site_name,
   $site_url               = $refinery::params::site_url,
   $virtualenv             = $refinery::params::virtualenv,
-) {
+) inherits refinery::params {
   if $deployment_platform == 'vagrant' {
     file { "${project_root}/import":
       ensure => directory,

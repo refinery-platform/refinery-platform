@@ -3,7 +3,7 @@ class refinery::solr (
   $app_user            = $refinery::params::app_user,
   $django_root         = $refinery::params::django_root,
   $solr_lib_dir        = $refinery::params::solr_lib_dir,
-) {
+) inherits refinery::params {
   $solr_version = '5.3.1'
   $solr_archive = "solr-${solr_version}.tgz"
   $download_path = "/tmp/${solr_archive}"

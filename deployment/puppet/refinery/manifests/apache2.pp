@@ -9,7 +9,7 @@ class refinery::apache2 (
   $media_root          = $refinery::params::media_root,
   $conf_mode           = $refinery::params::conf_mode,
   $virtualenv          = $refinery::params::virtualenv,
-) {
+) inherits refinery::params {
 
   # must be set to the ELB IdleTimeout value in the CloudFormation template
   # this is higher than the default of 60 to accommodate long synchronous

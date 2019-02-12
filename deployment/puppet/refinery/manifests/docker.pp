@@ -2,7 +2,7 @@ class refinery::docker (
   $deployment_platform = $refinery::params::deployment_platform,
   $app_user            = $refinery::params::app_user,
   $docker_host         = $refinery::params::docker_host,
-) {
+) inherits refinery::params {
   if $deployment_platform != 'aws' {
     class { '::docker':
       docker_users => [$app_user],

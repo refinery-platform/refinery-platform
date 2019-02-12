@@ -9,7 +9,7 @@ class refinery (
   $solr_data_set_manager_data = $refinery::params::solr_data_set_manager_data,
   $solr_core_data             = $refinery::params::solr_core_data,
   $docker_host                = $refinery::params::docker_host,
-) {
+) inherits refinery::params {
   sysctl { 'vm.swappiness': value => '10' }  # for better performance
 
   class { 'timezone':  # to make logs easier to read

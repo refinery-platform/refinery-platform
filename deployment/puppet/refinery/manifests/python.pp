@@ -5,7 +5,7 @@ class refinery::python (
   $virtualenv          = $refinery::params::virtualenv,
   $project_root        = $refinery::params::project_root,
   $django_root         = $refinery::params::django_root,
-) {
+) inherits refinery::params {
 
   class { '::python':
     dev        => 'present',

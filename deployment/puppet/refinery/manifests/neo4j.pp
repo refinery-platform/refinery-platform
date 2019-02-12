@@ -5,7 +5,7 @@ class refinery::neo4j (
   $django_root            = $refinery::params::django_root,
   $django_settings_module = $refinery::params::django_settings_module,
   $virtualenv             = $refinery::params::virtualenv,
-) {
+) inherits refinery::params {
   $neo4j_runtime_settings = '/etc/neo4j/neo4j-server.properties'
   $neo4j_launch_settings = '/etc/neo4j/neo4j-wrapper.conf'
 

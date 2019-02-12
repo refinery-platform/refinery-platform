@@ -7,7 +7,7 @@ class refinery::ui (
   $virtualenv             = $refinery::params::virtualenv,
   $django_root            = $refinery::params::django_root,
   $django_settings_module = $refinery::params::django_settings_module,
-) {
+) inherits refinery::params {
   if $deployment_platform == 'vagrant' {
     file { 'static_files_dir':
       ensure => directory,
