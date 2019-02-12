@@ -56,6 +56,7 @@
     vm.refreshDataSets = refreshDataSets;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
+    vm.areDataSetsTextSearched = false; // data sets text searched via solr api
     vm.searchQueryDataSets = '';
     vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
 
@@ -111,6 +112,7 @@
         vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
         vm.numPages = Math.ceil(vm.totalDataSets / vm.itemsPerPage);
         vm.dataSetsError = false;
+        vm.areDataSetsTextSearched = false;
       }, function (error) {
         vm.loadingDataSets = false;
         $log.error(error);
@@ -217,6 +219,7 @@
     **/
     function resetDataSetSearch () {
       vm.searchQueryDataSets = '';
+      vm.areDataSetsTextSearched = false;
       vm.refreshDataSets();
     }
 
@@ -229,13 +232,20 @@
     function searchDataSets (query) {
       // reset perm filter until we can search & check perms
       vm.groupFilter = { selectedName: 'All' };
+      vm.params = { limit: vm.itemsPerPage, offset: vm.pageStartOffset };
       if (query && query.length > 1) {
         vm.loadingDataSets = true;
         var apiRequest = new DataSetSearchApi(query);
         apiRequest(200).then(function (response) {
           vm.dataSets = response.data;
+          angular.copy(response.data, dataSetCardFactory.dataSets);
+          dataSetCardFactory.dataSetStats.totalCount = response.data.length;
+          vm.dataSets = dataSetCardFactory.dataSets.slice(0, vm.itemsPerPage);
+          vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
+          vm.numPages = Math.ceil(vm.totalDataSets / vm.itemsPerPage);
           vm.loadingDataSets = false;
           vm.dataSetsError = false;
+          vm.areDataSetsTextSearched = true;
         }, function (error) {
           $log.error(error);
           vm.dataSetsError = true;

@@ -38,6 +38,7 @@
       expect(ctrl.groupFilter.selectedName).toEqual('All');
       expect(ctrl.params.limit).toEqual(ctrl.itemsPerPage);
       expect(ctrl.params.limit).toEqual(ctrl.itemsPerPage);
+      expect(ctrl.areDataSetsTextSearched).toEqual(false);
     });
 
     it('Pagination variables should be initialized', function () {

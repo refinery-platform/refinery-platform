@@ -17,6 +17,8 @@
 
     it('factory and tools variables should exist', function () {
       expect(factory).toBeDefined();
+      expect(factory.attributeFilters).toEqual([]);
+      expect(factory.dataSetNodes).toEqual({ nodesCount: 0, totalNodesCount: 0 });
     });
 
     describe('createData', function () {
