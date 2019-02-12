@@ -119,6 +119,7 @@ resource "aws_iam_instance_profile" "app_server" {
 
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
+  # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
   ami                    = "ami-03597b1b84c02cf7b"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
