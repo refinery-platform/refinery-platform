@@ -1,187 +1,139 @@
-class refinery {
+class refinery (
+  $deployment_platform        = $refinery::params::deployment_platform,
+  $app_user                   = $refinery::params::app_user,
+  $app_group                  = $refinery::params::app_group,
+  $project_root               = $refinery::params::project_root,
+  $django_root                = $refinery::params::django_root,
+  $django_settings_module     = $refinery::params::django_settings_module,
+  $virtualenv                 = $refinery::params::virtualenv,
+  $solr_data_set_manager_data = $refinery::params::solr_data_set_manager_data,
+  $solr_core_data             = $refinery::params::solr_core_data,
+  $docker_host                = $refinery::params::docker_host,
+) inherits refinery::params {
+  sysctl { 'vm.swappiness': value => '10' }  # for better performance
 
-# for better performance
-sysctl { 'vm.swappiness': value => '10' }
+  class { 'timezone':  # to make logs easier to read
+    timezone => 'America/New_York',
+  }
 
-user { $::app_user: ensure => present, }
+  if $deployment_platform == 'vagrant' {
+    exec { 'activate_guest_user':
+      command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
+      environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+      user        => $app_user,
+      group       => $app_group,
+      require     => Exec['create_guest_user'],
+    }
+  }
 
-file { "/home/${app_user}/.ssh/config":
-  ensure => file,
-  source => "${deployment_root}/puppet/templates/ssh-config",
-  owner  => $app_user,
-  group  => $app_group,
-}
+  user { $app_user: ensure => present, }
 
-file { ["${project_root}/import", "${project_root}/static"]:
-  ensure => directory,
-  owner  => $app_user,
-  group  => $app_group,
-}
+  file { "/home/${app_user}/.ssh/config":
+    ensure => file,
+    source => "${project_root}/deployment/puppet/templates/ssh-config",
+    owner  => $app_user,
+    group  => $app_group,
+  }
 
-file_line { "django_settings_module":
-  path => "/home/${app_user}/.profile",
-  line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
-}
-->
-file { "${django_root}/config/config.json":
-  ensure  => file,
-  content => template("${django_root}/config/config.json.erb"),
-  owner   => $app_user,
-  group   => $app_group,
-  replace => false,
-}
-->
-exec { "migrate":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput --fake-initial",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-  logoutput   => true,
-  require     => [
-    Class['::refinery::python'],
-    Class['::refinery::postgresql']
-  ],
-}
-->
-exec { "create_superuser":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-  require     => Exec['migrate'],
-}
-->
-exec { "create_guest":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata guest.json",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "add_users_to_public_group":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-exec { "set_up_refinery_site_name":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-}
-->
-file { "/opt":
-  ensure => directory,
-}
+  file { "/opt":
+    ensure => directory,
+  }
 
-# workaround for CloudFront error 523 Origin Unreachable for https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
-class { '::rabbitmq':
-  package_gpg_key  => 'https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc',
-}
+  # workaround for CloudFront error 523 Origin Unreachable for https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
+  class { '::rabbitmq':
+    package_gpg_key  => 'https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc',
+  }
 
-class ui {
-  apt::source { 'nodejs':
-    ensure      => 'present',
-    comment     => 'Nodesource NodeJS repo.',
-    location    => 'https://deb.nodesource.com/node_6.x',
-    release     => 'trusty',
-    repos       => 'main',
-    key         => {
-      'id'     => '9FD3B784BC1C6FC31A8A0A1C1655A0AB68576280',
-      'server' => 'keyserver.ubuntu.com',
-    },
-    include => {
-      'src' => true,
-      'deb' => true,
-    },
+  package { 'memcached': }
+  ->
+  service { 'memcached':
+    ensure => running,
+  }
+
+  if $deployment_platform == 'aws' {
+    # Ensure formatted filesystem
+    # https://forge.puppetlabs.com/puppetlabs/lvm
+    # http://docs.puppetlabs.com/puppet/4.3/reference/types/mount.html
+    $fstype = 'ext3'
+    # This is the block device for the external data.
+    # It must match the attachment point for the EC2 EBS volume.
+    $block_device = '/dev/xvdr'
+
+    filesystem { $block_device:
+      ensure  => present,
+      fs_type => $fstype,
+    }
+    ->
+    file { '/data':
+      ensure => directory,
+    }
+    ->
+    mount { 'data_volume':
+      name    => '/data',
+      ensure  => mounted,
+      device  => $block_device,
+      fstype  => $fstype,
+      options => 'defaults',
+    }
+
+    file { '/data/media':
+      ensure  => directory,
+      owner   => $app_user,
+      group   => $app_group,
+      mode    => '0755',
+      require => Mount['data_volume'],
+    }
+
+    file { '/data/solr':
+      ensure  => directory,
+      owner   => $app_user,
+      group   => $app_group,
+      mode    => '0755',
+      before  => Exec['solr_install'],
+      require => Mount['data_volume'],
+    }
+
+    file { $solr_data_set_manager_data:
+      ensure  => directory,
+      owner   => $app_user,
+      group   => $app_group,
+      mode    => '0755',
+      require => Mount['data_volume'],
+    }
+
+    file { $solr_core_data:
+      ensure  => directory,
+      owner   => $app_user,
+      group   => $app_group,
+      mode    => '0755',
+      require => Mount['data_volume'],
+    }
+  }
+
+  file { "${django_root}/supervisord.conf":
+    ensure  => file,
+    content => template("${django_root}/supervisord.conf.erb"),
+    owner   => $app_user,
+    group   => $app_group,
   }
   ->
-  package { 'nodejs':
-    name    => 'nodejs',
-    ensure  => latest,
-    # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
-    require => Class['apt::update'],
-  }
-  ->
-  package {
-    'bower': ensure => '1.8.2', provider => 'npm';
-    'grunt-cli': ensure => '0.1.13', provider => 'npm';
-  }
-  ->
-  exec { "npm_prune_local_modules":
-    command   => "/usr/bin/npm prune --progress false",
-    cwd       => $ui_app_root,
-    logoutput => on_failure,
-    user      => $app_user,
-    group     => $app_group,
-  }
-  ->
-  exec { "npm_install_local_modules":
-    command   => "/usr/bin/npm install --progress false",
-    cwd       => $ui_app_root,
-    logoutput => on_failure,
-    user      => $app_user,
-    group     => $app_group,
-  }
-  ->
-  exec { "bower_modules":
-    command     => "/bin/rm -rf ${ui_app_root}/bower_components && /usr/bin/bower install --config.interactive=false",
-    cwd         => $ui_app_root,
-    logoutput   => on_failure,
+  exec { 'supervisord':
+    command     => "${virtualenv}/bin/supervisord",
+    environment => [
+      "DJANGO_SETTINGS_MODULE=${django_settings_module}",
+      "DOCKER_HOST=${docker_host}"
+    ],
+    cwd         => $django_root,
+    creates     => '/tmp/supervisord.pid',
     user        => $app_user,
     group       => $app_group,
-    environment => ["HOME=/home/${app_user}"],
+    require     => [
+      Class['refinery::django'],
+      Class['refinery::ui'],
+      Class['refinery::solr'],
+      Class['refinery::neo4j'],
+      Class['::rabbitmq'],
+      Service['memcached'],
+    ],
   }
-  ->
-  exec { "grunt":
-    command   => "/usr/bin/grunt make",
-    cwd       => $ui_app_root,
-    logoutput => on_failure,
-    user      => $app_user,
-    group     => $app_group,
-  }
-  ->
-  exec { "collectstatic":
-    command     => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
-    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-    user        => $app_user,
-    group       => $app_group,
-    require     => Class['::refinery::python'],
-  }
-}
-include ui
-
-package { 'memcached': }
-->
-service { 'memcached':
-  ensure => running,
-}
-
-file { "${django_root}/supervisord.conf":
-  ensure  => file,
-  content => template("${django_root}/supervisord.conf.erb"),
-  owner   => $app_user,
-  group   => $app_group,
-}
-->
-exec { "supervisord":
-  command     => "${virtualenv}/bin/supervisord",
-  environment => [
-    "DJANGO_SETTINGS_MODULE=${::django_settings_module}",
-    "DOCKER_HOST=${::docker_host}"
-  ],
-  cwd         => $django_root,
-  creates     => "/tmp/supervisord.pid",
-  user        => $app_user,
-  group       => $app_group,
-  require     => [
-    Class["ui"],
-    Class["solr"],
-    Class["neo4j"],
-    Class["::rabbitmq"],
-    Service["memcached"],
-  ],
-}
 }
