@@ -1635,8 +1635,6 @@ class ISAJSONCreator:
                 assay, study, nodes=node.children_set.all(),
                 process_sequence=process_sequence
             )
-            continue
-
         return process_sequence
 
     def _create_process_sequence_inputs(self, input_nodes):
