@@ -1655,7 +1655,7 @@ class ISAJSONCreator:
         for protocol_reference in ProtocolReference.objects.filter(
             node__type=Node.SOURCE,
             protocol__in=Protocol.objects.filter(study=study)
-        ):
+        ).distinct("node__id"):
             process = self._create_process(protocol_reference)
             process_sequence.append(process)
 
