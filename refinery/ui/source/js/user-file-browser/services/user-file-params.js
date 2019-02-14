@@ -18,7 +18,6 @@
       userFileSortsService
   ) {
     var characterSuffix = '_Characteristics_generic_s';
-    var factorSuffix = '_Factor_Value_generic_s';
 
     var params = {
       limit: 100, // Default is 100,000. Immutability make it hard in python.
@@ -29,10 +28,8 @@
         return userFileSortsService.fields.map(function (field) {
           var name = field.name;
           var direction = field.direction;
-          return [
-            name + characterSuffix + ' ' + direction,
-            name + factorSuffix + ' ' + direction].join(', ');
-        }).join(', ');
+          return name + characterSuffix + ' ' + direction;
+        });
       }
     };
     return params;
