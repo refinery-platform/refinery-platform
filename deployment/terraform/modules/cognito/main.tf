@@ -37,6 +37,7 @@ resource "aws_iam_role_policy" "upload_access_policy" {
 
   role = "${aws_iam_role.upload_role.id}"
 
+  # s3:ListBucket is required for 'aws s3 sync'
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -55,6 +56,13 @@ resource "aws_iam_role_policy" "upload_access_policy" {
       ],
       "Effect": "Allow",
       "Resource": "arn:aws:s3:::${var.upload_bucket_name}/$${cognito-identity.amazonaws.com:sub}/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::${var.upload_bucket_name}"
     }
   ]
 }
