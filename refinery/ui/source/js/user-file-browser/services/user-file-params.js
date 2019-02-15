@@ -28,6 +28,9 @@
         return userFileSortsService.fields.map(function (field) {
           var name = field.name;
           var direction = field.direction;
+          if (name === 'name') {
+            return name + ' ' + direction;
+          }
           return name + characterSuffix + ' ' + direction;
         });
       }
