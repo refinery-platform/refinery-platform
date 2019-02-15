@@ -52,7 +52,7 @@ GALAXY_WARNING_SCRIPT
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "deployment/puppet/manifests"
-    puppet.manifest_file  = "vagrant.pp"
+    puppet.manifest_file  = "site.pp"
     puppet.module_path = "deployment/puppet/modules"  # requires modules dir to exist when this file is parsed
     puppet.options = "--hiera_config /vagrant/deployment/puppet/hiera.yaml"  # to avoid missing file warning
   end

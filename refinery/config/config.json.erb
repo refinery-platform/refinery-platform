@@ -22,7 +22,7 @@
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
   "DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB": <%= @django_docker_engine_mem_limit_mb || 20 %>,
-  "EMAIL_HOST": "<%= @email_host || "localhost" %>",
+  "EMAIL_HOST": "<%= @email_host %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",
   "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",

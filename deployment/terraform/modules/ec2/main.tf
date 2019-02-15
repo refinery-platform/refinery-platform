@@ -119,7 +119,8 @@ resource "aws_iam_instance_profile" "app_server" {
 
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
-  ami                    = "ami-d05e75b8"
+  # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
+  ami                    = "ami-03597b1b84c02cf7b"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
@@ -207,7 +208,7 @@ export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
 
 # run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/aws.pp
+/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/site.pp
 EOF
 }
 
