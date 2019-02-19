@@ -14,6 +14,7 @@
         <div class="carousel-caption">
           {{ video.caption }}
         </div>
+        <div ng-if="$last" ng-init="onYouTubeIframeAPIReady()"></div>
       </div>
     </div>
     <div class="controls">
