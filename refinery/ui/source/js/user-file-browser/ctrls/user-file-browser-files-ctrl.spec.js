@@ -43,14 +43,14 @@
 
     it('downloadCsvQuery returns appropriate value', function () {
       expect(ctrl.downloadCsvQuery()).toEqual(
-        'filter_attribute=%7B%7D&limit=100000000&sort='
+        'filter_attribute=%7B%7D&limit=100000000'
       );
     });
 
     it('downloadCsv sets location.href properly', function () {
       ctrl.downloadCsv();
       expect(window.location.href).toEqual(
-        '/files_download?filter_attribute=%7B%7D&limit=100000000&sort='
+        '/files_download?filter_attribute=%7B%7D&limit=100000000'
       );
     });
 
