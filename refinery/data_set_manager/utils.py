@@ -1200,7 +1200,9 @@ class ISAJSONCreator:
         """
         datafiles = []
         for node in self.dataset.get_nodes(
-            assay=assay, study=study, type=Node.RAW_DATA_FILE
+            assay=assay, study=study, type__in=[
+                Node.RAW_DATA_FILE, Node.DERIVED_DATA_FILE, Node.IMAGE_FILE
+            ]
         ):
             file_store_item = node.get_file_store_item()
 
@@ -1211,8 +1213,8 @@ class ISAJSONCreator:
 
             datafiles.append(
                 {
-                    "@id": self._create_id(
-                        "data", "rawdatafile-{}".format(datafile_name)
+                    "@id": self._create_id_from_node(
+                        node, datafile_name=datafile_name
                     ),
                     "name": datafile_name,
                     "type": Node.RAW_DATA_FILE,
@@ -1274,7 +1276,7 @@ class ISAJSONCreator:
     def _create_id(self, identifier, value):
         return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
 
-    def _create_id_from_node(self, node):
+    def _create_id_from_node(self, node, datafile_name=None):
         value_prefix = node.type.lower().replace("name", "").replace(" ", "")
 
         if "File" in node.type:
@@ -1285,7 +1287,11 @@ class ISAJSONCreator:
             identifier = value_prefix
 
         return self._create_id(
-            identifier, "{}-{}".format(value_prefix, node.name)
+            identifier,
+            "{}-{}".format(
+                value_prefix,
+                node.name if datafile_name is None else datafile_name
+            )
         )
 
     def _create_investigation(self):
