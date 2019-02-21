@@ -1650,7 +1650,7 @@ class ISAJSONCreator:
 
     def _create_process_sequence_inputs(self, assay_node, protocol_reference):
         if assay_node is not None:
-            input_nodes = []
+            return []
         else:
             input_nodes = [protocol_reference.node]
         return [
@@ -1663,7 +1663,7 @@ class ISAJSONCreator:
             if protocol_reference == last_protocol_reference:
                 output_nodes = assay_node.children_set.all()
             else:
-                output_nodes = []
+                return []
         else:
             output_nodes = protocol_reference.node.children_set.all().exclude(
                 type=Node.ASSAY
