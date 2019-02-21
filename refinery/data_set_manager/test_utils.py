@@ -419,12 +419,11 @@ class ISAJSONCreatorTestMixin(object):
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
-class BioinformaticsInstituteISAJSONCreatorTests(ISAJSONCreatorTestMixin,
-                                                 MetadataImportTestBase):
+class BiiISAJSONCreatorTests(ISAJSONCreatorTestMixin, MetadataImportTestBase):
     @classmethod
     def setUpClass(cls):
         cls.TEST_ISA_TAB_NAME = "BII-S-7"
-        super(BioinformaticsInstituteISAJSONCreatorTests, cls).setUpClass()
+        super(BiiISAJSONCreatorTests, cls).setUpClass()
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
