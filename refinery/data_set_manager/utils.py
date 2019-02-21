@@ -1599,6 +1599,12 @@ class ISAJSONCreator:
                     "protocol", protocol_reference.protocol.name
                 )
             },
+            "inputs": self._create_process_sequence_inputs(
+                assay_node, protocol_reference
+            ),
+            "outputs": self._create_process_sequence_outputs(
+                assay_node, node, protocol_reference
+            ),
             "parameterValues":
                 self._create_protocol_reference_parameters(protocol_reference),
             "performer": protocol_reference.performer or ""
@@ -1613,27 +1619,6 @@ class ISAJSONCreator:
                 if self.create_comments else []
             )
             self.create_comments = False  # Reset create_comments flag
-
-        if assay_node is not None:
-            input_nodes = []
-        else:
-            input_nodes = [protocol_reference.node]
-        process["inputs"] = self._create_process_sequence_inputs(input_nodes)
-
-        if assay_node is not None:
-            last_protocol_reference = self.current_protocol_references[-1]
-            if protocol_reference == last_protocol_reference:
-                output_nodes = assay_node.children_set.all()
-            else:
-                output_nodes = []
-        else:
-            output_nodes = protocol_reference.node.children_set.all().exclude(
-                type=Node.ASSAY
-            )
-
-        process["outputs"] = self._create_process_sequence_outputs(
-            output_nodes
-        )
 
         return process
 
@@ -1666,12 +1651,27 @@ class ISAJSONCreator:
             )
         return process_sequence
 
-    def _create_process_sequence_inputs(self, input_nodes):
+    def _create_process_sequence_inputs(self, assay_node, protocol_reference):
+        if assay_node is not None:
+            input_nodes = []
+        else:
+            input_nodes = [protocol_reference.node]
         return [
             {"@id": self._create_id_from_node(node)} for node in input_nodes
         ]
 
-    def _create_process_sequence_outputs(self, output_nodes):
+    def _create_process_sequence_outputs(self, assay_node,
+                                         node, protocol_reference):
+        if assay_node is not None:
+            last_protocol_reference = self.current_protocol_references[-1]
+            if protocol_reference == last_protocol_reference:
+                output_nodes = assay_node.children_set.all()
+            else:
+                output_nodes = []
+        else:
+            output_nodes = protocol_reference.node.children_set.all().exclude(
+                type=Node.ASSAY
+            )
         return [
             {"@id": self._create_id_from_node(node)} for node in output_nodes
         ]
