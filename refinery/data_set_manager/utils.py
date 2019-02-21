@@ -1657,8 +1657,7 @@ class ISAJSONCreator:
             {"@id": self._create_id_from_node(node)} for node in input_nodes
         ]
 
-    def _create_process_sequence_outputs(self, assay_node,
-                                         node, protocol_reference):
+    def _create_process_sequence_outputs(self, assay_node, protocol_reference):
         if assay_node is not None:
             last_protocol_reference = self.current_protocol_references[-1]
             if protocol_reference == last_protocol_reference:
