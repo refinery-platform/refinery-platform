@@ -1603,7 +1603,7 @@ class ISAJSONCreator:
                 assay_node, protocol_reference
             ),
             "outputs": self._create_process_sequence_outputs(
-                assay_node, node, protocol_reference
+                assay_node, protocol_reference
             ),
             "parameterValues":
                 self._create_protocol_reference_parameters(protocol_reference),
