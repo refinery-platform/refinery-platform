@@ -1673,16 +1673,13 @@ class ISAJSONCreator:
         ]
 
     def _create_process_sequence_study(self, study):
-        process_sequence = []
-
-        for protocol_reference in ProtocolReference.objects.filter(
-            node__type=Node.SOURCE,
-            protocol__in=Protocol.objects.filter(study=study)
-        ).distinct("node__id"):
-            process = self._create_process(protocol_reference)
-            process_sequence.append(process)
-
-        return process_sequence
+        return [
+            self._create_process(protocol_reference)
+            for protocol_reference in ProtocolReference.objects.filter(
+                node__type=Node.SOURCE,
+                protocol__in=Protocol.objects.filter(study=study)
+            ).distinct("node__id")
+        ]
 
     def _create_protocol_components(self, protocol):
         return [
