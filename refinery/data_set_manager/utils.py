@@ -1630,9 +1630,6 @@ class ISAJSONCreator:
                                            type=Node.SAMPLE).order_by("pk")
 
         for node in nodes:
-            if node.type != Node.SAMPLE and node.assay != assay:
-                continue
-
             self.current_protocol_references = list(
                 ProtocolReference.objects.filter(node=node).order_by("pk")
             )
