@@ -1174,11 +1174,11 @@ class ISAJSONCreator:
         """
         return [
             {
+              "@id": self._create_id("characteristic_category",
+                                     characteristic_name),
               "characteristicType": self._create_ontology_annotation(
                   term=characteristic_name
-              ),
-              "@id": self._create_id("characteristic_category",
-                                     characteristic_name)
+              )
             }
 
             # Note the set comprehension below. There are issues with
