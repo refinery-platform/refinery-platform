@@ -10,6 +10,7 @@
     '$scope',
     '$window',
     'addFileToDataSetService',
+    'fileUploadStatusService',
     's3UploadService'
   ];
 
@@ -18,6 +19,7 @@
     $scope,
     $window,
     addFileToDataSetService,
+    fileUploadStatusService,
     s3UploadService) {
     var vm = this;
     vm.files = [];
@@ -32,6 +34,7 @@
 
     vm.addFiles = function (files) {
       vm.files = vm.files.concat(files);
+      fileUploadStatusService.setFileUploadStatus('queuing');
     };
 
     vm.isFileNew = function (file) {
@@ -79,6 +82,7 @@
         file.$error = 'Data upload configuration error';
         return;
       }
+      fileUploadStatusService.setFileUploadStatus('running');
       file.progress = 0;
       file.managedUpload.on('httpUploadProgress', function (progress) {
         // $applyAsync is used to avoid $rootScope:inprog error when canceling uploads
@@ -104,6 +108,8 @@
           }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
           }
         });
       }, function (error) {
@@ -113,6 +119,8 @@
           $log.error('Error uploading file ' + file.name + ': ' + file.$error);
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
           }
         });
       });
@@ -140,6 +148,11 @@
       if (vm.isUploadInProgress(file)) {
         file.managedUpload.abort();
         $log.warn('Upload canceled: ' + file.name);
+      }
+      if (vm.files.length) {
+        fileUploadStatusService.setFileUploadStatus('queuing');
+      } else {
+        fileUploadStatusService.setFileUploadStatus('none');
       }
     };
 

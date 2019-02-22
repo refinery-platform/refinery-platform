@@ -135,7 +135,7 @@
           direction: column.sort.direction
         };
 
-        refreshUserFiles.getUserFiles().then(function (solr) {
+        userFileBrowserFactory.getUserFiles().then(function (solr) {
           gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
           userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
           userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
