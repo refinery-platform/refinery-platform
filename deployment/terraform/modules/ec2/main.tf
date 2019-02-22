@@ -35,7 +35,6 @@ resource "aws_iam_access_key" "ses_user" {
 resource "aws_iam_role" "app_server" {
   description        = "Permissions for the Refinery app server EC2 instance"
   name               = "${var.resource_name_prefix}-refinery-appserver"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
