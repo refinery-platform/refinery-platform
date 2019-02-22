@@ -75,6 +75,14 @@ PUBLIC_ACCESS
     enabled = true
   }
 
+  # https://github.com/igvteam/igv.js/wiki/Data-Server-Requirements#cross-origin-resource-sharing-cors
+  cors_rule {
+    allowed_headers = ["Range"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["${var.origin_protocol}://${var.origin_domain}"]
+    max_age_seconds = 600
+  }
+
   lifecycle_rule {
     id                                     = "Delete non-current object versions and expired delete markers"
     enabled                                = true

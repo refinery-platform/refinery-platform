@@ -278,9 +278,10 @@
     function gridRegister (gridApi) {
       // prevent scoping issues, after reset or initial generation
       if (!vm.gridApi) {
-        vm.gridApi = gridApi;
         gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
         gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+
+        vm.gridApi = gridApi;
 
         // Sort events
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
@@ -619,5 +620,14 @@
           vm.dataSet = dataSet;
         }
     );
+
+    $scope.$watch(function () {
+      return vm.assayFilesTotal;
+    }, function () {
+      // turn off infinite scrolling when file list is short
+      if (vm.assayFilesTotal <= maxFileRequest) {
+        vm.gridApi.infiniteScroll.setScrollDirections(false, false);
+      }
+    });
   }
 })();

@@ -5,7 +5,10 @@
 # https://serverfault.com/a/670688
 export DEBIAN_FRONTEND=noninteractive
 
-/usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get autoremove
+# print commands and their expanded arguments
+set -x
+
+/usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -y autoremove
 
 /usr/bin/apt-get -q -y install git ruby-dev
 
