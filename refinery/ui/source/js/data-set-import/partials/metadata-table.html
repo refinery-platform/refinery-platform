@@ -525,13 +525,13 @@
                 class="refinery-base btn btn-primary"
                 ng-click="metadataTable.confirmImport()"
                 ng-disabled="importMetadataTableForm.$invalid ||
-                metadataTable.areFilesUploading() ||
-                metadataTable.areFilesInQueue()">
+                metadataTable.fileStatus === 'queuing' ||
+                metadataTable.fileStatus === 'running'">
                 Submit
               </button>
               <span class="m-l-1">
                 <span class="text-warning"
-                  ng-if="metadataTable.areFilesInQueue()">
+                  ng-if="metadataTable.fileStatus === 'queuing'">
                   <i class="fa fa-warning" aria-hidden="true"></i>
                   All data files have not been uploaded.
                 </span>

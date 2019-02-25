@@ -95,6 +95,7 @@
       file.managedUpload.promise().then(function () {
         $scope.$apply(function () {
           file.success = true;
+          fileUploadStatusService.setFileUploadStatus('none');
           if (vm.isNodeUpdate) {
             addFileToDataSetService.update({
               node_uuid: vm.nodeUuid,
@@ -108,8 +109,6 @@
           }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
-          } else {
-            fileUploadStatusService.setFileUploadStatus('none');
           }
         });
       }, function (error) {
@@ -117,10 +116,9 @@
           file.progress = 100;
           file.$error = error;
           $log.error('Error uploading file ' + file.name + ': ' + file.$error);
+          fileUploadStatusService.setFileUploadStatus('none');
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
-          } else {
-            fileUploadStatusService.setFileUploadStatus('none');
           }
         });
       });
