@@ -147,8 +147,10 @@
         file.managedUpload.abort();
         $log.warn('Upload canceled: ' + file.name);
       }
-      if (vm.files.length) {
+      if (vm.areUploadsEnabled()) {
         fileUploadStatusService.setFileUploadStatus('queuing');
+      } else if (vm.areUploadsInProgress()) {
+        fileUploadStatusService.setFileUploadStatus('running');
       } else {
         fileUploadStatusService.setFileUploadStatus('none');
       }
