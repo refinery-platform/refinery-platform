@@ -95,7 +95,6 @@
       file.managedUpload.promise().then(function () {
         $scope.$apply(function () {
           file.success = true;
-          fileUploadStatusService.setFileUploadStatus('none');
           if (vm.isNodeUpdate) {
             addFileToDataSetService.update({
               node_uuid: vm.nodeUuid,
@@ -107,6 +106,11 @@
                 vm.addFileStatus = 'error';
               });
           }
+          if (vm.areUploadsEnabled()) {
+            fileUploadStatusService.setFileUploadStatus('queuing');
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
+          }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
           }
@@ -117,6 +121,11 @@
           file.$error = error;
           $log.error('Error uploading file ' + file.name + ': ' + file.$error);
           fileUploadStatusService.setFileUploadStatus('none');
+          if (vm.areUploadsEnabled()) {
+            fileUploadStatusService.setFileUploadStatus('queuing');
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
+          }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
           }
@@ -155,6 +164,7 @@
         fileUploadStatusService.setFileUploadStatus('none');
       }
     };
+
 
     vm.cancelUploads = function () {
       // this iteration approach is necessary because vm.files is re-indexed in cancelUpload()
