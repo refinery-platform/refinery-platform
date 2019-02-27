@@ -31,6 +31,7 @@ describe('Anonymous user explores home page', function () {
 
   it('intro section is visible', function () {
     cy.visible('Welcome');
+    cy.visible('Refinery');
     cy.visible('The Refinery Platform is a web-based data visualization and analysis system powered by an ISA-Tab-compatible data repository for public and private data sets. Analyses are implemented as Galaxy workflows and executed through the Galaxy API.');
   });
 
@@ -60,14 +61,17 @@ describe('Anonymous user explores home page', function () {
 
   it('data chart is visible', function () {
     cy.visible('Data Overview');
+    cy.get('.ui-select-label', { timeout: 2000 }).contains('Top Five Categories');
+    cy.visible('Technology'); // default value
   });
 
   it('tools list is visible', function () {
-    cy.visible('Analysis and Visualization Tools');
-    cy.visible('IGV');
-    cy.visible('Test workflow: 5 steps without branching').click(); // redirect to workflow pg
-    cy.visible('Workflow');
-    cy.visible('Test workflow: 5 steps without branching');
+    cy.visible('Analysis and Visualization Tools').then( function () {
+      cy.visible('IGV', { timeout: 5000 });
+      cy.visible('Test workflow: 5 steps without branching', { timeout: 5000 }).click(); // redirect to workflow pg
+      cy.visible('Workflow');
+      cy.visible('Test workflow: 5 steps without branching');
+    });
   });
 
   it('twitter feed header is visible', function () {
