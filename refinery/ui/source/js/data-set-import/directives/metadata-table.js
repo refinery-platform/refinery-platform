@@ -23,7 +23,22 @@ function metadataTableDirective (
       scope.urlShortcutRegex = /^[a-zA-Z0-9_]*$/;
 
       scope.sampleMetadataUrl = $window.getStaticUrl('sample-files/refinery-sample-metadata.tsv');
-      ctrl.fileStatus = fileUploadStatusService.fileUploadStatus.status;
+
+      // Helper method to disable data file upload if files are uploading
+      ctrl.areFilesUploading = function () {
+        if (fileUploadStatusService.fileUploadStatus.status === 'running') {
+          return true;
+        }
+        return false;
+      };
+
+      // Helper method to show warning text when data files are queued
+      ctrl.areFilesInQueue = function () {
+        if (fileUploadStatusService.fileUploadStatus.status === 'queuing') {
+          return true;
+        }
+        return false;
+      };
 
       // Watches for tab navigation
       scope.$on('$stateChangeStart', function (event) {
@@ -47,15 +62,6 @@ function metadataTableDirective (
         }
       });
       /*eslint-enable */
-
-      scope.$watchCollection(
-        function () {
-          return fileUploadStatusService.fileUploadStatus;
-        },
-        function (statusObj) {
-          ctrl.fileStatus = statusObj.status;
-        }
-      );
     }
   };
 }
