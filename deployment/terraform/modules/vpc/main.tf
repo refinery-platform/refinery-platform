@@ -66,7 +66,7 @@ resource "aws_nat_gateway" "docker_nat" {
   allocation_id = "${aws_eip.docker_nat.id}"
   subnet_id     = "${aws_subnet.public_subnet.id}"
   depends_on    = ["aws_internet_gateway.public_gateway"]
-  tags = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
+  tags          = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_route_table" "private_route_table" {
@@ -81,71 +81,4 @@ resource "aws_route_table" "private_route_table" {
 resource "aws_route_table_association" "private_subnet" {
   subnet_id      = "${aws_subnet.private_subnet_a.id}"
   route_table_id = "${aws_route_table.private_route_table.id}"
-}
-
-resource "aws_security_group" "elb" {
-  # using standalone security group rule resources to avoid cycle errors
-  description = "Refinery: allow HTTP/S ingress and HTTP egress"
-  name        = "${var.resource_name_prefix}-elb"
-  tags        = "${var.tags}"
-  vpc_id      = "${aws_vpc.vpc.id}"
-}
-
-resource "aws_security_group_rule" "http_ingress" {
-  description       = "Refinery: allow HTTP ingress from Internet to ELB"
-  type              = "ingress"
-  cidr_blocks       = ["0.0.0.0/0"]
-  from_port         = 80
-  to_port           = 80
-  protocol          = "tcp"
-  security_group_id = "${aws_security_group.elb.id}"
-}
-
-resource "aws_security_group_rule" "https_ingress" {
-  description       = "Refinery: allow HTTPS ingress from Internet to ELB"
-  type              = "ingress"
-  cidr_blocks       = ["0.0.0.0/0"]
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  security_group_id = "${aws_security_group.elb.id}"
-}
-
-resource "aws_security_group_rule" "http_egress" {
-  description              = "Refinery: allow HTTP egress from ELB to app server"
-  type                     = "egress"
-  from_port                = 80
-  to_port                  = 80
-  protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.elb.id}"
-  source_security_group_id = "${aws_security_group.app_server.id}"
-}
-
-resource "aws_security_group" "app_server" {
-  description = "Refinery: allow HTTP and SSH access to app server instance"
-  name        = "${var.resource_name_prefix}-appserver"
-  tags        = "${var.tags}"
-  vpc_id      = "${aws_vpc.vpc.id}"
-
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = ["${aws_security_group.elb.id}"]
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-  }
-
-  egress {
-    # implicit with AWS but Terraform requires this to be explicit
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 }

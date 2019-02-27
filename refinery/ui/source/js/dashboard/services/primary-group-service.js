@@ -21,7 +21,8 @@
 
     var service = {
       primaryGroup: primaryGroup,
-      setPrimaryGroup: setPrimaryGroup
+      setPrimaryGroup: setPrimaryGroup,
+      updatePrimaryGroup: updatePrimaryGroup
     };
     return service;
 
@@ -46,6 +47,16 @@
         primaryGroup.id = group.id;
       });
       return userProfile.$promise;
+    }
+
+    /**
+     * @name updatePrimaryGroup
+     * @desc Updates the primary group, useful when deleting groups
+     * @memberOf refineryDashboard.updatePrimaryGroup
+    **/
+    function updatePrimaryGroup () {
+      primaryGroup.name = settings.djangoApp.userprofilePrimaryGroup;
+      primaryGroup.id = settings.djangoApp.userprofilePrimaryGroupID;
     }
   }
 })();

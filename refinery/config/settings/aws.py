@@ -17,18 +17,20 @@ INSTALLED_APPS += (
     'storages',
 )
 
-STATIC_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-static'
-MEDIA_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-media'
-UPLOAD_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-upload'
-
-STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
+MEDIA_BUCKET = get_setting('REFINERY_S3_MEDIA_BUCKET_NAME')
+STATIC_BUCKET = get_setting('REFINERY_S3_STATIC_BUCKET_NAME')
+UPLOAD_BUCKET = get_setting('REFINERY_S3_UPLOAD_BUCKET_NAME')
 
 STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'
+STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
+
 if REFINERY_S3_USER_DATA:
     DEFAULT_FILE_STORAGE = 'file_store.utils.S3MediaStorage'
+    MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(MEDIA_BUCKET)
 
 COGNITO_IDENTITY_POOL_ID = get_setting('COGNITO_IDENTITY_POOL_ID')
 
 # Refinery
+REFINERY_AWS_REGION = get_setting('REFINERY_AWS_REGION')
 REFINERY_DEPLOYMENT_PLATFORM = 'aws'
 REFINERY_DOCKER_HOST = get_setting("REFINERY_DOCKER_HOST")

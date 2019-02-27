@@ -1,7 +1,9 @@
+import contextlib
 import logging
 import os
 import shutil
 import stat
+import urllib2
 import urlparse
 
 from django.conf import settings
@@ -12,7 +14,6 @@ from django.utils.text import get_valid_filename
 
 import boto3
 import botocore
-import requests
 from storages.backends.s3boto3 import S3Boto3Storage
 
 logger = logging.getLogger(__name__)
@@ -24,12 +25,20 @@ UNKNOWN_FILE_SIZE = 0
 
 
 class S3MediaStorage(S3Boto3Storage):
-    """Django media (user data) files storage"""
+    """Django media files (user data) storage"""
     bucket_name = settings.MEDIA_BUCKET
     custom_domain = settings.MEDIA_BUCKET + '.s3.amazonaws.com'
     file_overwrite = False
 
+    def exists(self, name):
+        # returns False only if no object versions or delete markers are
+        # present to prevent overwrites
+        s3 = boto3.client('s3')
+        result = s3.list_object_versions(Bucket=self.bucket_name, Prefix=name)
+        return bool(result.get('Versions') or result.get('DeleteMarkers'))
+
     def get_available_name(self, name, max_length=None):
+        name = self._clean_name(name)
         while True:
             # remove leading '-' characters to make file management easier
             # limit file name length to 255 to make "fully portable" in POSIX
@@ -86,43 +95,21 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
 def copy_file_object(source, destination, progress_report=lambda _: None):
     """Copy a file object and update progress"""
     chunk_size = 10 * 1024 * 1024  # 10MB
-    logger.debug("Copying '%s' to '%s'", source.name, destination.name)
-    try:
-        for chunk in iter(lambda: source.read(chunk_size), ''):
-            destination.write(chunk)
-            progress_report(len(chunk))
-        # ensure that all internal buffers are written to disk
-        destination.flush()
-        os.fsync(destination.fileno())
-    except EnvironmentError as exc:
-        raise RuntimeError("Error copying '{}' to '{}': {}".format(
-            source.name, destination.name, exc
-        ))
-    logger.info("Copied '%s' to '%s'", source.name, destination.name)
+    for chunk in iter(lambda: source.read(chunk_size), ''):
+        destination.write(chunk)
+        progress_report(len(chunk))
+    # ensure that all internal buffers are written to disk
+    destination.flush()
+    os.fsync(destination.fileno())
 
 
 def copy_s3_object(source_bucket, source_key, destination_bucket,
                    destination_key, progress_report=lambda _: None):
     """Copy S3 object and update task progress"""
     s3 = boto3.client('s3')
-    logger.debug("Started copying from 's3://%s/%s' to 's3://%s/%s'",
-                 source_bucket, source_key, destination_bucket,
-                 destination_key)
-    try:
-        s3.copy(CopySource={'Bucket': source_bucket, 'Key': source_key},
-                Bucket=destination_bucket, Key=destination_key,
-                ExtraArgs=S3_WRITE_ARGS, Callback=progress_report)
-    except (botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        raise RuntimeError(
-            "Error copying from 's3://{}/{}' to 's3://{}/{}': {}".format(
-                source_bucket, source_key, destination_bucket,
-                destination_key, exc
-            )
-        )
-    logger.info("Finished copying from 's3://%s/%s' to 's3://%s/%s'",
-                source_bucket, source_key, destination_bucket,
-                destination_key)
+    s3.copy(CopySource={'Bucket': source_bucket, 'Key': source_key},
+            Bucket=destination_bucket, Key=destination_key,
+            ExtraArgs=S3_WRITE_ARGS, Callback=progress_report)
 
 
 def delete_file(absolute_path):
@@ -140,54 +127,21 @@ def delete_s3_object(bucket, key):
     logger.debug("Deleting 's3://%s/%s'",  bucket, key)
     try:
         s3.delete_object(Bucket=bucket, Key=key)
-    except (botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
+    except (botocore.exceptions.BotoCoreError,
+            botocore.exceptions.ClientError) as exc:
         logger.error("Error deleting 's3://%s/%s': %s", bucket, key, exc)
     else:
         logger.info("Deleted 's3://%s/%s'", bucket, key)
-
-
-def download_file_object(request_response, download_object,
-                         progress_report=lambda _: None):
-    """Download file from request response object to a temporary file and
-    report progress"""
-    chunk_size = 10 * 1024 * 1024  # 10MB
-    logger.debug("Started downloading from '%s'", request_response.url)
-    try:
-        for chunk in request_response.iter_content(chunk_size):
-            download_object.write(chunk)
-            progress_report(len(chunk))
-        # ensure that all internal buffers are written to disk
-        download_object.flush()
-        os.fsync(download_object.fileno())
-    except EnvironmentError as exc:
-        raise RuntimeError("Error downloading from '{}' to '{}': {}".format(
-            request_response.url, download_object.name, exc))
-    logger.info("Finished downloading from '%s' to '%s'",
-                request_response.url, download_object.name)
 
 
 def download_s3_object(bucket, key, download_object,
                        progress_report=lambda _: None):
     """Download object from S3 to a temp file and update task progress"""
     s3 = boto3.client('s3')
-    logger.debug("Started downloading from 's3://%s/%s' to '%s'",
-                 bucket, key, download_object.name)
-    try:
-        s3.download_fileobj(bucket, key, download_object,
-                            Callback=progress_report)
-        # ensure that all internal buffers are written to disk
-        download_object.flush()
-        os.fsync(download_object.fileno())
-    except (EnvironmentError, botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        raise RuntimeError(
-            "Error downloading from 's3://{}/{}' to '{}': {}".format(
-                bucket, key, download_object.name, exc
-            )
-        )
-    logger.info("Finished downloading from 's3://%s/%s' to '%s'",
-                bucket, key, download_object.name)
+    s3.download_fileobj(bucket, key, download_object, Callback=progress_report)
+    # ensure that all internal buffers are written to disk
+    download_object.flush()
+    os.fsync(download_object.fileno())
 
 
 def get_file_size(file_location):
@@ -202,19 +156,16 @@ def get_file_size(file_location):
         bucket, key = parse_s3_url(file_location)
         try:
             return s3.head_object(Bucket=bucket, Key=key)['ContentLength']
-        except (botocore.exceptions.ClientError,
-                botocore.exceptions.ParamValidationError):
+        except (botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError):
             return UNKNOWN_FILE_SIZE
     else:
         try:
-            response = requests.head(file_location)
-            response.raise_for_status()
-        except requests.exceptions.RequestException:
+            with contextlib.closing(urllib2.urlopen(file_location,
+                                                    timeout=30)) as response:
+                return int(response.info().getheader('Content-Length'))
+        except (EnvironmentError, TypeError):
             return UNKNOWN_FILE_SIZE
-        else:
-            # Content-Length header is optional, so provide a default value
-            return int(response.headers.get('Content-Length',
-                                            UNKNOWN_FILE_SIZE))
 
 
 def make_dir(path):
@@ -273,19 +224,7 @@ def symlink_file(source_path, link_path):
 
 
 def upload_file_object(source, bucket, key, progress_report=lambda _: None):
-    """Upload file from source path to S3 bucket and report progress"""
+    """Upload file-like object to S3 and report progress"""
     s3 = boto3.client('s3')
-    logger.debug("Started uploading from '%s' to 's3://%s/%s'",
-                 source.name, bucket, key)
-    try:
-        s3.upload_fileobj(source, bucket, key, ExtraArgs=S3_WRITE_ARGS,
-                          Callback=progress_report)
-    except (EnvironmentError, botocore.exceptions.ClientError,
-            botocore.exceptions.ParamValidationError) as exc:
-        raise RuntimeError(
-            "Error uploading from '{}' to 's3://{}/{}': {}".format(
-                source.name, bucket, key, exc
-            )
-        )
-    logger.info("Finished uploading from '%s' to 's3://%s/%s'",
-                source.name, bucket, key)
+    s3.upload_fileobj(source, bucket, key, ExtraArgs=S3_WRITE_ARGS,
+                      Callback=progress_report)

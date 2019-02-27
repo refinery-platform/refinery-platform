@@ -33,7 +33,6 @@
       userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
       userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
       launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
-      collaboration_tut_viewed: `{{ user.profile.has_viewed_collaboration_tut}}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
@@ -123,24 +122,23 @@
         <span class="name">{{ REFINERY_INSTANCE_NAME }}</span>
       </a>
 
-        <button type="button" class="navbar-toggle collapsed"
-          data-toggle="collapse" data-target="#navbarMain" aria-expanded="false">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
       </div>
 
       <div class="navbar-text pull-right" id="navbar-right">
-       {% if user.is_authenticated %}
-         <a href="/dashboard" class="pointer">
-           <i id="refinery-logout" class="fa fa-tachometer icon-only"></i>&nbsp;
-           <span id="dashboard-icon-text">
+        <a href="/dashboard" class="pointer" tabindex=2>
+          <i class="fa fa-tachometer icon-only"></i>&nbsp;
+           <span class="navbar-text-min">
              My Dashboard
            </span>
-         </a>
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-         <a
+        </a>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <i class="fa fa-info-circle icon-only"></i>
+        <a href="{% url "about" %}" tabindex=3 class="pointer">
+          <span class="navbar-text-min">
+            About
+          </span>
+        </a>
+      <!--   <a
            class="pointer"
            popover-placement="bottom"
            popover-trigger="'outsideClick'"
@@ -149,27 +147,49 @@
            <span id="help-icon-text">
               Help
            </span>
-         </a>
-         &nbsp;&nbsp;|&nbsp;&nbsp;
-      {% endif %}
+         </a> -->
+         &nbsp;&nbsp;&nbsp;&nbsp;
+         <span>
+            <a rp-analysis-monitor-global-status-tooltip-hider
+              tabindex=4>
+              <a
+                uib-popover-template="'analysesgloballist.html'"
+                popover-trigger="'outsideClick'"
+                popover-title="Recent Analyses"
+                popover-append-to-body="true"
+                popover-placement="left"
+                popover-class="global-analysis-popover"
+                class="pointer">
+                 <i class="fa fa-cogs pointer" id="global-analysis-status"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="left"
+                  title="View Recent Analyses"></i>
+                <span class="navbar-text-min">
+                  Analyses
+                </span>
+               </a>
+            </a>
+         </span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
 
         {% if user.is_authenticated %}
           <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
              tabindex=5>
             <i class="fa fa-user"></i>
-            <span id="login-name-icon-text">
+            <span class="navbar-text-min">
               {% if user.first_name != "" or user.last_name != "" %}
                 {{ user.first_name }} {{ user.last_name }}
               {% else %}
                 {{ user.username }}
               {% endif %}
             </span>
-          </a>&nbsp;&nbsp;|&nbsp;&nbsp;
+          </a>&nbsp;&nbsp;&nbsp;&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
-             <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
-            <span id="logout-icon-text">
+            <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
+            <span class="navbar-text-min">
               Logout
             </span>
           </a>
@@ -178,55 +198,14 @@
           {% url 'django.contrib.auth.views.login' as login_url %}
           {% if REGISTRATION_OPEN %}
             <a href="{{registration_url}}" tabindex=7>
-              Register
-            </a>&nbsp;&nbsp;
-          &nbsp;&nbsp;|&nbsp;&nbsp;
+              <i class="fa fa-pencil"></i>&nbsp;Register
+            </a>
+          &nbsp;&nbsp;&nbsp;&nbsp;
           {% endif %}
         <a href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">
-          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;
-          <span id="login-icon-text">
-            Login
-          </span>
+          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;Login
       </a>
         {% endif %}
-        &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span>
-          <a rp-analysis-monitor-global-status-tooltip-hider
-            tabindex=8>
-             <span>
-               <rp-analysis-monitor-global-status>
-               </rp-analysis-monitor-global-status>
-             </span>
-          </a>
-      </span>
-      </div>
-      <div class="collapse navbar-collapse" id="navbarMain"
-           ng-controller="collaborationTutorialCtrl">
-         <div ng-intro-options="collabIntroOptions"
-         ng-intro-method="collaborationStart"
-         ng-intro-oncomplete="collabCompletedEvent"
-         ng-intro-onexit="collabExitEvent"
-         ng-intro-onchange="collabChangeEvent"
-         ng-intro-onbeforechange="collabBeforeChangeEvent"
-         ng-intro-onafterchange="collabAfterChangeEvent">
-        <ul class="nav navbar-nav">
-          <li id="collaborationTutorialStep0" class="{{
-            navbar_class_collaboration }}">
-            <a id="collaborationTutorialStep0_click" href="{% url "collaboration" %}" tabindex=2>Collaboration</a>
-          </li>
-          <li class="{{ navbar_class_statistics }}">
-            <a href="{% url "statistics" %}" tabindex=3>Statistics</a>
-          </li>
-          <li class="{{ navbar_class_about }}">
-            <a href="{% url "about" %}" tabindex=4>About</a>
-          </li>
-          {% if REFINERY_CUSTOM_NAVBAR_ITEM %}
-             <li>
-               {{ REFINERY_CUSTOM_NAVBAR_ITEM|safe }}
-             </li>
-          {% endif %}
-        </ul>
-      </div>
       </div>
     </div>
     </div>
@@ -239,12 +218,6 @@
       </div>
     </div>
   </nav>
-
-  {% if REFINERY_BANNER %}
-      {% if not REFINERY_BANNER_ANONYMOUS_ONLY or not user.is_authenticated %}
-          <div class="alert alert-warning text-center">{{ REFINERY_BANNER|safe }}</div>
-      {% endif %}
-  {% endif %}
 
   <div class="container-fluid {% if main_container_no_padding %}p-l-0 p-r-0{% endif %}">
     <div class="row" hidden id="warning-ie-not-supported">
@@ -285,6 +258,7 @@
   <script src="{% static "vendor/filesize/lib/filesize.min.js" %}"></script>
   <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script src="{% static "vendor/lodash-migrate/dist/lodash-migrate.min.js" %}"></script>
+  <script src="{% static "vendor/markdown/lib/markdown.js" %}"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.
@@ -309,15 +283,14 @@
   <script src="{% static "js/refinery-settings.js" %}"></script>
   <script src="{% static "js/refinery-libraries.js" %}"></script>
   <script src="{% static "js/refinery-controller.js" %}"></script>
+  <script src="{% static "js/home.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
   <script src="{% static "js/analysis-monitor.js" %}"></script>
   <script src="{% static "js/file-browser.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
-  <script src="{% static "js/statistics.js" %}"></script>
   <script src="{% static "js/provvis.js" %}"></script>
   <script src="{% static "js/dashboard.js" %}"></script>
-  <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>
   <script src="{% static "js/data-set-visualization.js" %}"></script>
   <script src="{% static "js/tool-launch.js" %}"></script>
@@ -335,6 +308,15 @@
 
   {% block script %}
   {% endblock %}
+
+  <!-- Script for popup content in the tool status and analyses icon-->
+  <script type="text/ng-template" id="analysesgloballist.html">
+    <div>
+      <rp-analysis-monitor-global-status-popover>
+      </rp-analysis-monitor-global-status-popover>
+    </div>
+  </script>
+
 
   <script type="text/javascript">
     /**

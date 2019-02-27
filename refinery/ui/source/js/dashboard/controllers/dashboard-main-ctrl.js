@@ -13,20 +13,25 @@
 
   DashboardMainCtrl.$inject = [
     'humanize',
+    '_',
     'groupInviteService',
-    'groupMemberService'
+    'groupMemberService',
+    'settings'
   ];
 
   function DashboardMainCtrl (
     humanize,
+    _,
     groupInviteService,
-    groupMemberService
+    groupMemberService,
+    settings
   ) {
     var vm = this;
     vm.getGroups = getGroups;
     vm.groups = [];
     vm.groupInvites = {};
     vm.refreshEvents = false;
+    vm.isLoggedIn = settings.djangoApp.userId !== undefined;
     activate();
 
     function activate () {
@@ -58,9 +63,10 @@
       groupInviteService.query({
         group_id: groupID
       }).$promise.then(function (data) {
-        if (data.objects.length) {
-          vm.groupInvites[groupID] = data.objects;
+        if (!_.has(vm.groupInvites, 'groupID')) {
+          vm.groupInvites[groupID] = [];
         }
+        angular.copy(data.objects, vm.groupInvites[groupID]);
       });
     }
   }

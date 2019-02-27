@@ -13,13 +13,11 @@
 
   GroupAddModalCtrl.$inject = [
     '$log',
-    'groupDataService',
     'groupExtendedService'
   ];
 
   function GroupAddModalCtrl (
     $log,
-    groupDataService,
     groupExtendedService
   ) {
     var vm = this;
@@ -56,7 +54,6 @@
         .then(function () {
           vm.isLoading = false;
           generateAlertMessage('success', vm.groupName);
-          groupDataService.update();
         }, function (error) {
           vm.isLoading = false;
           generateAlertMessage('danger', vm.groupName);

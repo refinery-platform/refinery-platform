@@ -1,11 +1,13 @@
-<div class="refinery-panel" id="dashboard-history-card">
+<div class="refinery-panel"
+  id="dashboard-history-card"
+  ng-class="{'card-full-height':!$ctrl.isLoggedIn}">
   <div class="refinery-header">
     <h3>
       <i class="m-r-1-4 fa fa-history"></i> History
     </h3>
   </div>
   <div class="refinery-panel-content">
-    <div  ng-if="!$ctrl.isEventsLoading && !$ctrl.events.length"
+    <div ng-if="!$ctrl.isEventsLoading && !$ctrl.events.length"
       class="refinery-sub-panel-notice">
       <div class="text-info notice">
         <strong>Info</strong>: No events have occurred.
@@ -16,7 +18,8 @@
         <span class="refinery-spinner refinery-spinner-inline"></span>
       </h4>
     </div>
-     <ul class="list-unstyled scrollable-list main-content-list">
+     <ul ng-class="{'list-full-height':!$ctrl.isLoggedIn}"
+       class="list-unstyled scrollable-list main-content-list">
        <li ng-repeat="event in $ctrl.events" class="event-item">
         <span class="history-col-date">
           {{ event.date_time | date:"MM/dd/yyyy" }}

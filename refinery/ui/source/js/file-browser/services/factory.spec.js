@@ -8,6 +8,7 @@
     var fakeUuid;
     var mocker;
     var rootScope;
+    var underScore;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryFileBrowser'));
@@ -31,11 +32,13 @@
       var assayFiles;
 
       beforeEach(inject(function (
+        _,
         $q,
         $rootScope,
         assayFileService,
         nodeService
       ) {
+        underScore = _;
         assayFiles = {
           nodes: [
             {
@@ -121,6 +124,40 @@
         rootScope.$apply();
         expect(typeof response.then).toEqual('function');
         expect(successData).toEqual(assayFiles);
+      });
+
+      it('getAssayFiles removes duplicate attributes', function () {
+        assayFiles.attributes.push({
+          attribute_type: 'Characteristics',
+          file_ext: 's',
+          display_name: 'Author',
+          internal_name: 'Author_Characteristics_6_3_s'
+        });
+        expect(underScore.countBy(
+          assayFiles.attributes, 'internal_name').Author_Characteristics_6_3_s
+        ).toEqual(2);
+        factory.getAssayFiles({ uuid: mocker.generateUuid() });
+        rootScope.$apply();
+        expect(underScore.countBy(
+          factory.assayAttributes, 'internal_name').Author_Characteristics_6_3_s
+        ).toEqual(1);
+      });
+
+      it('getAssayFiles handles duplicate display names', function () {
+        assayFiles.attributes.push({
+          attribute_type: 'Factor',
+          file_ext: 's',
+          display_name: 'Author',
+          internal_name: 'Author_Characteristics_6_3_s'
+        });
+        factory.getAssayFiles({ uuid: mocker.generateUuid() });
+        rootScope.$apply();
+        expect(underScore.countBy(
+          factory.assayAttributes, 'display_name')['Author-Characteristics']
+        ).toEqual(1);
+        expect(underScore.countBy(
+          factory.assayAttributes, 'display_name')['Author-Factor']
+        ).toEqual(1);
       });
     });
 

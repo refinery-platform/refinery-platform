@@ -1,10 +1,135 @@
 # Change Log
 
-## [v1.6.7](https://github.com/refinery-platform/refinery-platform/tree/v1.6.7) (2018-11-05)
+## [1.6.8](https://github.com/refinery-platform/refinery-platform/tree/1.6.8) (2019-02-11)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.7...1.6.8)
+
+**Implemented enhancements:**
+
+- Replace requests library with urllib2 for data file import [\#3149](https://github.com/refinery-platform/refinery-platform/issues/3149)
+- New Layout of User Dashboard [\#3112](https://github.com/refinery-platform/refinery-platform/issues/3112)
+- Public view of Dashboard [\#3111](https://github.com/refinery-platform/refinery-platform/issues/3111)
+- Implement EBS to S3 data migration tool [\#3107](https://github.com/refinery-platform/refinery-platform/issues/3107)
+- Enable S3 server access logging on media bucket [\#3105](https://github.com/refinery-platform/refinery-platform/issues/3105)
+- Update get\_temp\_dir\(\) to support S3 storage backend [\#3028](https://github.com/refinery-platform/refinery-platform/issues/3028)
+- Update AWS deployment docs for v1.6.7 [\#2923](https://github.com/refinery-platform/refinery-platform/issues/2923)
+- Merge tags.yaml into config.yaml [\#2640](https://github.com/refinery-platform/refinery-platform/issues/2640)
+- Add name length constraints to stack.py script [\#2286](https://github.com/refinery-platform/refinery-platform/issues/2286)
+- Reorder dashboard buttons to suggest "Explore" is a fold out? [\#2125](https://github.com/refinery-platform/refinery-platform/issues/2125)
+- \*\[8\]\* create video to explain Refinery [\#284](https://github.com/refinery-platform/refinery-platform/issues/284)
+- Hackdna/docker instance count [\#3167](https://github.com/refinery-platform/refinery-platform/pull/3167) ([hackdna](https://github.com/hackdna))
+- Add app server instance count to Terraform config [\#3166](https://github.com/refinery-platform/refinery-platform/pull/3166) ([hackdna](https://github.com/hackdna))
+- Simplify and make file extension handling more robust [\#3155](https://github.com/refinery-platform/refinery-platform/pull/3155) ([hackdna](https://github.com/hackdna))
+- Hackdna/ftp import [\#3153](https://github.com/refinery-platform/refinery-platform/pull/3153) ([hackdna](https://github.com/hackdna))
+- Hackdna/EBS to S3 migration tool [\#3136](https://github.com/refinery-platform/refinery-platform/pull/3136) ([hackdna](https://github.com/hackdna))
+- Restrict allowed origins in CORS rules for static and media S3 buckets [\#3130](https://github.com/refinery-platform/refinery-platform/pull/3130) ([hackdna](https://github.com/hackdna))
+- Enable S3 server access logging for media bucket [\#3129](https://github.com/refinery-platform/refinery-platform/pull/3129) ([hackdna](https://github.com/hackdna))
+- Hackna/s3 backup [\#3125](https://github.com/refinery-platform/refinery-platform/pull/3125) ([hackdna](https://github.com/hackdna))
+- Simplify quickstart deployment on AWS [\#3115](https://github.com/refinery-platform/refinery-platform/pull/3115) ([hackdna](https://github.com/hackdna))
+
+**Fixed bugs:**
+
+- HTTP 500 in site\_profiles API due to DoesNotExist in SiteProfileViewSet.get\(\) [\#3200](https://github.com/refinery-platform/refinery-platform/issues/3200)
+- Deleting a primary group bug [\#3189](https://github.com/refinery-platform/refinery-platform/issues/3189)
+- Delete button appears active for visualizations owned by others [\#3186](https://github.com/refinery-platform/refinery-platform/issues/3186)
+- Adding files to existing data sets does not work in Firefox [\#3173](https://github.com/refinery-platform/refinery-platform/issues/3173)
+- Launch Pad State Update [\#3150](https://github.com/refinery-platform/refinery-platform/issues/3150)
+- Terraform parsing error in vars.tf [\#3135](https://github.com/refinery-platform/refinery-platform/issues/3135)
+- Don't require page refresh to see newly invited user [\#3124](https://github.com/refinery-platform/refinery-platform/issues/3124)
+- test\_user\_registration\_successful\_recaptcha depends on environment [\#3083](https://github.com/refinery-platform/refinery-platform/issues/3083)
+- ReadTimeout in Tool.is\_running\(\) [\#3046](https://github.com/refinery-platform/refinery-platform/issues/3046)
+- FF only: Unable to add files during upload [\#2987](https://github.com/refinery-platform/refinery-platform/issues/2987)
+- Dashboard text search doesn't interact with paging [\#2967](https://github.com/refinery-platform/refinery-platform/issues/2967)
+- Firefox only: Click on left half of download button does nothing [\#2960](https://github.com/refinery-platform/refinery-platform/issues/2960)
+- svgxuse.min.js in error log [\#2145](https://github.com/refinery-platform/refinery-platform/issues/2145)
+- Why is user/files slow? [\#2006](https://github.com/refinery-platform/refinery-platform/issues/2006)
+- Delete related objects when workflow is deleted [\#1425](https://github.com/refinery-platform/refinery-platform/issues/1425)
+- Dataset Import Body does not clear Navbar [\#793](https://github.com/refinery-platform/refinery-platform/issues/793)
+- Handle botocore.exceptions.ClientError [\#3176](https://github.com/refinery-platform/refinery-platform/pull/3176) ([hackdna](https://github.com/hackdna))
+- Set MEDIA\_URL correctly when using S3 backend for user data [\#3145](https://github.com/refinery-platform/refinery-platform/pull/3145) ([hackdna](https://github.com/hackdna))
+- Fix defaults in config.json template [\#3131](https://github.com/refinery-platform/refinery-platform/pull/3131) ([hackdna](https://github.com/hackdna))
+
+**Closed issues:**
+
+- Vis Tab Bug  [\#3133](https://github.com/refinery-platform/refinery-platform/issues/3133)
+- Relocate current launchpad to /explore [\#3110](https://github.com/refinery-platform/refinery-platform/issues/3110)
+- Update Tutorial.md [\#3108](https://github.com/refinery-platform/refinery-platform/issues/3108)
+- Streamline HTTPS configuration [\#3100](https://github.com/refinery-platform/refinery-platform/issues/3100)
+- ISATab Metadata Import "Submit" button should be disabled after initial click [\#3097](https://github.com/refinery-platform/refinery-platform/issues/3097)
+- Upgrade Node Version to V8 [\#3064](https://github.com/refinery-platform/refinery-platform/issues/3064)
+- Implement backups for MEDIA\_BUCKET [\#3042](https://github.com/refinery-platform/refinery-platform/issues/3042)
+- Tighten S3 access policies [\#3020](https://github.com/refinery-platform/refinery-platform/issues/3020)
+- Improve lifecycle management for data file storage bucket [\#3017](https://github.com/refinery-platform/refinery-platform/issues/3017)
+- Home Page Rev 1 [\#2680](https://github.com/refinery-platform/refinery-platform/issues/2680)
+- How should we handle Python coding style for open/close tokens spanning multiple lines? [\#2675](https://github.com/refinery-platform/refinery-platform/issues/2675)
+- user/files ignore duplicate fieldnames [\#2603](https://github.com/refinery-platform/refinery-platform/issues/2603)
+- Migrate stack.py to Terraform [\#2602](https://github.com/refinery-platform/refinery-platform/issues/2602)
+- Consistency in UI for launch pad filtering / sorting [\#2147](https://github.com/refinery-platform/refinery-platform/issues/2147)
+- CSS cleanup: priority-button style repeated on import-button [\#2065](https://github.com/refinery-platform/refinery-platform/issues/2065)
+- Metadata field naming conflicts [\#1699](https://github.com/refinery-platform/refinery-platform/issues/1699)
+- Avoid having separate tags file. [\#1386](https://github.com/refinery-platform/refinery-platform/issues/1386)
+- Created manager group names are cryptic [\#1307](https://github.com/refinery-platform/refinery-platform/issues/1307)
+
+**Merged pull requests:**
+
+- Jkmarx/avoid duplicate api calls [\#3204](https://github.com/refinery-platform/refinery-platform/pull/3204) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/fix dashboard search bugs [\#3202](https://github.com/refinery-platform/refinery-platform/pull/3202) ([jkmarx](https://github.com/jkmarx))
+- Hackdna/remove external auth [\#3201](https://github.com/refinery-platform/refinery-platform/pull/3201) ([hackdna](https://github.com/hackdna))
+- Fix deactivated button. [\#3198](https://github.com/refinery-platform/refinery-platform/pull/3198) ([jkmarx](https://github.com/jkmarx))
+- Error handle for missing site profile. [\#3197](https://github.com/refinery-platform/refinery-platform/pull/3197) ([jkmarx](https://github.com/jkmarx))
+- Remove duplicates. [\#3196](https://github.com/refinery-platform/refinery-platform/pull/3196) ([jkmarx](https://github.com/jkmarx))
+- Updates pg list when deleting group. [\#3195](https://github.com/refinery-platform/refinery-platform/pull/3195) ([jkmarx](https://github.com/jkmarx))
+- Show only non-manager groups on user page. [\#3194](https://github.com/refinery-platform/refinery-platform/pull/3194) ([jkmarx](https://github.com/jkmarx))
+- Fix bug related to refreshing group list when sending invites. [\#3193](https://github.com/refinery-platform/refinery-platform/pull/3193) ([jkmarx](https://github.com/jkmarx))
+- Fix alignment for pg dropdown. [\#3192](https://github.com/refinery-platform/refinery-platform/pull/3192) ([jkmarx](https://github.com/jkmarx))
+- Fix padding issue. [\#3191](https://github.com/refinery-platform/refinery-platform/pull/3191) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/fix pg delete bug [\#3190](https://github.com/refinery-platform/refinery-platform/pull/3190) ([jkmarx](https://github.com/jkmarx))
+- Hide any column containing the name data file. [\#3188](https://github.com/refinery-platform/refinery-platform/pull/3188) ([jkmarx](https://github.com/jkmarx))
+- Only return characteristics\_attributes for user-files api. [\#3187](https://github.com/refinery-platform/refinery-platform/pull/3187) ([jkmarx](https://github.com/jkmarx))
+- Fix firefox issue due to capturing events within button element. [\#3185](https://github.com/refinery-platform/refinery-platform/pull/3185) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/update homepage services [\#3184](https://github.com/refinery-platform/refinery-platform/pull/3184) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/django docker engine version bump [\#3183](https://github.com/refinery-platform/refinery-platform/pull/3183) ([scottx611x](https://github.com/scottx611x))
+- Remove unused variables. [\#3182](https://github.com/refinery-platform/refinery-platform/pull/3182) ([jkmarx](https://github.com/jkmarx))
+- Add site-profile api service. [\#3181](https://github.com/refinery-platform/refinery-platform/pull/3181) ([jkmarx](https://github.com/jkmarx))
+- Consolidate Puppet config [\#3179](https://github.com/refinery-platform/refinery-platform/pull/3179) ([hackdna](https://github.com/hackdna))
+- Remove get\_temp\_dir\(\) [\#3178](https://github.com/refinery-platform/refinery-platform/pull/3178) ([hackdna](https://github.com/hackdna))
+- Jkmarx/add config model [\#3177](https://github.com/refinery-platform/refinery-platform/pull/3177) ([jkmarx](https://github.com/jkmarx))
+- Set a Workflow's description from the ToolDefinition that represents it [\#3174](https://github.com/refinery-platform/refinery-platform/pull/3174) ([scottx611x](https://github.com/scottx611x))
+- Hackdna/remove mage2isa convert [\#3171](https://github.com/refinery-platform/refinery-platform/pull/3171) ([hackdna](https://github.com/hackdna))
+- Set wsgi\_pass\_authorization to 'On' [\#3170](https://github.com/refinery-platform/refinery-platform/pull/3170) ([scottx611x](https://github.com/scottx611x))
+- Make git-info.sh more robust [\#3169](https://github.com/refinery-platform/refinery-platform/pull/3169) ([hackdna](https://github.com/hackdna))
+- Move banner to child templates. [\#3168](https://github.com/refinery-platform/refinery-platform/pull/3168) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/minor ui changes [\#3165](https://github.com/refinery-platform/refinery-platform/pull/3165) ([jkmarx](https://github.com/jkmarx))
+- Update states for new url. [\#3164](https://github.com/refinery-platform/refinery-platform/pull/3164) ([jkmarx](https://github.com/jkmarx))
+- Remove unused variables. [\#3161](https://github.com/refinery-platform/refinery-platform/pull/3161) ([jkmarx](https://github.com/jkmarx))
+- Disable submit button while uploading. [\#3160](https://github.com/refinery-platform/refinery-platform/pull/3160) ([jkmarx](https://github.com/jkmarx))
+- Add workflow link to fb. [\#3159](https://github.com/refinery-platform/refinery-platform/pull/3159) ([jkmarx](https://github.com/jkmarx))
+- Hide icons based on perms. [\#3158](https://github.com/refinery-platform/refinery-platform/pull/3158) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/public view dashboard [\#3152](https://github.com/refinery-platform/refinery-platform/pull/3152) ([jkmarx](https://github.com/jkmarx))
+- Update navbar in template. [\#3151](https://github.com/refinery-platform/refinery-platform/pull/3151) ([jkmarx](https://github.com/jkmarx))
+- Update requests and certifi to latest versions [\#3148](https://github.com/refinery-platform/refinery-platform/pull/3148) ([hackdna](https://github.com/hackdna))
+- Jkmarx/landing page reorganize [\#3144](https://github.com/refinery-platform/refinery-platform/pull/3144) ([jkmarx](https://github.com/jkmarx))
+- Resolve bug due to incorrect name reference. [\#3143](https://github.com/refinery-platform/refinery-platform/pull/3143) ([jkmarx](https://github.com/jkmarx))
+- Update Vagrant box to v20181203.0.1 [\#3142](https://github.com/refinery-platform/refinery-platform/pull/3142) ([hackdna](https://github.com/hackdna))
+- Jkmarx/add video carousel [\#3140](https://github.com/refinery-platform/refinery-platform/pull/3140) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add twitter component [\#3138](https://github.com/refinery-platform/refinery-platform/pull/3138) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add twitter settings [\#3137](https://github.com/refinery-platform/refinery-platform/pull/3137) ([jkmarx](https://github.com/jkmarx))
+- Add buttons. [\#3134](https://github.com/refinery-platform/refinery-platform/pull/3134) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/pass refinery intro config [\#3132](https://github.com/refinery-platform/refinery-platform/pull/3132) ([jkmarx](https://github.com/jkmarx))
+- Add buttons. [\#3128](https://github.com/refinery-platform/refinery-platform/pull/3128) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add analysis delete to fb [\#3127](https://github.com/refinery-platform/refinery-platform/pull/3127) ([jkmarx](https://github.com/jkmarx))
+- Adjust styling and css for dashboard. [\#3123](https://github.com/refinery-platform/refinery-platform/pull/3123) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add tools list landing page [\#3122](https://github.com/refinery-platform/refinery-platform/pull/3122) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add chart component [\#3117](https://github.com/refinery-platform/refinery-platform/pull/3117) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/file browser csv download [\#3106](https://github.com/refinery-platform/refinery-platform/pull/3106) ([scottx611x](https://github.com/scottx611x))
+- Remove collaboration module. [\#3103](https://github.com/refinery-platform/refinery-platform/pull/3103) ([jkmarx](https://github.com/jkmarx))
+- Migrate ELB config to Terraform [\#3101](https://github.com/refinery-platform/refinery-platform/pull/3101) ([hackdna](https://github.com/hackdna))
+
+## [v1.6.7](https://github.com/refinery-platform/refinery-platform/tree/v1.6.7) (2018-11-13)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6.2...v1.6.7)
 
 **Implemented enhancements:**
 
+- Provide a unique name to final RDS snapshot to avoid error [\#3090](https://github.com/refinery-platform/refinery-platform/issues/3090)
 - Update FileStoreItem.get\_file\_size\(\) to support S3 storage backend [\#3029](https://github.com/refinery-platform/refinery-platform/issues/3029)
 - Update FileStoreItem.rename\_datafile\(\) to support S3 storage backend [\#3027](https://github.com/refinery-platform/refinery-platform/issues/3027)
 - Update FileStoreItem.is\_local\(\) to support S3 storage backend [\#3026](https://github.com/refinery-platform/refinery-platform/issues/3026)
@@ -17,6 +142,9 @@
 - Inspect Solr query builder, some queries generate lots of Boolean expressions [\#952](https://github.com/refinery-platform/refinery-platform/issues/952)
 - Add django-pgcli [\#848](https://github.com/refinery-platform/refinery-platform/issues/848)
 - Admin owns everything? [\#825](https://github.com/refinery-platform/refinery-platform/issues/825)
+- add definitions to attribute values [\#258](https://github.com/refinery-platform/refinery-platform/issues/258)
+- Assign unique ID to final RDS snapshot [\#3091](https://github.com/refinery-platform/refinery-platform/pull/3091) ([hackdna](https://github.com/hackdna))
+- Migrate app server config from CloudFormation to Terraform [\#3089](https://github.com/refinery-platform/refinery-platform/pull/3089) ([hackdna](https://github.com/hackdna))
 - Disable selection of 0 count facets. [\#3079](https://github.com/refinery-platform/refinery-platform/pull/3079) ([jkmarx](https://github.com/jkmarx))
 - Migrate WebInstanceProfile to Terraform [\#3066](https://github.com/refinery-platform/refinery-platform/pull/3066) ([hackdna](https://github.com/hackdna))
 - Migrate SES user config to Terraform [\#3062](https://github.com/refinery-platform/refinery-platform/pull/3062) ([hackdna](https://github.com/hackdna))
@@ -35,15 +163,19 @@
 
 **Fixed bugs:**
 
+- Intermittent HTTP error when deploying puppetlabs-rabbitmq module [\#3098](https://github.com/refinery-platform/refinery-platform/issues/3098)
 - Internal server error in get\_owner\_from\_assay - MultipleObjectsReturned [\#3053](https://github.com/refinery-platform/refinery-platform/issues/3053)
 - Transfer Data Set Bug [\#3045](https://github.com/refinery-platform/refinery-platform/issues/3045)
 - Tabular metadata file is imported incorrectly to S3 [\#3023](https://github.com/refinery-platform/refinery-platform/issues/3023)
 - Can't change permissions on dataset [\#3016](https://github.com/refinery-platform/refinery-platform/issues/3016)
 - Internal Server Error: /api/v2/events/ [\#2999](https://github.com/refinery-platform/refinery-platform/issues/2999)
+- ConnectTimeout in django\_docker\_cleanup [\#2998](https://github.com/refinery-platform/refinery-platform/issues/2998)
+- Internal Server Error in \_check\_max\_running\_containers [\#2988](https://github.com/refinery-platform/refinery-platform/issues/2988)
 - Filtering down to empty set causes facet sidebar to disappear [\#2958](https://github.com/refinery-platform/refinery-platform/issues/2958)
 - User/files multiple filtering bug [\#2879](https://github.com/refinery-platform/refinery-platform/issues/2879)
 - "Hamburger" flicker on expand / collapse [\#2764](https://github.com/refinery-platform/refinery-platform/issues/2764)
 - Default not to list static assets s3 bucket contents? [\#2762](https://github.com/refinery-platform/refinery-platform/issues/2762)
+- Terraform error deleting VPC [\#2709](https://github.com/refinery-platform/refinery-platform/issues/2709)
 - Recent Analyses Popover spacing [\#2351](https://github.com/refinery-platform/refinery-platform/issues/2351)
 - FileBrowser2: Change columns and the grid disappears [\#1902](https://github.com/refinery-platform/refinery-platform/issues/1902)
 - Scottx611x/properly reflect admin dataset ownership [\#3074](https://github.com/refinery-platform/refinery-platform/pull/3074) ([scottx611x](https://github.com/scottx611x))
@@ -51,6 +183,8 @@
 
 **Closed issues:**
 
+- Generate SES user keys with aws\_iam\_access\_key Terraform resource [\#3088](https://github.com/refinery-platform/refinery-platform/issues/3088)
+- Remove unused Attribute Definition Model [\#3008](https://github.com/refinery-platform/refinery-platform/issues/3008)
 - Meta-data update - modify existing node's content - UI [\#2982](https://github.com/refinery-platform/refinery-platform/issues/2982)
 - ISA-Tab data set submission should end with blue 'Submit' button [\#2969](https://github.com/refinery-platform/refinery-platform/issues/2969)
 - Upgrade PostgreSQL to version 10 [\#2707](https://github.com/refinery-platform/refinery-platform/issues/2707)
@@ -62,6 +196,8 @@
 
 **Merged pull requests:**
 
+- Remove the unused attributeDefinition model. [\#3093](https://github.com/refinery-platform/refinery-platform/pull/3093) ([jkmarx](https://github.com/jkmarx))
+- Remove statistics. [\#3092](https://github.com/refinery-platform/refinery-platform/pull/3092) ([jkmarx](https://github.com/jkmarx))
 - Add comments and delete unit test. [\#3081](https://github.com/refinery-platform/refinery-platform/pull/3081) ([jkmarx](https://github.com/jkmarx))
 - Scottx611x/handle admin users specially when determining ownership [\#3080](https://github.com/refinery-platform/refinery-platform/pull/3080) ([scottx611x](https://github.com/scottx611x))
 - Update button text for clarity. [\#3078](https://github.com/refinery-platform/refinery-platform/pull/3078) ([jkmarx](https://github.com/jkmarx))
@@ -100,8 +236,6 @@
 ## [v1.6.6.2](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.2) (2018-09-17)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6.1...v1.6.6.2)
 
-- This hotfix release resolves a bug in the events api caused by a str conversion.
-
 **Merged pull requests:**
 
 - Remove str cast. [\#3001](https://github.com/refinery-platform/refinery-platform/pull/3001) ([jkmarx](https://github.com/jkmarx))
@@ -109,7 +243,6 @@
 ## [v1.6.6.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.6.1) (2018-09-14)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.6...v1.6.6.1)
 
-- This is a hotfix release solely to get a larger EC2 instance type for our docker host running our `VisualizationTools`
 **Implemented enhancements:**
 
 - Scottx611x/tool manager views cleanup [\#2991](https://github.com/refinery-platform/refinery-platform/pull/2991) ([scottx611x](https://github.com/scottx611x))
@@ -1665,7 +1798,7 @@
 **Closed issues:**
 
 - Remove all print statements from Python code [\#1195](https://github.com/refinery-platform/refinery-platform/issues/1195)
-- Upgrade Puppet apt module to the latest version [\#774](https://github.com/refinery-platform/refinery-platform/issues/774)
+- Upgrade Puppet apt module to v2.3.0 [\#774](https://github.com/refinery-platform/refinery-platform/issues/774)
 - Update external Javascript packages to the latest stable versions [\#452](https://github.com/refinery-platform/refinery-platform/issues/452)
 
 **Merged pull requests:**

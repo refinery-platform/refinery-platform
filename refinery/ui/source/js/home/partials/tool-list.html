@@ -1,0 +1,21 @@
+<div id="home-tool-list" ng-show="$ctrl.toolList.length">
+  <div class="refinery-header">
+    <h3>
+      Analysis and Visualization Tools
+    </h3>
+  </div>
+  <ul class="list-unstyled">
+    <li ng-repeat="tool in $ctrl.toolList | orderBy:'name'" class="p-b-1-2">
+      <i class="{{tool.tool_type|toolTypeIcon}}" aria-hidden="true"></i>
+      <span ng-if="tool.tool_type=='WORKFLOW'">
+        <a ng-href="/workflows/{{tool.workflow}}">
+         <strong>{{ tool.name }}</strong>
+        </a>
+      </span>
+      <span ng-if="tool.tool_type!=='WORKFLOW'">
+        <strong> {{ tool.name }}</strong>
+      </span>
+       - {{ tool.description }}
+    </li>
+  </ul>
+</div>

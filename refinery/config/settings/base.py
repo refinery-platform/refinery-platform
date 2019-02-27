@@ -9,7 +9,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
 
 import djcelery
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +18,9 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(__file__),
 
 local_settings_file_path = os.path.join(BASE_DIR,
                                         'refinery/config/config.json')
-
 tutorial_settings_file_path = os.path.join(
-    BASE_DIR,
-    'refinery/config/tutorial_steps.json'
+    BASE_DIR, 'refinery/config/tutorial_steps.json'
 )
-
-override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -44,14 +39,6 @@ except IOError as e:
         tutorial_settings_file_path, e
     )
     raise ImproperlyConfigured(error_msg)
-
-# load (optional) override-config.yaml
-try:
-    with open(override_path, 'r') as f:
-        override = yaml.load(f)
-    local_settings.update(override)
-except IOError:
-    pass
 
 
 def get_setting(name, settings=local_settings, default=None):
@@ -221,6 +208,7 @@ INSTALLED_APPS = (
     'django_docker_engine',
     'revproxy',
     'cuser',
+    'rest_framework.authtoken'
 )
 
 # NG: added for django-guardian
@@ -367,26 +355,12 @@ REFINERY_PUBLIC_GROUP_NAME = "Public"
 # DO NOT CHANGE THIS after initialization of your Refinery instance
 REFINERY_PUBLIC_GROUP_ID = 100
 
-# Base query for what kind of ArrayExpress studies to pull in
-# (e.g. only ChIP-Seq studies, or studies updated after a certain date)
-AE_BASE_QUERY = 'http://www.ebi.ac.uk/arrayexpress/xml/v2/experiments?'
-
-# prefix of the URL where all ArrayExpress studies' MAGE-TAB files can be
-# accessed
-AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
-
-ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
-
 # relative to MEDIA_ROOT
 FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
 # absolute path to the file store root dir
 FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
-FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
 # for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
 FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
-# move uploaded files into file store quickly instead of copying
-FILE_UPLOAD_TEMP_DIR = get_setting('FILE_UPLOAD_TEMP_DIR',
-                                   default=FILE_STORE_TEMP_DIR)
 # always keep uploaded files on disk
 FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
                                           default=0)
@@ -475,42 +449,11 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Use external authentication system like django-auth-ldap (disables password
-# management URLs)
-REFINERY_EXTERNAL_AUTH = get_setting("REFINERY_EXTERNAL_AUTH")
-# Message to display on password management pages when REFINERY_EXTERNAL_AUTH
-# is set to True
-REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
-
-"""
-# external tool status settings
-TIMEOUT = get_setting("TIMEOUT")
-"""
-
 # Directory for custom libraries
 LIBS_DIR = get_setting("LIBS_DIR")
 
 # Java settings
 JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
-
-if REFINERY_EXTERNAL_AUTH:
-    # enable LDAP authentication
-    try:
-        from django_auth_ldap.config import LDAPSearch
-    except ImportError:
-        logger.info("Failed to configure LDAP authentication")
-    else:
-        AUTH_LDAP_SERVER_URI = get_setting("AUTH_LDAP_SERVER_URI")
-        AUTH_LDAP_BIND_DN = get_setting("AUTH_LDAP_BIND_DN")
-        AUTH_LDAP_BIND_PASSWORD = get_setting("AUTH_LDAP_BIND_PASSWORD")
-        AUTH_LDAP_USER_SEARCH = LDAPSearch(get_setting("AUTH_LDAP_BASE_DN"),
-                                           get_setting("AUTH_LDAP_SCOPE"),
-                                           get_setting("AUTH_LDAP_FILTERSTR"))
-        # populate Django user profile from the LDAP directory
-        AUTH_LDAP_USER_ATTR_MAP = get_setting("AUTH_LDAP_USER_ATTR_MAP")
-        AUTHENTICATION_BACKENDS += (
-            'core.models.RefineryLDAPBackend',
-        )
 
 CACHES = {
     'default': {
@@ -638,7 +581,7 @@ UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
-REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA')
 
 # ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
 ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
@@ -653,10 +596,8 @@ REFINERY_VISUALIZATION_REGISTRY = \
 # environments (They don't actually validate registering users)
 # See: https://developers.google.com/recaptcha/docs/faq
 REFINERY_GOOGLE_RECAPTCHA_SITE_KEY = get_setting(
-    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY",
-    default="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+    "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY"
 )
 REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY = get_setting(
-    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY",
-    default="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+    "REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY"
 )

@@ -1,4 +1,5 @@
 import csv
+import json
 import logging
 import urllib
 from urlparse import urljoin
@@ -9,7 +10,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import RequestSite, Site, get_current_site
+from django.contrib.sites.models import RequestSite, Site
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
@@ -35,6 +37,9 @@ from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import APIException
 from rest_framework.pagination import LimitOffsetPagination
@@ -48,18 +53,25 @@ from data_set_manager.models import Attribute
 
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, SiteStatistics,
-                     UserProfile, Workflow, WorkflowEngine)
+                     ExtendedGroup, Invitation, Ontology, SiteProfile,
+                     SiteStatistics, SiteVideo, UserProfile, Workflow,
+                     WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
+                          SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations)
+from .utils import (api_error_response, get_data_sets_annotations,
+                    get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
 
 def home(request):
+    return render(request, 'core/home.html')
+
+
+def explore(request):
     return render_to_response(
-        'core/home.html',
+        'core/explore.html',
         {
             'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
             'main_container_no_padding': True,
@@ -75,12 +87,6 @@ def about(request):
                               context_instance=RequestContext(request))
 
 
-def statistics(request):
-    return render_to_response('core/statistics.html', {},
-                              context_instance=RequestContext(request))
-
-
-@login_required
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
@@ -111,12 +117,6 @@ def auto_login(request):
             return redirect('{}#/exploration'.format(reverse('home')))
 
     return redirect('{}'.format(reverse('home')))
-
-
-@login_required
-def collaboration(request):
-    return render_to_response('core/collaboration.html', {},
-                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -179,8 +179,11 @@ def user(request, query):
     except User.DoesNotExist:
         user = get_object_or_404(UserProfile, uuid=query).user
 
-    return render_to_response('core/user.html', {'profile_user': user},
-                              context_instance=RequestContext(request))
+    # return all non-manager groups in profile
+    groups = get_non_manager_groups_for_user(user)
+    return render(request,
+                  'core/user.html',
+                  {'profile_user': user, 'user_groups': groups})
 
 
 @login_required()
@@ -1012,19 +1015,9 @@ class OpenIDToken(APIView):
     renderer_classes = (JSONRenderer,)
 
     def post(self, request):
-        # retrieve current AWS region and Cognito settings
         try:
-            with open('/home/ubuntu/region') as f:
-                region = f.read().rstrip()
-        except IOError as exc:
-            message = "Error retrieving current AWS region: {}".format(exc)
-            logger.error(message)
-            return api_error_response(
-                message, status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        try:
-            client = boto3.client('cognito-identity', region_name=region)
+            client = boto3.client('cognito-identity',
+                                  region_name=settings.REFINERY_AWS_REGION)
         except botocore.exceptions.NoRegionError as exc:
             message = "Server AWS configuration is incorrect: {}".format(exc)
             logger.error(message)
@@ -1050,9 +1043,121 @@ class OpenIDToken(APIView):
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        token["Region"] = region
+        token["Region"] = settings.REFINERY_AWS_REGION
 
         return Response(token)
+
+
+class SiteProfileViewSet(APIView):
+    """API endpoint that allows for SiteProfileViewSet to be edited.
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: about_markdown
+              description: Markdown paragraph
+              type: string
+              paramType: form
+              required: false
+            - name: intro_markdown
+              description: Markdown paragraph
+              type: string
+              paramType: form
+              required: false
+            - name: twitter_username
+              description: twitter user name to display twitter feed
+              type: string
+              paramType: form
+              required: false
+            - name: site_videos
+              description: string object with source, source ids, and captions
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ["get", "patch"]
+
+    def get(self, request):
+        try:
+            site_profile = SiteProfile.objects.get(
+                site=get_current_site(request)
+            )
+        except SiteProfile.DoesNotExist as e:
+            logger.error("Site profile for the current site does not exist.")
+            return HttpResponseNotFound(e)
+        except SiteProfile.MultipleObjectsReturned:
+            logger.error("Multiple site profiles for current site error.")
+            return HttpResponseServerError(e)
+
+        serializer = SiteProfileSerializer(site_profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        if not request.user.is_superuser:
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            site_profile = SiteProfile.objects.get(
+                site=get_current_site(request)
+            )
+        except SiteProfile.DoesNotExist as e:
+            logger.error("Site profile for the current site does not exist.")
+            return HttpResponseNotFound(e)
+        except SiteProfile.MultipleObjectsReturned:
+            logger.error("Multiple site profiles for current site error.")
+            return HttpResponseServerError(e)
+
+        site_videos = request.data.get('site_videos')
+        # remove unlisted videos
+        if site_videos is not None:
+            db_site_videos = SiteVideo.objects.filter(
+                site_profile=site_profile
+            )
+            new_video_list = json.loads(request.data.getlist('site_videos')[0])
+            new_video_list_ids = [vid.get('id') for vid in new_video_list]
+            # delete unused videos
+            for video in db_site_videos:
+                if video.id not in new_video_list_ids:
+                    video.delete()
+            # add new videos or update exisiting videos
+            for new_video_data in new_video_list:
+                try:
+                    db_video = SiteVideo.objects.get(
+                        id=new_video_data.get('id')
+                    )
+                except SiteVideo.MultipleObjectsReturned as e:
+                    logger.error("Duplicate site videos found for id %s."
+                                 % new_video_data.get('id'))
+                    return HttpResponseServerError(e)
+                except SiteVideo.DoesNotExist:
+                    vid_serializer = SiteVideoSerializer(data=new_video_data)
+                else:
+                    vid_serializer = SiteVideoSerializer(db_video,
+                                                         data=new_video_data,
+                                                         partial=True)
+                if vid_serializer.is_valid():
+                    vid_serializer.save()
+
+        serializer = SiteProfileSerializer(site_profile,
+                                           data=request.data,
+                                           partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserProfileViewSet(APIView):
@@ -1118,3 +1223,15 @@ def site_statistics(request, **kwargs):
             )
         )
     return response
+
+
+class ObtainAuthTokenValidSession(ObtainAuthToken):
+    """
+    Allow authenticated Users to obtain a DRF API V2 auth token
+    """
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        token, created = Token.objects.get_or_create(user=request.user)
+        return JsonResponse({'token': token.key})

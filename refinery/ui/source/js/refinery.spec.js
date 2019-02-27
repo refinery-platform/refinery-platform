@@ -67,12 +67,12 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryRouter')).toEqual(true);
     });
 
-    it('should have "refineryStatistics" as a dependency', function () {
-      expect(hasModule('refineryStatistics')).toEqual(true);
-    });
-
     it('should have "refineryProvvis" as a dependency', function () {
       expect(hasModule('refineryProvvis')).toEqual(true);
+    });
+
+    it('should have "refineryHome" as a dependency', function () {
+      expect(hasModule('refineryHome')).toEqual(true);
     });
 
     it('should have "refineryDataSetImport" as a dependency', function () {
@@ -89,10 +89,6 @@ describe('RefineryApp.module: unit tests', function () {
 
     it('should have "refineryAnalysisMonitor" as a dependency', function () {
       expect(hasModule('refineryAnalysisMonitor')).toEqual(true);
-    });
-
-    it('should have "refineryCollaboration" as a dependency', function () {
-      expect(hasModule('refineryCollaboration')).toEqual(true);
     });
 
     it('should have "refineryFileBrowser" as a dependency', function () {

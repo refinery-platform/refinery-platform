@@ -6,11 +6,14 @@ from urlparse import urljoin
 from cuser.middleware import CuserMiddleware
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
-from django.test import override_settings
+from django.contrib.sites.models import Site
+from django.http import Http404
+from django.test import Client, override_settings
 from django.test.testcases import TestCase
 from django.utils.functional import SimpleLazyObject
 
 from guardian.shortcuts import get_groups_with_perms
+from guardian.utils import get_anonymous_user
 import mock
 import mockcache as memcache
 from rest_framework.test import (
@@ -25,13 +28,15 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
-                     SiteStatistics, Workflow, WorkflowEngine)
+                     SiteProfile, SiteStatistics, SiteVideo, Workflow,
+                     WorkflowEngine)
 
 
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    UserProfileViewSet, WorkflowViewSet)
+                    ObtainAuthTokenValidSession, SiteProfileViewSet,
+                    UserProfileViewSet, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -937,6 +942,216 @@ class WorkflowApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.content, self.mock_workflow_graph)
 
 
+class SiteProfileApiV2Tests(APIV2TestCase):
+    def setUp(self, **kwargs):
+        super(SiteProfileApiV2Tests, self).setUp(
+            api_base_name="site_profiles",
+            view=SiteProfileViewSet.as_view()
+        )
+        self.current_site = Site.objects.get_current()
+        self.site_profile = SiteProfile.objects.create(
+            site=self.current_site,
+            about_markdown='About the platform paragraph.',
+            intro_markdown='The refinery platform intro paragraph.',
+            twitter_username='Mock_twitter_name'
+        )
+        self.site_video_1 = SiteVideo.objects.create(
+            caption="Dashboard video",
+            site_profile=self.site_profile,
+            source="YouTube",
+            source_id="yt_5tc"
+        )
+        self.site_video_2 = SiteVideo.objects.create(
+            caption="Analysis video",
+            site_profile=self.site_profile,
+            source="YouTube",
+            source_id="yt_875"
+        )
+
+        username = password = "admin"
+        self.admin_user = User.objects.create_superuser(username, '', password)
+        self.get_request = self.factory.get(self.url_root)
+
+    def test_get_returns_404_status_for_missing_site_profiles(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request)
+        self.assertEqual(get_response.status_code, 404)
+
+    def test_get_returns_200_status_for_anon_user(self):
+        get_response = self.view(self.get_request)
+        self.assertEqual(get_response.status_code, 200)
+
+    def test_get_returns_site_profile(self):
+        get_response = self.view(self.get_request)
+        self.assertEqual(get_response.data.get('site'), self.current_site.id)
+
+    def test_get_returns_site_markdown_fields(self):
+        get_response = self.view(self.get_request)
+        self.assertEqual(get_response.data.get('about_markdown'),
+                         self.site_profile.about_markdown)
+        self.assertEqual(get_response.data.get('intro_markdown'),
+                         self.site_profile.intro_markdown)
+
+    def test_get_returns_twitter_username(self):
+        get_response = self.view(self.get_request)
+        self.assertEqual(get_response.data.get('twitter_username'),
+                         self.site_profile.twitter_username)
+
+    def test_get_returns_site_videos(self):
+        get_response = self.view(self.get_request)
+        response_videos = [video.get('source_id') for video in
+                           get_response.data.get('site_videos')]
+        self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
+                                                self.site_video_2.source_id])
+
+    def test_patch_returns_401_status_for_anon_user(self):
+        patch_request = self.factory.patch(
+            self.url_root,
+            {'about_markdown': 'New paragraph about the site.'}
+        )
+        patch_response = self.view(patch_request)
+        self.assertEqual(patch_response.status_code, 401)
+
+    def test_patch_returns_202_status_for_admin(self):
+        patch_request = self.factory.patch(
+            self.url_root,
+            {'about_markdown': 'New paragraph about the site.'}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.assertEqual(patch_response.status_code, 202)
+
+    def test_patch_updates_about_markdown(self):
+        new_about_markdown = 'New paragraph about the site.'
+        patch_request = self.factory.patch(
+            self.url_root,
+            {'about_markdown': new_about_markdown}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.assertEqual(patch_response.data.get('about_markdown'),
+                         new_about_markdown)
+
+    def test_patch_updates_intro_markdown(self):
+        new_intro_markdown = 'New introduction to the refinery-platform.'
+        patch_request = self.factory.patch(
+            self.url_root,
+            {'intro_markdown': new_intro_markdown}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.assertEqual(patch_response.data.get('intro_markdown'),
+                         new_intro_markdown)
+
+    def test_patch_updates_twitter_username(self):
+        new_twitter_username = 'newTwitterName'
+        patch_request = self.factory.patch(
+            self.url_root,
+            {'twitter_username': new_twitter_username}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.assertEqual(patch_response.data.get('twitter_username'),
+                         new_twitter_username)
+
+    def test_patch_updates_site_videos_lists_add(self):
+        site_video_1_data = {
+            "caption": self.site_video_1.caption,
+            "site_profile": self.site_profile.id,
+            "source": self.site_video_1.source,
+            "source_id": self.site_video_1.source_id,
+            "id": self.site_video_1.id
+        }
+        site_video_2_data = {
+            "caption": self.site_video_2.caption,
+            "site_profile": self.site_profile.id,
+            "source": self.site_video_2.source,
+            "source_id": self.site_video_2.source_id,
+            "id": self.site_video_2.id
+        }
+        site_video_3_data = {
+            "caption": "Video caption three.",
+            "site_profile": self.site_profile.id,
+            "source": "youtube",
+            "source_id": "yt_349v"
+        }
+        patch_request = self.factory.patch(
+            self.url_root,
+            {"site_videos": json.dumps([
+                site_video_1_data, site_video_2_data, site_video_3_data
+            ])}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.site_profile.refresh_from_db()
+        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+                         len(patch_response.data.get('site_videos')))
+
+    def test_patch_updates_site_videos_lists_removal(self):
+        site_video_2_data = {
+            "caption": self.site_video_2.caption,
+            "site_profile": self.site_profile.id,
+            "source": self.site_video_2.source,
+            "source_id": self.site_video_2.source_id,
+            "id": self.site_video_2.id,
+        }
+        patch_request = self.factory.patch(
+            self.url_root,
+            {"site_videos": json.dumps([site_video_2_data])}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.site_profile.refresh_from_db()
+        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+                         len(patch_response.data.get('site_videos')))
+
+    def test_patch_updates_site_videos_lists_updates_video_caption(self):
+        new_caption = 'New analysis video caption.'
+        site_video_1_data = {
+            "caption": new_caption,
+            "site_profile": self.site_profile.id,
+            "source": self.site_video_1.source,
+            "source_id": self.site_video_1.source_id,
+            "id": self.site_video_1.id
+        }
+        patch_request = self.factory.patch(
+            self.url_root,
+            {"site_videos": json.dumps([site_video_1_data])}
+        )
+        patch_request.user = self.admin_user
+        patch_response = self.view(patch_request)
+        self.assertEqual(
+            patch_response.data.get('site_videos')[0].get('caption'),
+            new_caption)
+
+
+class UserViewTest(TestCase):
+    def setUp(self, **kwargs):
+        self.username = 'test_user'
+        self.password = '12345@'
+        self.user = User.objects.create_user(self.username,
+                                             'test@fake.com',
+                                             self.password)
+        self.client = Client()
+
+    def test_returns_200_status_with_correct_template(self):
+        get_request = self.client.get(
+            'users/{}/'.format(self.user.profile.uuid)
+        )
+        get_request.user = self.user
+        with self.assertTemplateUsed('core/user.html'):
+            response = user(get_request, self.user.username)
+            self.assertEqual(response.status_code, 200)
+
+    def test_raises_404_status_for_anon(self):
+        get_request = self.client.get(
+            'users/{}/'.format(self.user.profile.uuid)
+        )
+        get_request.user = get_anonymous_user()
+        with self.assertRaises(Http404):
+            user(get_request, '')
+
+
 class UserProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(UserProfileApiV2Tests, self).setUp(
@@ -1113,6 +1328,10 @@ class EventApiV2Tests(APIV2TestCase):
 
 
 class CustomRegistrationViewTests(TestCase):
+    @override_settings(
+        REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI",  # noqa: E501
+        REFINERY_GOOGLE_RECAPTCHA_SECRET_KEY="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"  # noqa: E501
+    )
     def test_user_registration_successful_recaptcha(self):
         username = "new-test-user"
         password = make_password('password')
@@ -1190,3 +1409,23 @@ class SiteStatisticsViewTests(TestCase):
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=True)
         self.assertEqual(get_csv_row_mock.call_count, 2)
+
+
+class ObtainAuthTokenValidSessionApiV2Tests(APIV2TestCase):
+    def setUp(self, **kwargs):
+        super(ObtainAuthTokenValidSessionApiV2Tests, self).setUp(
+            api_base_name="obtain-auth-token/",
+            view=ObtainAuthTokenValidSession.as_view()
+        )
+
+    def test_get_with_valid_session(self):
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(json.loads(get_response.content),
+                         {"token": self.user.auth_token.key})
+
+    def test_get_without_valid_session(self):
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 403)

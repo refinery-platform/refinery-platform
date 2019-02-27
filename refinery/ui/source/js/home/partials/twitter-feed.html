@@ -1,0 +1,15 @@
+<div id="home-twitter-feed" ng-show="$ctrl.twitterId.length">
+  <div class="refinery-header">
+    <h3>
+      News from <a ng-href="https://www.twitter.com/{{ $ctrl.twitterId }}">
+      @{{ $ctrl.twitterId }} </a>
+    </h3>
+  </div>
+  <a class="twitter-timeline"
+    ng-href="https://twitter.com/{{ $ctrl.twitterId }}"
+    data-tweet-limit="10"
+    data-chrome="transparent noheader nofooter noborders">
+  </a>
+
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>

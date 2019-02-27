@@ -1,9 +1,13 @@
+data "aws_elb_service_account" "main" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "static_files" {
   bucket        = "${var.bucket_name_base}-static"
   force_destroy = true
   tags          = "${var.tags}"
 
-  policy        = <<EOF
+  policy        = <<PUBLIC_ACCESS
 {
   "Version":"2012-10-17",
   "Statement": [
@@ -15,19 +19,18 @@ resource "aws_s3_bucket" "static_files" {
     }
   ]
 }
-EOF
+PUBLIC_ACCESS
 
   cors_rule {
     allowed_headers = ["Authorization"]
     allowed_methods = ["GET"]
-    allowed_origins = ["*"]
+    allowed_origins = ["${var.origin_protocol}://${var.origin_domain}"]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
 }
 
 resource "aws_s3_bucket" "uploaded_files" {
-  acl           = "private"
   bucket        = "${var.bucket_name_base}-upload"
   force_destroy = true
   tags          = "${var.tags}"
@@ -35,12 +38,13 @@ resource "aws_s3_bucket" "uploaded_files" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT", "POST", "DELETE"]
-    allowed_origins = ["*"]
+    allowed_origins = ["${var.origin_protocol}://${var.origin_domain}"]
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
 
   lifecycle_rule {
+    id                                     = "Delete objects"
     enabled                                = true
     abort_incomplete_multipart_upload_days = 1
     expiration {
@@ -53,7 +57,7 @@ resource "aws_s3_bucket" "media_files" {
   bucket = "${var.bucket_name_base}-media"
   tags   = "${var.tags}"
 
-  policy = <<EOF
+  policy = <<PUBLIC_ACCESS
 {
   "Version":"2012-10-17",
   "Statement": [
@@ -65,19 +69,46 @@ resource "aws_s3_bucket" "media_files" {
     }
   ]
 }
-EOF
+PUBLIC_ACCESS
+
+  versioning {
+    enabled = true
+  }
+
+  # https://github.com/igvteam/igv.js/wiki/Data-Server-Requirements#cross-origin-resource-sharing-cors
+  cors_rule {
+    allowed_headers = ["Range"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["${var.origin_protocol}://${var.origin_domain}"]
+    max_age_seconds = 600
+  }
+
+  lifecycle_rule {
+    id                                     = "Delete non-current object versions and expired delete markers"
+    enabled                                = true
+    # delete results of interrupted FileImportTask operations
+    abort_incomplete_multipart_upload_days = 1
+    expiration {
+      expired_object_delete_marker = true
+    }
+    noncurrent_version_expiration {
+      days = 14
+    }
+  }
+
+  logging {
+    target_bucket = "${aws_s3_bucket.log_files.id}"
+    # to match ELB log key name format
+    target_prefix = "AWSLogs/${data.aws_caller_identity.current.account_id}/s3/media/"
+  }
 }
 
-data "aws_elb_service_account" "main" {}
-
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "log_files" {
-  acl    = "private"
+  acl    = "log-delivery-write"  # for S3 server access logging
   bucket = "${var.bucket_name_base}-log"
   tags   = "${var.tags}"
 
-  policy = <<POLICY
+  policy = <<ELB_ACCESS_LOG
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -91,5 +122,5 @@ resource "aws_s3_bucket" "log_files" {
     }
   ]
 }
-POLICY
+ELB_ACCESS_LOG
 }

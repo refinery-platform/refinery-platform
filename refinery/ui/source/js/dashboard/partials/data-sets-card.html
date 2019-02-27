@@ -8,8 +8,8 @@
           class="no-underline btn btn-sm">
           <i class="fa fa-list"></i> List
         </a>
-        <!--ToDo: check perms first -->
         <a
+          ng-if="$ctrl.isLoggedIn"
           href="/data_set_manager/import/"
           class="btn btn-sm btn-primary p-l-1-2"
           id="import-button">
@@ -20,36 +20,11 @@
   </div>
   <div class="refinery-sub-panel">
     <div class="card-sub-header">
-      <div
-        id="search-interface-dashboard"
-        class="form-group navbar-search col-sm-6 col-xs-12"
-        ng-form="metadataSearch"
-        ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
-        <i class="fa fa-search"></i>
-        <i class="fa fa-times-circle"
-          ng-if="$ctrl.searchQueryDataSets"
-          ng-click="$ctrl.resetDataSetSearch()"></i>
-        <!--The 'metadata-search' id below is used to define custom
-          styling to address a padding issue observed in Firefox-->
-         <button
-            id="search-interface-dashboard-button"
-            class="refinery-base btn btn-default btn-sm"
-            ng-click="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
-            ng-disabled="$ctrl.searchQueryDataSets.length < 2">
-            Search
-          </button>
-          <input
-            id="dashboard-data-search"
-            type="text"
-            class="search-query form-control"
-            ng-model="$ctrl.searchQueryDataSets"
-            ng-minlength="2"
-            name="searchQuery"
-            ng-keyup="$event.keyCode == 13 ? $ctrl.searchDataSets($ctrl.searchQueryDataSets) : null">
-      </div>
-      <div class="col-md-6">
-        <rp-primary-group-button class="float-left p-r-1"></rp-primary-group-button>
-        <div class="refinery-base btn btn-default btn-sm"
+      <div class="col-lg-9 col-md-12 col-sm-12 p-t-1-3" ng-if="$ctrl
+      .isLoggedIn">
+        <rp-primary-group-button id='primary-group-div' class="float-left p-r-1">
+        </rp-primary-group-button>
+        <div class="refinery-base btn btn-default btn-xs"
           ng-model="$ctrl.groupFilter['owned']"
           ng-change="$ctrl.filterDataSets('owned')"
           uib-btn-checkbox>
@@ -58,9 +33,9 @@
           </span>
           Owned
         </div>
-        <div class="float-left m-l-1" uib-dropdown auto-close="outsideClick">
+        <div class="float-left m-l-1-2" uib-dropdown auto-close="outsideClick">
           <button
-            class="refinery-base btn btn-default btn-sm"
+            class="refinery-base btn btn-default btn-xs"
             id="btn-append-to-single-button"
             uib-dropdown-toggle
             ng-class="{'banned':$ctrl.groups.length < 2}"
@@ -98,7 +73,7 @@
           </ul>
         </div>
         <div
-          class="refinery-base btn btn-default btn-sm m-l-1"
+          class="refinery-base btn btn-default btn-xs m-l-1-2"
           ng-model="$ctrl.groupFilter['public']"
           ng-change="$ctrl.filterDataSets('public')"
           uib-btn-checkbox>
@@ -107,6 +82,35 @@
           </span>
           Public
         </div>
+      </div>
+      <div
+        id="search-interface-dashboard"
+        class="form-group navbar-search col-lg-3 col-md-12 col-sm-12"
+        ng-form="metadataSearch"
+        ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
+        <i class="fa fa-times-circle"
+          ng-if="$ctrl.searchQueryDataSets"
+          ng-click="$ctrl.resetDataSetSearch()"></i>
+        <!--The 'metadata-search' id below is used to define custom
+          styling to address a padding issue observed in Firefox-->
+         <button
+            id="search-interface-dashboard-button"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
+            ng-disabled="$ctrl.searchQueryDataSets.length < 2">
+           <i class="fa fa-search"></i>
+           <span class="min-text-hide">
+             Search
+           </span>
+          </button>
+          <input
+            id="dashboard-data-search"
+            type="text"
+            class="search-query form-control"
+            ng-model="$ctrl.searchQueryDataSets"
+            ng-minlength="2"
+            name="searchQuery"
+            ng-keyup="$event.keyCode == 13 ? $ctrl.searchDataSets($ctrl.searchQueryDataSets) : null">
       </div>
     </div>
     <div
@@ -150,7 +154,7 @@
         <span ng-if="$ctrl.dataSets.length">
           {{ $ctrl.totalDataSets }} data sets
         </span>
-        <span ng-if="$ctrl.searchQueryDataSets.length > 0 && $ctrl.isFiltersEmpty()">
+        <span ng-if="$ctrl.areDataSetsTextSearched">
           <button
             class="refinery-base btn btn-default btn-xs m-l-1-2"
             ng-click="$ctrl.resetDataSetSearch()">

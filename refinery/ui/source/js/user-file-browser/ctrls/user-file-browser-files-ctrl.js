@@ -1,3 +1,9 @@
+/**
+ * User File Browser Files Ctrl
+ * @namespace UserFileBrowserFilesCtrl
+ * @desc Main controller for user files data.
+ * @memberOf refineryApp.refineryUserFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -11,6 +17,7 @@
     '$log',
     '$q',
     '$scope',
+    '$window',
     '_',
     'userFileBrowserFactory',
     'userFileFiltersService',
@@ -25,6 +32,7 @@
       $log,
       $q,
       $scope,
+      $window,
       _,
       userFileBrowserFactory,
       userFileFiltersService,
@@ -32,26 +40,27 @@
       userFileSortsService,
       gridOptionsService
   ) {
+    gridOptionsService.appScopeProvider = vm;
+    var promise = $q.defer();
     var vm = this;
+    vm.downloadCsv = downloadCsv;
+    vm.downloadCsvQuery = downloadCsvQuery;
+    vm.refreshUserFiles = refreshUserFiles;
+    vm.gridOptions = gridOptionsService;
     vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
+    vm.sortChanged = sortChanged;
     vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
 
-    var promise = $q.defer();
-    var getUserFiles = userFileBrowserFactory.getUserFiles;
-    getUserFiles().then(function (solr) {
-      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
-        cullEmptyAttributes(solr.facet_field_counts)
-      );
-      userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
-      userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
+    activate();
 
-      gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
-      promise.resolve();
-    }, function () {
-      $log.error('/files/ request failed');
-      promise.reject();
-    });
-
+   /*
+   * ---------------------------------------------------------
+   * Methods Definitions
+   * ---------------------------------------------------------
+   */
+    function activate () {
+      refreshUserFiles();
+    }
     // helper method to cull out attributes with no fields
     function cullEmptyAttributes (facetCountObj) {
       _.each(facetCountObj, function (counts, facetName) {
@@ -63,7 +72,56 @@
       return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'name');
     }
 
-    vm.sortChanged = function (grid, sortColumns) {
+    /**
+     * @name downloadCsv
+     * @desc  VM method used to interact with the `/files_download`
+     * endpoint to get a .csv
+     * @memberOf UserFileBrowserFilesCtrl
+    **/
+    function downloadCsv () {
+      $window.location.href = '/files_download?' + downloadCsvQuery();
+    }
+
+    /**
+     * @name downloadCsvQuery
+     * @desc  VM method used to construct the query parameters to be sent
+     * to the `/files_download` endpoint
+     * @memberOf UserFileBrowserFilesCtrl
+    **/
+    function downloadCsvQuery () {
+      return $httpParamSerializer({
+        filter_attribute: userFileFiltersService,
+        sort: userFileParamsService.sort(),
+        limit: 100000000
+      });
+    }
+
+    vm.gridOptions.onRegisterApi = function (api) {
+      api.core.on.sortChanged(null, vm.sortChanged);
+    };
+
+    /**
+     * @name refreshUserFiles
+     * @desc  Uses service to update the data in grid
+     * @memberOf refineryUserFileBrowser.refreshUserFiles
+    **/
+    function refreshUserFiles () {
+      userFileBrowserFactory.getUserFiles().then(function (solr) {
+        gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
+          cullEmptyAttributes(solr.facet_field_counts)
+        );
+        userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
+        userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
+
+        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        promise.resolve();
+      }, function () {
+        $log.error('/files/ request failed');
+        promise.reject();
+      });
+    }
+
+    function sortChanged (grid, sortColumns) {
       var sortUrlParam = 'sort';
       var directionUrlParam = 'direction';
       if (typeof sortColumns !== 'undefined' && sortColumns.length > 0) {
@@ -77,10 +135,7 @@
           direction: column.sort.direction
         };
 
-        // TODO: This is copy-and-paste
-        getUserFiles().then(function (solr) {
-          // TODO: Should there be something that wraps up this "then"? It is repeated.
-          // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+        userFileBrowserFactory.getUserFiles().then(function (solr) {
           gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
           userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
           userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
@@ -93,41 +148,13 @@
         $location.search(sortUrlParam, null);
         $location.search(directionUrlParam, null);
       }
-    };
-
-    gridOptionsService.appScopeProvider = vm;
-    vm.downloadCsvQuery = function () {
-      return $httpParamSerializer({
-        fq: createFacetQuery(),
-        sort: userFileParamsService.sort(),
-        limit: 100000000
-      });
-    };
-    vm.downloadCsvPath = function () {
-      return '/files_download?' + vm.downloadCsvQuery();
-    };
-    vm.downloadCsvUrl = function () {
-      return $location.protocol() + '://'
-        + $location.host() + ':' + $location.port()
-        + vm.downloadCsvPath();
-    };
-    vm.gridOptions = gridOptionsService;
-    vm.gridOptions.onRegisterApi = function (api) {
-      api.core.on.sortChanged(null, vm.sortChanged);
-    };
-
-    // helper method to create facet query for solr
-    function createFacetQuery () {
-      var filters = Object.keys(userFileFiltersService).map(function (internalName) {
-        var fields = userFileFiltersService[internalName];
-        var queryStr = fields.map(function (field) {
-          return '(' + internalName + ':' + '"' + field + '")';
-        }).join(' OR ');
-        return ('(') + queryStr + (')');
-      });
-      return filters.join(' AND ');
     }
 
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
     $scope.$watchCollection(
       function () {
         return userFileBrowserFactory.dataSetNodes;

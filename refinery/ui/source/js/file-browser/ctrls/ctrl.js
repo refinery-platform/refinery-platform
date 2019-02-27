@@ -13,6 +13,7 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
+    '$httpParamSerializer',
     '$log',
     '$q',
     '$scope',
@@ -20,6 +21,8 @@
     '$uibModal',
     '$window',
     'uiGridConstants',
+    'uiGridExporterConstants',
+    'uiGridExporterService',
     '_',
     'assayFiltersService',
     'dataSetPermsService',
@@ -37,6 +40,7 @@
   ];
 
   function FileBrowserCtrl (
+    $httpParamSerializer,
     $log,
     $q,
     $scope,
@@ -44,6 +48,8 @@
     $uibModal,
     $window,
     uiGridConstants,
+    uiGridExporterConstants,
+    uiGridExporterService,
     _,
     assayFiltersService,
     dataSetPermsService,
@@ -80,6 +86,8 @@
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.dataSet = {};
+    vm.downloadCsv = downloadCsv;
+    vm.downloadCsvQuery = downloadCsvQuery;
     vm.editMode = false;
     vm.fileEditsUpdating = false;
     vm.firstPage = 0;
@@ -98,6 +106,10 @@
       data: fileBrowserFactory.assayFiles,
       editableCellTemplate: editCellTemplate,
       enableCellEdit: false,
+      exporterAllDataFn: function () {
+        return fileBrowserFactory.getAssayFiles(paramService.fileParam);
+      },
+      exporterSuppressColumns: ['Input Groups'],
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
@@ -111,6 +123,7 @@
       useExternalSorting: true
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
+    vm.isFiltered = isFiltered;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openPermissionEditor = openPermissionEditor;
@@ -165,10 +178,40 @@
       }
     }
 
+    /**
+     * @name downloadCsv
+     * @desc  VM method used to call the uiGridExporterService.csvExport
+     * with the appropriate "visibility" based on whether or not the user
+     * has begun filtering with the FileBrowser facets or not
+     * @memberOf FileBrowserCtrl
+    **/
+    function downloadCsv () {
+      var visibility = uiGridExporterConstants.ALL;
+      if (isFiltered()) {
+        visibility = uiGridExporterConstants.VISIBLE;
+      }
+      uiGridExporterService.csvExport(vm.gridApi.grid, visibility, visibility);
+    }
+
+    /**
+     * @name downloadCsvQuery
+     * @desc  VM method used to construct the query parameters to be sent
+     * to the `/files_download` endpoint
+     * @memberOf FileBrowserCtrl
+    **/
+    function downloadCsvQuery () {
+      return $httpParamSerializer({
+        filter_attribute: selectedFilterService.attributeSelectedFields,
+        assay_uuid: $window.externalAssayUuid,
+        limit: 100000000
+      });
+    }
+
     // Gets the data set properties
     function refreshDataSetProps () {
       dataSetPropsService.refreshDataSet().then(function () {
         vm.dataSet = dataSetPropsService.dataSet;
+        vm.setCsvFileName(vm.dataSet.title);
         // initialize the dataset and updates ui-grid selection, filters, and url
         initializeDataOnPageLoad();
       });
@@ -235,9 +278,10 @@
     function gridRegister (gridApi) {
       // prevent scoping issues, after reset or initial generation
       if (!vm.gridApi) {
-        vm.gridApi = gridApi;
         gridApi.infiniteScroll.on.needLoadMoreData(null, vm.getDataDown);
         gridApi.infiniteScroll.on.needLoadMoreDataTop(null, vm.getDataUp);
+
+        vm.gridApi = gridApi;
 
         // Sort events
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
@@ -291,6 +335,25 @@
           }
         });
       }
+    }
+
+    /** view method to aid in determining if the user has begun using the
+     *  facets to filter the FileBrowser table's results.*/
+    function isFiltered () {
+      // Note: paramService.fileParam.filter_attribute can be both
+      // undefined and an empty object. Both of these scenarios correlate
+      // to facet filtering not having happened yet.
+
+      var filtered = true;
+
+      if (paramService.fileParam.filter_attribute === undefined) {
+        filtered = false;
+      } else {
+        filtered = Boolean(
+          Object.keys(paramService.fileParam.filter_attribute).length
+        );
+      }
+      return filtered;
     }
 
     /** view method to open the permissions modal component, in commons
@@ -378,6 +441,17 @@
         });
       }
     }
+
+
+    /**
+     * @name setCsvFileName
+     * @desc  VM method used to set the filename of the exportable .csv once
+     * we have the dataSet info
+     * @memberOf FileBrowserCtrl
+    **/
+    vm.setCsvFileName = function (dataSetTitle) {
+      vm.gridOptions.exporterCsvFilename = dataSetTitle + '.csv';
+    };
 
     /**
      * Generates sort param for api call from ui-grid response and calls grid
@@ -546,5 +620,14 @@
           vm.dataSet = dataSet;
         }
     );
+
+    $scope.$watch(function () {
+      return vm.assayFilesTotal;
+    }, function () {
+      // turn off infinite scrolling when file list is short
+      if (vm.assayFilesTotal <= maxFileRequest) {
+        vm.gridApi.infiniteScroll.setScrollDirections(false, false);
+      }
+    });
   }
 })();

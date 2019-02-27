@@ -28,6 +28,7 @@
     "bootbox": "4.4.0",
     "bootstrap": "3.3.6",
     "c3": "0.4.11-rc4",
+    "chart.js": "^2.7.3",
     "d3": "3.5.16",
     "d3-v4": "mbostock-bower/d3-bower#4.2.2",
     "d3-tip": "0.6.7",
@@ -54,7 +55,8 @@
     "filesize": "3.3.0",
     "angular-local-storage": "0.5.2",
     "intro.js": "2.4.0",
-    "angular-intro.js": "2.1.2"
+    "angular-intro.js": "2.1.2",
+    "markdown": "0.5.0"
   },
   "resolutions": {
     "d3": "3.5.16",

@@ -11,15 +11,17 @@
     .module('refineryDashboard')
     .controller('HistoryCardCtrl', HistoryCardCtrl);
 
-  HistoryCardCtrl.$inject = ['$scope', 'eventsService'];
+  HistoryCardCtrl.$inject = ['$scope', 'eventsService', 'settings'];
 
   function HistoryCardCtrl (
     $scope,
-    eventsService
+    eventsService,
+    settings
   ) {
     var vm = this;
     vm.isEventsLoading = false;
     vm.getUserEvents = getUserEvents;
+    vm.isLoggedIn = settings.djangoApp.userId !== undefined;
     vm.events = [];
     activate();
 

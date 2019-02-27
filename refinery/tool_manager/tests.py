@@ -670,6 +670,23 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
             self.delete_response.data['detail'], 'Method "DELETE" not '
                                                  'allowed.')
 
+    def test_request_without_any_params_returns_all(self):
+        get_request = self.factory.get(self.tool_defs_url_root)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        serialized_data = ToolDefinitionSerializer(
+            ToolDefinition.objects.all(), many=True
+        ).data
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.data, serialized_data)
+
+    def test_request_without_data_set_uuid_returns_all(self):
+        serialized_data = ToolDefinitionSerializer(
+            ToolDefinition.objects.all(), many=True
+        ).data
+        self.assertEqual(self.get_response.status_code, 200)
+        self.assertEqual(self.get_response.data, serialized_data)
+
     def test_for_proper_parameters_in_response(self):
         """ToolDefinitions for Workflows will have an extra field on their
          parameter objects
@@ -709,25 +726,6 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
                     tool_type=ToolDefinition.VISUALIZATION
                 )
             )
-
-    def test_no_query_params_in_get_yields_bad_request(self):
-        get_request = self.factory.get(self.tool_defs_url_root)
-        force_authenticate(get_request, self.user)
-        get_response = self.tool_defs_view(get_request)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a DataSet UUID", get_response.content)
-
-    def test_bad_query_params_in_get_yields_bad_request(self):
-        get_request = self.factory.get(
-            "{}?coffee={}".format(
-                self.tool_defs_url_root,
-                self.dataset.uuid
-            )
-        )
-        force_authenticate(get_request, self.user)
-        get_response = self.tool_defs_view(get_request)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
         dataset_uuid = str(uuid.uuid4())
@@ -1439,6 +1437,10 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertIn("does not have `workflow_outputs`",
                       context.exception.message)
         self.assertTrue(_are_workflow_outputs_present_mock.called)
+
+    def test_workflow_description_is_set_from_tool_definition_annotation(self):
+        self.create_workflow_tool_definition()
+        self.assertEqual(self.td.description, self.td.workflow.description)
 
 
 class ToolDefinitionTests(ToolManagerTestBase):

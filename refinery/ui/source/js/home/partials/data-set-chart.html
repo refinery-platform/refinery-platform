@@ -1,0 +1,28 @@
+<div id="home-chart" class="section-content">
+  <div class="refinery-header">
+    <h3>
+      Data Overview
+    </h3>
+  </div>
+  <div id="home-chart-ui-select">
+    <label class="ui-select-label">
+      Top Five Categories
+    </label>
+    <ui-select
+      append-to-body="true"
+      ng-model="DSCtrl.selectedAttribute.select"
+      on-select="DSCtrl.updateAttribute($item)"
+      theme="select2"
+      class="select-right">
+      <ui-select-match placeholder="Select an attribute">
+         {{$select.selected.name }}
+      </ui-select-match>
+      <ui-select-choices
+        position="down"
+        repeat="attribute in DSCtrl.attributes | orderBy:'name' track by $index">
+        <span ng-bind-html="attribute.name"></span>
+      </ui-select-choices>
+    </ui-select>
+  </div>
+  <canvas id="files-bar-chart"></canvas>
+</div>

@@ -1,171 +1,25 @@
 from datetime import date
-import glob
 import logging
-import os
-import re
-import shutil
-import string
-import subprocess
-import tempfile
 import time
 
-from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.management import call_command
 from django.db import transaction
 
 import celery
 from celery.task import task
 import pysam
-import requests
-from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
 from file_store.tasks import FileImportTask
-from file_store.utils import make_dir
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
-from .utils import (calculate_checksum, fix_last_column, get_node_types,
-                    index_annotated_nodes, update_annotated_nodes)
+from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
+                    update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
-
-
-def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
-    """zips up the isatab and pre-isatab files from MAGE-Tab conversion
-    Parameters:
-    accession: accession number of investigation
-    isatab_zip_loc: prefix for isatab zipped file (dir/accession)
-    preisatab_zip_loc: directory where pre-isatab zipped file will be
-    """
-    logger.info("zipping up ISA-Tab files")
-    # send stdout and stderr to a unique temp directory to avoid console
-    temp_dir = tempfile.mkdtemp()
-    """
-    shutil makes a zip, tar, tar.gz, etc file out of files in given dir
-    Params:
-    zip file prefix
-    type of archive (e.g. zip, tar)
-    superdirectory of the directory you want to archive
-    name of directory that's being archived
-    """
-    shutil.make_archive(isatab_zip_loc, 'zip', settings.ISA_TAB_DIR, accession)
-    # Get and zip up the MAGE-TAB and put in the ISA-Tab folder
-    # make file name for ArrayExpress information to download into
-    ae_name = tempfile.NamedTemporaryFile(dir=temp_dir, prefix='ae_').name
-    # make url to fetch the experiment
-    url = "%s/%s" % (settings.AE_BASE_URL, accession)
-    # get ArrayExpress information to get URLs to download
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-
-    f = open(ae_name, 'wb')
-    f.write(response.raw.read())  # small file, so just grab whole thing in
-    # one go
-    f.close()
-    # open and read in the last line (the HTML) that has the info we want
-    f = open(ae_name, 'rb')
-    lines = f.readlines()
-    f.close()
-    last_line = lines[-1]
-    dir_to_zip = os.path.join(temp_dir, "magetab")
-    make_dir(dir_to_zip)
-    # isolate the links by splitting on '<a href="'
-    a_hrefs = string.split(last_line, '<a href="')
-    # get the links we want
-    for a_href in a_hrefs:
-        if re.search(r'sdrf.txt', a_href) or re.search(r'idf.txt', a_href):
-            link = string.split(a_href, '"').pop(0)  # grab the link
-            file_name = link.split('/')[-1]  # get the file name
-            if not re.search(r'^http://', link):
-                link = "http://www.ebi.ac.uk%s" % link
-
-            try:
-                response = requests.get(link, stream=True)
-                response.raise_for_status()
-            except HTTPError as e:
-                logger.error(e)
-
-            file = os.path.join(dir_to_zip, file_name)
-            f = open(file, 'wb')
-            f.write(response.raw.read())  # again, shouldn't be a large file
-            f.close()
-    files_to_zip = 0
-    for dirname, dirnames, filenames in os.walk(dir_to_zip):
-        for filename in filenames:
-            files_to_zip += 1
-    if files_to_zip > 1:
-        # zip up and move the MAGE-TAB files
-        shutil.make_archive("%s/MAGE-TAB_%s" % (preisatab_zip_loc, accession),
-                            'zip', temp_dir, "magetab")
-
-
-@task()
-def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
-    """converts MAGE-Tab file from ArrayExpress into ISA-Tab, zips up the
-    ISA-Tab, and zips up the MAGE-Tab
-    Parameters:
-    accession: ArrayExpress study to convert
-    """
-    logger = convert_to_isatab.get_logger()
-    logger.info("logging from convert_to_isatab")
-    # send stdout and stderr to a unique temp directory to avoid console
-    temp_dir = tempfile.mkdtemp()
-    # create the subprocess
-    process = subprocess.Popen(args="./convert.sh", shell=True,
-                               cwd=settings.CONVERSION_DIR,
-                               stdin=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               stdout=subprocess.PIPE)
-    # run the subprocess and grab the exit code
-    # exit_code = process.wait()
-    logger.info("converting to ISA-Tab")
-    (stdout, stderr) = process.communicate(input=accession)
-    exit_code = process.returncode
-    # process stderr
-    if stderr:
-        shutil.rmtree(os.path.join(settings.ISA_TAB_DIR, accession))
-        logger.error(stderr)
-        if exit_code != 0:  # something bad happened
-            shutil.rmtree(temp_dir)
-            raise Exception("Error Converting to ISA-Tab: %s" % stderr)
-        else:
-            # unsuccessful conversion, but clean exit
-            return "Could not convert %s: %s" % (accession, stderr)
-    else:  # successfully converted
-        base_dir = os.path.join(settings.ISA_TAB_DIR, accession)
-        study_files = glob.glob("%s/s_*.txt" % base_dir)
-        assay_files = glob.glob("%s/a_*.txt" % base_dir)
-        for study_file in study_files:
-            logging.info("fixing last columns in study file if needed")
-            if not fix_last_column(study_file):
-                return "Could not fix study file for %s" % accession
-        for assay_file in assay_files:
-            logging.info("fixing last columns in assay file if needed")
-            if not fix_last_column(assay_file):
-                return "Could not fix assay file for %s" % accession
-        zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc)
-    shutil.rmtree(base_dir)
-    return "Successfully converted %s" % accession  # successful everything
-
-
-def get_arrayexpress_studies():
-    """task that runs every Friday at 9:00PM that checks ArrayExpress for new
-    and updated studies, then pulls down their metadata, converts it to
-    ISA-Tab, and parses it into the Django database
-
-    """
-    """
-    If you don't want to fetch all studies, edit in this fashion:
-        call_command('mage2isa_convert', 'exptype=chip-seq', species='human')
-    """
-    call_command('mage2isa_convert', 'exptype=ChIP-seq')
 
 
 @task()

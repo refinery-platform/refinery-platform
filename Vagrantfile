@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "ubuntu/trusty64"
-  config.vm.box_version = "20170619.0.0"
+  config.vm.box_version = "20181203.0.1"
   config.vm.hostname = "refinery"
   # nic_type set to virtio to increase guest network performance (https://superuser.com/a/850389)
   config.vm.network "private_network", ip: "192.168.50.50", nic_type: "virtio"
@@ -51,10 +51,10 @@ GALAXY_WARNING_SCRIPT
   config.vm.provision :shell, path: "deployment/bootstrap.sh"
 
   config.vm.provision :puppet do |puppet|
-    puppet.manifests_path = "deployment/manifests"
-    puppet.manifest_file  = "default.pp"
-    puppet.module_path = "deployment/modules"  # requires modules dir to exist when this file is parsed
-    puppet.options = "--hiera_config /vagrant/deployment/hiera.yaml"  # to avoid missing file warning
+    puppet.manifests_path = "deployment/puppet/manifests"
+    puppet.manifest_file  = "vagrant.pp"
+    puppet.module_path = "deployment/puppet/modules"  # requires modules dir to exist when this file is parsed
+    puppet.options = "--hiera_config /vagrant/deployment/puppet/hiera.yaml"  # to avoid missing file warning
   end
 
   # workaround for services that start on boot before /vagrant is available

@@ -13,18 +13,15 @@
 
   GroupMemberAddModalCtrl.$inject = [
     '$log',
-    'groupDataService',
     'groupInviteService'
   ];
 
   function GroupMemberAddModalCtrl (
     $log,
-    groupDataService,
     groupInviteService
   ) {
     var vm = this;
     vm.alertType = 'info';
-    vm.cancel = cancel;
     vm.close = close;
     vm.form = { email: '' };
     vm.isLoading = false;
@@ -36,15 +33,6 @@
      * Methods Definitions
      * ---------------------------------------------------------
      */
-    /**
-     * @name cancel
-     * @desc  View method to cancel modals, expects modalInstance in scope
-     * @memberOf refineryApp.GroupMemberAddModalCtrl.
-    **/
-    function cancel () {
-      vm.modalInstance.dismiss('cancel');
-    }
-
     /**
      * @name close
      * @desc  View method to cancel modals, expects modalInstance in scope
@@ -86,7 +74,6 @@
         function () {
           vm.isLoading = false;
           generateAlertMessage('success', vm.form.email);
-          groupDataService.update();
         }, function (error) {
           vm.isLoading = false;
           generateAlertMessage('danger', vm.form.email);
