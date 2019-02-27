@@ -69,8 +69,7 @@ describe('Anonymous user explores home page', function () {
     cy.visible('Analysis and Visualization Tools').then( function () {
       cy.visible('IGV', { timeout: 5000 });
       cy.visible('Test workflow: 5 steps without branching', { timeout: 5000 }).click(); // redirect to workflow pg
-      cy.visible('Workflow');
-      cy.visible('Test workflow: 5 steps without branching');
+      cy.get('h1').contains('Workflow');
     });
   });
 
