@@ -106,10 +106,13 @@
                 vm.addFileStatus = 'error';
               });
           }
-          if (vm.multifileUploadInProgress) {
-            vm.uploadFiles();
+          if (vm.areUploadsEnabled()) {
+            fileUploadStatusService.setFileUploadStatus('queuing');
           } else {
             fileUploadStatusService.setFileUploadStatus('none');
+          }
+          if (vm.multifileUploadInProgress) {
+            vm.uploadFiles();
           }
         });
       }, function (error) {
@@ -117,10 +120,14 @@
           file.progress = 100;
           file.$error = error;
           $log.error('Error uploading file ' + file.name + ': ' + file.$error);
-          if (vm.multifileUploadInProgress) {
-            vm.uploadFiles();
+          fileUploadStatusService.setFileUploadStatus('none');
+          if (vm.areUploadsEnabled()) {
+            fileUploadStatusService.setFileUploadStatus('queuing');
           } else {
             fileUploadStatusService.setFileUploadStatus('none');
+          }
+          if (vm.multifileUploadInProgress) {
+            vm.uploadFiles();
           }
         });
       });
@@ -149,12 +156,15 @@
         file.managedUpload.abort();
         $log.warn('Upload canceled: ' + file.name);
       }
-      if (vm.files.length) {
+      if (vm.areUploadsEnabled()) {
         fileUploadStatusService.setFileUploadStatus('queuing');
+      } else if (vm.areUploadsInProgress()) {
+        fileUploadStatusService.setFileUploadStatus('running');
       } else {
         fileUploadStatusService.setFileUploadStatus('none');
       }
     };
+
 
     vm.cancelUploads = function () {
       // this iteration approach is necessary because vm.files is re-indexed in cancelUpload()
