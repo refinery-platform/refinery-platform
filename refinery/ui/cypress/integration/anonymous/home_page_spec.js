@@ -13,7 +13,7 @@ describe('Anonymous user explores home page', function () {
     });
     cy.route({
       method: 'GET',
-      url: '/api/v2/files/?filter_attribute=%7B%7D&limit=100&sort=',
+      url: '/api/v2/files/?filter_attribute={}&limit=100&sort=',
       response: '@user_files'
     });
     cy.route({
@@ -62,7 +62,7 @@ describe('Anonymous user explores home page', function () {
   it('data chart is visible', function () {
     cy.visible('Data Overview');
     cy.get('.ui-select-label', { timeout: 2000 }).contains('Top Five Categories');
-    cy.visible('Technology'); // default value
+    cy.visible('Technology').click(); // default value
   });
 
   it('tools list is visible', function () {
