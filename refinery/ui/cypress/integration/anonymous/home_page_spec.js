@@ -51,18 +51,23 @@ describe('Anonymous user explores home page', function () {
   });
 
   it('video carousel is visible', function () {
-    cy.visible('Features at a Glance');
+    cy.visible('Features at a Glance',  { timeout: 5000 });
   });
 
   it('about section is visible', function () {
-    cy.visible('About');
-    cy.visible('The Refinery Platform is a project of the Park Lab and Gehlenborg Lab at Harvard Medical School in collaboration with the Hide Lab at Harvard School of Public Health.');
+    cy.visible('About',  { timeout: 5000 }).then( function () {
+      cy.visible('The Refinery Platform is a project of the Park Lab and' +
+      ' Gehlenborg Lab at Harvard Medical School in collaboration with the' +
+      ' Hide Lab at Harvard School of Public Health.');
+    });
   });
 
   it('data chart is visible', function () {
     cy.visible('Data Overview');
     cy.get('.ui-select-label', { timeout: 2000 }).contains('Top Five Categories');
     cy.visible('Technology').click(); // default value
+    cy.visible('Organism', { timeout: 5000 }).click();
+    cy.visible('Organism');
   });
 
   it('tools list is visible', function () {

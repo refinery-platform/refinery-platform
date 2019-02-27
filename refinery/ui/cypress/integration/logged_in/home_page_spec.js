@@ -64,6 +64,8 @@ describe('Registered user explores home page', function () {
     cy.visible('Data Overview');
     cy.get('.ui-select-label', { timeout: 2000 }).contains('Top Five Categories');
     cy.visible('Technology'); // default value
+    cy.visible('Organism', { timeout: 5000 }).click();
+    cy.visible('Organism');
   });
 
   it('tools list is visible', function () {
