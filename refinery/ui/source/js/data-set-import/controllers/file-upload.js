@@ -256,9 +256,9 @@ function RefineryFileUploadCtrl (
 
     // wait for digest to complete
     $timeout(function () {
-      if (totalNumFilesUploaded === totalNumFilesQueued) {
+      if (totalNumFilesQueued === 0) {
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('none');
-      } else {
+      } else if ($element.fileupload('active') === 0) {
         vm.fileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
     }, 110);

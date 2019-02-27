@@ -95,7 +95,6 @@
       file.managedUpload.promise().then(function () {
         $scope.$apply(function () {
           file.success = true;
-          fileUploadStatusService.setFileUploadStatus('none');
           if (vm.isNodeUpdate) {
             addFileToDataSetService.update({
               node_uuid: vm.nodeUuid,
@@ -109,6 +108,8 @@
           }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
           }
         });
       }, function (error) {
@@ -116,9 +117,10 @@
           file.progress = 100;
           file.$error = error;
           $log.error('Error uploading file ' + file.name + ': ' + file.$error);
-          fileUploadStatusService.setFileUploadStatus('none');
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
           }
         });
       });
@@ -147,10 +149,8 @@
         file.managedUpload.abort();
         $log.warn('Upload canceled: ' + file.name);
       }
-      if (vm.areUploadsEnabled()) {
+      if (vm.files.length) {
         fileUploadStatusService.setFileUploadStatus('queuing');
-      } else if (vm.areUploadsInProgress()) {
-        fileUploadStatusService.setFileUploadStatus('running');
       } else {
         fileUploadStatusService.setFileUploadStatus('none');
       }
