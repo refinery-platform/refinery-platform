@@ -3,24 +3,24 @@ describe('Anonymous user explores home page', function () {
   function fixtures_and_routes() {
     cy.fixture('api-v2-site_profiles.json').as('site_profiles');
     cy.fixture('api-v2-files.json').as('user_files');
-    cy.fixture('api-v2-tool_definitions.json').as('tools');
+    cy.fixture('api-v2-tool_definitions.json').as('tools_list');
 
     cy.server();
     cy.route({
       method: 'GET',
       url: '/api/v2/site_profiles/',
       response: '@site_profiles'
-    });
+    }).as('getSiteProfile');
     cy.route({
       method: 'GET',
       url: '/api/v2/files/?filter_attribute={}&limit=100&sort=',
       response: '@user_files'
-    });
+    }).as('getFiles');
     cy.route({
       method: 'GET',
       url: '/api/v2/tool_definitions/?data_set_uuid=',
-      response: '@tools'
-    });
+      response: '@tools_list'
+    }).as('getTools');
   }
 
   beforeEach(function() {
@@ -51,11 +51,13 @@ describe('Anonymous user explores home page', function () {
   });
 
   it('video carousel is visible', function () {
-    cy.visible('Features at a Glance',  { timeout: 5000 });
+    cy.wait('@getSiteProfile');
+    cy.visible('Features at a Glance');
   });
 
   it('about section is visible', function () {
-    cy.visible('About',  { timeout: 5000 }).then( function () {
+    cy.wait('@getSiteProfile');
+    cy.visible('About').then( function () {
       cy.visible('The Refinery Platform is a project of the Park Lab and' +
       ' Gehlenborg Lab at Harvard Medical School in collaboration with the' +
       ' Hide Lab at Harvard School of Public Health.');
@@ -63,18 +65,20 @@ describe('Anonymous user explores home page', function () {
   });
 
   it('data chart is visible', function () {
+    cy.wait('@getFiles');
     cy.visible('Data Overview');
-    cy.get('.ui-select-label', { timeout: 2000 }).contains('Top Five Categories');
+    cy.get('.ui-select-label').contains('Top Five Categories');
     cy.visible('Technology').click(); // default value
-    cy.visible('Organism', { timeout: 5000 }).click();
+    cy.visible('Organism', { timeout: 2000 }).click();
     cy.visible('Organism');
   });
 
   it('tools list is visible', function () {
+    cy.wait('@getTools');
     cy.visible('Analysis and Visualization Tools').then( function () {
-      cy.visible('IGV', { timeout: 5000 });
-      cy.visible('Test workflow: 5 steps without branching', { timeout: 5000 }).click(); // redirect to workflow pg
-      cy.get('h1').contains('Workflow');
+      cy.visible('IGV');
+      cy.visible('Test workflow: 5 steps without branching').click(); // redirect to workflow pg
+      cy.get('h1').contains('Workflow', { timeout: 2000 });
     });
   });
 
