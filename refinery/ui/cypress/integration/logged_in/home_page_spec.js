@@ -4,6 +4,8 @@ describe('Registered user explores home page', function () {
     cy.fixture('api-v2-site_profiles.json').as('site_profiles');
     cy.fixture('api-v2-files.json').as('user_files');
     cy.fixture('api-v2-tool_definitions.json').as('tools');
+    cy.fixture('api-v2-workflows.json').as('workflows');
+
 
     cy.server();
     cy.route({
@@ -21,6 +23,11 @@ describe('Registered user explores home page', function () {
       url: '/api/v2/tool_definitions/?data_set_uuid=',
       response: '@tools'
     }).as('getTools');
+    cy.route({
+      method: 'GET',
+      url: '/api/v2/workflows/429f8bf7-1dba-43df-91a7-e93d31b2b6b2/graph/',
+      response: '@workflows'
+    }).as('getWorkflows');
   }
 
   beforeEach(function() {
@@ -76,7 +83,9 @@ describe('Registered user explores home page', function () {
     cy.visible('Analysis and Visualization Tools').then( function () {
       cy.visible('IGV');
       cy.visible('Test workflow: 5 steps without branching').click(); // redirect to workflow pg
-      cy.get('h1').contains('Workflow', { timeout: 2000 });
+      cy.wait('@getWorkflows');
+      cy.get('h1').contains('Workflow');
+      cy.visible('Test workflow: 5 steps without branching');
     });
   });
 

@@ -105,7 +105,7 @@
             "assay_uuid": "30bd70b0-d95d-493d-a72b-f81330ad3c4a",
             "file_uuid": "21bd9bf6-fba8-43d9-b696-766f0fbf451d",
             "filetype_Characteristics_generic_s": "FASTQ file",
-            "REFINERY_DOWNLOAD_URL_s": "http://192.168.50.50:8000/media/file_store/cd/e7/s5_p42_E2_45min.subsample.fastq",
+            "REFINERY_DOWNLOAD_URL_s": "N/A",
             "study_uuid": "28f1d9d3-775e-4e95-ab84-b4f9dbf79829",
             "type": "Raw Data File",
             "name": "s5_p42_E2_45min.subsample.fastq"
@@ -119,7 +119,7 @@
             "assay_uuid": "30bd70b0-d95d-493d-a72b-f81330ad3c4a",
             "file_uuid": "fa58ba85-1481-4d26-b22d-12f6345ba001",
             "filetype_Characteristics_generic_s": "FASTQ file",
-            "REFINERY_DOWNLOAD_URL_s": "http://192.168.50.50:8000/media/file_store/e9/9c/s7_EV_E2_45min.subsample.fastq",
+            "REFINERY_DOWNLOAD_URL_s": "N/A",
             "study_uuid": "28f1d9d3-775e-4e95-ab84-b4f9dbf79829",
             "type": "Raw Data File",
             "name": "s7_EV_E2_45min.subsample.fastq"
