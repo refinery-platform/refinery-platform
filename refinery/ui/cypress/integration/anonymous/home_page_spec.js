@@ -84,7 +84,6 @@ describe('Anonymous user explores home page', function () {
     cy.visible('Analysis and Visualization Tools').then( function () {
       cy.visible('IGV');
       cy.visible('Test workflow: 5 steps without branching'); //redirect to workflows page
-
     });
   });
 

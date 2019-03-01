@@ -29,7 +29,8 @@
          * @desc Private method for initializing the youtube players on startup
          * @memberOf refineryHome.rpVideoCarousel
         **/
-        function onYouTubeIframeAPIReady () {
+        scope.onYouTubeIframeAPIReady = function () {
+          carouselDiv = elem.find('#home-video-carousel');
           // The id of the iframe and is the same as the videoId
           elem.find('.youtube-video').each(function (i, obj) {
             // eslint-disable-next-line no-undef
@@ -49,7 +50,7 @@
               }
             });
           });
-        }
+        };
 
         /**
          * @name navNext
@@ -86,12 +87,6 @@
             targetControl.fadeOut(500);
           }
         }
-
-        // time out allows the dom to load
-        $timeout(function () {
-          carouselDiv = elem.find('#home-video-carousel');
-          onYouTubeIframeAPIReady();
-        }, 0);
 
         scope.$watchCollection(
           function () {

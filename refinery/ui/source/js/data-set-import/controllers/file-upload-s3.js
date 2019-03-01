@@ -10,6 +10,7 @@
     '$scope',
     '$window',
     'addFileToDataSetService',
+    'fileUploadStatusService',
     's3UploadService'
   ];
 
@@ -18,6 +19,7 @@
     $scope,
     $window,
     addFileToDataSetService,
+    fileUploadStatusService,
     s3UploadService) {
     var vm = this;
     vm.files = [];
@@ -32,6 +34,7 @@
 
     vm.addFiles = function (files) {
       vm.files = vm.files.concat(files);
+      fileUploadStatusService.setFileUploadStatus('queuing');
     };
 
     vm.isFileNew = function (file) {
@@ -79,6 +82,7 @@
         file.$error = 'Data upload configuration error';
         return;
       }
+      fileUploadStatusService.setFileUploadStatus('running');
       file.progress = 0;
       file.managedUpload.on('httpUploadProgress', function (progress) {
         // $applyAsync is used to avoid $rootScope:inprog error when canceling uploads
@@ -102,6 +106,11 @@
                 vm.addFileStatus = 'error';
               });
           }
+          if (vm.areUploadsEnabled()) {
+            fileUploadStatusService.setFileUploadStatus('queuing');
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
+          }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
           }
@@ -111,6 +120,12 @@
           file.progress = 100;
           file.$error = error;
           $log.error('Error uploading file ' + file.name + ': ' + file.$error);
+          fileUploadStatusService.setFileUploadStatus('none');
+          if (vm.areUploadsEnabled()) {
+            fileUploadStatusService.setFileUploadStatus('queuing');
+          } else {
+            fileUploadStatusService.setFileUploadStatus('none');
+          }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
           }
@@ -141,7 +156,15 @@
         file.managedUpload.abort();
         $log.warn('Upload canceled: ' + file.name);
       }
+      if (vm.areUploadsEnabled()) {
+        fileUploadStatusService.setFileUploadStatus('queuing');
+      } else if (vm.areUploadsInProgress()) {
+        fileUploadStatusService.setFileUploadStatus('running');
+      } else {
+        fileUploadStatusService.setFileUploadStatus('none');
+      }
     };
+
 
     vm.cancelUploads = function () {
       // this iteration approach is necessary because vm.files is re-indexed in cancelUpload()
