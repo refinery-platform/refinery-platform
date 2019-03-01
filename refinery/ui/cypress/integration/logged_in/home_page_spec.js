@@ -85,9 +85,6 @@ describe('Registered user explores home page', function () {
     cy.wait('@getTools');
     cy.visible('Analysis and Visualization Tools').then( function () {
       cy.visible('IGV');
-      cy.visible('Test workflow: 5 steps without branching').click(); // redirect to workflow pg
-      cy.wait('@getWorkflows');
-      cy.get('h1').contains('Workflow');
       cy.visible('Test workflow: 5 steps without branching');
     });
   });
