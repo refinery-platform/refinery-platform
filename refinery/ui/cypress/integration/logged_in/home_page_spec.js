@@ -31,9 +31,12 @@ describe('Registered user explores home page', function () {
   }
 
   beforeEach(function() {
+    cy.login_guest();;
+  });
+
+  beforeEach(function() {
     cy.viewport(1440, 900) //macbook 15"
     fixtures_and_routes();
-    cy.login_guest();
     cy.visit('/');
   });
 
