@@ -4,8 +4,6 @@ describe('Anonymous user explores home page', function () {
     cy.fixture('api-v2-site_profiles.json').as('site_profiles');
     cy.fixture('api-v2-files.json').as('user_files');
     cy.fixture('api-v2-tool_definitions.json').as('tools_list');
-    cy.fixture('api-v2-workflows.json').as('workflows');
-
     cy.server();
     cy.route({
       method: 'GET',
@@ -22,11 +20,6 @@ describe('Anonymous user explores home page', function () {
       url: '/api/v2/tool_definitions/?data_set_uuid=',
       response: '@tools_list'
     }).as('getTools');
-    cy.route({
-      method: 'GET',
-      url: '/api/v2/workflows/429f8bf7-1dba-43df-91a7-e93d31b2b6b2/graph/',
-      response: '@workflows'
-    }).as('getWorkflows');
   }
 
   beforeEach(function() {
@@ -71,11 +64,12 @@ describe('Anonymous user explores home page', function () {
   });
 
   it('data chart is visible', function () {
+    cy.wait(500);
     cy.wait('@getFiles');
     cy.visible('Data Overview');
     cy.get('.ui-select-label').contains('Top Five Categories');
     cy.visible('Technology').click(); // default value
-    cy.visible('Organism', { timeout: 2000 }).click();
+    cy.visible('Organism', { timeout: 5000 }).click();
     cy.visible('Organism');
   });
 
@@ -83,7 +77,7 @@ describe('Anonymous user explores home page', function () {
     cy.wait('@getTools');
     cy.visible('Analysis and Visualization Tools').then( function () {
       cy.visible('IGV');
-      cy.visible('Test workflow: 5 steps without branching'); //redirect to workflows page
+      cy.visible('Test workflow: 5 steps without branching');
     });
   });
 
