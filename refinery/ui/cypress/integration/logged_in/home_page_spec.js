@@ -14,12 +14,12 @@ describe('Registered user explores home page', function () {
     }).as('getSiteProfile');
     cy.route({
       method: 'GET',
-      url: '/api/v2/files/?filter_attribute={}&limit=100&sort=',
+      url: '/api/v2/files/**',
       response: '@user_files'
     }).as('getFiles');
     cy.route({
       method: 'GET',
-      url: '/api/v2/tool_definitions/?data_set_uuid=',
+      url: '/api/v2/tool_definitions/**',
       response: '@tools'
     }).as('getTools');
   }
@@ -70,9 +70,7 @@ describe('Registered user explores home page', function () {
     cy.wait('@getFiles');
     cy.visible('Data Overview');
     cy.get('.ui-select-label').contains('Top Five Categories');
-    cy.visible('Technology').click(); // default value
-    cy.visible('Organism', { timeout: 5000 }).click();
-    cy.visible('Organism');
+    cy.visible('Technology'); // default value
   });
 
   it('tools list is visible', function () {
