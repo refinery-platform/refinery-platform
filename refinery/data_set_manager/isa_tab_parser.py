@@ -20,8 +20,9 @@ from django.core.files import File
 import botocore
 
 from file_store.models import FileStoreItem
-from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
-                     Node, Ontology, Protocol, ProtocolReference,
+from .models import (Assay, Attribute, Comment, Contact, Design, Factor,
+                     Investigation, Node, Ontology, Protocol,
+                     ProtocolComponent, ProtocolReference, ProtocolParameter,
                      ProtocolReferenceParameter, Publication, Study)
 from .utils import fix_last_column
 
@@ -90,8 +91,8 @@ class IsaTabParser:
             "model": Contact,
             "fields":
             {
-                "Investigation Person Last Name": "last_name",
                 "Investigation Person First Name": "first_name",
+                "Investigation Person Last Name": "last_name",
                 "Investigation Person Mid Initials": "middle_initials",
                 "Investigation Person Email": "email",
                 "Investigation Person Phone": "phone",
@@ -208,7 +209,7 @@ class IsaTabParser:
                     "measurement_source",
                 "Study Assay Technology Type": "technology",
                 "Study Assay Technology Type Term Accession Number":
-                    "technology",
+                    "technology_accession",
                 "Study Assay Technology Type Term Source REF":
                     "technology_source",
                 "Study Assay Technology Platform": "platform",
@@ -231,21 +232,17 @@ class IsaTabParser:
                 "Study Protocol Description": "description",
                 "Study Protocol URI": "uri",
                 "Study Protocol Version": "version",
-                # "Study Protocol Parameters Name": "parameter_name",
-                # TODO: should this be "Study Protocol Parameters Name
-                #  Accession Number"???
-                # "Study Protocol Parameters Name Term Accession Number":
-                #   "name_accession",
-                # TODO: should this be "Study Protocol Parameters Name Source
-                # REF"???
-                # "Study Protocol Parameters Name Term Source REF":
-                #   "name_source",
-                # "Study Protocol Components Name": "component_name",
-                # "Study Protocol Components Type": "component_type",
-                # "Study Protocol Components Type Term Accession Number":
-                #   "type_accession",
-                # "Study Protocol Components Type Term Source REF":
-                #   "type_source",
+                "Study Protocol Parameters Name": "parameter_name",
+                "Study Protocol Parameters Name Term Accession Number":
+                    "parameter_name_accession",
+                "Study Protocol Parameters Name Term Source REF":
+                    "parameter_name_source",
+                "Study Protocol Components Name": "component_name",
+                "Study Protocol Components Type": "component_type",
+                "Study Protocol Components Type Term Accession Number":
+                    "component_type_accession",
+                "Study Protocol Components Type Term Source REF":
+                    "component_type_source",
             },
             "references":
             {
@@ -275,6 +272,12 @@ class IsaTabParser:
         self._current_reader = None
         self._current_file = None
         self._current_file_name = None
+
+        self.current_comments = {}
+        self.ontology_source_reference_data = {
+            "comments": None,
+            "model_parameters": []
+        }
 
     def _split_header(self, header):
         return [x.strip() for x in header.replace("]", "").strip().split("[")]
@@ -503,7 +506,8 @@ class IsaTabParser:
 
             protocol_reference = ProtocolReference.objects.create(
                 node=self._current_node,
-                protocol=protocol)
+                protocol=protocol
+            )
             self._current_protocol_reference = protocol_reference
 
             row.popleft()
@@ -670,6 +674,32 @@ class IsaTabParser:
                 self._current_node = None
                 self._parse_node(headers, row)
 
+    def _create_comments(self, columns):
+        """
+        Creates Comment instances to be associated with a given Section's model
+        """
+        if not columns[0].startswith("Comment["):
+            return
+
+        regex_result = re.search('\[(.+?)\]', columns[0])
+        if regex_result:
+            comment_name = regex_result.group(1)
+        else:
+            raise ParserException(
+                "Invalid Comment specified: {}".format(columns[0])
+            )
+
+        for index, comment_value in enumerate(columns[1:]):
+            if self.current_comments.get(index) is None:
+                self.current_comments[index] = []
+
+            if comment_value == u'""':
+                comment_value = u''
+            comment, created = Comment.objects.get_or_create(
+                name=comment_name, value=comment_value
+            )
+            self.current_comments[index].append(comment)
+
     def _create_investigation_file_section_model(self, section_title, fields):
         try:
             section = self.SECTIONS[section_title]
@@ -729,19 +759,85 @@ class IsaTabParser:
                         pass
                         # TODO: log error referring to unknown reference_name
             # create model
-            if section_title != "ONTOLOGY SOURCE REFERENCE":
+            if section_title == "ONTOLOGY SOURCE REFERENCE":
+                # Ontology Source References are often come across first in
+                # the investigation file before the INVESTIGATION section.
+                # This means that we won't have an Investigation instance to
+                # satisfy the foreignKey of Ontology here. We'll temporarily
+                #  store the information we're parsing and create the
+                # Ontology instances after we have an Investigation
+                self.ontology_source_reference_data["model_parameters"].append(
+                    model_parameters
+                )
+                if not self.ontology_source_reference_data.get("comments"):
+                    self.ontology_source_reference_data["comments"] = \
+                        self.current_comments
+
+            elif section_title == "STUDY PROTOCOLS":
+                # The STUDY_PROTOCOLS section actually contains
+                # parameters that need to be distributed to a few separate
+                # models. Those currently being: Protocol,
+                # ProtocolParameter, and ProtocolComponent
+                self._create_protocol_and_related_models(model_parameters,
+                                                         self.current_comments)
+            else:
+                logger.debug(
+                    "Creating `%s` instance from the following parameters: %s",
+                    model_class.__name__, model_parameters
+                )
                 model_instance = model_class.objects.create(**model_parameters)
-                model_instance.save()
+
                 if section_title == "INVESTIGATION":
                     self._current_investigation = model_instance
                 if section_title == "STUDY":
                     self._current_study = model_instance
-        # create an investigation even if no information is provided
-        # (all fields empty, no tab after any field name)
-        if columns == 0:
-            if section_title == "INVESTIGATION":
-                model_instance = Investigation.objects.create()
-                self._current_investigation = model_instance
+
+                for comment in self.current_comments.get(column, []):
+                    model_instance.comments.add(comment)
+
+        # Reset the current comments for the next Section to be parsed
+        self.current_comments = {}
+
+    def _create_protocol_and_related_models(self, model_parameters, comments):
+        def get_model_parameters(parameter_names):
+            return [
+                model_parameters.pop(parameter_name).split(";")
+                for parameter_name in parameter_names
+            ]
+
+        protocol_parameter_fields = zip(
+            *get_model_parameters(["parameter_name",
+                                   "parameter_name_accession",
+                                   "parameter_name_source"])
+        )
+        protocol_component_fields = zip(
+            *get_model_parameters(["component_name", "component_type",
+                                   "component_type_accession",
+                                   "component_type_source"])
+        )
+
+        protocol_instance = Protocol.objects.create(**model_parameters)
+        for comment in comments:
+            protocol_instance.comments.add(comment)
+
+        for parameter_fields in protocol_parameter_fields:
+            if not all(field == u"" for field in parameter_fields):
+                ProtocolParameter.objects.create(
+                    protocol=protocol_instance,
+                    name=parameter_fields[0],
+                    name_accession=parameter_fields[1],
+                    name_source=parameter_fields[2]
+                )
+
+        for component_fields in protocol_component_fields:
+            if not all(field == u"" for field in component_fields):
+                ProtocolComponent.objects.create(
+                    protocol=protocol_instance,
+                    name=component_fields[0],
+                    type=component_fields[1],
+                    type_accession=component_fields[2],
+                    type_source=component_fields[3]
+                )
 
     # parse an investigation section
     def _parse_investigation_file_section(self, section_title):
@@ -780,6 +876,9 @@ class IsaTabParser:
                 continue
             # 3. split line on tab
             columns = line.split("\t")
+
+            self._create_comments(columns)
+
             # 4. identify row type
             if (self._adjust_string_case(columns[0].strip()) in
                     self._adjust_list_case(self.SECTIONS)):
@@ -877,8 +976,6 @@ class IsaTabParser:
 
         self._current_file_name = file_name
         self._current_file = open(file_name, "rU")
-
-        section_title = None
 
         # read lines from the file until a section title is found
         while True:
@@ -1045,6 +1142,19 @@ class IsaTabParser:
                 )
 
         self._current_investigation.save()
+
+        # Create Ontology instances now that we have an Investigation to
+        # associate them with
+        for index, ontology_params in enumerate(
+            self.ontology_source_reference_data["model_parameters"]
+        ):
+            ontology_params["investigation"] = self._current_investigation
+            ontology = Ontology.objects.create(**ontology_params)
+            for comment in self.ontology_source_reference_data["comments"].get(
+                    index, []
+            ):
+                ontology.comments.add(comment)
+
         return self._current_investigation
 
     # Utility Functions

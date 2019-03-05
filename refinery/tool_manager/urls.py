@@ -3,7 +3,8 @@ from django.conf.urls import include, url
 
 from rest_framework.routers import DefaultRouter
 
-from .views import AutoRelaunchProxy, ToolDefinitionsViewSet, ToolsViewSet
+from .views import (AutoRelaunchProxy, ToolDefinitionsViewSet, ToolsViewSet)
+
 
 # DRF url routing
 tool_manager_router = DefaultRouter()

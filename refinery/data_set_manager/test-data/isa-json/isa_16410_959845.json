@@ -1,0 +1,2575 @@
+{
+   "identifier":"1549398057907",
+   "title":"",
+   "description":"",
+   "submissionDate":"",
+   "publicReleaseDate":"",
+   "ontologySourceReferences":[
+      {
+         "description":"National Center for Biotechnology Information (NCBI) Organismal Classification",
+         "file":"http://data.bioontology.org/ontologies/NCBITAXON",
+         "name":"NCBITAXON",
+         "version":"1.2"
+      },
+      {
+         "description":"Gene Ontology",
+         "file":"http://data.bioontology.org/ontologies/GO",
+         "name":"GO",
+         "version":"4/20/14"
+      },
+      {
+         "description":"Cell Ontology",
+         "file":"http://data.bioontology.org/ontologies/CL",
+         "name":"CL",
+         "version":"43"
+      },
+      {
+         "description":"Ontology for Biomedical Investigations",
+         "file":"http://data.bioontology.org/ontologies/OBI",
+         "name":"OBI",
+         "version":"21"
+      },
+      {
+         "description":"National Cancer Institute Thesaurus",
+         "file":"http://data.bioontology.org/ontologies/NCIT",
+         "name":"NCIT",
+         "version":"24"
+      }
+   ],
+   "publications":[
+
+   ],
+   "people":[
+
+   ],
+   "studies":[
+      {
+         "@id":"#study/16410",
+         "identifier":"16410",
+         "title":"Depletion of RUNX1/ETO in t(8;21) AML cells leads to genome-wide changes in chromatin structure and transcription factor binding (ChIP-seq)",
+         "description":"RUNX1 siMM and RUNX1 siRE ChIP-Seq samples and a paired-end ChIP-Seq samples from patients with t(8;21) AML are used in this study; there are two paired-end ChIP-Seq runs and control per patient",
+         "submissionDate":"2015-01-29",
+         "publicReleaseDate":"",
+         "studyDesignDescriptors":[
+
+         ],
+         "publications":[
+            {
+               "pubMedID":"22343733",
+               "doi":"10.1038/leu.2012.49",
+               "authorList":"Ptasinska A, Assi SA, Mannari D, James SR, Williamson D, Dunne J, Hoogenkamp M, Wu M, Care M, McNeill H, et al.",
+               "title":"Depletion of RUNX1/ETO in t(8;21) AML cells leads to genome-wide changes in chromatin structure and transcription factor binding.",
+               "status":{
+                  "annotationValue":"",
+                  "termSource":"",
+                  "termAccession":""
+               }
+            }
+         ],
+         "people":[
+            {
+               "@id":"#person/Tenen",
+               "lastName":"Tenen",
+               "firstName":"Daniel",
+               "midInitials":"G",
+               "email":"",
+               "phone":"",
+               "fax":"",
+               "address":"",
+               "affiliation":"Beth Israel Deaconess Medical Center",
+               "roles":[
+
+               ],
+               "comments":[
+                  {
+                     "name":"Study Person REF",
+                     "value":""
+                  }
+               ]
+            }
+         ],
+         "protocols":[
+            {
+               "@id":"#protocol/growth_protocol",
+               "name":"growth protocol",
+               "protocolType":{
+                  "annotationValue":"growth protocol",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "description":"The Kasumi-1 cell line (acute myeloid leukemia FAB M2 with t(8;21)) was obtained from the DSMZ cell line repository (http://www.dsmz.de/ mutz/mutzhome.htm). The cells were grown in RPMI 1640 medium (Invitrogen, Heidelberg, Germany) supplemented 2 mM L-glutamine with 10% FCS and maintained in a humidified 37\u00b0C incubator with 5% CO. Leukemic blast cells from t(8;21) patients A and B were purified from white blood cells and neutrophils by Ficoll\u2013Hypaque density-gradient centrifugation. The sample was frozen in liquid nitrogen with 10% dimethyl sulphoxide in 20% FCS, 10% DMSO, RPMI. After thawing, cells were washed and immediately used for ChIP.",
+               "uri":"",
+               "version":"",
+               "parameters":[
+
+               ],
+               "components":[
+
+               ]
+            },
+            {
+               "@id":"#protocol/treatment_protocol",
+               "name":"treatment protocol",
+               "protocolType":{
+                  "annotationValue":"treatment protocol",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "description":"Kasumi-1 cells  were transfected with the 200 nM of siRNA using a Fischer EPI 3500 electroporator (Fischer, Heidelberg, Germany) as described previously (Martinez et al., 2004). The following siRNAs were used: mismatch control (sense, 5'-CCU CGA AUU CGU UCU GAG AAG-3'; antisense, 5'-UCU CAG AAC GAA UUC GAG GUU-3')",
+               "uri":"",
+               "version":"",
+               "parameters":[
+
+               ],
+               "components":[
+
+               ]
+            },
+            {
+               "@id":"#protocol/sample_collection",
+               "name":"sample collection",
+               "protocolType":{
+                  "annotationValue":"sample collection",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "description":"",
+               "uri":"",
+               "version":"",
+               "parameters":[
+
+               ],
+               "components":[
+
+               ]
+            },
+            {
+               "@id":"#protocol/nucleic_acid_extraction",
+               "name":"nucleic acid extraction",
+               "protocolType":{
+                  "annotationValue":"nucleic acid extraction",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "description":"Libraries of DNA fragments from chromatin immunoprecipitation or DNase I treatment  were prepared from approximately 10ng of DNA. Firstly, overhangs were repaired by treatment of sample material with T4 DNA polymerase, T4 PNK and Klenow DNA polymerase (all enzymes obtained from New England Biolabs UK) in a reaction also containing 50 mM Tris-HCl,10 mM MgCl2, 10 mM Dithiothreitol, 0.4 mM dNTPs and 1 mM ATP. Samples were purified after each step using Qiagen MinElute columns (according to the manufacturer's guidelines). Adenosine bases were added to 3' ends of fragments using Klenow Fragment (3'-5' exo-minus), allowing for subsequent ligation of adapter oligonucleotides (Illumina part #1000521) using Quick T4 DNA ligase. After a further column clean up to remove excess adaptors, fragments were amplified in an 18 cycle PCR reaction using adapter-specific primers The libraries were purified and adapter dimers removed by running PCR products on 2% agarose gels and excising gel slices corresponding to fragments approximately 200-300 bp in size, which were then extracted using the Qiagen gel extraction kit. Libraries from cells from patients A and B and their respective input DNA were preparing using a kit for paired end sequencing. Once prepared, DNA libraries were subject to massively parallel DNA sequencing on an Illumina Genome Analyzer.",
+               "uri":"",
+               "version":"",
+               "parameters":[
+                  {
+                     "@id":"#parameter/cross_linking",
+                     "parameterName":{
+                        "annotationValue":"cross linking",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/DNA_fragmentation",
+                     "parameterName":{
+                        "annotationValue":"DNA fragmentation",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/DNA_fragment_size",
+                     "parameterName":{
+                        "annotationValue":"DNA fragment size",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/antibody",
+                     "parameterName":{
+                        "annotationValue":"antibody",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  }
+               ],
+               "components":[
+
+               ]
+            },
+            {
+               "@id":"#protocol/library_construction",
+               "name":"library construction",
+               "protocolType":{
+                  "annotationValue":"library construction",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "description":"",
+               "uri":"",
+               "version":"",
+               "parameters":[
+                  {
+                     "@id":"#parameter/library_source",
+                     "parameterName":{
+                        "annotationValue":"library source",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/library_strategy",
+                     "parameterName":{
+                        "annotationValue":"library strategy",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/library_selection",
+                     "parameterName":{
+                        "annotationValue":"library selection",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/library_layout",
+                     "parameterName":{
+                        "annotationValue":"library layout",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  }
+               ],
+               "components":[
+
+               ]
+            },
+            {
+               "@id":"#protocol/nucleic_acid_sequencing",
+               "name":"nucleic acid sequencing",
+               "protocolType":{
+                  "annotationValue":"nucleic acid sequencing",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "description":"",
+               "uri":"",
+               "version":"",
+               "parameters":[
+                  {
+                     "@id":"#parameter/sequencing_instrument",
+                     "parameterName":{
+                        "annotationValue":"sequencing instrument",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/base_caller",
+                     "parameterName":{
+                        "annotationValue":"base caller",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  },
+                  {
+                     "@id":"#parameter/quality_score",
+                     "parameterName":{
+                        "annotationValue":"quality score",
+                        "termSource":"",
+                        "termAccession":""
+                     }
+                  }
+               ],
+               "components":[
+
+               ]
+            }
+         ],
+         "factors":[
+            {
+               "@id":"#factor/antibody",
+               "factorName":"antibody",
+               "factorType":{
+                  "annotationValue":"antibody",
+                  "termSource":"GO",
+                  "termAccession":"http://purl.obolibrary.org/obo/GO_0042571"
+               }
+            },
+            {
+               "@id":"#factor/cell_type",
+               "factorName":"cell type",
+               "factorType":{
+                  "annotationValue":"cell",
+                  "termSource":"CL",
+                  "termAccession":"http://purl.obolibrary.org/obo/CL_0000000"
+               }
+            }
+         ],
+         "characteristicCategories":[
+            {
+               "@id":"#characteristic_category/organism",
+               "characteristicType":{
+                  "annotationValue":"organism",
+                  "termSource":"",
+                  "termAccession":""
+               }
+            },
+            {
+               "@id":"#characteristic_category/disease_state",
+               "characteristicType":{
+                  "annotationValue":"disease state",
+                  "termSource":"",
+                  "termAccession":""
+               }
+            },
+            {
+               "@id":"#characteristic_category/genotype",
+               "characteristicType":{
+                  "annotationValue":"genotype",
+                  "termSource":"",
+                  "termAccession":""
+               }
+            },
+            {
+               "@id":"#characteristic_category/cell_type",
+               "characteristicType":{
+                  "annotationValue":"cell type",
+                  "termSource":"",
+                  "termAccession":""
+               }
+            },
+            {
+               "@id":"#characteristic_category/notes",
+               "characteristicType":{
+                  "annotationValue":"notes",
+                  "termSource":"",
+                  "termAccession":""
+               }
+            }
+         ],
+         "unitCategories":[
+
+         ],
+         "materials":{
+            "sources":[
+               {
+                  "@id":"#source/source-GSM850823",
+                  "name":"source-GSM850823",
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/organism"
+                        },
+                        "value":{
+                           "annotationValue":"Homo sapiens",
+                           "termSource":"NCBITAXON",
+                           "termAccession":"http://purl.obolibrary.org/obo/NCBITaxon_9606"
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/disease_state"
+                        },
+                        "value":{
+                           "annotationValue":"Acute Myelogenous Leukemia (AML)",
+                           "termSource":"NCIT",
+                           "termAccession":"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3171"
+                        }
+                     }
+                  ]
+               },
+               {
+                  "@id":"#source/source-GSM850824",
+                  "name":"source-GSM850824",
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/organism"
+                        },
+                        "value":{
+                           "annotationValue":"Homo sapiens",
+                           "termSource":"NCBITAXON",
+                           "termAccession":"http://purl.obolibrary.org/obo/NCBITaxon_9606"
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/disease_state"
+                        },
+                        "value":{
+                           "annotationValue":"Acute Myelogenous Leukemia (AML)",
+                           "termSource":"NCIT",
+                           "termAccession":"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3171"
+                        }
+                     }
+                  ]
+               },
+               {
+                  "@id":"#source/source-GSM850825",
+                  "name":"source-GSM850825",
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/organism"
+                        },
+                        "value":{
+                           "annotationValue":"Homo sapiens",
+                           "termSource":"NCBITAXON",
+                           "termAccession":"http://purl.obolibrary.org/obo/NCBITaxon_9606"
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/disease_state"
+                        },
+                        "value":{
+                           "annotationValue":"Acute Myelogenous Leukemia (AML)",
+                           "termSource":"NCIT",
+                           "termAccession":"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3171"
+                        }
+                     }
+                  ]
+               },
+               {
+                  "@id":"#source/source-GSM850826",
+                  "name":"source-GSM850826",
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/organism"
+                        },
+                        "value":{
+                           "annotationValue":"Homo sapiens",
+                           "termSource":"NCBITAXON",
+                           "termAccession":"http://purl.obolibrary.org/obo/NCBITaxon_9606"
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/disease_state"
+                        },
+                        "value":{
+                           "annotationValue":"Acute Myelogenous Leukemia (AML)",
+                           "termSource":"NCIT",
+                           "termAccession":"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3171"
+                        }
+                     }
+                  ]
+               },
+               {
+                  "@id":"#source/source-GSM850827",
+                  "name":"source-GSM850827",
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/organism"
+                        },
+                        "value":{
+                           "annotationValue":"Homo sapiens",
+                           "termSource":"NCBITAXON",
+                           "termAccession":"http://purl.obolibrary.org/obo/NCBITaxon_9606"
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/disease_state"
+                        },
+                        "value":{
+                           "annotationValue":"Acute Myelogenous Leukemia (AML)",
+                           "termSource":"NCIT",
+                           "termAccession":"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3171"
+                        }
+                     }
+                  ]
+               },
+               {
+                  "@id":"#source/source-GSM850828",
+                  "name":"source-GSM850828",
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/organism"
+                        },
+                        "value":{
+                           "annotationValue":"Homo sapiens",
+                           "termSource":"NCBITAXON",
+                           "termAccession":"http://purl.obolibrary.org/obo/NCBITaxon_9606"
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/disease_state"
+                        },
+                        "value":{
+                           "annotationValue":"Acute Myelogenous Leukemia (AML)",
+                           "termSource":"NCIT",
+                           "termAccession":"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C3171"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "samples":[
+               {
+                  "@id":"#sample/sample-RUNX1_siMM_ChIPSeq",
+                  "name":"sample-RUNX1_siMM_ChIPSeq",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"Kasumi-1 transfection with mismatch siRNA",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Kasumi-1",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"Kasumi-1 transfection with mismatch siRNA",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850823"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-RUNX1_siRE_ChIPSeq",
+                  "name":"sample-RUNX1_siRE_ChIPSeq",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"Kasumi-1 transfection with RUNX1/ETO siRNA",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Kasumi-1",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"Kasumi-1 transfection with RUNX1/ETO siRNA",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850824"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientA_ChIPSeq_1",
+                  "name":"sample-PatientA_ChIPSeq 1",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850825"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientA_ChIPSeq_2",
+                  "name":"sample-PatientA_ChIPSeq 2",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850825"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientB_ChIPSeq_1",
+                  "name":"sample-PatientB_ChIPSeq 1",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850826"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientB_ChIPSeq_2",
+                  "name":"sample-PatientB_ChIPSeq 2",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850826"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientA_input_1",
+                  "name":"sample-PatientA_input 1",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850827"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientA_input_2",
+                  "name":"sample-PatientA_input 2",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850827"
+                     }
+                  ]
+               },
+               {
+                  "@id":"#sample/sample-PatientB_input",
+                  "name":"sample-PatientB_input",
+                  "factorValues":[
+
+                  ],
+                  "characteristics":[
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/genotype"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/cell_type"
+                        },
+                        "value":{
+                           "annotationValue":"Leukemic blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     },
+                     {
+                        "category":{
+                           "@id":"#characteristic_category/notes"
+                        },
+                        "value":{
+                           "annotationValue":"t(8;21) AML patient Blast cells",
+                           "termSource":"",
+                           "termAccession":""
+                        }
+                     }
+                  ],
+                  "derivesFrom":[
+                     {
+                        "@id":"#source/source-GSM850828"
+                     }
+                  ]
+               }
+            ],
+            "otherMaterials":[
+
+            ]
+         },
+         "processSequence":[
+            {
+               "@id":"#process/sample_collection1",
+               "executesProtocol":{
+                  "@id":"#protocol/sample_collection"
+               },
+               "performer":"",
+               "date":"",
+               "parameterValues":[
+
+               ],
+               "inputs":[
+                  {
+                     "@id":"#source/source-GSM850823"
+                  }
+               ],
+               "outputs":[
+                  {
+                     "@id":"#sample/sample-RUNX1_siMM_ChIPSeq"
+                  }
+               ],
+               "comments":[
+
+               ]
+            },
+            {
+               "@id":"#process/sample_collection2",
+               "executesProtocol":{
+                  "@id":"#protocol/sample_collection"
+               },
+               "performer":"",
+               "date":"",
+               "parameterValues":[
+
+               ],
+               "inputs":[
+                  {
+                     "@id":"#source/source-GSM850824"
+                  }
+               ],
+               "outputs":[
+                  {
+                     "@id":"#sample/sample-RUNX1_siRE_ChIPSeq"
+                  }
+               ],
+               "comments":[
+
+               ]
+            },
+            {
+               "@id":"#process/sample_collection3",
+               "executesProtocol":{
+                  "@id":"#protocol/sample_collection"
+               },
+               "performer":"",
+               "date":"",
+               "parameterValues":[
+
+               ],
+               "inputs":[
+                  {
+                     "@id":"#source/source-GSM850825"
+                  }
+               ],
+               "outputs":[
+                  {
+                     "@id":"#sample/sample-PatientA_ChIPSeq_1"
+                  },
+                  {
+                     "@id":"#sample/sample-PatientA_ChIPSeq_2"
+                  }
+               ],
+               "comments":[
+
+               ]
+            },
+            {
+               "@id":"#process/sample_collection4",
+               "executesProtocol":{
+                  "@id":"#protocol/sample_collection"
+               },
+               "performer":"",
+               "date":"",
+               "parameterValues":[
+
+               ],
+               "inputs":[
+                  {
+                     "@id":"#source/source-GSM850826"
+                  }
+               ],
+               "outputs":[
+                  {
+                     "@id":"#sample/sample-PatientB_ChIPSeq_1"
+                  },
+                  {
+                     "@id":"#sample/sample-PatientB_ChIPSeq_2"
+                  }
+               ],
+               "comments":[
+
+               ]
+            },
+            {
+               "@id":"#process/sample_collection5",
+               "executesProtocol":{
+                  "@id":"#protocol/sample_collection"
+               },
+               "performer":"",
+               "date":"",
+               "parameterValues":[
+
+               ],
+               "inputs":[
+                  {
+                     "@id":"#source/source-GSM850827"
+                  }
+               ],
+               "outputs":[
+                  {
+                     "@id":"#sample/sample-PatientA_input_1"
+                  },
+                  {
+                     "@id":"#sample/sample-PatientA_input_2"
+                  }
+               ],
+               "comments":[
+
+               ]
+            },
+            {
+               "@id":"#process/sample_collection6",
+               "executesProtocol":{
+                  "@id":"#protocol/sample_collection"
+               },
+               "performer":"",
+               "date":"",
+               "parameterValues":[
+
+               ],
+               "inputs":[
+                  {
+                     "@id":"#source/source-GSM850828"
+                  }
+               ],
+               "outputs":[
+                  {
+                     "@id":"#sample/sample-PatientB_input"
+                  }
+               ],
+               "comments":[
+
+               ]
+            }
+         ],
+         "assays":[
+            {
+               "@id":"#assay/a_16410.txt",
+               "filename":"a_16410.txt",
+               "measurementType":{
+                  "annotationValue":"transcription factor binding site identification",
+                  "termSource":"OBI",
+                  "termAccession":"http://purl.obolibrary.org/obo/OBI_0000291"
+               },
+               "technologyType":{
+                  "annotationValue":"nucleotide sequencing",
+                  "termSource":"",
+                  "termAccession":""
+               },
+               "technologyPlatform":"Illumina Genome Analyzer",
+               "characteristicCategories":[
+
+               ],
+               "unitCategories":[
+                  {
+                     "@id":"#Unit/",
+                     "annotationValue":"",
+                     "termSource":"",
+                     "termAccession":""
+                  }
+               ],
+               "materials":{
+                  "samples":[
+                     {
+                        "@id":"#sample/sample-PatientA_ChIPSeq_1"
+                     },
+                     {
+                        "@id":"#sample/sample-PatientA_ChIPSeq_2"
+                     },
+                     {
+                        "@id":"#sample/sample-PatientA_input_1"
+                     },
+                     {
+                        "@id":"#sample/sample-PatientA_input_2"
+                     },
+                     {
+                        "@id":"#sample/sample-PatientB_ChIPSeq_1"
+                     },
+                     {
+                        "@id":"#sample/sample-PatientB_ChIPSeq_2"
+                     },
+                     {
+                        "@id":"#sample/sample-PatientB_input"
+                     },
+                     {
+                        "@id":"#sample/sample-RUNX1_siMM_ChIPSeq"
+                     },
+                     {
+                        "@id":"#sample/sample-RUNX1_siRE_ChIPSeq"
+                     }
+                  ],
+                  "otherMaterials":[
+                     {
+                        "@id":"#material/extract-PatientA_ChIPSeq_1",
+                        "name":"extract-PatientA_ChIPSeq 1",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-PatientA_ChIPSeq_2",
+                        "name":"extract-PatientA_ChIPSeq 2",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-PatientA_input_1",
+                        "name":"extract-PatientA_input 1",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-PatientA_input_2",
+                        "name":"extract-PatientA_input 2",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-PatientB_ChIPSeq_1",
+                        "name":"extract-PatientB_ChIPSeq 1",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-PatientB_ChIPSeq_2",
+                        "name":"extract-PatientB_ChIPSeq 2",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-PatientB_input",
+                        "name":"extract-PatientB_input",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-RUNX1_siMM_ChIPSeq",
+                        "name":"extract-RUNX1_siMM_ChIPSeq",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     },
+                     {
+                        "@id":"#material/extract-RUNX1_siRE_ChIPSeq",
+                        "name":"extract-RUNX1_siRE_ChIPSeq",
+                        "type":"Extract Name",
+                        "characteristics":[
+
+                        ]
+                     }
+                  ]
+               },
+               "dataFiles":[
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391643/SRR391643_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391643/SRR391643_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15586"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391643/SRR391643_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391643/SRR391643_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15586"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391644/SRR391644_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391644/SRR391644_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15587"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391644/SRR391644_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391644/SRR391644_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15587"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391648/SRR391648_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391648/SRR391648_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15590"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391648/SRR391648_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391648/SRR391648_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15590"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391647/SRR391647_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391647/SRR391647_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15591"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391647/SRR391647_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391647/SRR391647_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15591"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391645/SRR391645_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391645/SRR391645_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15588"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391645/SRR391645_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391645/SRR391645_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15588"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391646/SRR391646_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391646/SRR391646_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15589"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391646/SRR391646_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391646/SRR391646_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15589"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391649/SRR391649_1.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391649/SRR391649_1.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15592"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391649/SRR391649_2.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391649/SRR391649_2.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15592"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391641/SRR391641.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391641/SRR391641.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siMM_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15584"
+                        }
+                     ]
+                  },
+                  {
+                     "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391642/SRR391642.fastq.gz",
+                     "name":"ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391642/SRR391642.fastq.gz",
+                     "type":"Raw Data File",
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siRE_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15585"
+                        }
+                     ]
+                  }
+               ],
+               "processSequence":[
+                  {
+                     "@id":"#process/nucleic_acid_extraction1",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"ETO (E/S19)",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientA_ChIPSeq_1"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientA_ChIPSeq_1"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15586"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/library_construction1",
+                     "executesProtocol":{
+                        "@id":"#protocol/library_construction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/library_source"
+                           },
+                           "value":{
+                              "annotationValue":"genomic",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/library_strategy"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/library_selection"
+                           },
+                           "value":{
+                              "annotationValue":"chip",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/library_layout"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#material/extract-PatientA_ChIPSeq_1"
+                        },
+                        {
+                           "@id":"#material/extract-PatientA_ChIPSeq_2"
+                        },
+                        {
+                           "@id":"#material/extract-PatientA_input_1"
+                        },
+                        {
+                           "@id":"#material/extract-PatientA_input_2"
+                        },
+                        {
+                           "@id":"#material/extract-PatientB_ChIPSeq_1"
+                        },
+                        {
+                           "@id":"#material/extract-PatientB_ChIPSeq_2"
+                        },
+                        {
+                           "@id":"#material/extract-PatientB_input"
+                        },
+                        {
+                           "@id":"#material/extract-RUNX1_siMM_ChIPSeq"
+                        },
+                        {
+                           "@id":"#material/extract-RUNX1_siRE_ChIPSeq"
+                        }
+                     ],
+                     "outputs":[
+
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siRE_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15585"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/nucleic_acid_extraction9"
+                     },
+                     "nextProcess":{
+                        "@id":"#process/RUNX1_siRE_ChIPSeq"
+                     }
+                  },
+                  {
+                     "@id":"#process/PatientA_ChIPSeq",
+                     "name":"PatientA_ChIPSeq",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_sequencing"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/sequencing_instrument"
+                           },
+                           "value":"Illumina Genome Analyzer"
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/base_caller"
+                           },
+                           "value":""
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/quality_score"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391643/SRR391643_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391643/SRR391643_2.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391644/SRR391644_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391644/SRR391644_2.fastq.gz"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15587"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction2",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"ETO (E/S19)",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientA_ChIPSeq_2"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientA_ChIPSeq_2"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15587"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction3",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientA_input_1"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientA_input_1"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15590"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/PatientA_input",
+                     "name":"PatientA_input",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_sequencing"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/sequencing_instrument"
+                           },
+                           "value":"Illumina Genome Analyzer"
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/base_caller"
+                           },
+                           "value":""
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/quality_score"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391648/SRR391648_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391648/SRR391648_2.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391647/SRR391647_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391647/SRR391647_2.fastq.gz"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15591"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction4",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientA_input_2"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientA_input_2"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientA_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15591"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction5",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"ETO (E/S19)",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientB_ChIPSeq_1"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientB_ChIPSeq_1"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15588"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/PatientB_ChIPSeq",
+                     "name":"PatientB_ChIPSeq",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_sequencing"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/sequencing_instrument"
+                           },
+                           "value":"Illumina Genome Analyzer"
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/base_caller"
+                           },
+                           "value":""
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/quality_score"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391645/SRR391645_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391645/SRR391645_2.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391646/SRR391646_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391646/SRR391646_2.fastq.gz"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15589"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction6",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"ETO (E/S19)",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientB_ChIPSeq_2"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientB_ChIPSeq_2"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15589"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction7",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-PatientB_input"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-PatientB_input"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15592"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/PatientB_input",
+                     "name":"PatientB_input",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_sequencing"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/sequencing_instrument"
+                           },
+                           "value":"Illumina Genome Analyzer"
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/base_caller"
+                           },
+                           "value":""
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/quality_score"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391649/SRR391649_1.fastq.gz"
+                        },
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391649/SRR391649_2.fastq.gz"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"PatientB_input"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15592"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction8",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"ETO(C20)",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-RUNX1_siMM_ChIPSeq"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-RUNX1_siMM_ChIPSeq"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siMM_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15584"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/RUNX1_siMM_ChIPSeq",
+                     "name":"RUNX1_siMM_ChIPSeq",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_sequencing"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/sequencing_instrument"
+                           },
+                           "value":"Illumina Genome Analyzer"
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/base_caller"
+                           },
+                           "value":""
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/quality_score"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391641/SRR391641.fastq.gz"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siMM_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15584"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/nucleic_acid_extraction9",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_extraction"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/cross_linking"
+                           },
+                           "value":{
+                              "annotationValue":"formaldehyde",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragmentation"
+                           },
+                           "value":{
+                              "annotationValue":"",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/DNA_fragment_size"
+                           },
+                           "value":"",
+                           "unit":{
+                              "@id":"#Unit/"
+                           }
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/antibody"
+                           },
+                           "value":{
+                              "annotationValue":"ETO(C20)",
+                              "termSource":"",
+                              "termAccession":""
+                           }
+                        }
+                     ],
+                     "inputs":[
+                        {
+                           "@id":"#sample/sample-RUNX1_siRE_ChIPSeq"
+                        }
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#material/extract-RUNX1_siRE_ChIPSeq"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siRE_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15585"
+                        }
+                     ],
+                     "nextProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  },
+                  {
+                     "@id":"#process/RUNX1_siRE_ChIPSeq",
+                     "name":"RUNX1_siRE_ChIPSeq",
+                     "executesProtocol":{
+                        "@id":"#protocol/nucleic_acid_sequencing"
+                     },
+                     "performer":"",
+                     "date":"",
+                     "parameterValues":[
+                        {
+                           "category":{
+                              "@id":"#parameter/sequencing_instrument"
+                           },
+                           "value":"Illumina Genome Analyzer"
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/base_caller"
+                           },
+                           "value":""
+                        },
+                        {
+                           "category":{
+                              "@id":"#parameter/quality_score"
+                           },
+                           "value":""
+                        }
+                     ],
+                     "inputs":[
+
+                     ],
+                     "outputs":[
+                        {
+                           "@id":"#data/rawdatafile-ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR391/SRR391642/SRR391642.fastq.gz"
+                        }
+                     ],
+                     "comments":[
+                        {
+                           "name":"Group Name",
+                           "value":"RUNX1_siRE_ChIPSeq"
+                        },
+                        {
+                           "name":"Replicate Id",
+                           "value":"15585"
+                        }
+                     ],
+                     "previousProcess":{
+                        "@id":"#process/library_construction1"
+                     }
+                  }
+               ]
+            }
+         ],
+         "filename":"s_16410.txt",
+         "comments":[
+            {
+               "name":"Study Grant Number",
+               "value":""
+            },
+            {
+               "name":"Study Funding Agency",
+               "value":""
+            },
+            {
+               "name":"Manuscript Licence",
+               "value":""
+            },
+            {
+               "name":"Experimental Metadata Licence",
+               "value":""
+            },
+            {
+               "name":"Data Repository",
+               "value":""
+            },
+            {
+               "name":"Data Record Accession",
+               "value":""
+            },
+            {
+               "name":"Data Record URI",
+               "value":""
+            },
+            {
+               "name":"Supplementary Information File Name",
+               "value":""
+            },
+            {
+               "name":"Supplementary Information File Type",
+               "value":""
+            },
+            {
+               "name":"Supplementary Information File URI",
+               "value":""
+            },
+            {
+               "name":"Subject Keywords",
+               "value":""
+            }
+         ]
+      }
+   ],
+   "comments":[
+      {
+         "name":"Created With Configuration",
+         "value":""
+      },
+      {
+         "name":"Last Opened With Configuration",
+         "value":""
+      }
+   ]
+}

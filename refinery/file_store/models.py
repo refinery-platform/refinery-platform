@@ -14,6 +14,8 @@ import os
 import re
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
@@ -254,6 +256,14 @@ class FileStoreItem(models.Model):
         # unintended side-effects
         self.datafile = None
         self.save()
+
+    def has_url_source(self):
+        try:
+            URLValidator()(self.source)
+        except ValidationError:
+            return False
+        else:
+            return True
 
 
 # post_delete is safer than pre_delete

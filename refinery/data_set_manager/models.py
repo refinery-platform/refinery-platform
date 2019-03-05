@@ -6,6 +6,8 @@ Created on May 10, 2012
 import os
 from datetime import datetime
 import logging
+import re
+import zipfile
 
 from django.conf import settings
 from django.db import models
@@ -40,7 +42,29 @@ General:
 """
 
 
-class NodeCollection(models.Model):
+class Comment(models.Model):
+    """Representation of a Comment within an ISA-Tab archive"""
+    name = models.TextField()
+    value = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return unicode(self.name + ": " + self.value)
+
+
+class Commentable(models.Model):
+    """
+    Reserved for ISA-Tab components that are allowed to have comments
+    according to the ISA-JSON standard.
+    See: isa-specs.readthedocs.io/en/latest/isajson.html?highlight=comments
+    """
+    comments = models.ManyToManyField(Comment, blank=True,
+                                      default=Comment.objects.none())
+
+    class Meta:
+        abstract = True
+
+
+class NodeCollection(Commentable):
     """Base class for Investigation and Study
     """
     uuid = UUIDField(unique=True, auto=True)
@@ -106,7 +130,7 @@ class NodeCollection(models.Model):
             return dateString
 
 
-class Publication(models.Model):
+class Publication(Commentable):
     """Investigation or Study Publication (ISA-Tab Spec 4.1.2.2, 4.1.3.3)"""
     collection = models.ForeignKey(NodeCollection)
     title = models.TextField(blank=True, null=True)
@@ -122,7 +146,7 @@ class Publication(models.Model):
         return unicode(self.authors) + ": " + unicode(self.title)
 
 
-class Contact(models.Model):
+class Contact(Commentable):
     """Investigation or Study Contact (ISA-Tab Spec 4.1.2.3, 4.1.3.7)"""
     collection = models.ForeignKey(NodeCollection)
     last_name = models.TextField(blank=True, null=True)
@@ -205,8 +229,11 @@ class Investigation(NodeCollection):
     def get_assay(self):
         try:
             return Assay.objects.get(study=self.get_study())
-        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+        except Assay.DoesNotExist as e:
             raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+        except Assay.MultipleObjectsReturned as e:
+            raise RuntimeError("Study has multiple assays which is "
+                               "currently unsupported: {}".format(e))
 
     def get_assay_count(self):
         studies = self.study_set.all()
@@ -215,6 +242,26 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
+    def get_isatab_file_name(self):
+        """
+        Attempt to find appropriate filename match from the ISATab zip contents
+        https://isa-specs.readthedocs.io/en/latest/isatab.html#format
+
+        :return: string containing the filename that this Investigation was
+        derived from
+        :raises: NotImplementedError
+        """
+        if not self.is_isa_tab_based():
+            raise NotImplementedError("Only Investigations derived from "
+                                      "ISATabs are supported")
+
+        zipped_filenames = \
+            zipfile.ZipFile(self.get_file_store_item().datafile).namelist()
+
+        for base_file_name in [os.path.basename(n) for n in zipped_filenames]:
+            if re.match("i_.*\.txt", base_file_name):
+                return base_file_name
 
     def get_file_store_items(self, exclude_metadata_file=False,
                              local_only=False):
@@ -277,7 +324,7 @@ def _investigation_delete(sender, instance, **kwargs):
     instance.get_file_store_item().delete()
 
 
-class Ontology(models.Model):
+class Ontology(Commentable):
     """Ontology Source Reference (ISA-Tab Spec 4.1.1)"""
     investigation = models.ForeignKey(Investigation)
     name = models.TextField(blank=True, null=True)
@@ -336,7 +383,7 @@ class Design(models.Model):
         return unicode(self.type)
 
 
-class Factor(models.Model):
+class Factor(Commentable):
     """Study Factor (ISA-Tab Spec 4.1.3.4)"""
     study = models.ForeignKey(Study)
     name = models.TextField(blank=True, null=True)
@@ -348,7 +395,7 @@ class Factor(models.Model):
         return unicode(self.name) + ": " + unicode(self.type)
 
 
-class Assay(models.Model):
+class Assay(Commentable):
     """Study Assay (ISA-Tab Spec 4.1.3.5)"""
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study)
@@ -376,7 +423,7 @@ class Assay(models.Model):
         return retstr
 
 
-class Protocol(models.Model):
+class Protocol(Commentable):
     """Study Protocol (ISA-Tab Spec 4.1.3.6)"""
     study = models.ForeignKey(Study)
     uuid = UUIDField(unique=True, auto=True)
@@ -393,8 +440,6 @@ class Protocol(models.Model):
     type_source = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     uri = models.TextField(blank=True, null=True)
-    # protocol parameters: via FK
-    # protocol components: via FK
 
     def __unicode__(self):
         return unicode(self.name) + ": " + unicode(self.type)
@@ -403,8 +448,7 @@ class Protocol(models.Model):
         ordering = ['id']
 
 
-class ProtocolParameter(models.Model):
-    study = models.ForeignKey(Study)
+class ProtocolParameter(Commentable):
     protocol = models.ForeignKey(Protocol)
     name = models.TextField(blank=True, null=True)
     name_accession = models.TextField(blank=True, null=True)
@@ -412,7 +456,6 @@ class ProtocolParameter(models.Model):
 
 
 class ProtocolComponent(models.Model):
-    study = models.ForeignKey(Study)
     protocol = models.ForeignKey(Protocol)
     name = models.TextField(blank=True, null=True)
     type = models.TextField(blank=True, null=True)
@@ -420,12 +463,13 @@ class ProtocolComponent(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
 
-class Node(models.Model):
+class Node(Commentable):
     # allowed node types
     SOURCE = "Source Name"
     SAMPLE = "Sample Name"
     EXTRACT = "Extract Name"
     LABELED_EXTRACT = "Labeled Extract Name"
+    EXTRACTS = [EXTRACT, LABELED_EXTRACT]
 
     SCAN = "Scan Name"
     NORMALIZATION = "Normalization Name"
@@ -708,6 +752,26 @@ class Node(models.Model):
             self, using="data_set_manager"
         )
 
+    def get_comment_attributes(self):
+        """
+        Retrieve Attributes of type Attribute.COMMENT for a given Node and
+        said Nodes parents
+        """
+
+        # Note: that the .distinct('subtype', 'value') is required by both
+        # the query and the return value to be able to perform a union of both
+        # QuerySets
+        comment_attributes = Attribute.objects.filter(
+            node=self, type=Attribute.COMMENT
+        ).distinct('subtype', 'value')
+
+        for parent_node in self.parents_set.all():
+            comment_attributes = (
+                comment_attributes | parent_node.get_comment_attributes()
+            )
+
+        return comment_attributes.distinct('subtype', 'value')
+
 
 @receiver(pre_delete, sender=Node)
 def _node_delete(sender, instance, *args, **kwargs):
@@ -782,6 +846,17 @@ class Attribute(models.Model):
             " = " +
             unicode(self.value)
         )
+
+    @property
+    def properly_cast_value(self):
+        if self.value.isdigit():
+            return int(self.value)
+        try:
+            float_value = float(self.value)
+        except ValueError:
+            return self.value
+        else:
+            return float_value
 
 
 # non-ISA Tab

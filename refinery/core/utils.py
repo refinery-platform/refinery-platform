@@ -1031,3 +1031,18 @@ def verify_recaptcha(view_function):
                 request.recaptcha_is_valid = True
         return view_function(request, *args, **kwargs)
     return _wrapped_view
+
+
+def get_data_set_instance_from_query_params(request):
+    try:
+        data_set_uuid = request.query_params["data_set_uuid"]
+    except (AttributeError, KeyError) as e:
+        raise RuntimeError("Must specify a DataSet UUID: {}".format(e))
+    try:
+        data_set = core.models.DataSet.objects.get(uuid=data_set_uuid)
+    except (core.models.DataSet.DoesNotExist,
+            core.models.DataSet.MultipleObjectsReturned) as e:
+        raise RuntimeError(
+            "Couldn't fetch DataSet with UUID: {} {}".format(data_set_uuid, e)
+        )
+    return data_set

@@ -14,8 +14,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from core.models import DataSet
-
+from core.utils import get_data_set_instance_from_query_params
 from .models import ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import (
@@ -32,17 +31,10 @@ class ToolManagerViewSetBase(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            data_set_uuid = self.request.query_params["data_set_uuid"]
-        except (AttributeError, KeyError) as e:
-            return HttpResponseBadRequest("Must specify a DataSet "
-                                          "UUID: {}".format(e))
-        try:
-            self.data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            return HttpResponseBadRequest(
-                "Couldn't fetch DataSet with UUID: {} {}"
-                .format(data_set_uuid, e)
-            )
+            self.data_set = get_data_set_instance_from_query_params(request)
+        except RuntimeError as e:
+            return HttpResponseBadRequest(e)
+
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
             return super(ToolManagerViewSetBase, self).list(request)
         return HttpResponseForbidden(

@@ -8,6 +8,7 @@ import csv
 import hashlib
 import json
 import logging
+import os
 import shutil
 import tempfile
 import time
@@ -24,8 +25,9 @@ import core
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
-    Node, Study
-)
+    Contact, Design, Factor, Node, Ontology, Protocol, ProtocolComponent,
+    ProtocolParameter, ProtocolReference, ProtocolReferenceParameter,
+    Publication, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 
@@ -1062,3 +1064,847 @@ def get_first_annotated_node_from_solr_name(solr_name, node):
         attribute_type=attribute_type,
         attribute_subtype__iexact=attribute_subtype
     ).first()
+
+
+class ISAJSONCreatorError(RuntimeError):
+    pass
+
+
+class ISAJSONCreator:
+    """
+    Create a dict representation of an ISA-Tab based Refinery DataSet that
+    satisfies the ISA-JSON standard.
+
+    See: https://isa-specs.readthedocs.io/en/latest/isajson.html
+
+    Said dict will be utilized by:
+    https://github.com/refinery-platform/isa-tab-exporter to generate a new
+    ISA-Tab .zip file including any changes that have occurred during the
+    lifetime of the DataSet including, but not limited to:
+      - Analysis/Workflow derived results,
+      - Metadata revisions (DataSet Node contents as well as DataSet-level
+        modifications (title updates etc.))
+    """
+    def __init__(self, dataset):
+        investigation = dataset.get_investigation()
+        if not investigation.is_isa_tab_based():
+            raise ISAJSONCreatorError(
+                "Investigation is not derived from an ISA-Tab"
+            )
+        self.dataset = dataset
+        self.investigation = investigation
+        self.investigation_identifier = self.investigation.get_identifier()
+        self.studies = Study.objects.filter(investigation=self.investigation)
+
+        self.create_comments = False
+        self.current_protocol_reference_index = None
+        self.current_protocol_references = None
+
+    def create(self):
+        return {
+            "isatab_filename": "{}.zip".format(
+                self.dataset.get_investigation().get_identifier() or "ISA-Tab"
+            ),
+            # Replace any `null` occurrences with empty strings.
+            # The ISA JSON schemas consider null values to be invalid
+            "isatab_contents": json.loads(
+                json.dumps(self._create_investigation()).replace('null', '""')
+            ),
+        }
+
+    def _create_assays(self, study):
+        """
+        See: Assay Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#assay-schema-json
+        """
+
+        return [
+            {
+                "@id": self._create_id("assay", assay.file_name),
+                "comments": self._create_comments_from_commentable_model(
+                    assay
+                ),
+                "measurementType": self._create_ontology_annotation(
+                    assay.measurement, assay.measurement_source,
+                    assay.measurement_accession
+                ),
+                "technologyType": self._create_ontology_annotation(
+                    assay.technology, assay.technology_source,
+                    assay.technology_accession
+                ),
+                "technologyPlatform": assay.platform,
+                "filename": assay.file_name,
+                "materials": self._create_materials(assay),
+                "characteristicCategories": [],
+                "processSequence": self._create_process_sequence_assay(
+                    assay, study
+                ),
+                "dataFiles": self._create_datafiles(assay, study),
+                "unitCategories": []
+            }
+            for assay in Assay.objects.filter(study=study)
+        ]
+
+    def _create_comment(self, name, value):
+        """
+        See: Comment Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#comment-schema-json
+        """
+        return {"name": name, "value": str(value)}
+
+    def _create_comments_from_commentable_model(self, model_instance):
+        logger.debug("Creating ISA-JSON comments for %s", model_instance)
+        return [
+            self._create_comment(comment.name, comment.value)
+            for comment in model_instance.comments.all()
+        ]
+
+    def _create_comments_from_node(self, node):
+        comment_attributes = node.get_comment_attributes()
+        return [
+            self._create_comment(attribute.subtype, attribute.value)
+            for attribute in comment_attributes
+        ]
+
+    def _create_characteristic_categories(self, study):
+        """
+        See: Material Attribute Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #material-attribute-schema-json
+        """
+        return [
+            {
+              "@id": self._create_id("characteristic_category",
+                                     characteristic_name),
+              "characteristicType": self._create_ontology_annotation(
+                  term=characteristic_name
+              )
+            }
+
+            # Note the set comprehension below. There are issues with
+            # AnnotatedNode creation where many duplicates are created.
+            # See the "Exponential Explosion" GitHub issue:
+            # github.com/refinery-platform/refinery-platform/issues/2427
+            for characteristic_name in {
+                annotated_node.attribute.subtype for annotated_node in
+                AnnotatedNode.objects.filter(
+                    study=study, attribute__type=Attribute.CHARACTERISTICS
+                )
+            }
+          ]
+
+    def _create_datafiles(self, assay, study):
+        """
+        See: Data Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#data-schema-json
+        """
+        datafiles = []
+        for node in self.dataset.get_nodes(
+            assay=assay, study=study, type__in=[
+                Node.RAW_DATA_FILE, Node.DERIVED_DATA_FILE, Node.IMAGE_FILE
+            ]
+        ):
+            file_store_item = node.get_file_store_item()
+
+            if file_store_item.has_url_source():
+                datafile_name = file_store_item.source
+            else:
+                datafile_name = os.path.basename(file_store_item.source)
+
+            datafiles.append(
+                {
+                    "@id": self._create_id_from_node(
+                        node, datafile_name=datafile_name
+                    ),
+                    "name": datafile_name,
+                    "type": Node.RAW_DATA_FILE,
+                    "comments": self._create_comments_from_node(node)
+                }
+            )
+        return datafiles
+
+    def _create_design_descriptors(self, study):
+        return [
+            self._create_ontology_annotation(
+                design.type, design.type_source, design.type_accession
+            )
+            for design in Design.objects.filter(study=study)
+        ]
+
+    def _create_factors(self, study):
+        """
+        See: Factor Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#factor-schema-json
+        """
+        factors = []
+        for factor in Factor.objects.filter(study=study):
+            factor_dict = {
+                "@id": self._create_id("factor", factor.name),
+                "factorName": factor.name,
+                "factorType": self._create_ontology_annotation(
+                    factor.type, factor.type_source, factor.type_accession
+                )
+            }
+            self._update_dict_with_comments(factor, factor_dict),
+            factors.append(factor_dict)
+        return factors
+
+    def _create_factor_values(self, node):
+        """
+        See: Factor Value Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #factor-value-schema-json
+        """
+        return [
+            {
+                "category": {
+                    "@id": self._create_id(
+                        "factor", annotated_node.attribute_subtype
+                    )
+                },
+                "value": {
+                    "annotationValue": annotated_node.attribute_value,
+                    "termAccession": "",
+                    "termSource": ""
+                }
+            } for annotated_node in AnnotatedNode.objects.filter(
+                node__name__startswith=node.name,
+                attribute__type=Attribute.FACTOR_VALUE
+            )
+        ]
+
+    def _create_id(self, identifier, value):
+        return "#{}/{}".format(identifier, self._spaces_to_underscores(value))
+
+    def _create_id_from_node(self, node, datafile_name=None):
+        value_prefix = node.type.lower().replace("name", "").replace(" ", "")
+
+        if "File" in node.type:
+            identifier = "data"
+        elif "Extract" in node.type:
+            identifier = "material"
+        else:
+            identifier = value_prefix
+
+        return self._create_id(
+            identifier,
+            "{}-{}".format(
+                value_prefix,
+                node.name if datafile_name is None else datafile_name
+            )
+        )
+
+    def _create_investigation(self):
+        """
+        See: Investigation Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #investigation-schema-json
+        """
+        return {
+            "@id": self._create_id("investigation",
+                                   self.investigation_identifier),
+            "comments": self._create_comments_from_commentable_model(
+                self.investigation
+            ),
+            "filename": self.investigation.get_isatab_file_name(),
+            "identifier": self._create_investigation_identifier(),
+            "title": self.investigation.title,
+            "description": self.investigation.description,
+            "submissionDate": self._iso_format_date(
+                self.investigation.submission_date
+            ),
+            "publicReleaseDate": self._iso_format_date(
+                self.investigation.release_date
+            ),
+            "ontologySourceReferences":
+            self._create_ontology_source_references(),
+            "publications": self._create_publications(self.investigation),
+            "people": self._create_people(self.investigation),
+            "studies": self._create_studies(),
+        }
+
+    def _create_investigation_identifier(self):
+        identifier = self.investigation.get_identifier()
+        if identifier.isdigit():
+            # Many SCC ISA-TABs will throw the error:
+            # isatools.errors.ISAModelAttributeError:
+            #   Investigation.identifier must be a string
+            # Without putting quotes around Investigation identifiers
+            # comprised of only digits
+            return "\"{}\"".format(identifier)
+        return identifier
+
+    def _create_materials(self, assay_or_study):
+        """
+        See: Material Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#material-schema-json
+        """
+        is_study = isinstance(assay_or_study, Study)
+
+        materials_dict = {
+            "otherMaterials": [] if is_study else
+            self._create_other_materials(assay_or_study),
+            "samples": self._create_samples(assay_or_study),
+        }
+        if is_study:
+            study = assay_or_study
+            materials_dict["sources"] = self._create_sources(study)
+
+        return materials_dict
+
+    def _create_characteristics(self, node):
+        """
+        See: Material Attribute Value Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #material-attribute-value-schema-json
+        """
+        characteristics = []
+        attributes = Attribute.objects.filter(
+            node__name__startswith=node.name,
+            node__type=node.type,
+            type=Attribute.CHARACTERISTICS
+        )
+
+        for attribute in attributes:
+            characteristic = {
+                "category": {
+                    "@id": self._create_id(
+                        "characteristic_category", attribute.subtype
+                    )
+                }
+            }
+
+            # The Attribute Model corresponds to a "Unit" if the `value_unit`
+            # field is populated
+            if attribute.value_unit:
+                characteristic["unit"] = {
+                    "@id": self._create_id(
+                        "Unit", attribute.value_unit
+                    )
+                }
+                characteristic["value"] = attribute.properly_cast_value
+            else:
+                characteristic["value"] = self._create_ontology_annotation(
+                    attribute.properly_cast_value,
+                    attribute.value_source,
+                    attribute.value_accession
+                )
+            characteristics.append(characteristic)
+
+        return characteristics
+
+    def _create_next_process(self, node, process):
+        next_process = None
+        next_protocol_reference = None
+
+        if self.current_protocol_reference_index == \
+                len(self.current_protocol_references) - 1:
+
+            next_protocol_references = \
+                ProtocolReference.objects.filter(
+                    node__in=node.children_set.all()
+                ).order_by("pk")
+
+            if next_protocol_references.exists():
+                next_protocol_reference = next_protocol_references.first()
+                next_process = {
+                    "@id": self._create_id(
+                        "process",
+                        next_protocol_reference.protocol.name +
+                        str(next_protocol_reference.id)
+                    )
+                }
+        else:
+            next_protocol_reference = self.current_protocol_references[
+                self.current_protocol_reference_index + 1
+            ]
+
+            next_process = {
+                "@id": self._create_id(
+                    "process",
+                    next_protocol_reference.protocol.name +
+                    str(next_protocol_reference.id)
+                )
+            }
+
+        if next_protocol_reference == self.current_protocol_references[-1]:
+            if node.type == Node.EXTRACT:
+                assay_node = node.children_set.all().filter(
+                    type=Node.ASSAY
+                ).first()
+
+                if assay_node:
+                    next_process = {
+                        "@id": self._create_id("process", assay_node.name)
+                    }
+                    self.create_comments = True
+
+        if next_process is not None:
+            process["nextProcess"] = next_process
+
+    def _create_ontology_annotation(self, term="", term_source="",
+                                    term_accession=""):
+        """
+        See: Ontology Annotation Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #ontology-annotation-schema-json
+        """
+        return {
+            "annotationValue": term or "",
+            "termAccession": term_accession or "",
+            "termSource": term_source or ""
+        }
+
+    def _create_ontology_source_references(self):
+        """
+        See: Ontology Source Reference Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #ontology-source-reference-schema-json
+        """
+        ontology_source_references = []
+        for ontology in Ontology.objects.filter(
+            investigation=self.investigation
+        ):
+            ontology_dict = {
+                "name": ontology.name,
+                "version": ontology.version,
+                "description": ontology.description,
+                "file": ontology.file_name
+            }
+            self._update_dict_with_comments(ontology, ontology_dict)
+            ontology_source_references.append(ontology_dict)
+
+        return ontology_source_references
+
+    def _create_other_materials(self, assay):
+        return [
+            {
+                "@id": self._create_id_from_node(node),
+                "characteristics": [],
+                "name": "extract-{}".format(node.name),
+                "type": node.type
+            }
+            for node in Node.objects.filter(
+                assay=assay, type__in=Node.EXTRACTS
+            )
+        ]
+
+    def _create_people(self, node_collection):
+        """
+        See: Person Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#person-schema-json
+        """
+        def handle_semicolon(string):
+            return "" if string == ";" else string
+
+        def create_roles(contact):
+            roles = []
+            for role in contact.roles.split(";"):
+                role_ontology_annotation = self._create_ontology_annotation(
+                    role,
+                    handle_semicolon(contact.roles_source),
+                    handle_semicolon(contact.roles_accession)
+                )
+                if not all(not value for value in
+                           role_ontology_annotation.values()):
+                    roles.append(role_ontology_annotation)
+            return roles
+
+        return [
+            {
+                "@id": self._create_id("person", contact.last_name),
+                "comments": self._create_comments_from_commentable_model(
+                    contact
+                ),
+                "lastName": contact.last_name,
+                "firstName": contact.first_name,
+                "midInitials": contact.middle_initials,
+                "email": contact.email,
+                "phone": contact.phone,
+                "fax": contact.fax,
+                "address": contact.address,
+                "affiliation": contact.affiliation,
+                "roles": create_roles(contact)
+            }
+            for contact in Contact.objects.filter(collection=node_collection)
+        ]
+
+    def _create_previous_process(self, node, process):
+        previous_process = None
+
+        if self.current_protocol_reference_index == 0:
+            prior_protocol_references = \
+                ProtocolReference.objects.filter(
+                    node__in=node.parents_set.all()
+                ).exclude(node__type__in=[Node.SOURCE]).order_by("pk")
+
+            if prior_protocol_references.exists():
+                prior_protocol_reference = \
+                    prior_protocol_references.last()
+
+                previous_process = {
+                    "@id": self._create_id(
+                        "process",
+                        prior_protocol_reference.protocol.name +
+                        str(prior_protocol_reference.id)
+                    )
+                }
+        else:
+            prior_protocol_reference = self.current_protocol_references[
+                self.current_protocol_reference_index - 1
+            ]
+
+            previous_process = {
+                "@id": self._create_id(
+                    "process",
+                    prior_protocol_reference.protocol.name +
+                    str(prior_protocol_reference.id)
+                )
+            }
+
+        if previous_process is not None:
+            process["previousProcess"] = previous_process
+
+    def _create_process(self, protocol_reference, node=None):
+        """
+        See: Process Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#process-schema-json
+        """
+        assay_node = None
+
+        process_id = (
+            self._create_id(
+                "process", protocol_reference.protocol.name +
+                str(protocol_reference.id)
+            )
+        )
+
+        if node is not None and node.type == Node.EXTRACT:
+            last_protocol_reference = self.current_protocol_references[-1]
+            if protocol_reference == last_protocol_reference:
+                assay_node = node.children_set.all().filter(
+                    type=Node.ASSAY
+                ).first()
+
+                if assay_node:
+                    process_id = self._create_id("process", assay_node.name)
+                    self.create_comments = True
+
+        process = {
+            "@id": process_id,
+            "date": self._iso_format_date(protocol_reference.date),
+            "name": assay_node.name if assay_node else "",
+            "executesProtocol": {
+                "@id": self._create_id(
+                    "protocol", protocol_reference.protocol.name
+                )
+            },
+            "inputs": self._create_process_sequence_inputs(
+                assay_node, protocol_reference
+            ),
+            "outputs": self._create_process_sequence_outputs(
+                assay_node, protocol_reference
+            ),
+            "parameterValues":
+                self._create_protocol_reference_parameters(protocol_reference),
+            "performer": protocol_reference.performer or ""
+        }
+
+        if node is not None:
+            self._create_next_process(node, process)
+            self._create_previous_process(node, process)
+
+            process["comments"] = (
+                self._create_comments_from_node(node)
+                if self.create_comments else []
+            )
+            self.create_comments = False  # Reset create_comments flag
+
+        return process
+
+    def _create_process_sequence_assay(self, assay, study, nodes=None,
+                                       process_sequence=None):
+        if process_sequence is None:
+            process_sequence = []
+            nodes = self.dataset.get_nodes(study=study,
+                                           type=Node.SAMPLE).order_by("pk")
+
+        for node in nodes:
+            self.current_protocol_references = list(
+                ProtocolReference.objects.filter(node=node).order_by("pk")
+            )
+
+            for index, protocol_reference in enumerate(
+                self.current_protocol_references
+            ):
+                self.current_protocol_reference_index = index
+                process = self._create_process(protocol_reference, node=node)
+                process_sequence.append(process)
+
+            # Recursive call
+            self._create_process_sequence_assay(
+                assay, study, nodes=node.children_set.all(),
+                process_sequence=process_sequence
+            )
+        return process_sequence
+
+    def _create_process_sequence_inputs(self, assay_node, protocol_reference):
+        if assay_node is not None:
+            return []
+        else:
+            input_nodes = [protocol_reference.node]
+        return [
+            {"@id": self._create_id_from_node(node)} for node in input_nodes
+        ]
+
+    def _create_process_sequence_outputs(self, assay_node, protocol_reference):
+        if assay_node is not None:
+            last_protocol_reference = self.current_protocol_references[-1]
+            if protocol_reference == last_protocol_reference:
+                output_nodes = assay_node.children_set.all()
+            else:
+                return []
+        else:
+            output_nodes = protocol_reference.node.children_set.all().exclude(
+                type=Node.ASSAY
+            )
+        return [
+            {"@id": self._create_id_from_node(node)} for node in output_nodes
+        ]
+
+    def _create_process_sequence_study(self, study):
+        return [
+            self._create_process(protocol_reference)
+            for protocol_reference in ProtocolReference.objects.filter(
+                node__type=Node.SOURCE,
+                protocol__in=Protocol.objects.filter(study=study)
+            ).distinct("node__id")
+        ]
+
+    def _create_protocol_components(self, protocol):
+        return [
+            {
+                "componentName": protocol_component.name,
+                "componentType": self._create_ontology_annotation(
+                    protocol_component.type, protocol_component.type_source,
+                    protocol_component.type_accession
+                ),
+
+            }
+            for protocol_component in ProtocolComponent.objects.filter(
+                protocol=protocol
+            )
+        ]
+
+    def _create_protocol_parameters(self, protocol):
+        """
+        See: Protocol Parameter Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #protocol-parameter-schema-json
+        """
+        protocol_parameters = []
+        for protocol_parameter in ProtocolParameter.objects.filter(
+            protocol=protocol
+        ):
+            protocol_parameter_dict = {
+                "@id": self._create_id("parameter", protocol_parameter.name),
+                "parameterName": self._create_ontology_annotation(
+                    protocol_parameter.name, protocol_parameter.name_source,
+                    protocol_parameter.name_accession
+                ),
+            }
+            self._update_dict_with_comments(protocol_parameter,
+                                            protocol_parameter_dict)
+            protocol_parameters.append(protocol_parameter_dict)
+        return protocol_parameters
+
+    def _create_protocol_reference_parameters(self, protocol_reference):
+        parameter_values = []
+        protocol_reference_parameters = \
+            ProtocolReferenceParameter.objects.filter(
+                protocol_reference=protocol_reference
+            )
+        for protocol_reference_parameter in protocol_reference_parameters:
+            parameter_value = (protocol_reference_parameter.value if not
+                               protocol_reference_parameter.value_unit else
+                               protocol_reference_parameter.value_unit)
+            parameter_values.append(
+                {
+                    "category": {
+                        "@id": self._create_id(
+                            "parameter",
+                            protocol_reference_parameter.name
+                        )
+                    },
+                    "value": self._create_ontology_annotation(
+                        parameter_value,
+                        protocol_reference_parameter.value_source,
+                        protocol_reference_parameter.value_accession
+                    )
+                }
+            )
+        return parameter_values
+
+    def _create_protocols(self, study):
+        """
+        See: Protocol Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#protocol-schema-json
+        """
+        protocols = []
+        for protocol in Protocol.objects.filter(study=study):
+            protocol_dict = {
+                "@id": self._create_id("protocol", protocol.name),
+                "name": protocol.name,
+                "protocolType": self._create_ontology_annotation(
+                    protocol.type, protocol.type_source,
+                    protocol.type_accession
+                ),
+                "description": protocol.description,
+                "uri": protocol.uri,
+                "version": protocol.version,
+                "parameters": self._create_protocol_parameters(protocol),
+                "components": self._create_protocol_components(protocol),
+
+            }
+
+            self._update_dict_with_comments(protocol, protocol_dict)
+
+            protocols.append(protocol_dict)
+        return protocols
+
+    def _create_publications(self, investigation_or_study):
+        """
+        See: Publication Scema
+          isa-specs.readthedocs.io/en/latest/isajson.html
+          #publication-schema-json
+        """
+        publications = []
+        for publication in Publication.objects.filter(
+                collection=investigation_or_study
+        ):
+            publication_dict = {
+                "pubMedID": publication.pubmed_id,
+                "doi": publication.doi,
+                "authorList": publication.authors,
+                "title": publication.title,
+                "status": self._create_ontology_annotation(
+                    publication.status, publication.status_source,
+                    publication.status_accession
+                ),
+            }
+            self._update_dict_with_comments(publication, publication_dict)
+            publications.append(publication_dict)
+
+        return publications
+
+    def _create_samples(self, assay_or_study):
+        """
+        See: Sample Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#sample-schema-json
+        """
+        is_study = isinstance(assay_or_study, Study)
+
+        if is_study:
+            study = assay_or_study
+            nodes = Node.objects.filter(study=study, type=Node.SAMPLE)
+            return [
+                {
+                    "@id": self._create_id_from_node(node),
+                    "characteristics": self._create_characteristics(node),
+                    "derivesFrom": [
+                        {
+                            "@id": self._create_id_from_node(parent_node)
+                            for parent_node in node.parents.all()
+                        }
+                    ],
+                    "factorValues": self._create_factor_values(node),
+                    "name": "sample-{}".format(node.name)
+                }
+                for node in nodes
+            ]
+        else:
+            assay = assay_or_study
+            nodes = Node.objects.filter(study=assay.study, type=Node.SAMPLE)
+            return [
+                {"@id": self._create_id_from_node(node)}
+                for node in nodes
+            ]
+
+    def _create_sources(self, study):
+        """
+        See: Source schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#source-schema-json
+        """
+        return [
+            {
+                "@id": self._create_id_from_node(node),
+                "characteristics": self._create_characteristics(node),
+                "name": "source-{}".format(node.name)
+            }
+            for node in Node.objects.filter(study=study, type=Node.SOURCE)
+        ]
+
+    def _create_studies(self):
+        """
+        See: Study Schema
+          isa-specs.readthedocs.io/en/latest/isajson.html#study-schema-json
+        """
+        return [
+            {
+                "@id": self._create_id("study", study.identifier),
+                "identifier": study.identifier,
+                "title": study.title,
+                "description": study.description,
+                "comments": self._create_comments_from_commentable_model(
+                    study
+                ),
+                "submissionDate": self._iso_format_date(study.submission_date),
+                "publicReleaseDate": self._iso_format_date(study.release_date),
+                "filename": study.file_name,
+                "publications": self._create_publications(study),
+                "people": self._create_people(study),
+                "factors": self._create_factors(study),
+                "protocols": self._create_protocols(study),
+                "assays": self._create_assays(study),
+                "studyDesignDescriptors":
+                    self._create_design_descriptors(study),
+                "materials": self._create_materials(study),
+                "characteristicCategories":
+                    self._create_characteristic_categories(study),
+                "processSequence": self._create_process_sequence_study(study),
+                "unitCategories": self._create_unit_categories(study)
+            }
+            for study in self.studies
+        ]
+
+    def _create_unit_categories(self, study):
+        unit_categories = [
+            {
+                "@id": self._create_id("Unit",
+                                       annotated_node.attribute.value_unit),
+                "annotationValue": annotated_node.attribute.value_unit,
+                "termAccession": annotated_node.attribute.value_accession,
+                "termSource": annotated_node.attribute.value_source
+            }
+            for annotated_node in AnnotatedNode.objects.filter(
+                attribute__value_unit__isnull=False, study=study
+            )
+        ]
+
+        # Return a unique list of unit category dicts;
+        # See the "Exponential Explosion" GitHub issue:
+        # github.com/refinery-platform/refinery-platform/issues/2427
+        return {d['@id']: d for d in unit_categories}.values()
+
+    @staticmethod
+    def _iso_format_date(date):
+        return "" if date is None else date.isoformat()
+
+    @staticmethod
+    def _spaces_to_underscores(string):
+        return string.replace(" ", "_")
+
+    def _update_dict_with_comments(self, model_instance, model_dict):
+        if model_instance.comments.exists():
+            model_dict["comments"] = \
+                self._create_comments_from_commentable_model(model_instance)
