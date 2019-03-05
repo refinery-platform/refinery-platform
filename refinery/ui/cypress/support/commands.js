@@ -57,7 +57,6 @@ Cypress.Commands.add('django_shell',
   }
 );
 
-// mock login!
 Cypress.Commands.add('login_guest',
   // TODO: Figure out how to POST with CSRF tocken?
   function(next) {
