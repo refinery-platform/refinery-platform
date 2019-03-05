@@ -1,0 +1,156 @@
+{
+    "facet_field_counts": {
+        "filetype_Characteristics_generic_s": [
+            {
+                "count": 2,
+                "name": "FASTQ file"
+            },
+            {
+                "count": 2,
+                "name": "FASTQ.GZ file"
+            }
+        ],
+        "organism_Characteristics_generic_s": [
+            {
+                "count": 4,
+                "name": "Human"
+            }
+        ]
+    },
+    "nodes_count": 4,
+    "attributes": [
+        {
+            "file_ext": "s",
+            "display_name": "",
+            "internal_name": "*_generic_s"
+        },
+        {
+            "display_name": "name",
+            "internal_name": "name"
+        },
+        {
+            "file_ext": "uuid",
+            "display_name": "",
+            "internal_name": "*_uuid"
+        },
+        {
+            "display_name": "uuid",
+            "internal_name": "uuid"
+        },
+        {
+            "display_name": "type",
+            "internal_name": "type"
+        },
+        {
+            "file_ext": "id",
+            "display_name": "",
+            "internal_name": "django_id"
+        },
+        {
+            "attribute_type": "Internal",
+            "file_ext": "s",
+            "display_name": "Download",
+            "internal_name": "REFINERY_DOWNLOAD_URL_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Filetype",
+            "internal_name": "filetype_Characteristics_generic_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Organism",
+            "internal_name": "organism_Characteristics_generic_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Technology",
+            "internal_name": "technology_Characteristics_generic_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Genotype",
+            "internal_name": "genotype_Characteristics_generic_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Cell Type",
+            "internal_name": "cell_type_Characteristics_generic_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Antibody",
+            "internal_name": "antibody_Characteristics_generic_s"
+        },
+        {
+            "attribute_type": "Characteristics",
+            "file_ext": "s",
+            "display_name": "Experimenter",
+            "internal_name": "experimenter_Characteristics_generic_s"
+        }
+    ],
+    "nodes": [
+        {
+            "django_id": "54",
+            "organism_Characteristics_generic_s": "Human",
+            "data_set_uuid": "09b83132-6b71-46a7-9f4c-da33de8547ca",
+            "uuid": "e44fcb5b-23b6-40d2-a568-9abf61745250",
+            "sample_id_Characteristics_generic_s": "s5_p42_E2_45min.subsample",
+            "assay_uuid": "30bd70b0-d95d-493d-a72b-f81330ad3c4a",
+            "file_uuid": "21bd9bf6-fba8-43d9-b696-766f0fbf451d",
+            "filetype_Characteristics_generic_s": "FASTQ file",
+            "REFINERY_DOWNLOAD_URL_s": "N/A",
+            "study_uuid": "28f1d9d3-775e-4e95-ab84-b4f9dbf79829",
+            "type": "Raw Data File",
+            "name": "s5_p42_E2_45min.subsample.fastq"
+        },
+        {
+            "django_id": "58",
+            "organism_Characteristics_generic_s": "Human",
+            "data_set_uuid": "09b83132-6b71-46a7-9f4c-da33de8547ca",
+            "uuid": "2e733684-ac22-4400-9ca2-07792bdd5dde",
+            "sample_id_Characteristics_generic_s": "s7_EV_E2_45min.subsample",
+            "assay_uuid": "30bd70b0-d95d-493d-a72b-f81330ad3c4a",
+            "file_uuid": "fa58ba85-1481-4d26-b22d-12f6345ba001",
+            "filetype_Characteristics_generic_s": "FASTQ file",
+            "REFINERY_DOWNLOAD_URL_s": "N/A",
+            "study_uuid": "28f1d9d3-775e-4e95-ab84-b4f9dbf79829",
+            "type": "Raw Data File",
+            "name": "s7_EV_E2_45min.subsample.fastq"
+        },
+        {
+            "django_id": "62",
+            "organism_Characteristics_generic_s": "Human",
+            "data_set_uuid": "09b83132-6b71-46a7-9f4c-da33de8547ca",
+            "uuid": "bd5d0ffb-03de-4f4d-b64a-087f58b19151",
+            "sample_id_Characteristics_generic_s": "s5_p42_E2_45min",
+            "assay_uuid": "30bd70b0-d95d-493d-a72b-f81330ad3c4a",
+            "file_uuid": "8cf9a739-59f4-4ed2-ab3a-0c8224b5ef85",
+            "filetype_Characteristics_generic_s": "FASTQ.GZ file",
+            "REFINERY_DOWNLOAD_URL_s": "N/A",
+            "study_uuid": "28f1d9d3-775e-4e95-ab84-b4f9dbf79829",
+            "type": "Raw Data File",
+            "name": "s5_p42_E2_45min.fastq.gz"
+        },
+        {
+            "django_id": "66",
+            "organism_Characteristics_generic_s": "Human",
+            "data_set_uuid": "09b83132-6b71-46a7-9f4c-da33de8547ca",
+            "uuid": "93bf145f-ab7b-4aa8-bc32-9b7857a98421",
+            "sample_id_Characteristics_generic_s": "s7_EV_E2_45min",
+            "assay_uuid": "30bd70b0-d95d-493d-a72b-f81330ad3c4a",
+            "file_uuid": "e553f6d5-6b80-4876-98e3-41cbc2a6889f",
+            "filetype_Characteristics_generic_s": "FASTQ.GZ file",
+            "REFINERY_DOWNLOAD_URL_s": "N/A",
+            "study_uuid": "28f1d9d3-775e-4e95-ab84-b4f9dbf79829",
+            "type": "Raw Data File",
+            "name": "s7_EV_E2_45min.fastq.gz"
+        }
+    ]
+}
