@@ -5,7 +5,6 @@ describe('Registered user explores home page', function () {
     cy.fixture('api-v2-files.json').as('user_files');
     cy.fixture('api-v2-tool_definitions.json').as('tools');
 
-
     cy.server();
     cy.route({
       method: 'GET',
