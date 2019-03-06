@@ -223,89 +223,10 @@ def _error_message(error_msg):
     return {"success": False, "message": error_msg}
 
 
-class ProcessISATabView(View):
+class ProcessISATabView(APIView):
     """Process ISA archive"""
-    template_name = 'data_set_manager/isa-tab-import.html'
+    http_method_names = ['post']
     success_view_name = 'data_set'
-    isa_tab_cookie_name = 'isa_tab_url'
-
-    def get(self, request, *args, **kwargs):
-        # a workaround for automatic ISA archive import after logging in
-        try:
-            url_from_cookie = request.COOKIES[self.isa_tab_cookie_name]
-        except KeyError:
-            logger.info("ISA-Tab URL was not provided")
-            form = ImportISATabFileForm()
-            context = RequestContext(request, {'form': form})
-            return render_to_response(self.template_name,
-                                      context_instance=context)
-        form = ImportISATabFileForm({'isa_tab_url': url_from_cookie})
-        if form.is_valid():
-            url = form.cleaned_data['isa_tab_url']
-        else:
-            context = RequestContext(request, {'form': form})
-            response = render_to_response(self.template_name,
-                                          context_instance=context)
-            response.delete_cookie(self.isa_tab_cookie_name)
-            return response
-        u = urlparse.urlparse(url)
-        file_name = u.path.split('/')[-1]
-        temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
-        try:
-            # TODO: refactor download_file to take file handle instead of path
-            download_file(url, temp_file_path)
-        except RuntimeError as exc:
-            logger.error("Problem downloading ISA-Tab file. %s", exc)
-            error = "Problem downloading ISA-Tab file from: '{}'".format(url)
-            context = RequestContext(request, {'form': form, 'error': error})
-            response = render_to_response(self.template_name,
-                                          context_instance=context)
-            response.delete_cookie(self.isa_tab_cookie_name)
-            return response
-        logger.debug("Temp file name: '%s'", temp_file_path)
-        try:
-            dataset_uuid = parse_isatab(
-                request.user.username,
-                False,
-                temp_file_path
-            )
-        except ParserException as e:
-            error_message = "{} {}".format(
-                PARSER_ERROR_MESSAGE,
-                e.message
-            )
-            logger.error(error_message)
-            return HttpResponseBadRequest(error_message)
-        except Exception as e:
-            error_message = "{} {}".format(
-                PARSER_UNEXPECTED_ERROR_MESSAGE,
-                traceback.format_exc(e)
-            )
-            logger.error(error_message)
-            return HttpResponseBadRequest(
-                PARSER_UNEXPECTED_ERROR_MESSAGE +
-                e.message
-            )
-        try:
-            os.unlink(temp_file_path)
-        except OSError as exc:
-            logger.error("Couldn't unlink ISATab's `temp_file_path`: %s %s",
-                         temp_file_path, exc)
-        if dataset_uuid:
-            if 'ajax' in kwargs and kwargs['ajax']:
-                return JsonResponse({'new_data_set_uuid': dataset_uuid})
-            else:
-                response = HttpResponseRedirect(
-                    reverse(self.success_view_name, args=(dataset_uuid,)))
-                response.delete_cookie(self.isa_tab_cookie_name)
-                return response
-        else:
-            error = "Problem parsing ISA-Tab file"
-            context = RequestContext(request, {'form': form, 'error': error})
-            response = render_to_response(self.template_name,
-                                          context_instance=context)
-            response.delete_cookie(self.isa_tab_cookie_name)
-            return response
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
@@ -350,31 +271,17 @@ class ProcessISATabView(View):
                 except (KeyError, ValueError):
                     error_msg = 'identity_id is missing'
                     error = {'error_message': error_msg}
-                    if request.is_ajax():
-                        return HttpResponseBadRequest(
-                            json.dumps({'error': error_msg}),
-                            'application/json'
-                        )
-                    else:
-                        return render(request, self.template_name, error)
+                    return HttpResponseBadRequest(
+                        json.dumps({'error': error_msg}),
+                        'application/json'
+                    )
             else:
                 identity_id = None
 
             if not response['success']:
-                if request.is_ajax():
-                    return HttpResponseBadRequest(
-                        json.dumps({'error': response["message"]}),
-                        content_type='application/json'
-                    )
-                return render_to_response(
-                    self.template_name,
-                    context_instance=RequestContext(
-                        request,
-                        {
-                            'form': form,
-                            'error': response["message"]
-                        }
-                    )
+                return HttpResponseBadRequest(
+                    json.dumps({'error': response["message"]}),
+                    content_type='application/json'
                 )
 
             logger.debug(
@@ -425,35 +332,23 @@ class ProcessISATabView(View):
                         ):
                             FileImportTask().delay(file_store_item.uuid)
 
-                if request.is_ajax():
-                    return JsonResponse({
-                        'success': 'Data set imported',
-                        'data': {'new_data_set_uuid': dataset_uuid}
-                    })
-                return HttpResponseRedirect(
-                    reverse(self.success_view_name, args=[dataset_uuid])
-                )
+                return JsonResponse({
+                    'success': 'Data set imported',
+                    'data': {'new_data_set_uuid': dataset_uuid}
+                })
             else:
                 error = 'Problem parsing ISA-Tab file'
-                if request.is_ajax():
-                    return JsonResponse({'error': error})
-                context = RequestContext(request, {'form': form,
-                                                   'error': error})
-                return render_to_response(self.template_name,
-                                          context_instance=context)
+                return JsonResponse({'error': error})
         else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
             return render_to_response(self.template_name,
                                       context_instance=context)
 
 
-class ProcessMetadataTableView(View):
+class ProcessMetadataTableView(APIView):
     """Create a new dataset from uploaded metadata table"""
-    template_name = 'data_set_manager/metadata-table-import.html'
+    http_method_names = ['post']
     success_view_name = 'data_set'
-
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
         # Get required params
@@ -474,12 +369,9 @@ class ProcessMetadataTableView(View):
         except (KeyError, ValueError):
             error_msg = 'Required parameters are missing'
             error = {'error_message': error_msg}
-            if request.is_ajax():
-                return HttpResponseBadRequest(
-                    json.dumps({'error': error_msg}), 'application/json'
-                )
-            else:
-                return render(request, self.template_name, error)
+            return HttpResponseBadRequest(
+                json.dumps({'error': error_msg}), 'application/json'
+            )
         else:
             response = import_by_file(metadata_file)
             if not response["success"]:
@@ -491,25 +383,19 @@ class ProcessMetadataTableView(View):
             source_column_index = request.POST.getlist('source_column_index')
         except TypeError as error_msg:
             error = {'error_message': error_msg}
-            if request.is_ajax():
-                return HttpResponseBadRequest(
-                    # TODO: make sure error_msg is JSON serializable, e.g.:
-                    # TypeError: IndexError('list index out of range',)
-                    # is not JSON serializable
-                    json.dumps({'error': error_msg}), 'application/json'
-                )
-            else:
-                return render(request, self.template_name, error)
+            return HttpResponseBadRequest(
+                # TODO: make sure error_msg is JSON serializable, e.g.:
+                # TypeError: IndexError('list index out of range',)
+                # is not JSON serializable
+                json.dumps({'error': error_msg}), 'application/json'
+            )
         else:
             if not source_column_index:
                 error_msg = 'Source columns have not been selected'
                 error = {'error_message': error_msg}
-                if request.is_ajax():
-                    return HttpResponseBadRequest(
-                        json.dumps({'error': error_msg}), 'application/json'
-                    )
-                else:
-                    return render(request, self.template_name, error)
+                return HttpResponseBadRequest(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
 
         # workaround for breaking change in Angular
         # https://github.com/angular/angular.js/commit/7fda214c4f65a6a06b25cf5d5aff013a364e9cef
@@ -565,12 +451,7 @@ class ProcessMetadataTableView(View):
             else:
                 return render(request, self.template_name, error)
 
-        if request.is_ajax():
             return JsonResponse({'new_data_set_uuid': dataset_uuid})
-        else:
-            return HttpResponseRedirect(
-                reverse(self.success_view_name, args=(dataset_uuid,))
-            )
 
 
 class CheckDataFilesView(View):

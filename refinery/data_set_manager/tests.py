@@ -1759,7 +1759,7 @@ class IsaTabTestBase(TestCase):
         self.user = User.objects.create_user(test_user)
         self.user.set_password(test_user)
         self.user.save()
-        self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
+        self.isa_tab_import_url = "/api/v2/import/isa-tab-form/"
         self.client.login(username=self.user.username, password=test_user)
 
     def tearDown(self):
@@ -1920,7 +1920,7 @@ class MetadataImportTestBase(IsaTabTestBase):
                 "source_column_index": source_column_index,
                 "delimiter": delimiter
             }
-            url = "/data_set_manager/import/metadata-table-form/"
+            url = "/api/v2/import/metadata-table-form/"
             if data_set_uuid is not None:
                 url += "?data_set_uuid={}".format(data_set_uuid)
 

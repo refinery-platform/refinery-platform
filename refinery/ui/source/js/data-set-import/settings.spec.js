@@ -20,12 +20,12 @@ describe('refineryDataSetImport.settings: unit tests', function () {
     });
 
     it('should have isaTabImportUrl constant', function () {
-      expect(settings.isaTabImportUrl).toEqual('/data_set_manager/import/isa-tab-form/');
+      expect(settings.isaTabImportUrl).toEqual('/api/v2/import/isa-tab-form/');
     });
 
     it('should have tabularFileImportUrl constant', function () {
       expect(settings.tabularFileImportUrl)
-        .toEqual('/data_set_manager/import/metadata-table-form/');
+        .toEqual('/api/v2/import/metadata-table-form/');
     });
 
     it('should have uploadUrl constant', function () {
