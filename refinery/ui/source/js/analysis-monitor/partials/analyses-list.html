@@ -59,7 +59,13 @@
       </div>
 
       <div class="col-md-2">
-        <strong>Owner Name</strong>
+        <a class="analysis-header" ng-click="order('owner')">
+          <strong>Owner Name</strong>
+          <span class="sortorder" ng-show="predicate === 'owner'"
+            ng-class="{reverse:reverse}">
+             <i ng-class="analysisIcon"></i>
+          </span>
+        </a>
       </div>
 
     </div>
