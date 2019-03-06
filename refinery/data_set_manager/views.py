@@ -19,7 +19,7 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import get_object_or_404, render, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
@@ -368,7 +368,6 @@ class ProcessMetadataTableView(APIView):
             data_file_column = request.POST.get('data_file_column')
         except (KeyError, ValueError):
             error_msg = 'Required parameters are missing'
-            error = {'error_message': error_msg}
             return HttpResponseBadRequest(
                 json.dumps({'error': error_msg}), 'application/json'
             )
@@ -382,7 +381,6 @@ class ProcessMetadataTableView(APIView):
         try:
             source_column_index = request.POST.getlist('source_column_index')
         except TypeError as error_msg:
-            error = {'error_message': error_msg}
             return HttpResponseBadRequest(
                 # TODO: make sure error_msg is JSON serializable, e.g.:
                 # TypeError: IndexError('list index out of range',)
@@ -392,7 +390,6 @@ class ProcessMetadataTableView(APIView):
         else:
             if not source_column_index:
                 error_msg = 'Source columns have not been selected'
-                error = {'error_message': error_msg}
                 return HttpResponseBadRequest(
                     json.dumps({'error': error_msg}), 'application/json'
                 )
@@ -408,13 +405,9 @@ class ProcessMetadataTableView(APIView):
                 identity_id = request.POST.get('identity_id')
             except (KeyError, ValueError):
                 error_msg = 'identity_id is missing'
-                error = {'error_message': error_msg}
-                if request.is_ajax():
-                    return HttpResponseBadRequest(
-                        json.dumps({'error': error_msg}), 'application/json'
-                    )
-                else:
-                    return render(request, self.template_name, error)
+                return HttpResponseBadRequest(
+                    json.dumps({'error': error_msg}), 'application/json'
+                )
         else:
             identity_id = None
 
@@ -443,15 +436,11 @@ class ProcessMetadataTableView(APIView):
             )
         except Exception as exc:
             logger.error(exc, exc_info=True)
-            error = {'error_message': repr(exc)}
-            if request.is_ajax():
-                return HttpResponseServerError(
-                    json.dumps({'error': exc.message}), 'application/json'
-                )
-            else:
-                return render(request, self.template_name, error)
+            return HttpResponseServerError(
+                json.dumps({'error': exc.message}), 'application/json'
+            )
 
-            return JsonResponse({'new_data_set_uuid': dataset_uuid})
+        return JsonResponse({'new_data_set_uuid': dataset_uuid})
 
 
 class CheckDataFilesView(View):
