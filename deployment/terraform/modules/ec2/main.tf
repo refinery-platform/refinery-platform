@@ -119,7 +119,8 @@ resource "aws_iam_instance_profile" "app_server" {
 
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
-  ami                    = "ami-d05e75b8"
+  # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
+  ami                    = "ami-03597b1b84c02cf7b"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
@@ -158,7 +159,7 @@ export DEBIAN_FRONTEND=noninteractive
 set -x
 
 # install dependencies
-/usr/bin/apt-get clean && /usr/bin/apt-get -qq update
+/usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -y autoremove
 /usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev
 
 # add extra SSH keys from Github
@@ -170,6 +171,10 @@ done >> /home/ubuntu/.ssh/authorized_keys
 mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
 su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
 su -c 'cd /srv/refinery-platform && /usr/bin/git checkout -q ${var.git_commit}' ubuntu
+
+# configure librarian-puppet
+/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
+su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD="${var.django_admin_password}"
@@ -201,12 +206,8 @@ export FACTER_REFINERY_WELCOME_EMAIL_SUBJECT="${var.refinery_welcome_email_subje
 export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE="${var.refinery_welcome_email_message}"
 export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 
-# configure librarian-puppet
-/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
-su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
-
-# run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/aws.pp
+# run Puppet
+/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/site.pp
 EOF
 }
 

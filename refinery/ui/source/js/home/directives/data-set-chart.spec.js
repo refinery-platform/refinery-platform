@@ -25,7 +25,7 @@
       $httpBackend
         .whenGET(
           settings.appRoot +
-          settings.refineryApiV2 + '/files/?filter_attribute=%7B%7D&limit=100&sort='
+          settings.refineryApiV2 + '/files/?filter_attribute=%7B%7D&limit=100'
         ).respond(200, []);
 
       scope = $rootScope.$new();

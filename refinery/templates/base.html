@@ -141,14 +141,15 @@
          &nbsp;&nbsp;&nbsp;&nbsp;
          <span>
             <a rp-analysis-monitor-global-status-tooltip-hider
-              tabindex=4 class="pointer">
+              tabindex=4>
               <a
                 uib-popover-template="'analysesgloballist.html'"
                 popover-trigger="'outsideClick'"
                 popover-title="Recent Analyses"
                 popover-append-to-body="true"
                 popover-placement="left"
-                popover-class="global-analysis-popover">
+                popover-class="global-analysis-popover"
+                class="pointer">
                  <i class="fa fa-cogs pointer" id="global-analysis-status"
                   refinery-tooltip
                   refinery-tooltip-container="body"
@@ -248,6 +249,8 @@
   <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
   <script src="{% static "vendor/lodash-migrate/dist/lodash-migrate.min.js" %}"></script>
   <script src="{% static "vendor/markdown/lib/markdown.js" %}"></script>
+  <script src="{% static "vendor/chart.js/dist/chart.min.js" %}"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script type="text/javascript">
     // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
     // lodash v2 or other libraries like underscore.

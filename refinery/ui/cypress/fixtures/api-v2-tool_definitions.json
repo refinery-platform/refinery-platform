@@ -1,0 +1,136 @@
+[
+    {
+        "file_relationship": {
+            "file_relationship": [],
+            "input_files": [
+                {
+                    "allowed_filetypes": [
+                        {
+                            "name": "BAM",
+                            "description": "Binary compressed SAM",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "BED",
+                            "description": "BED file",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "BIGWIG",
+                            "description": "Big WIG",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "GFF",
+                            "description": "GFF file",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "SEG",
+                            "description": "Segmented Data File",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "VCF",
+                            "description": "Variant Call Format",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "WIG",
+                            "description": "Wiggle Track Format",
+                            "used_for_visualization": true
+                        },
+                        {
+                            "name": "BEDGRAPH",
+                            "description": "BEDGRAPH file",
+                            "used_for_visualization": true
+                        }
+                    ],
+                    "uuid": "10485273-fd00-4fd8-a775-750fd6d59f50",
+                    "name": "Input File",
+                    "description": "IGV-compatible Input File"
+                }
+            ],
+            "uuid": "3dcbabcf-1dc5-4e3b-b8d2-38ae6a084993",
+            "name": "List of Input Files",
+            "value_type": "LIST"
+        },
+        "parameters": [
+            {
+                "uuid": "09243af0-2d57-4ec6-b5c6-6fc670d2e4dc",
+                "name": "Genome Build",
+                "description": "Reference genome build to use",
+                "is_user_adjustable": true,
+                "value_type": "GENOME_BUILD",
+                "default_value": "hg19"
+            }
+        ],
+        "workflow": null,
+        "uuid": "ce9439d7-0685-490d-9e9f-494e1f2df769",
+        "name": "IGV",
+        "description": "Genomic dataset viewer. Select from any of these formats: BED, GFF, WIG, BIGWIG, BEDGRAPH, BAM, VCF, SEG.",
+        "tool_type": "VISUALIZATION",
+        "image_name": "gehlenborglab/docker_igv_js:v0.0.9",
+        "mem_reservation_mb": 15,
+        "annotation": "{\"tool_type\": \"VISUALIZATION\", \"description\": \"Genomic dataset viewer. Select from any of these formats: BED, GFF, WIG, BIGWIG, BEDGRAPH, BAM, VCF, SEG.\", \"parameters\": [{\"default_value\": \"hg19\", \"value_type\": \"GENOME_BUILD\", \"name\": \"Genome Build\", \"description\": \"Reference genome build to use\"}], \"image_name\": \"gehlenborglab/docker_igv_js:v0.0.9\", \"name\": \"IGV\", \"file_relationship\": {\"file_relationship\": {}, \"value_type\": \"LIST\", \"name\": \"List of Input Files\", \"input_files\": [{\"allowed_filetypes\": [{\"name\": \"BED\"}, {\"name\": \"GFF\"}, {\"name\": \"WIG\"}, {\"name\": \"BIGWIG\"}, {\"name\": \"BEDGRAPH\"}, {\"name\": \"BAM\"}, {\"name\": \"VCF\"}, {\"name\": \"SEG\"}], \"name\": \"Input File\", \"description\": \"IGV-compatible Input File\"}]}, \"mem_reservation_mb\": 15, \"extra_directories\": [\"/refinery-data\"]}"
+    },
+    {
+        "file_relationship": {
+            "file_relationship": [],
+            "input_files": [
+                {
+                    "allowed_filetypes": [
+                        {
+                            "name": "TXT",
+                            "description": "Text file",
+                            "used_for_visualization": false
+                        }
+                    ],
+                    "uuid": "827e0cf4-430f-4b91-890d-bfd8fc93bb08",
+                    "name": "Input File",
+                    "description": "File to run Test Workflow on"
+                }
+            ],
+            "uuid": "29e8ce77-7c5b-4099-9fba-84d7369596ab",
+            "name": "List of Input Files",
+            "value_type": "LIST"
+        },
+        "parameters": [
+            {
+                "galaxy_workflow_step": 5,
+                "uuid": "12e2481e-3993-4d3f-bb2c-9a55313adbc5",
+                "name": "exit_code",
+                "description": "Exit code for the final Refinery Test Tool 1-1 in the workflow",
+                "is_user_adjustable": true,
+                "value_type": "INTEGER",
+                "default_value": "0"
+            },
+            {
+                "galaxy_workflow_step": 5,
+                "uuid": "bb0bee5e-f4f3-4028-b824-98a6393ef4f9",
+                "name": "p_fail",
+                "description": "Probability of failure for the final Refinery Test Tool 1-1 in the workflow",
+                "is_user_adjustable": true,
+                "value_type": "FLOAT",
+                "default_value": "0.0"
+            },
+            {
+                "galaxy_workflow_step": 5,
+                "uuid": "4a1302a9-c1e3-4ee0-8149-1c1e3bc1f152",
+                "name": "empty_outfile",
+                "description": "Whether or not the final Refinery Test Tool 1-1 in the workflow will produce an empty output file",
+                "is_user_adjustable": true,
+                "value_type": "BOOLEAN",
+                "default_value": "False"
+            }
+        ],
+        "workflow": "429f8bf7-1dba-43df-91a7-e93d31b2b6b2",
+        "uuid": "9841e474-586c-4b88-9d21-714705ffd24a",
+        "name": "Test workflow: 5 steps without branching (imported from API)",
+        "description": "Test workflow with 5 steps.",
+        "tool_type": "WORKFLOW",
+        "image_name": "",
+        "mem_reservation_mb": 10,
+        "annotation": "{\"file_relationship\": {\"file_relationship\": {}, \"value_type\": \"LIST\", \"name\": \"List of Input Files\", \"input_files\": [{\"allowed_filetypes\": [{\"name\": \"TXT\"}], \"name\": \"Input File\", \"description\": \"File to run Test Workflow on\"}]}, \"tool_type\": \"WORKFLOW\", \"description\": \"Test workflow with 5 steps.\", \"parameters\": [{\"default_value\": 0, \"galaxy_workflow_step\": 5, \"value_type\": \"INTEGER\", \"name\": \"exit_code\", \"description\": \"Exit code for the final Refinery Test Tool 1-1 in the workflow\"}, {\"default_value\": 0.0, \"galaxy_workflow_step\": 5, \"value_type\": \"FLOAT\", \"name\": \"p_fail\", \"description\": \"Probability of failure for the final Refinery Test Tool 1-1 in the workflow\"}, {\"default_value\": false, \"galaxy_workflow_step\": 5, \"value_type\": \"BOOLEAN\", \"name\": \"empty_outfile\", \"description\": \"Whether or not the final Refinery Test Tool 1-1 in the workflow will produce an empty output file\"}], \"name\": \"Test workflow: 5 steps without branching (imported from API)\"}"
+    }
+]
