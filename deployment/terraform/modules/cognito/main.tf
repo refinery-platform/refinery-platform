@@ -5,9 +5,8 @@ resource "aws_cognito_identity_pool" "refinery" {
 }
 
 resource "aws_iam_role" "upload_role" {
-  description = "Allows users with identities in Cognito pool to upload files directly into S3"
-  name_prefix = "${var.iam_resource_name_prefix}-"
-
+  description        = "Allows users with identities in Cognito pool to upload files directly into S3"
+  name               = "${var.iam_resource_name_prefix}-refinery-upload"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -33,10 +32,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "upload_access_policy" {
-  name_prefix = "${var.iam_resource_name_prefix}-"
-
-  role = "${aws_iam_role.upload_role.id}"
-
+  name   = "AllowAccessToRefineryS3UploadBucket"
+  role   = "${aws_iam_role.upload_role.id}"
+  # s3:ListBucket is required for 'aws s3 sync'
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -55,6 +53,13 @@ resource "aws_iam_role_policy" "upload_access_policy" {
       ],
       "Effect": "Allow",
       "Resource": "arn:aws:s3:::${var.upload_bucket_name}/$${cognito-identity.amazonaws.com:sub}/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::${var.upload_bucket_name}"
     }
   ]
 }
