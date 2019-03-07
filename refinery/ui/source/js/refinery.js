@@ -23,7 +23,6 @@ angular
      */
     'ui.bootstrap',
     'ui.router',
-    'ngWebworker',
     'file-model',
     'angular-intro',
     'LocalStorageModule',
