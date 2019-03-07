@@ -61,7 +61,6 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   $scope.isntOnHomepage = location.pathname !== '/';
 
   $scope.tutorials_viewed = {
-    launchpad: settings.djangoApp.launchpad_tut_viewed,
     data_upload: settings.djangoApp.data_upload_tut_viewed
   };
 
@@ -72,7 +71,6 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
 
   $scope.dataUploadAutoStart = 'dataUploadAutoStart';
-  $scope.launchpadAutoStart = 'launchpadAutoStart';
 
   $scope.refineryTutorialSteps = JSON.parse(settings.djangoApp.refineryTutorialSteps);
 

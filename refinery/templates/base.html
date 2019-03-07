@@ -32,7 +32,6 @@
       userprofileUUID: '{{ user.profile.uuid|escapejs }}',
       userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
       userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
-      launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
@@ -85,16 +84,7 @@
   <!-- header navigation bar -->
 
   <nav class="refinery-base navbar navbar-default navbar-fixed-top">
-  <div ng-controller="launchpadTutorialCtrl">
-    <div ng-intro-options="launchpadIntroOptions"
-         ng-intro-method="launchpadStart"
-         ng-intro-oncomplete="launchpadCompletedEvent"
-         ng-intro-onexit="launchpadExitEvent"
-         ng-intro-onchange="launchpadChangeEvent"
-         ng-intro-onbeforechange="launchpadBeforeChangeEvent"
-         ng-intro-onafterchange="launchpadAfterChangeEvent">
-    <div id="launchpadStep" class="container-fluid">
-
+  <div>
       <div class="navbar-header pull-left">
 
         <a class="navbar-brand" href="{% url "home" %}" tabindex=1>

@@ -53,7 +53,7 @@ from data_set_manager.models import Attribute
 
 from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, SiteProfile,
+                     ExtendedGroup, Invitation, SiteProfile,
                      SiteStatistics, SiteVideo, UserProfile, Workflow,
                      WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
@@ -67,18 +67,6 @@ logger = logging.getLogger(__name__)
 
 def home(request):
     return render(request, 'core/home.html')
-
-
-def explore(request):
-    return render_to_response(
-        'core/explore.html',
-        {
-            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
-            'main_container_no_padding': True,
-            'num_ontologies_imported': Ontology.objects.count()
-        },
-        context_instance=RequestContext(request)
-    )
 
 
 def about(request):
