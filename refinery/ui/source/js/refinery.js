@@ -39,7 +39,6 @@ angular
     'clearFileInput',
     'mockParams',
     'replaceWhiteSpaceWithHyphen',
-    'triggerSvgEvent',
 
     /*
      * Refinery modules
