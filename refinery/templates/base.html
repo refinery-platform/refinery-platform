@@ -304,35 +304,6 @@
         user_id = undefined;
     }
     $(document).ready( function(){
-
-      function sizing() {
-        var windowWidth = $(window).width(),
-            windowHeight = $(window).height();
-         if(windowWidth <= 767) {
-          $('.jquery-full-height').css('height', 'inherit' );
-        }
-        else {
-          $('.jquery-full-height').map( function() {
-            var $this = $(this),
-                parent = $this.parent().closest('.jquery-full-height'),
-                targetHeight = (
-                  (
-                    parent.length ?
-                      parent.first().offset().top + parent.first().height() :
-                      windowHeight
-                  ) - $this.offset().top - 10
-                ),
-                minHeight = parseInt($this.css("min-height")),
-                newHeight = Math.max(targetHeight, minHeight);
-             $this.css('height', newHeight + 'px');
-          });
-        }
-    }
-     $(window).on(
-      'resize.jqfullheight orientationchange.jqfullheight',
-      sizing
-    );
-
       $('#attentionGrabber').on('click', function(){
         $('#attentionGrabber').removeClass('attention_grabber');
        });
