@@ -16,7 +16,7 @@ from tastypie.resources import ModelResource
 
 from file_store.models import FileStoreItem
 
-from .models import (Assay, Attribute, Investigation, Node, Protocol,
+from .models import (Attribute, Investigation, Node, Protocol,
                      ProtocolReference, ProtocolReferenceParameter,
                      Publication, Study)
 
@@ -54,8 +54,6 @@ class NodeResource(ModelResource):
     children = fields.ToManyField('data_set_manager.api.NodeResource',
                                   'children')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
-    assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
-                              null=True)
     attributes = fields.ToManyField(
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
@@ -240,23 +238,5 @@ class StudyResource(ModelResource):
         filtering = {
             'uuid': ALL,
             'investigation_uuid': ALL
-        }
-        # fields = ["uuid"]
-
-
-class AssayResource(ModelResource):
-    study_uuid = fields.CharField(
-        attribute='study__uuid',
-        use_in='all'
-    )
-
-    class Meta:
-        queryset = Assay.objects.all()
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        allowed_methods = ['get']
-        resource_name = 'assay'
-        filtering = {
-            'uuid': ALL,
-            'study_uuid': ALL
         }
         # fields = ["uuid"]

@@ -18,7 +18,7 @@ from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.utils import verify_recaptcha
 from core.views import CustomRegistrationView
-from data_set_manager.api import (AssayResource, AttributeResource,
+from data_set_manager.api import (AttributeResource,
                                   InvestigationResource, NodeResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolReferenceResource, ProtocolResource,
@@ -36,7 +36,6 @@ v1_api = Api(api_name='v1')
 
 v1_api.register(AnalysisResource())
 v1_api.register(StudyResource())
-v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
 v1_api.register(NodeResource())
 v1_api.register(WorkflowResource())
