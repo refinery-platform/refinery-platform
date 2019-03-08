@@ -658,7 +658,7 @@ class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
 
-    def get(self, request):
+    def list(self, request):
         params = request.query_params
         paginator = LimitOffsetPagination()
         paginator.default_limit = 100
@@ -744,6 +744,12 @@ class DataSetsViewSet(APIView):
         return Response({'data_sets': serializer.data,
                         'total_data_sets': total_data_sets})
 
+    def retrieve(self, request, uuid):
+        data_set = self.get_object(uuid)
+        serializer = DataSetSerializer(data_set)
+        return Response(serializer.data,
+                        status=status.HTTP_202_ACCEPTED)
+
     def get_object(self, uuid):
         try:
             return DataSet.objects.get(uuid=uuid)
@@ -761,7 +767,7 @@ class DataSetsViewSet(APIView):
         else:
             return True
 
-    def delete(self, request, uuid):
+    def destroy(self, request, uuid):
         if not request.user.is_authenticated():
             return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
@@ -790,7 +796,7 @@ class DataSetsViewSet(APIView):
         return Response('Unauthorized to delete data set with uuid: {'
                         '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
-    def patch(self, request, uuid, format=None):
+    def partial_update(self, request, uuid, format=None):
         self.data_set = self.get_object(uuid)
         self.current_site = get_current_site(request)
 
