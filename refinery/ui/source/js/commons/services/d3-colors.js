@@ -27,15 +27,15 @@ angular
           var hsl = this.colors[i].toHsl();
           var colors = hsl.brighten(steps - 1, true);
 
-           // Prepend original color
+          // Prepend original color
           colors.unshift(hsl);
 
-           // Convert HSL back to RGB
+          // Convert HSL back to RGB
           for (var j = 0; j < steps; j++) {
             colors[j] = colors[j].toHex().toString();
           }
 
-           // Merge set of fading colors
+          // Merge set of fading colors
           fadedColors = fadedColors.concat(colors);
         }
         return d3.scale.ordinal()
