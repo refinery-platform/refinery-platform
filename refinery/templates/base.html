@@ -39,7 +39,6 @@
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
-      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }},
       staticUrl: '{{ STATIC_URL|escapejs }}',
       userFilesColumns: '{{ USER_FILES_COLUMNS }}'.split(','),
       userFilesFilters: '{{ USER_FILES_FILTERS }}'.split(','),
@@ -75,11 +74,9 @@
 </head>
 
 <body
-  class="{{ SATORI_DEMO|yesno:"is-screenshot-ready,," }}"
   ng-app="{% block ng_app %}refineryApp{% endblock %}"
   ng-controller="AppCtrl as app"
   ng-class="{ 'repo-mode': app.repoMode }"
-  ng-click="app.globalClick($event)"
   ng-strict-di>
   <!-- header navigation bar -->
 
@@ -238,7 +235,6 @@
   <script src="{% static "vendor/angular-resource/angular-resource.min.js" %}"></script>
   <script src="{% static "vendor/angular-sanitize/angular-sanitize.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-router/release/angular-ui-router.min.js" %}"></script>
-  <script src="{% static "vendor/angular-ui-scroll/dist/ui-scroll.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
   <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
   <script src="{% static "vendor/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js" %}"></script>
@@ -255,11 +251,6 @@
     // lodash v2 or other libraries like underscore.
     window.lodashLatest = _.noConflict();
   </script>
-
-  <!-- Only needed when loading D3.js v4 and D3.js v3 -->
-  <!-- This an be removed once everything runs on D3.js v4 -->
-  {% block vendor_scripts_pre_d3_v3 %}
-  {% endblock %}
 
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>

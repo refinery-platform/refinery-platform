@@ -25,18 +25,17 @@ angular
     'ui.router',
     'file-model',
     'angular-intro',
-    'LocalStorageModule',
 
     /*
      * Angular App globals
      */
     'errors',
-    'pubSub',
     'getCookie',
     'colors',
     'clearFileInput',
     'mockParams',
     'replaceWhiteSpaceWithHyphen',
+    'lodashLatest',
 
     /*
      * Refinery modules
