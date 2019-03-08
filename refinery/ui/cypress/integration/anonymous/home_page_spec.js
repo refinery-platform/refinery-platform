@@ -44,11 +44,6 @@ describe('Anonymous user explores home page', function () {
     cy.visible('All Files');
   });
 
-  it('explore data sets button is visible and redirects', function () {
-    cy.visible_btn('Explore Data Sets').click();
-    cy.visible('Exploration');
-  });
-
   it('video carousel is visible', function () {
     cy.wait('@getSiteProfile');
     cy.visible('Features at a Glance');

@@ -14,7 +14,7 @@ angular
         this.colors = colors;
       }
 
-       /**
+      /**
        * Assign constructor to itself
        *
        * @type {Function}
