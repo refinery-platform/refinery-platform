@@ -228,7 +228,6 @@
   <script src="{% static "vendor/intro-js/minified/intro.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
   <script src="{% static "vendor/angular-intro-js/build/angular-intro.min.js" %}"></script>
-  <script src="{% static "vendor/angular-local-storage/dist/angular-local-storage.min.js" %}"></script>
   <script src="{% static "vendor/angular-animate/angular-animate.min.js" %}"></script>
   <script src="{% static "vendor/select2/select2.min.js" %}"></script>
   <script src="{% static "vendor/ui-select/dist/select.min.js" %}"></script>
@@ -301,22 +300,6 @@
 
 
   <script type="text/javascript">
-    /**
-     * Provides requestAnimationFrame in a cross browser way.
-     * @author paulirish / http://paulirish.com/
-     */
-    if (!window.requestAnimationFrame) {
-      window.requestAnimationFrame = ( function() {
-        return window.webkitRequestAnimationFrame ||
-          window.mozRequestAnimationFrame ||
-          window.oRequestAnimationFrame ||
-          window.msRequestAnimationFrame ||
-          function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
-            window.setTimeout( callback, 1000 / 60 );
-          };
-      } )();
-    }
-
     var username = '{{ user.username }}';
     var user_id = '{{ user.id }}';
     var admins = '{{ ADMIN_EMAIL|safe }}';
@@ -324,45 +307,11 @@
         username = undefined;
         user_id = undefined;
     }
-
-    function sizing() {
-        var windowWidth = $(window).width(),
-            windowHeight = $(window).height();
-
-        if(windowWidth <= 767) {
-          $('.jquery-full-height').css('height', 'inherit' );
-        }
-        else {
-          $('.jquery-full-height').map( function() {
-            var $this = $(this),
-                parent = $this.parent().closest('.jquery-full-height'),
-                targetHeight = (
-                  (
-                    parent.length ?
-                      parent.first().offset().top + parent.first().height() :
-                      windowHeight
-                  ) - $this.offset().top - 10
-                ),
-                minHeight = parseInt($this.css("min-height")),
-                newHeight = Math.max(targetHeight, minHeight);
-
-            $this.css('height', newHeight + 'px');
-          });
-        }
-    }
-
-    $(window).on(
-      'resize.jqfullheight orientationchange.jqfullheight',
-      sizing
-    );
-
     $(document).ready( function(){
 
       $('#attentionGrabber').on('click', function(){
         $('#attentionGrabber').removeClass('attention_grabber');
        });
-
-      sizing();
 
       // detect IE: https://gist.github.com/527683
       // ----------------------------------------------------------
@@ -404,7 +353,6 @@
       if ( ie !== undefined ) {
         // detected IE
         $( "#warning-ie-not-supported" ).show();
-        sizing();
       }
     });
   </script>
