@@ -8,8 +8,7 @@ function refineryAppConfig (
   $sceDelegateProvider,
   $urlRouterProvider,
   settings,
-  uiSelectConfig,
-  localStorageServiceProvider
+  uiSelectConfig
 ) {
   /*
    * Force URLs to be caseinsensitive.
@@ -63,11 +62,6 @@ function refineryAppConfig (
   // https://github.com/angular-ui/ui-select/issues/1672
   uiSelectConfig.removeSelected = false;
 
-  // Set unique prefix for the local storage
-  localStorageServiceProvider.setPrefix(
-    'refinery' + settings.djangoApp.refineryInstanceName
-  );
-
   $sceDelegateProvider.resourceUrlWhitelist([
     'self',
     settings.djangoApp.staticUrl + '**'  // allow loading assets from S3
@@ -85,6 +79,5 @@ angular
     '$urlRouterProvider',
     'settings',
     'uiSelectConfig',
-    'localStorageServiceProvider',
     refineryAppConfig
   ]);

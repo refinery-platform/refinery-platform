@@ -1,27 +1,13 @@
 'use strict';
 
-function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings) {
+function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, settings) {
   this.$window = $window;
   this.jqWindow = $($window);
   this.$ = $;
   this._ = _;
-  this.pubSub = pubSub;
   this.settings = settings;
 
   this.repoMode = settings.djangoApp.repositoryMode;
-
-  this.jqWindow.on(
-    'resize orientationchange',
-    this._.debounce(
-      function () {
-        this.pubSub.trigger('resize', {
-          width: this.jqWindow.width(),
-          height: this.jqWindow.height()
-        });
-      }.bind(this),
-      this.settings.debounceWindowResize
-    )
-  );
 
   $rootScope.$on(
     '$stateChangeSuccess',
@@ -61,7 +47,6 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   $scope.isntOnHomepage = location.pathname !== '/';
 
   $scope.tutorials_viewed = {
-    launchpad: settings.djangoApp.launchpad_tut_viewed,
     data_upload: settings.djangoApp.data_upload_tut_viewed
   };
 
@@ -72,7 +57,6 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   $scope.dataUploadKey = 'dataUploadTutorialFirstStepViewed';
 
   $scope.dataUploadAutoStart = 'dataUploadAutoStart';
-  $scope.launchpadAutoStart = 'launchpadAutoStart';
 
   $scope.refineryTutorialSteps = JSON.parse(settings.djangoApp.refineryTutorialSteps);
 
@@ -84,10 +68,6 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   };
 }
 
-AppCtrl.prototype.globalClick = function ($event) {
-  this.pubSub.trigger('globalClick', $event);
-};
-
 angular
   .module('refineryApp')
   .controller('AppCtrl', [
@@ -97,7 +77,6 @@ angular
     '$timeout',
     '$window',
     '_',
-    'pubSub',
     'settings',
     AppCtrl
   ]);

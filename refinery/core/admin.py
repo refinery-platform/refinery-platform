@@ -136,7 +136,6 @@ class UserProfileAdmin(GuardedModelAdmin):
 
 class TutorialsAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'user_profile',
-                    'launchpad_tutorial_viewed',
                     'collaboration_tutorial_viewed',
                     'data_upload_tutorial_viewed']
 
