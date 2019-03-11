@@ -38,7 +38,7 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from data_set_manager.api import (InvestigationResource, StudyResource)
+from data_set_manager.api import InvestigationResource, StudyResource
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
