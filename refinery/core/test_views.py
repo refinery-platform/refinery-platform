@@ -242,6 +242,13 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(get_ds_response.status_code, 401)
 
+    def test_get_data_set_returns_public_data_set(self):
+        self.data_set.share(ExtendedGroup.objects.public_group())
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('uuid'), self.data_set.uuid)
+
     def test_get_data_set_returns_title(self):
         get_request = self.factory.get(urljoin(self.url_root,
                                                self.data_set.uuid))
