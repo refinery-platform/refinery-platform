@@ -20,8 +20,6 @@ from core.utils import verify_recaptcha
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeResource,
                                   InvestigationResource, NodeResource,
-                                  ProtocolReferenceParameterResource,
-                                  ProtocolReferenceResource, ProtocolResource,
                                   PublicationResource, StudyResource)
 from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
@@ -44,9 +42,6 @@ v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())
 v1_api.register(InvestigationResource())
-v1_api.register(ProtocolResource())
-v1_api.register(ProtocolReferenceResource())
-v1_api.register(ProtocolReferenceParameterResource())
 v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
