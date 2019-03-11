@@ -44,7 +44,7 @@ from data_set_manager.models import Study
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
-from .utils import (get_resources_for_user, which_default_read_perm)
+from .utils import get_resources_for_user, which_default_read_perm
 
 logger = logging.getLogger(__name__)
 
