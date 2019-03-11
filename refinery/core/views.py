@@ -753,8 +753,7 @@ class DataSetsViewSet(viewsets.ViewSet):
             )
 
         serializer = DataSetSerializer(data_set, context={'request': request})
-        return Response(serializer.data,
-                        status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.data)
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or
