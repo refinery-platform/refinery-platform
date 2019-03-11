@@ -642,9 +642,20 @@ class EventViewSet(APIView):
         return Response(serializer.data)
 
 
-class DataSetsViewSet(APIView):
+class DataSetsViewSet(viewsets.ViewSet):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
+    lookup_field = 'uuid'
+
+    def get_object(self, uuid):
+        try:
+            return DataSet.objects.get(uuid=uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple objects returned.")
 
     def list(self, request):
         params = request.query_params
@@ -734,19 +745,16 @@ class DataSetsViewSet(APIView):
 
     def retrieve(self, request, uuid):
         data_set = self.get_object(uuid)
-        serializer = DataSetSerializer(data_set)
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(
+                uuid, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        serializer = DataSetSerializer(data_set, context={'request': request})
         return Response(serializer.data,
                         status=status.HTTP_202_ACCEPTED)
-
-    def get_object(self, uuid):
-        try:
-            return DataSet.objects.get(uuid=uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple objects returned.")
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or
