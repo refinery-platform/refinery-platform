@@ -416,8 +416,6 @@ class UserProfileResource(ModelResource):
         # Update User's Tutorials based on payload received
         if bundle.data["collab_viewed"]:
             t.collaboration_tutorial_viewed = bundle.data["collab_viewed"]
-        if bundle.data["launchpad_viewed"]:
-            t.launchpad_tutorial_viewed = bundle.data["launchpad_viewed"]
         if bundle.data["upload_viewed"]:
             t.data_upload_tutorial_viewed = bundle.data["upload_viewed"]
 

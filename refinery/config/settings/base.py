@@ -547,8 +547,6 @@ REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_NAME = "AnonymousUser"
 
-SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
-
 AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"

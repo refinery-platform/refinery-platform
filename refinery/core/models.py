@@ -101,10 +101,6 @@ class UserProfile(models.Model):
         return self.user.first_name + " " + self.user.last_name + \
                " (" + self.affiliation + "): " + self.user.email
 
-    def has_viewed_launchpad_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).launchpad_tutorial_viewed
-
     def has_viewed_data_upload_tut(self):
         return Tutorials.objects.get(
             user_profile=self).data_upload_tutorial_viewed
@@ -223,16 +219,14 @@ class Tutorials(models.Model):
         User has viewed
     """
     user_profile = models.ForeignKey(UserProfile)
-    launchpad_tutorial_viewed = models.BooleanField(default=False)
     collaboration_tutorial_viewed = models.BooleanField(default=False)
     data_upload_tutorial_viewed = models.BooleanField(default=False)
 
     def __unicode__(self):
         return (
-            "User: {} | Launchpad: {}, Collaboration: {}, DataUpload:"
+            "User: {} | Collaboration: {}, DataUpload:"
             " {}".format(
              self.user_profile.user.username,
-             self.launchpad_tutorial_viewed,
              self.collaboration_tutorial_viewed,
              self.data_upload_tutorial_viewed
             )

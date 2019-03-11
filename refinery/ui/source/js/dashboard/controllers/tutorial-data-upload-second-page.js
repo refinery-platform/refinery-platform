@@ -9,7 +9,6 @@ function dataUploadTutorialCtrl2 (
   $scope.dataUploadCompletedEvent = function () {
     var data = {
       uuid: $scope.uuid,
-      launchpad_viewed: null,
       collab_viewed: null,
       upload_viewed: true
     };
