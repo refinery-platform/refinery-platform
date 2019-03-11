@@ -113,7 +113,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
 }
 
 angular
-  .module('dataSet')
+  .module('refineryDashboard')
   .factory('DataSetSearchApi', [
     '$sce',
     'settings',

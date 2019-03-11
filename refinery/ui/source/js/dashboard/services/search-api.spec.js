@@ -85,7 +85,7 @@ describe('DataSet.search-api: unit tests', function () {
 
   beforeEach(function () {
     module('refineryApp');
-    module('dataSet');
+    module('refineryDashboard');
 
     inject(function ($injector) {
       $httpBackend = $injector.get('$httpBackend');

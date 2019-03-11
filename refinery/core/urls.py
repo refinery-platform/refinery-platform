@@ -17,7 +17,6 @@ from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
 urlpatterns = patterns(
     'core.views',
     url(r'^$', 'home', name="home"),
-    url(r'^explore/$', 'explore', name="explore"),
     url(r'^about/$', 'about', name="about"),
     url(r'^dashboard/$', 'dashboard', name="dashboard"),
     url(r'^group_invite/(?P<token>' + UUID_RE + r')/$',
