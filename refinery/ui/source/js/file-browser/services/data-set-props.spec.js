@@ -21,9 +21,9 @@
     });
 
     describe('dataSetPropsService', function () {
-      beforeEach(inject(function (dataSetService, $q, $rootScope) {
-        var responseData = { objects: [{ is_owner: true }] };
-        spyOn(dataSetService, 'query').and.callFake(function () {
+      beforeEach(inject(function (dataSetV2Service, $q, $rootScope) {
+        var responseData = { data: { is_owner: true } };
+        spyOn(dataSetV2Service, 'query').and.callFake(function () {
           deferred = $q.defer();
           deferred.resolve(responseData);
           return { $promise: deferred.promise };
@@ -40,7 +40,7 @@
         var response = service
           .refreshDataSet({ uuid: fakeUuid })
           .then(function (responseData) {
-            successData = responseData.objects[0].is_owner;
+            successData = responseData.data.is_owner;
           });
         rootScope.$apply();
         expect(typeof response.then).toEqual('function');

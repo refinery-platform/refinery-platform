@@ -2,7 +2,6 @@
 
 function dataSetAboutFactory (
   assayService,
-  dataSetService,
   dataSetV2Service,
   fileStoreItemService,
   groupMemberService,
@@ -19,9 +18,9 @@ function dataSetAboutFactory (
     var params = {
       uuid: dataSetUuid
     };
-    var dataSetRequest = dataSetService.query(params);
+    var dataSetRequest = dataSetV2Service.query(params);
     dataSetRequest.$promise.then(function (response) {
-      angular.copy(response.objects[0], dataSet);
+      angular.copy(response.data, dataSet);
     });
     return dataSetRequest.$promise;
   };
@@ -86,7 +85,6 @@ angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
     'assayService',
-    'dataSetService',
     'dataSetV2Service',
     'fileStoreItemService',
     'groupMemberService',

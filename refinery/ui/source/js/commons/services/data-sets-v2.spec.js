@@ -81,5 +81,25 @@ describe('Common.service.dataSetsV2: unit tests', function () {
       $rootScope.$digest();
       expect(results.data.data_sets[0].name).toEqual(dataSets.data_sets[0].name);
     });
+
+    it('query for single ds should return a resolving promise', function () {
+      $httpBackend
+        .expectGET(
+          settings.appRoot +
+          settings.refineryApiV2 +
+          '/data_sets/' + fakeUuid + '/'
+      ).respond(200, fakeResponse);
+
+      var results;
+      param.uuid = fakeUuid;
+      var promise = service.query({ uuid: fakeUuid }).$promise
+        .then(function (response) {
+          results = response;
+        });
+      expect(typeof promise.then).toEqual('function');
+      $httpBackend.flush();
+      $rootScope.$digest();
+      expect(results.data.data.name).toEqual(fakeResponse.data.name);
+    });
   });
 });

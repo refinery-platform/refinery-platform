@@ -30,7 +30,7 @@ describe('Data Set About Factory', function () {
     var dataSet;
 
     beforeEach(inject(function (
-      dataSetService,
+      dataSetV2Service,
       _$q_,
       _$rootScope_
     ) {
@@ -59,7 +59,7 @@ describe('Data Set About Factory', function () {
           uuid: mocker.generateUuid()
         }]
       };
-      spyOn(dataSetService, 'query').and.callFake(function () {
+      spyOn(dataSetV2Service, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(dataSet);
         return {
