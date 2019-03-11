@@ -44,8 +44,7 @@ from data_set_manager.models import Study
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
-from .utils import (get_data_sets_annotations, get_resources_for_user,
-                    which_default_read_perm)
+from .utils import (get_resources_for_user, which_default_read_perm)
 
 logger = logging.getLogger(__name__)
 
@@ -532,14 +531,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 name='api_%s_get_all_ids' % (
                     self._meta.resource_name)
                 ),
-            url(r'^(?P<resource_name>%s)/annotations%s$' % (
-                    self._meta.resource_name,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_all_annotations'),
-                name='api_%s_get_all_annotations' % (
-                    self._meta.resource_name)
-                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
                     UUID_RE,
@@ -719,9 +710,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             return HttpForbidden()
 
         return self.create_response(request, return_obj)
-
-    def get_all_annotations(self, request, **kwargs):
-        return self.create_response(request, get_data_sets_annotations())
 
     def get_investigation(self, request, **kwargs):
         try:
