@@ -407,14 +407,6 @@ class NodeAPITest(LoginResourceTestCase):
         self.assertEqual(node_list_dict['meta']['total_count'], 1)
         self.assertEqual(len(node_list_dict['objects']), 1)
 
-    def test_get_node_detail_fields(self):
-        response = self.api_client.get(api_uri(NodeResource, self.node.uuid))
-        node_fields = self.deserialize(response).keys()
-        expected_fields = NodeResource._meta.fields + [
-            'file_import_status', 'resource_uri'
-        ]
-        self.assertItemsEqual(node_fields, expected_fields)
-
 
 class NodeAPIUnauthenticatedAccessTest(ResourceTestCase):
 

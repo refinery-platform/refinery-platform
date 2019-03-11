@@ -38,9 +38,7 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from data_set_manager.api import (AssayResource, InvestigationResource,
-                                  StudyResource)
-from data_set_manager.models import Study
+from data_set_manager.api import InvestigationResource, StudyResource
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
@@ -576,17 +574,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 name='api_%s_get_analyses' % (
                     self._meta.resource_name
                 )),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies/'
-                r'(?P<study_uuid>%s)/assays%s$' % (
-                    self._meta.resource_name,
-                    UUID_RE,
-                    UUID_RE,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_study_assays'),
-                name='api_%s_get_assays' % (
-                    self._meta.resource_name
-                )),
             url(r'^(?P<resource_name>%s)/(?P<id>%s)%s$' % (
                     self._meta.resource_name,
                     self.id_regex,
@@ -789,26 +776,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return AnalysisResource().get_list(
             request=request,
             data_set__uuid=kwargs['uuid']
-        )
-
-    def get_study_assays(self, request, **kwargs):
-        try:
-            DataSet.objects.get(uuid=kwargs['uuid'])
-        except (DataSet.DoesNotExist,
-                DataSet.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpGone()
-
-        try:
-            Study.objects.get(uuid=kwargs['study_uuid'])
-        except (Study.DoesNotExist,
-                Study.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpGone()
-
-        return AssayResource().get_list(
-            request=request,
-            study_uuid=kwargs['study_uuid']
         )
 
 
