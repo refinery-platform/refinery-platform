@@ -1271,10 +1271,10 @@ class StudiesView(APIView):
 
         parameters:
             - name: dataSetUuid
-              description: study uuid
+              description: data set uuid containing the studies
               paramType: query
               type: string
-              required: false
+              required: true
     ...
     """
     def get(self, request):
