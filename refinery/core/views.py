@@ -643,7 +643,7 @@ class EventViewSet(APIView):
 
 
 class DataSetsViewSet(viewsets.ViewSet):
-    """API endpoint that allows for DataSets to be deleted"""
+    """API endpoint for viewing, editing, and deleting datasets."""
     http_method_names = ['get', 'delete', 'patch']
     lookup_field = 'uuid'
 
