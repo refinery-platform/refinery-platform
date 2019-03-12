@@ -42,7 +42,7 @@ from file_store.utils import parse_s3_url
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
                      Study)
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
-                          NodeSerializer)
+                          NodeSerializer, StudySerializer)
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (
@@ -1256,6 +1256,46 @@ class NodeViewSet(APIView):
         return Response('Currently, you can only remove node files or '
                         'edit non-derived files',
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class StudiesView(APIView):
+    """
+    Return study object
+
+    ---
+    #YAML
+
+    GET:
+        serializer: StudySerializer
+        omit_serializer: false
+
+        parameters:
+            - name: uuid
+              description: study uuid
+              paramType: query
+              type: string
+              required: false
+    ...
+    """
+    def get(self, request):
+        data_set_uuid = request.query_params.get('dataSetUuid')
+        if data_set_uuid is None:
+            return HttpResponseBadRequest(
+                "Currently, a Data Set UUID is required for "
+                "retrieving related studies."
+            )
+
+        try:
+            data_set = DataSet.objects.get(
+                uuid=request.query_params.get('dataSetUuid')
+            )
+        except DataSet.DoesNotExist as e:
+            return HttpResponseNotFound(e)
+        except DataSet.MultipleObjectsReturned as e:
+            return HttpResponseServerError(e)
+
+        serializer = StudySerializer(data_set.get_studies(), many=True)
+        return Response(serializer.data)
 
 
 def _check_data_set_ownership(user, data_set_uuid):
