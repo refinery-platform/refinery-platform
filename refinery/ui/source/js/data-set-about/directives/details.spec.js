@@ -7,30 +7,14 @@ describe('rpDataSetAboutDetails directive unit test', function () {
   var compile;
   var rootScope;
   var scope;
-  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
     $templateCache,
     $httpBackend,
-    $window,
-    settings
+    $window
   ) {
-    $httpBackend
-      .expectGET(
-        settings.appRoot +
-        settings.refineryApi +
-        '/data_sets/?format=json&order_by=-modification_date&uuid=' + fakeUuid
-     ).respond(200, '');
-
-    $httpBackend
-      .expectGET(
-        settings.appRoot +
-        settings.refineryApi +
-        '/data_sets/' + fakeUuid + '/studies/'
-     ).respond(200, '');
-
     $templateCache.put(
       $window.getStaticUrl('partials/data-set-about/partials/details.html'),
       '<div class="refinery-header"> ' +
