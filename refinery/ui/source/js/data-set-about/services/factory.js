@@ -46,11 +46,11 @@ function dataSetAboutFactory (
   // Get Studies associated with a data set
   var getStudies = function (dataSetUuid) {
     var params = {
-      uuid: dataSetUuid
+      dataSetUuid: dataSetUuid
     };
     var study = studyService.query(params);
     study.$promise.then(function (response) {
-      angular.copy(response.objects, studies);
+      angular.copy(response, studies);
     });
     return study.$promise;
   };

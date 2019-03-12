@@ -5,14 +5,14 @@ angular
   .factory('studyService', ['$resource', 'settings',
     function ($resource, settings) {
       var study = $resource(
-        settings.appRoot + settings.refineryApi + '/data_sets/:uuid/studies/',
+        settings.appRoot + settings.refineryApiV2 + '/studies/',
         {
-          uuid: '@uuid'
+          dataSetUuid: '@uuid'
         },
         {
           query: {
             method: 'GET',
-            isArray: false
+            isArray: true
           }
         }
       );
