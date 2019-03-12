@@ -66,7 +66,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(DataSetApiV2Tests, self).setUp(
             api_base_name="datasets/",
-            view=DataSetsViewSet.as_view()
+            view=DataSetsViewSet.as_view({'get': 'list'})
         )
 
         # Create Datasets
@@ -90,17 +90,13 @@ class DataSetApiV2Tests(APIV2TestCase):
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.put_response = self.view(self.put_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
             format="json"
         )
+        self.get_ds_view = DataSetsViewSet.as_view({'get': 'retrieve'})
+        self.patch_view = DataSetsViewSet.as_view({'patch': 'partial_update'})
         self.options_response = self.view(self.options_request)
         self.user_2 = User.objects.create_user('jane_lab',
                                                'jane@fake.com',
@@ -121,14 +117,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.group.user_set.add(self.user_2)
         self.group.user_set.add(self.user_3)
 
-    def test_unallowed_http_verbs(self):
-        self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
-
-    def test_get_data_set_with_auth(self):
+    def test_get_data_sets_with_auth(self):
         self.get_request.user = self.user
         get_response = self.view(self.get_request)
         self.assertEqual(len(get_response.data), 2)
@@ -239,8 +228,85 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(len(get_response.data.get('data_sets')),
                          get_response.data.get('total_data_sets'))
 
-    def test_dataset_delete_successful(self):
+    def test_get_data_set_with_auth(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('uuid'), self.data_set.uuid)
 
+    def test_get_data_set_returns_401(self):
+        # anon user on a non-public data set
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.status_code, 401)
+
+    def test_get_data_set_returns_public_data_set(self):
+        self.data_set.share(ExtendedGroup.objects.public_group())
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('uuid'), self.data_set.uuid)
+
+    def test_get_data_set_returns_title(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('title'),
+                         self.data_set.title)
+
+    def test_get_data_set_returns_summary(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('summary'),
+                         self.data_set.summary)
+
+    def test_get_data_set_returns_description(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('description'),
+                         self.data_set.description)
+
+    def test_get_data_set_returns_is_owner(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('is_owner'),
+                         self.user == self.data_set.get_owner())
+
+    def test_get_data_set_returns_public(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('public'),
+                         self.data_set.is_public())
+
+    def test_get_data_set_returns_is_clean(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('is_clean'),
+                         self.data_set.is_clean())
+
+    def test_get_data_set_returns_file_count(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('file_count'),
+                         self.data_set.get_file_count())
+
+    def test_dataset_delete_successful(self):
+        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request1 = self.factory.delete(
@@ -249,8 +315,8 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         force_authenticate(self.delete_request1, user=self.user)
 
-        self.delete_response = self.view(self.delete_request1,
-                                         self.data_set.uuid)
+        self.delete_response = delete_view(self.delete_request1,
+                                           self.data_set.uuid)
 
         self.assertEqual(self.delete_response.status_code, 200)
 
@@ -262,27 +328,29 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         force_authenticate(self.delete_request2, user=self.user)
 
-        self.delete_response = self.view(self.delete_request2,
-                                         self.data_set_2.uuid)
+        self.delete_response = delete_view(self.delete_request2,
+                                           self.data_set_2.uuid)
         self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 2)
 
     def test_dataset_delete_no_auth(self):
+        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request = self.factory.delete(
            urljoin(self.url_root, self.data_set.uuid)
         )
 
-        self.delete_response = self.view(self.delete_request,
-                                         self.data_set.uuid)
+        self.delete_response = delete_view(self.delete_request,
+                                           self.data_set.uuid)
 
         self.assertEqual(self.delete_response.status_code, 403)
 
         self.assertEqual(DataSet.objects.all().count(), 4)
 
     def test_dataset_delete_not_found(self):
+        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         uuid = self.data_set.uuid
@@ -296,8 +364,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
         force_authenticate(self.delete_request, user=self.user)
 
-        self.delete_response = self.view(self.delete_request,
-                                         uuid)
+        self.delete_response = delete_view(self.delete_request, uuid)
 
         self.assertEqual(self.delete_response.status_code, 404)
 
@@ -314,7 +381,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
@@ -329,7 +396,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertFalse(patch_response.data.get('is_owner'))
 
     def test_dataset_patch_fails_not_found_email_returns_404(self):
@@ -340,7 +407,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 404)
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
@@ -354,7 +421,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, self.data_set.uuid)
+        self.patch_view(patch_request, self.data_set.uuid)
         self.assertTrue(mock_update.called)
         self.assertTrue(mock_email.called)
 
@@ -369,7 +436,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
-        response = self.view(patch_request, self.data_set.uuid)
+        response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(response.status_code, 412)
         self.assertEqual(self.data_set.get_owner(), self.user)
 
@@ -392,7 +459,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         mock_perms.return_value = [group_non_union_0, group_non_union_1, {}]
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
-        response = self.view(patch_request, self.data_set.uuid)
+        response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(response.status_code, 412)
         self.assertEqual(len(get_groups_with_perms(self.data_set)), 2)
 
@@ -404,7 +471,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"accession": new_accession}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('accession')[0],
@@ -418,7 +485,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"accession": new_accession},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('accession'), new_accession)
 
@@ -428,7 +495,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             urljoin(self.url_root, self.data_set.uuid),
             {"description": new_description},
         )
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 401)
 
     def test_dataset_patch_description_fails(self):
@@ -438,7 +505,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"description": new_description},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('description')[0],
@@ -452,7 +519,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"description": new_description},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(
             patch_response.data.get('description'), new_description
@@ -466,7 +533,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"slug": new_slug}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('slug')[0],
@@ -481,7 +548,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"slug": new_slug}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug)
 
@@ -491,7 +558,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"slug": new_slug}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set_2.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set_2.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('slug')[0],
@@ -505,7 +572,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"slug": new_slug},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug)
 
@@ -516,7 +583,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"slug": new_slug},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug.strip())
 
@@ -528,7 +595,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"summary": new_summary}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('summary')[0],
@@ -542,7 +609,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"summary": new_summary},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('summary'), new_summary)
 
@@ -554,7 +621,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"title": new_title}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('title')[0],
@@ -568,7 +635,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             {"title": new_title},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('title'), new_title)
 
@@ -686,10 +753,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         groups = view_set.update_group_perms(new_owner)
 
         self.assertEqual(len(groups.get('groups_with_access')), 1)
-        self.assertEqual(
-            groups.get('groups_with_access')[0].get('name'),
-            group_union.extendedgroup.name
-        )
+        self.assertEqual(groups.get('groups_with_access')[0].get('name'),
+                         group_union.extendedgroup.name)
         self.assertEqual(
             groups.get('groups_with_access')[0].get('profile'),
             'http://{}/groups/{}'.format(view_set.current_site,

@@ -5,9 +5,9 @@
     .module('refineryFileBrowser')
     .service('dataSetPropsService', dataSetPropsService);
 
-  dataSetPropsService.$inject = ['$window', 'dataSetService'];
+  dataSetPropsService.$inject = ['$window', 'dataSetV2Service'];
 
-  function dataSetPropsService ($window, dataSetService) {
+  function dataSetPropsService ($window, dataSetV2Service) {
     var vm = this;
     vm.dataSet = {};
     vm.refreshDataSet = refreshDataSet;
@@ -19,9 +19,9 @@
      */
     function refreshDataSet () {
       var params = { uuid: $window.dataSetUuid };
-      var dataSet = dataSetService.query(params);
+      var dataSet = dataSetV2Service.query(params);
       dataSet.$promise.then(function (response) {
-        vm.dataSet = response.objects[0];
+        angular.copy(response.data, vm.dataSet);
       });
       return dataSet.$promise;
     }
