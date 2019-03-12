@@ -1260,7 +1260,7 @@ class NodeViewSet(APIView):
 
 class StudiesView(APIView):
     """
-    Return study object
+    API end point for retrieving studies based on a data set uuid
 
     ---
     #YAML
@@ -1270,7 +1270,7 @@ class StudiesView(APIView):
         omit_serializer: false
 
         parameters:
-            - name: uuid
+            - name: dataSetUuid
               description: study uuid
               paramType: query
               type: string
@@ -1286,13 +1286,16 @@ class StudiesView(APIView):
             )
 
         try:
-            data_set = DataSet.objects.get(
-                uuid=request.query_params.get('dataSetUuid')
-            )
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
         except DataSet.DoesNotExist as e:
             return HttpResponseNotFound(e)
         except DataSet.MultipleObjectsReturned as e:
             return HttpResponseServerError(e)
+
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
 
         serializer = StudySerializer(data_set.get_studies(), many=True)
         return Response(serializer.data)
