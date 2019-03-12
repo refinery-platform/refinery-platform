@@ -1653,3 +1653,59 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('uuid'),
                          self.data_set.get_studies()[0].uuid)
+
+    def test_get_returns_title_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('title'),
+                         self.data_set.get_studies()[0].title)
+
+    def test_get_returns_description_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('description'),
+                         self.data_set.get_studies()[0].description)
+
+    def test_get_returns_submission_date_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('submission_date'),
+                         self.data_set.get_studies()[0].submission_date)
+
+    def test_get_returns_identifier_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('identifier'),
+                         self.data_set.get_studies()[0].identifier)
+
+    def test_get_returns_release_date_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('release_date'),
+                         self.data_set.get_studies()[0].release_date)
+
+    def test_get_returns_file_name_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('file_name'),
+                         self.data_set.get_studies()[0].file_name)
+
+    def test_get_returns_investigation_id_field_for_data_set(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('investigation'),
+                         self.data_set.get_studies()[0].investigation.id)
