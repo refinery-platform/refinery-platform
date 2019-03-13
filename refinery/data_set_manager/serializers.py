@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Assay, Attribute, AttributeOrder, FileStoreItem, Node
+from .models import Assay, Attribute, AttributeOrder, Node
 
 
 class AssaySerializer(serializers.ModelSerializer):
@@ -43,37 +43,14 @@ class AttributeOrderSerializer(serializers.ModelSerializer):
 
 
 class NodeSerializer(serializers.ModelSerializer):
-    attributes = serializers.SerializerMethodField()
     children = serializers.SerializerMethodField()
-    file_import_status = serializers.SerializerMethodField()
     file_uuid = serializers.CharField(max_length=36,
                                       required=False,
                                       allow_null=True)
-    file_url = serializers.SerializerMethodField()
-
     parents = serializers.SerializerMethodField()
-
-    def get_attributes(self, node):
-        attributes = node.attribute_set.all().filter(subtype='organism')
-        # NOTE: For provenance graph it filters on organism, unsure the whys
-        return AttributeSerializer(attributes, many=True).data
 
     def get_children(self, node):
         return node.get_children()
-
-    def get_file_url(self, node):
-        try:
-            file_item = FileStoreItem.objects.get(uuid=node.file_uuid)
-        except:
-            return ''
-        return file_item.get_datafile_url()
-
-    def get_file_import_status(self, node):
-        try:
-            file_item = FileStoreItem.objects.get(uuid=node.file_uuid)
-        except:
-            return ''
-        return file_item.get_import_status()
 
     def get_parents(self, node):
         return node.get_parents()

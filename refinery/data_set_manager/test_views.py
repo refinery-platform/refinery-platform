@@ -799,7 +799,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.node = self.data_set.get_nodes()[0]
         self.get_list_view = NodeViewSet.as_view({'get': 'list'})
         self.patch_view = NodeViewSet.as_view({'patch': 'partial_update'})
-        self.study_uuid = self.data_set.get_studies()[0].uuid
+        self.study_uuid = self.hg_19_data_set.get_studies()[0].uuid
 
     def test_get_without_study_uuid_returns_400(self):
         get_request = self.factory.get(self.url_root, {})
@@ -818,7 +818,166 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         self.assertEqual(len(get_response.data),
-                         len(self.data_set.get_nodes()))
+                         len(self.hg_19_data_set.get_nodes()))
+        for node in get_response.data:
+            self.assertIn(
+                node.get('uuid'),
+                self.hg_19_data_set.get_nodes().values_list('uuid', flat=True)
+            )
+
+    def test_get_with_study_uuid_returns_children_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('children'),
+            Node.objects.get(uuid=first_node.get('uuid')).get_children()
+        )
+
+    def test_get_with_study_uuid_returns_parents_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('parents'),
+            Node.objects.get(uuid=first_node.get('uuid')).get_parents()
+        )
+
+    def test_get_with_study_uuid_returns_file_uuid_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('file_uuid'),
+            Node.objects.get(uuid=first_node.get('uuid')).file_uuid
+        )
+
+    def test_get_with_study_uuid_returns_name_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('name'),
+            Node.objects.get(uuid=first_node.get('uuid')).name
+        )
+
+    def test_get_with_study_uuid_returns_type_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('type'),
+            Node.objects.get(uuid=first_node.get('uuid')).type
+        )
+
+    def test_get_with_study_uuid_returns_genome_build_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('genome_build'),
+            Node.objects.get(uuid=first_node.get('uuid')).genome_build
+        )
+
+    def test_get_with_study_uuid_returns_species_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('species'),
+            Node.objects.get(uuid=first_node.get('uuid')).species
+        )
+
+    def test_get_with_study_uuid_returns_is_annotation_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('is_annotation'),
+            Node.objects.get(uuid=first_node.get('uuid')).is_annotation
+        )
+
+    def test_get_with_study_uuid_returns_analysis_uuid_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('analysis_uuid'),
+            Node.objects.get(uuid=first_node.get('uuid')).analysis_uuid
+        )
+
+    def test_get_with_study_uuid_returns_is_auxiliary_node_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('is_auxiliary_node'),
+            Node.objects.get(uuid=first_node.get('uuid')).is_auxiliary_node
+        )
+
+    def test_get_with_study_uuid_returns_subanalysis_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('subanalysis'),
+            Node.objects.get(uuid=first_node.get('uuid')).subanalysis
+        )
+
+    def test_get_with_study_uuid_returns_workflow_output_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('workflow_output'),
+            Node.objects.get(uuid=first_node.get('uuid')).workflow_output
+        )
+
+    def test_get_with_study_uuid_returns_study_id_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('study'),
+            Node.objects.get(uuid=first_node.get('uuid')).study.id
+        )
+
+    def test_get_with_study_uuid_returns_assay_id_field(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        first_node = get_response.data[0]
+        self.assertEqual(
+            first_node.get('assay'),
+            Node.objects.get(uuid=first_node.get('uuid')).assay.id
+        )
 
     def test_get_uuid_returns_400(self):
         node = self.hg_19_data_set.get_nodes().filter(
