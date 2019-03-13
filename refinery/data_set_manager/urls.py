@@ -16,7 +16,7 @@ from .views import (AddFileToNodeView, Assays, AssaysAttributes,
                     ChunkedFileUploadCompleteView, ChunkedFileUploadView,
                     DataSetImportView, ImportISATabView, NodeViewSet,
                     ProcessISATabView, ProcessMetadataTableView,
-                    TakeOwnershipOfPublicDatasetView)
+                    StudiesView, TakeOwnershipOfPublicDatasetView)
 
 urlpatterns = patterns(
     'data_set_manager.views',
@@ -57,5 +57,6 @@ data_set_manager_router.urls.extend([
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/attributes/$',
         AssaysAttributes.as_view()),
     url(r'^data_set_manager/add-file/$',
-        AddFileToNodeView.as_view())
+        AddFileToNodeView.as_view()),
+    url(r'^studies/$', StudiesView.as_view()),
 ])

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Assay, Attribute, AttributeOrder, Node
+from .models import Assay, AttributeOrder, Node, Study
 
 
 class AssaySerializer(serializers.ModelSerializer):
@@ -11,11 +11,6 @@ class AssaySerializer(serializers.ModelSerializer):
             'uuid', 'study', 'measurement', 'measurement_accession',
             'measurement_source', 'technology', 'technology_accession',
             'technology_source', 'platform', 'file_name')
-
-
-class AttributeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Attribute
 
 
 class AttributeOrderSerializer(serializers.ModelSerializer):
@@ -57,3 +52,9 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
+
+
+class StudySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Study

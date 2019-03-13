@@ -38,7 +38,7 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from data_set_manager.api import InvestigationResource, StudyResource
+from data_set_manager.api import InvestigationResource
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
@@ -538,15 +538,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 name='api_%s_get_investigation' % (
                     self._meta.resource_name)
                 ),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
-                    self._meta.resource_name,
-                    UUID_RE,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_studies'),
-                name='api_%s_get_studies' % (
-                    self._meta.resource_name
-                )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
                     UUID_RE,
@@ -710,19 +701,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return InvestigationResource().get_detail(
             request,
             uuid=data_set.get_investigation().uuid
-        )
-
-    def get_studies(self, request, **kwargs):
-        try:
-            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except (DataSet.DoesNotExist,
-                DataSet.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpGone()
-
-        return StudyResource().get_list(
-            request=request,
-            investigation_uuid=data_set.get_investigation().uuid
         )
 
     def get_assays(self, request, **kwargs):
