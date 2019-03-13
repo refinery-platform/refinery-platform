@@ -60,8 +60,6 @@
    */
   // var runInitPrivate = function (data, analysesData, solrResponse) {
     function initGraph (data, analysesData, solrResponse) {
-      /* Extract raw objects. */
-    //  var dataArray = d3.entries(data);
       /* Create node collection. */
       extractNodes(data, solrResponse);
 
