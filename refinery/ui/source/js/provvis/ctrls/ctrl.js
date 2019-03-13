@@ -48,7 +48,6 @@
     var _dataSetUuid = $window.dataSetUuid;
     var _assayUuid = $window.externalAssayUuid;
     var analysesList = [];
-    var nodesApiUrl = settings.appRoot + settings.refineryApiV2 + '/nodes/?studyUuid=';
     vm.getData = getData;
     vm.launchProvvis = launchProvvis;
     vm.isGraphReady = false;
@@ -110,7 +109,7 @@
 
       /* Only allow one instance of ProvVis. */
       if (vis instanceof provvisDecl.ProvVis === false) {
-        var url = nodesApiUrl + studyUuid + '&format=json';
+        var url = settings.appRoot + settings.refineryApiV2 + '/nodes/?studyUuid=' + studyUuid;
         var analysesData = studyAnalyses.filter(function (a) {
           return a.status === 'SUCCESS';
         });

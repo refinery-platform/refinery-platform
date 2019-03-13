@@ -807,6 +807,12 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_response = self.get_list_view(get_request)
         self.assertEqual(get_response.status_code, 400)
 
+    def test_get_with_incorrect_study_uuid_returns_404(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.hg_19_data_set.uuid})
+        get_response = self.get_list_view(get_request)
+        self.assertEqual(get_response.status_code, 404)
+
     def test_get_with_study_uuid_returns_401(self):
         get_request = self.factory.get(self.url_root,
                                        {'studyUuid': self.study_uuid})

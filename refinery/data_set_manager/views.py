@@ -1104,7 +1104,9 @@ class AddFileToNodeView(APIView):
 
 
 class NodeViewSet(viewsets.ViewSet):
-    """API endpoint that allows Nodes to be viewed".
+    """API endpoint for viewing and editing nodes. Note currently, the api
+    supports viewing nodes filtered by studyUuid and viewing a node's
+    attribute related siblings. "
      ---
     #YAML
 
