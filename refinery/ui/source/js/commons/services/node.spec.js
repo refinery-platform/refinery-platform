@@ -7,7 +7,7 @@ describe('Common.service.node: unit tests', function () {
   var service;
   var fakeResponse = {
     analysis_uuid: null,
-    assay: '/api/v1/assay/5eff885e-49cb-477a-ad76-f65d74d78f8a/',
+    assay: '/api/v2/assay/5eff885e-49cb-477a-ad76-f65d74d78f8a/',
     attributes: [],
     file_import_status: 'PENDING',
     file_url: '/media/file_store/c5/d2/rfc174.txt',
@@ -17,7 +17,7 @@ describe('Common.service.node: unit tests', function () {
       '/api/v1/node/2d59008b-5abe-4f35-9199-81b75f7e9eef/'
     ],
     resource_uri: '/api/v1/node/63647300-3117-4c7b-9205-706ac4daa7fa/',
-    study: '/api/v1/study/ff657398-30db-4481-bfb9-8b86f46e9000/',
+    study: '/api/v2/study/ff657398-30db-4481-bfb9-8b86f46e9000/',
     subanalysis: null,
     type: 'Raw Data File',
     uuid: '63647300-3117-4c7b-9205-706ac4daa7fa'

@@ -143,23 +143,21 @@ describe('Data Set About Factory', function () {
       _$rootScope_
     ) {
       $q = _$q_;
-      studyResult = { objects:
-        [{
-          description: 'A collection of RFC documents.',
-          file_name: 's_study.txt',
-          id: 10,
-          identifier: 'IETF Request for Comments',
-          investigation_uuid: mocker.generateUuid(),
-          protocols: [],
-          publications: [],
-          release_date: null,
-          resource_uri: '/api/v1/study/8486046b-22f4-447f-9c81-41dbf6173c44/',
-          sources: [],
-          submission_date: '2013-03-22',
-          title: 'RFC Documents',
-          uuid: mocker.generateUuid()
-        }]
-      };
+      studyResult = [{
+        description: 'A collection of RFC documents.',
+        file_name: 's_study.txt',
+        id: 10,
+        identifier: 'IETF Request for Comments',
+        investigation_uuid: mocker.generateUuid(),
+        protocols: [],
+        publications: [],
+        release_date: null,
+        resource_uri: '/api/v1/study/8486046b-22f4-447f-9c81-41dbf6173c44/',
+        sources: [],
+        submission_date: '2013-03-22',
+        title: 'RFC Documents',
+        uuid: mocker.generateUuid()
+      }];
       spyOn(studyService, 'query').and.callFake(function () {
         deferred = $q.defer();
         deferred.resolve(studyResult);
