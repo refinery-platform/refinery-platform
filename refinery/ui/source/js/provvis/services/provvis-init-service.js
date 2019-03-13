@@ -61,10 +61,9 @@
   // var runInitPrivate = function (data, analysesData, solrResponse) {
     function initGraph (data, analysesData, solrResponse) {
       /* Extract raw objects. */
-      var obj = d3.entries(data)[1];
-
+    //  var dataArray = d3.entries(data);
       /* Create node collection. */
-      extractNodes(obj, solrResponse);
+      extractNodes(data, solrResponse);
 
       /* Create link collection. */
       extractLinks();
@@ -412,13 +411,9 @@
      * @returns {provvisDecl.Node} New Node object.
      */
     function createNode (n, type, id) {
-      var study = (n.study !== null) ? n.study.replace(/\/api\/v1\/study\//g, '')
-        .replace(/\//g, '') : '';
-      var assay = (n.assay !== null) ? n.assay.replace(/\/api\/v1\/assay\//g, '')
-        .replace(/\//g, '') : '';
-      var parents = n.parents.map(function (y) {
-        return y.replace(/\/api\/v1\/node\//g, '').replace(/\//g, '');
-      });
+      var study = n.study;
+      var assay = n.assay;
+      var parents = n.parents;
       var analysis = (n.analysis_uuid !== null) ? n.analysis_uuid : 'dataset';
 
       /* Fix for datasets which nodes might not contain a name attribute. */
@@ -539,7 +534,6 @@
    */
     function extractLinks () {
       var lId = 0;
-
       nodes.forEach(function (n) {
         if (typeof n !== 'undefined' && typeof n.uuid !== 'undefined') {
           if (typeof n.parents !== 'undefined') {
@@ -568,8 +562,8 @@
      * Extract nodes.
      * @param datasetJsonObj Analysis dataset of type JSON.
      */
-    function extractNodes (datasetJsonObj) {
-      d3.values(datasetJsonObj.value).forEach(function (n, i) {
+    function extractNodes (datasetArray) {
+      datasetArray.forEach(function (n, i) {
         /* Assign class string for node types. */
         var nodeType = assignNodeType(n);
 
