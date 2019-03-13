@@ -789,7 +789,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(NodeViewAPIV2Tests, self).setUp(
             api_base_name="nodes/",
-            view=NodeViewSet.as_view()
+            view=NodeViewSet.as_view({'get': 'retrieve'})
         )
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user)
@@ -797,6 +797,28 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             user=self.user
         )
         self.node = self.data_set.get_nodes()[0]
+        self.get_list_view = NodeViewSet.as_view({'get': 'list'})
+        self.patch_view = NodeViewSet.as_view({'patch': 'partial_update'})
+        self.study_uuid = self.data_set.get_studies()[0].uuid
+
+    def test_get_without_study_uuid_returns_400(self):
+        get_request = self.factory.get(self.url_root, {})
+        get_response = self.get_list_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+
+    def test_get_with_study_uuid_returns_401(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_response = self.get_list_view(get_request)
+        self.assertEqual(get_response.status_code, 401)
+
+    def test_get_with_study_uuid_returns_study_nodes(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'studyUuid': self.study_uuid})
+        get_request.user = self.user
+        get_response = self.get_list_view(get_request)
+        self.assertEqual(len(get_response.data),
+                         len(self.data_set.get_nodes()))
 
     def test_get_uuid_returns_400(self):
         node = self.hg_19_data_set.get_nodes().filter(
@@ -807,7 +829,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_response = self.view(get_request, node.uuid)
         self.assertEqual(get_response.status_code, 400)
 
-    def test_get_returns_401_non_owners(self):
+    def test_get_uuid_returns_401_non_owners(self):
         node = self.hg_19_data_set.get_nodes().filter(
             type=Node.RAW_DATA_FILE
         )[0]
@@ -825,7 +847,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_response = self.view(get_request, node.uuid)
         self.assertEqual(get_response.status_code, 401)
 
-    def test_get_returns_empty_list_for_dataset_without_related_nodes(self):
+    def test_get_uuid_returns_empty_list_for_ds_without_related_nodes(self):
         node = self.hg_19_data_set.get_nodes().filter(
             type=Node.RAW_DATA_FILE
         )[0]
@@ -842,7 +864,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data, [])
 
-    def test_get_returns_derived_nodes_for_dataset_with_related_nodes(self):
+    def test_get_uuid_returns_derived_nodes_for_ds_with_related_nodes(self):
         nodes = self.isatab_9909_data_set.get_nodes()
         file_node = nodes.filter(
             type=Node.ARRAY_DATA_FILE,
@@ -875,7 +897,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             {"file_uuid": ''}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.node.uuid)
+        patch_response = self.patch_view(patch_request, self.node.uuid)
         self.assertTrue(mock_index.called)
         self.assertEqual(patch_response.status_code, 200)
 
@@ -887,7 +909,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             {"file_uuid": ''}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.node.uuid)
+        patch_response = self.patch_view(patch_request, self.node.uuid)
         self.assertEqual(patch_response.status_code, 400)
 
     def test_patch_missing_file_store_item_400_status(self):
@@ -899,7 +921,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             {"file_uuid": ''}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.node.uuid)
+        patch_response = self.patch_view(patch_request, self.node.uuid)
         self.assertEqual(patch_response.status_code, 400)
 
     def test_patch_non_owner_401_status(self):
@@ -911,7 +933,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             {"file_uuid": ''}
         )
         force_authenticate(patch_request, user=self.non_owner)
-        patch_response = self.view(patch_request, self.node.uuid)
+        patch_response = self.patch_view(patch_request, self.node.uuid)
         self.assertEqual(patch_response.status_code, 401)
 
     def test_patch_edit_field_405_status(self):
@@ -920,7 +942,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
             {"name": 'New Node Name'}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.node.uuid)
+        patch_response = self.patch_view(patch_request, self.node.uuid)
         self.assertEqual(patch_response.status_code, 405)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -939,7 +961,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
                                            {"attribute_solr_name": solr_name,
                                             "attribute_value": new_value})
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, node.uuid)
+        self.patch_view(patch_request, node.uuid)
         self.assertEqual(annotated_node.attribute.value, new_value)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -960,7 +982,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": new_value}
         )
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, node.uuid)
+        self.patch_view(patch_request, node.uuid)
         annotated_node.refresh_from_db()
         self.assertEqual(annotated_node.attribute_value, new_value)
 
@@ -980,7 +1002,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": 'mouse'}
         )
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, node.uuid)
+        self.patch_view(patch_request, node.uuid)
         self.assertTrue(update_solr_index_mock.called)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -998,7 +1020,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": 'mouse'}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, derived_node.uuid)
+        patch_response = self.patch_view(patch_request, derived_node.uuid)
         self.assertEqual(patch_response.status_code, 405)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -1015,7 +1037,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": 'New Name'}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, node.uuid)
+        patch_response = self.patch_view(patch_request, node.uuid)
         self.assertEqual(patch_response.status_code, 400)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
@@ -1039,7 +1061,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": new_value}
         )
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, file_node.uuid)
+        self.patch_view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
         self.assertEqual(annotated_node.attribute_value, new_value)
 
@@ -1064,7 +1086,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": new_value}
         )
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, file_node.uuid)
+        self.patch_view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
         # source node attribute updated
         source_node = nodes.filter(
@@ -1097,7 +1119,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": new_value}
         )
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, file_node.uuid)
+        self.patch_view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
         # derived nodes attribute_values updated, there's six
         derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)
@@ -1144,7 +1166,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
              "attribute_value": new_value}
         )
         force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, file_node.uuid)
+        self.patch_view(patch_request, file_node.uuid)
         annotated_node.refresh_from_db()
         # derived nodes attribute_values not updated, there's 6
         derived_array_nodes = nodes.filter(type=Node.DERIVED_ARRAY_DATA_FILE)

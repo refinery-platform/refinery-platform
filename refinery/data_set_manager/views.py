@@ -1150,6 +1150,13 @@ class NodeViewSet(viewsets.ViewSet):
 
     def list(self, request):
         study_uuid = request.query_params.get('studyUuid')
+
+        if study_uuid is None:
+            return Response(
+                'Currently, the API only supports a study-related node lists.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             study = Study.objects.get(uuid=study_uuid)
         except Study.DoesNotExist as e:
