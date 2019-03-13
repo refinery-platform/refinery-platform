@@ -1620,10 +1620,8 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
 
 class StudiesViewAPIV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
-        super(StudiesViewAPIV2Tests, self).setUp(
-            api_base_name="studies/",
-            view=StudiesView.as_view()
-        )
+        super(StudiesViewAPIV2Tests, self).setUp(api_base_name="studies/",
+                                                 view=StudiesView.as_view())
         self.data_set = create_dataset_with_necessary_models(user=self.user)
 
     def test_get_missing_data_set_uuid_returns_400(self):
