@@ -23,6 +23,7 @@
     '$',
     '$q',
     '$scope',
+    'settings',
     '$window'
   ];
 
@@ -39,6 +40,7 @@
     $,
     $q,
     $scope,
+    settings,
     $window
   ) {
     var vm = this;
@@ -107,8 +109,7 @@
 
       /* Only allow one instance of ProvVis. */
       if (vis instanceof provvisDecl.ProvVis === false) {
-        var url = '/api/v1/node/?study__uuid=' + studyUuid +
-          '&format=json&limit=0';
+        var url = settings.appRoot + settings.refineryApiV2 + '/nodes/?studyUuid=' + studyUuid;
         var analysesData = studyAnalyses.filter(function (a) {
           return a.status === 'SUCCESS';
         });

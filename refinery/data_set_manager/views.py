@@ -27,7 +27,7 @@ import boto3
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from guardian.shortcuts import get_perms
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -1103,8 +1103,10 @@ class AddFileToNodeView(APIView):
         return HttpResponse(status=202)  # Accepted
 
 
-class NodeViewSet(APIView):
-    """API endpoint that allows Nodes to be viewed".
+class NodeViewSet(viewsets.ViewSet):
+    """API endpoint for viewing and editing nodes. Note currently, the api
+    supports viewing nodes filtered by studyUuid and viewing a node's
+    attribute related siblings. "
      ---
     #YAML
 
@@ -1148,7 +1150,37 @@ class NodeViewSet(APIView):
             logger.error(e)
             raise APIException("Multiple objects returned.")
 
-    def get(self, request, uuid):
+    def list(self, request):
+        study_uuid = request.query_params.get('studyUuid')
+
+        if study_uuid is None:
+            return Response(
+                'Currently, the API only supports a study-related node lists.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            study = Study.objects.get(uuid=study_uuid)
+        except Study.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(
+                 content="Study with UUID: {} not found.".format(study_uuid)
+             )
+        except Study.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple studies returned for this request"
+            )
+        # check perms via data set
+        data_set = study.get_dataset()
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set.uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(NodeSerializer(study.node_set.all(), many=True).data)
+
+    def retrieve(self, request, uuid):
         # filter nodes by attributes' info
         attribute_solr_name = request.query_params.get(
             'related_attribute_nodes'
@@ -1183,7 +1215,7 @@ class NodeViewSet(APIView):
                 related_node_uuids, status=status.HTTP_200_OK
             )
 
-    def patch(self, request, uuid):
+    def partial_update(self, request, uuid):
         node = self.get_object(uuid)
         new_file_uuid = request.data.get('file_uuid')
         solr_name = request.data.get('attribute_solr_name')

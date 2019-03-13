@@ -49,6 +49,7 @@ urlpatterns = patterns(
 
 # DRF url routing
 data_set_manager_router = DefaultRouter()
+data_set_manager_router.register(r'^nodes', NodeViewSet, 'nodes')
 data_set_manager_router.urls.extend([
     url(r'^assays/$', Assays.as_view()),
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/files/$',
@@ -57,7 +58,5 @@ data_set_manager_router.urls.extend([
         AssaysAttributes.as_view()),
     url(r'^data_set_manager/add-file/$',
         AddFileToNodeView.as_view()),
-    url(r'^nodes/(?P<uuid>' + UUID_RE + r')/$',
-        NodeViewSet.as_view()),
     url(r'^studies/$', StudiesView.as_view()),
 ])
