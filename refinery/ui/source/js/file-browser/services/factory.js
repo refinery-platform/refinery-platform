@@ -20,7 +20,6 @@
     'assayFiltersService',
     'dataSetPropsService',
     'fileBrowserSettings',
-    'nodeService',
     'selectedFilterService',
     'settings',
     'toolSelectService'
@@ -35,7 +34,6 @@
     assayFiltersService,
     dataSetPropsService,
     fileBrowserSettings,
-    nodeService,
     selectedFilterService,
     settings,
     toolSelectService
