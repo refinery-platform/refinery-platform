@@ -18,7 +18,7 @@ from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.utils import verify_recaptcha
 from core.views import CustomRegistrationView
-from data_set_manager.api import (AttributeResource, InvestigationResource)
+from data_set_manager.api import (AttributeResource)
 from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
 from tool_manager.urls import django_docker_engine_url, tool_manager_router
@@ -36,7 +36,6 @@ v1_api.register(WorkflowResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())
-v1_api.register(InvestigationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
 v1_api.register(UserProfileResource())

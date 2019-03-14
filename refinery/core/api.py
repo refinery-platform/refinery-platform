@@ -38,7 +38,6 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from data_set_manager.api import InvestigationResource
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
@@ -529,15 +528,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 name='api_%s_get_all_ids' % (
                     self._meta.resource_name)
                 ),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
-                    self._meta.resource_name,
-                    UUID_RE,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_investigation'),
-                name='api_%s_get_investigation' % (
-                    self._meta.resource_name)
-                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
                     UUID_RE,
@@ -688,20 +678,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             return HttpForbidden()
 
         return self.create_response(request, return_obj)
-
-    def get_investigation(self, request, **kwargs):
-        try:
-            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except (DataSet.DoesNotExist,
-                DataSet.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpGone()
-
-        # Assuming 1 to 1 relationship between DataSet and Investigation
-        return InvestigationResource().get_detail(
-            request,
-            uuid=data_set.get_investigation().uuid
-        )
 
     def get_assays(self, request, **kwargs):
         try:
