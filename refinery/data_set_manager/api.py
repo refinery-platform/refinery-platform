@@ -8,7 +8,7 @@ import logging
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 
-from .models import Attribute, Investigation, Publication
+from .models import Attribute, Investigation
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +44,3 @@ class InvestigationResource(ModelResource):
         filtering = {
             'uuid': ALL
         }
-
-
-class PublicationResource(ModelResource):
-    class Meta:
-        queryset = Publication.objects.all()
-        allowed_methods = ['get']
-        resource_name = 'publications'
