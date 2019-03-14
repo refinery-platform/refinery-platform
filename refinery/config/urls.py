@@ -18,9 +18,8 @@ from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.utils import verify_recaptcha
 from core.views import CustomRegistrationView
-from data_set_manager.api import (AttributeResource,
-                                  InvestigationResource, NodeResource,
-                                  PublicationResource, StudyResource)
+from data_set_manager.api import (AttributeResource, InvestigationResource,
+                                  NodeResource, PublicationResource)
 from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
 from tool_manager.urls import django_docker_engine_url, tool_manager_router
@@ -33,7 +32,6 @@ logger = logging.getLogger(__name__)
 v1_api = Api(api_name='v1')
 
 v1_api.register(AnalysisResource())
-v1_api.register(StudyResource())
 v1_api.register(DataSetResource())
 v1_api.register(NodeResource())
 v1_api.register(WorkflowResource())

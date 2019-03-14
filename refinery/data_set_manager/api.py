@@ -16,7 +16,7 @@ from tastypie.resources import ModelResource
 
 from file_store.models import FileStoreItem
 
-from .models import Attribute, Investigation, Node, Publication, Study
+from .models import Attribute, Investigation, Node, Publication
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,6 @@ class NodeResource(ModelResource):
                                  'parents')
     children = fields.ToManyField('data_set_manager.api.NodeResource',
                                   'children')
-    study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
     attributes = fields.ToManyField(
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
@@ -127,39 +126,3 @@ class PublicationResource(ModelResource):
         queryset = Publication.objects.all()
         allowed_methods = ['get']
         resource_name = 'publications'
-
-
-class StudyResource(ModelResource):
-    investigation_uuid = fields.CharField(
-        attribute='investigation__uuid',
-        use_in='all'
-    )
-    publications = fields.ToManyField(
-        'data_set_manager.api.PublicationResource',
-        'publication_set',
-        full=True,
-        null=True
-    )
-    sources = fields.ToManyField(
-        'data_set_manager.api.NodeResource',
-        attribute=lambda bundle: (
-            Node.objects
-                .filter(
-                    study=bundle.obj,
-                    type='Source Name'
-                )
-        ),
-        full=True,
-        null=True
-    )
-
-    class Meta:
-        queryset = Study.objects.all()
-        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
-        allowed_methods = ["get"]
-        resource_name = "study"
-        filtering = {
-            'uuid': ALL,
-            'investigation_uuid': ALL
-        }
-        # fields = ["uuid"]
