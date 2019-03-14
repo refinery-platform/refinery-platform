@@ -1,5 +1,4 @@
 import json
-import uuid
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -11,11 +10,8 @@ from guardian.shortcuts import assign_perm
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
-from data_set_manager.api import NodeResource
-from data_set_manager.models import Investigation, Study
-
 from .api import AnalysisResource, DataSetResource
-from .models import (Analysis, Node, Project, UserProfile, Workflow,
+from .models import (Analysis, Project, UserProfile, Workflow,
                      WorkflowEngine)
 
 
@@ -391,49 +387,3 @@ class DataSetResourceTest(LoginResourceTestCase):
         # assert that the admin user isn't displayed as the DataSet's owner
         self.assertFalse(dataset["is_owner"])
         self.assertNotEqual(dataset["owner"], admin_user.profile.uuid)
-
-
-class NodeAPITest(LoginResourceTestCase):
-
-    def setUp(self):
-        super(NodeAPITest, self).setUp()
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.node = Node.objects.create(study=self.study)
-
-    def test_get_node_list_count(self):
-        response = self.api_client.get(api_uri(NodeResource))
-        node_list_dict = self.deserialize(response)
-        self.assertEqual(node_list_dict['meta']['total_count'], 1)
-        self.assertEqual(len(node_list_dict['objects']), 1)
-
-
-class NodeAPIUnauthenticatedAccessTest(ResourceTestCase):
-
-    def test_get_node_list(self):
-        self.assertHttpOK(self.api_client.get(api_uri(NodeResource)))
-
-    def test_get_node_detail(self):
-        investigation = Investigation.objects.create()
-        study = Study.objects.create(investigation=investigation)
-        node = Node.objects.create(study=study)
-        response = self.api_client.get(api_uri(NodeResource, node.uuid))
-        self.assertHttpOK(response)
-
-    def test_patch_node(self):
-        response = self.api_client.patch(
-            api_uri(NodeResource, str(uuid.uuid4())), data={}
-        )
-        self.assertHttpMethodNotAllowed(response)
-
-    def test_post_node(self):
-        response = self.api_client.post(api_uri(NodeResource))
-        self.assertHttpMethodNotAllowed(response)
-
-    def test_put_node(self):
-        response = self.api_client.put(api_uri(NodeResource))
-        self.assertHttpMethodNotAllowed(response)
-
-    def test_delete_node(self):
-        response = self.api_client.delete(api_uri(NodeResource))
-        self.assertHttpMethodNotAllowed(response)
