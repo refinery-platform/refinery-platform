@@ -11,8 +11,7 @@ from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from .api import AnalysisResource, DataSetResource
-from .models import (Analysis, Project, UserProfile, Workflow,
-                     WorkflowEngine)
+from .models import (Analysis, Project, UserProfile, Workflow, WorkflowEngine)
 
 
 def api_uri(resource, resource_id='', sharing=False):
