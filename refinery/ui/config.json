@@ -8,11 +8,6 @@
       "compile": "production",
       "src": "source",
       "tmp": ".tmp"
-    },
-    "static": {
-      "build": "../static/development",
-      "compile": "../static/production",
-      "src": "../static/source"
     }
   },
   "files": {
