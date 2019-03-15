@@ -56,18 +56,13 @@
 			<h4>Structure</h4>
 		</div>
 		<p>
-			<div>
-				<div class="row">
-					<div id="vis_workflow" class="col-md-12"></div>
-					<div class="col-md-12">
-					</div>
-				</div>
-			</div>
+      <rp-workflow-graph></rp-workflow-graph>
 		</p>
 
 		<div class="refinery-subheader">
-            <a href="#" onclick="workflowVisualizationModule.toggle_visibility('node_table');"><h4>Toggle Selection
-                Details &raquo; </h4></a>
+         <!--   <a href="#" onclick="workflowVisualizationModule
+         .toggle_visibility('node_table');"><h4>Toggle Selection
+                Details &raquo; </h4></a> -->
         </div>
 		<p>
 			<div id="node_table"></div>
@@ -77,7 +72,7 @@
 			<h4>Layout</h4>
 		</div>
 		<p>
-			<label class="radio">
+		<!--	<label class="radio">
                 <input type="radio" name="optionsRadios" id="cb_layout_kind_refinery" value="1"
                        onclick="workflowVisualizationModule.reload_workflow(
                          '{% url 'workflow-graph' workflow.uuid %}')"
@@ -88,7 +83,7 @@
                        onclick="workflowVisualizationModule.reload_workflow(
                          '{% url 'workflow-graph' workflow.uuid %}')"
                        value="0"> Galaxy
-			</label>
+			</label> -->
 		</p>
 
 		<div class="refinery-header">
@@ -150,9 +145,7 @@
 {% endblock %}
 
 {% block script %}
-<script src="{% static "vendor/d3-tip/index.js" %}"></script>
-<script type="text/javascript" src="{% static "js/refinery/core/workflow_visualization.js" %}"></script>
-<script>
-    workflowVisualizationModule.runWorkflowVisualization("{% url 'workflow-graph' workflow.uuid %}");
-</script>
+ <script type="text/javascript">
+    window.djangoApp.workflowUuid = "{{ workflow.uuid }}";
+  </script>
 {% endblock %}

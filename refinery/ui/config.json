@@ -30,7 +30,8 @@
       "metadata-table-import",
       "provvis",
       "tool-launch",
-      "user-file-browser"
+      "user-file-browser",
+      "workflow"
     ],
     "vendor": {
       "css": [
