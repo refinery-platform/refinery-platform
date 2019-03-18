@@ -1,10 +1,11 @@
 import logging
 
 from django.conf import settings
+from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (DataSet, Event, SiteProfile, SiteVideo, User,
+from .models import (DataSet, Event, Group, SiteProfile, SiteVideo, User,
                      UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,24 @@ class DataSetSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    permissions = serializers.SerializerMethodField()
+    uuid = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Group
+
+    def get_permissions(self, group):
+        data_set = self.context.get('data_set')
+        data_set_perms = get_perms(group, data_set)
+        return {'change': 'change_dataset' in data_set_perms,
+                'read': 'read_dataset' in data_set_perms,
+                'read_meta': 'read_meta_dataset' in data_set_perms}
+
+    def get_uuid(self, group):
+        return group.extendedgroup.uuid
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
