@@ -5,9 +5,7 @@
     </div>
   </div>
   <div class="refinery-subheader">
-    <a href="#" ng-click="$ctrl.toggleVisibility('node_table')">
-      <h4>Toggle Selection Details &raquo; </h4>
-    </a>
+    <h4>Select Node to See Details</h4>
   </div>
   <p>
     <div id="node_table"></div>
@@ -21,7 +19,8 @@
     <input type="radio" name="optionsRadios" value="cb_layout_kind_refinery"
       ng-change="$ctrl.reloadWorkflow()"
       ng-model="$ctrl.workflowGraph.selected">
-    Refinery
+      Refinery
+    </input>
   </label>
   <label class="block label-block lavel-text-left p-l-1-3">
     <input type="radio" name="optionsRadios" value="cb_layout_kind_galaxy"

@@ -3,7 +3,7 @@
  * @namespace WorkflowGraphyCtrl
  * @desc Main controller for the workflow graph partial
  * @memberOf refineryApp.refineryWorkflow
- * @author (c) Stefan Luger 2013 - 2014
+ * @author (c) Stefan Luger 2013 - 2014, moved to /UI by JMarx Mar 2019
  */
 (function () {
   'use strict';
@@ -42,7 +42,6 @@
     var workflowUrl = settings.appRoot + settings.refineryApiV2
       + '/workflows/' + vm.workflowUuid + '/graph/';
     vm.reloadWorkflow = reloadWorkflowPrivate;
-    vm.toggleVisibility = toggleVisibilityPrivate;
     vm.workflowGraph = { selected: 'cb_layout_kind_refinery' };
     var layout = (vm.workflowGraph.selected === 'cb_layout_kind_refinery') ? '1' : '0';
 
@@ -98,21 +97,6 @@
       });
 
       return false;
-    }
-
-    /*
-     * toggle visibility of table via button click
-     *
-     * id: id of the div element to be toggled
-     */
-    function toggleVisibilityPrivate (id) {
-      var element = $('#' + id);
-
-      if (element.style.display === 'block') {
-        element.style.display = 'none';
-      } else {
-        element.style.display = 'block';
-      }
     }
 
     // refinery injection for the workflow visualization
