@@ -18,7 +18,6 @@
         '<div id="workflow-graph"></div>'
       );
       var scope = $rootScope.$new();
-      // Parent component
       var template = '<rp-workflow-graph></rp-workflow-graph>';
       directiveElement = $compile(template)(scope);
       scope.$digest();

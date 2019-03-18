@@ -1,7 +1,7 @@
 /**
  * Workflow Component
  * @namespace rpWorkflowDisplay
- * @desc Main parent component for the main view, workflow view.
+ * @desc Main component for the workflow - graph on the workflow view.
  * @memberOf refineryApp.refineryToolLaunch
  */
 (function () {
