@@ -31,6 +31,7 @@
 {% if workflow %}
 <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 	<div class="row">
+  <div class="col-md-12">
 		<div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>{{ workflow.name }}</h3>
@@ -57,33 +58,6 @@
 		</div>
 		<p>
       <rp-workflow-graph></rp-workflow-graph>
-		</p>
-
-		<div class="refinery-subheader">
-         <!--   <a href="#" onclick="workflowVisualizationModule
-         .toggle_visibility('node_table');"><h4>Toggle Selection
-                Details &raquo; </h4></a> -->
-        </div>
-		<p>
-			<div id="node_table"></div>
-		</p>
-
-		<div class="refinery-subheader">
-			<h4>Layout</h4>
-		</div>
-		<p>
-		<!--	<label class="radio">
-                <input type="radio" name="optionsRadios" id="cb_layout_kind_refinery" value="1"
-                       onclick="workflowVisualizationModule.reload_workflow(
-                         '{% url 'workflow-graph' workflow.uuid %}')"
-                       checked> Refinery
-			</label>
-			<label class="radio">
-                <input type="radio" name="optionsRadios" id="cb_layout_kind_galaxy"
-                       onclick="workflowVisualizationModule.reload_workflow(
-                         '{% url 'workflow-graph' workflow.uuid %}')"
-                       value="0"> Galaxy
-			</label> -->
 		</p>
 
 		<div class="refinery-header">
@@ -141,6 +115,7 @@
 	    <p>No valid workflow.</p>
 	{% endif %}
 	</div>
+</div>
 </div>
 {% endblock %}
 

@@ -12,11 +12,12 @@
     .module('refineryWorkflow')
     .controller('WorkflowGraphCtrl', WorkflowGraphCtrl);
 
-  WorkflowGraphCtrl.$inject = ['$', 'd3', 'settings'];
+  WorkflowGraphCtrl.$inject = ['$', 'd3', '$log', 'settings'];
 
   function WorkflowGraphCtrl (
     $,
     d3,
+    $log,
     settings
   ) {
     var vm = this;
@@ -37,19 +38,20 @@
     var dataset = null; // actual dataset
     var inNodes = null;
     var outNodes = null;
-    var layout = $('#cb_layout_kind_refinery').checked ? '1' : '0';
+    vm.workflowUuid = settings.djangoApp.workflowUuid;
+    var workflowUrl = settings.appRoot + settings.refineryApiV2
+      + '/workflows/' + vm.workflowUuid + '/graph/';
     vm.reloadWorkflow = reloadWorkflowPrivate;
     vm.toggleVisibility = toggleVisibilityPrivate;
+    vm.workflowGraph = { selected: 'cb_layout_kind_refinery' };
+    var layout = (vm.workflowGraph.selected === 'cb_layout_kind_refinery') ? '1' : '0';
 
     activate();
 
     function activate () {
       vm.workflowUuid = settings.djangoApp.workflowUuid;
-
       if (vm.workflowUuid) {
-        var workflowUrl = settings.appRoot + settings.refineryApiV2
-          + '/workflows/' + vm.workflowUuid + '/graph/';
-        runWorkflowVisualization(workflowUrl);
+        runWorkflowVisualization();
       }
     }
 
@@ -62,9 +64,9 @@
      */
     var clearSvg = function () {
       if (canvas) {
-        d3.select(canvas).selectAll('.link').remove();
-        d3.select(canvas).selectAll('.node').remove();
-        d3.select(canvas).selectAll('svg').remove();
+        d3.selectAll('.link').remove();
+        d3.selectAll('.node').remove();
+        d3.selectAll('svg').remove();
       }
       d3.select('#workflowtbl').remove();
 
@@ -77,14 +79,14 @@
       dataset = null; // actual dataset
       inNodes = null;
       outNodes = null;
-      layout = document.getElementById('cb_layoutKind_refinery').checked ? '1' : '0';
+      layout = (vm.workflowGraph.selected === 'cb_layout_kind_refinery') ? '1' : '0';
     };
 
     /*
      * reloads the whole workflow visualization from scratch through the
       * visualizeWorkflow function
      */
-    function reloadWorkflowPrivate (workflowUrl) {
+    function reloadWorkflowPrivate () {
       clearSvg();
 
       canvas = initCanvas('#vis_workflow');
@@ -104,7 +106,7 @@
      * id: id of the div element to be toggled
      */
     function toggleVisibilityPrivate (id) {
-      var element = document.getElementById(id);
+      var element = $('#' + id);
 
       if (element.style.display === 'block') {
         element.style.display = 'none';
@@ -114,7 +116,7 @@
     }
 
     // refinery injection for the workflow visualization
-    function runWorkflowVisualizationPrivate (workflowUrl) {
+    function runWorkflowVisualizationPrivate () {
       // initialize svg to body
       canvas = initCanvas('#vis_workflow');
 
@@ -2006,7 +2008,7 @@
           });
         }
       } else {
-        console.log('ERROR: No layout chosen!');
+        $log.error('ERROR: No layout chosen!');
       }
 
         // -----------------------------------------------------------------

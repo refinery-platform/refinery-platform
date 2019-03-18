@@ -136,6 +136,26 @@ module.exports = function (grunt) {
     cfg: grunt.file.readJSON('config.json'),
 
     /*
+     * Cleaning tasks for all non-source directory for building and compiling
+     * assets.
+     */
+    clean: {
+      options: {
+        // We need this because the static dirs are outside of Grunt's root
+        force: true
+      },
+      uiBuild: [
+        '<%= cfg.basePath.ui.build %>'
+      ],
+      uiCompile: [
+        '<%= cfg.basePath.ui.compile %>'
+      ],
+      uiTmp: [
+        '<%= cfg.basePath.ui.tmp %>'
+      ]
+    },
+
+    /*
      *
      */
     copy: {
@@ -708,6 +728,7 @@ module.exports = function (grunt) {
   grunt.registerTask('build', [
     'newer:eslint:sourceCode',
     'newer:eslint:gruntfile',
+    'clean:uiBuild',
     'newer:less:build',
     'newer:copy:uiBuildImages',
     'newer:copy:uiBuildSampleFiles',
@@ -721,6 +742,7 @@ module.exports = function (grunt) {
   grunt.registerTask('compile', [
     'env:compile',
     'eslint:sourceCode',
+    'clean:uiCompile',
     'less:compile',
     // IMPORTANT:
     // `concat-by-feature:compile` has to be called before `ngAnnotate` because
@@ -732,6 +754,7 @@ module.exports = function (grunt) {
     'copy:uiCompileSampleFiles',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
+    'clean:uiTmp',
     'jsdoc'
   ]);
 
