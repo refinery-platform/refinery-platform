@@ -152,7 +152,6 @@ describe('Data Set About Factory', function () {
         protocols: [],
         publications: [],
         release_date: null,
-        resource_uri: '/api/v1/study/8486046b-22f4-447f-9c81-41dbf6173c44/',
         sources: [],
         submission_date: '2013-03-22',
         title: 'RFC Documents',
