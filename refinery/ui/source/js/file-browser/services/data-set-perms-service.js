@@ -5,9 +5,9 @@
     .module('refineryFileBrowser')
     .service('dataSetPermsService', dataSetPermsService);
 
-  dataSetPermsService.$inject = ['sharingService'];
+  dataSetPermsService.$inject = ['groupService'];
 
-  function dataSetPermsService (sharingService) {
+  function dataSetPermsService (groupService) {
     var vm = this;
     vm.dataSetSharing = {};
     vm.groupList = [];
@@ -22,27 +22,27 @@
      * ----------------------
      */
     // helper method returns only groups associated with data set
-    var filterDataSetGroups = function (allGroups) {
-      var filteredGroupList = [];
-      for (var i = 0; i < allGroups.length; i++) {
-        if (allGroups[i].perms.read_meta || allGroups[i].perms.read || allGroups[i].perms.change) {
-          filteredGroupList.push(allGroups[i]);
-        }
-      }
-      return filteredGroupList;
-    };
+    // var filterDataSetGroups = function (allGroups) {
+    //  var filteredGroupList = [];
+    //  for (var i = 0; i < allGroups.length; i++) {
+    //    if (allGroups[i].perms.read_meta || allGroups[i].perms.read ||
+    // allGroups[i].perms.change) {
+    //      filteredGroupList.push(allGroups[i]);
+    //    }
+    //  }
+    //  return filteredGroupList;
+    // };
 
     function getDataSetSharing (dataSetUuid) {
       var params = {
-        uuid: dataSetUuid,
-        model: 'data_sets'
+        dataSetUuid: dataSetUuid
       };
-      var dataSetRequest = sharingService.query(params);
+      var dataSetRequest = groupService.query(params);
       dataSetRequest.$promise.then(function (response) {
-        angular.copy(response, vm.dataSetSharing);
-        var filteredGroups = filterDataSetGroups(response.share_list);
-        angular.copy(filteredGroups, vm.groupList);
-        vm.userPerms = response.user_perms;
+      //  angular.copy(response, vm.dataSetSharing);
+     //   var filteredGroups = filterDataSetGroups(response);
+        angular.copy(response, vm.groupList);
+      //  vm.userPerms = response.user_perms;
       });
       return dataSetRequest.$promise;
     }

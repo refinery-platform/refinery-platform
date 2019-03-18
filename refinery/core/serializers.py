@@ -85,13 +85,13 @@ class DataSetSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    permissions = serializers.SerializerMethodField()
+    perms = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
 
-    def get_permissions(self, group):
+    def get_perms(self, group):
         data_set = self.context.get('data_set')
         data_set_perms = get_perms(group, data_set)
         return {'change': 'change_dataset' in data_set_perms,

@@ -29,7 +29,7 @@
   </div>
   <p>
     <div ng-repeat="group in ASCtrl.groupList track by $index">
-      <a href="/groups/{{group.group_uuid}}">{{ group.group_name }}</a>&nbsp;
+      <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
       <span
         ng-if="group.perms.read_meta && !group.perms.read && !group.perms.change"
         class="perm-details-icon">
