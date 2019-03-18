@@ -22,6 +22,7 @@ class DataSetSerializer(serializers.ModelSerializer):
     )
     description = serializers.CharField(max_length=5000)
     is_owner = serializers.SerializerMethodField()
+    owner = serializers.SerializerMethodField()
     public = serializers.SerializerMethodField()
     is_clean = serializers.SerializerMethodField()
     file_count = serializers.SerializerMethodField()
@@ -46,6 +47,9 @@ class DataSetSerializer(serializers.ModelSerializer):
                 return False
             return user_request == owner
 
+    def get_owner(self, data_set):
+        return UserSerializer(data_set.get_owner()).data
+
     def get_public(self, data_set):
         try:
             return data_set.public
@@ -63,7 +67,7 @@ class DataSetSerializer(serializers.ModelSerializer):
         model = DataSet
         fields = ('title', 'accession', 'analyses', 'summary', 'description',
                   'slug', 'uuid', 'modification_date', 'id', 'is_owner',
-                  'public', 'is_clean', 'file_count')
+                  'owner', 'public', 'is_clean', 'file_count')
 
     def partial_update(self, instance, validated_data):
         """

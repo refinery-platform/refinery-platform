@@ -6,13 +6,12 @@ function AboutSharingCtrl (
   $scope,
   $location,
   $window,
-  $log,
-  _
+  $log
   ) {
   var vm = this;
-  vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+//  vm.dataSetSharing = dataSetPermsService.dataSetSharing;
   vm.groupList = dataSetPermsService.groupList;
-  vm.ownerName = dataSetPermsService.ownerName;
+//  vm.ownerName = dataSetPermsService.ownerName;
 
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
@@ -28,16 +27,16 @@ function AboutSharingCtrl (
       });
   };
 
-  vm.refreshOwnerName = function (userUuid) {
-    userService.get(userUuid).then(function (response) {
-      if (_.has(response, 'fullName') && response.fullName) {
-        dataSetPermsService.ownerName = response.fullName;
-      } else if (_.has(response, 'userName') && response.userName) {
-        dataSetPermsService.ownerName = response.userName;
-      }
-      vm.ownerName = dataSetPermsService.ownerName;
-    });
-  };
+  // vm.refreshOwnerName = function (userUuid) {
+  //  userService.get(userUuid).then(function (response) {
+  //    if (_.has(response, 'fullName') && response.fullName) {
+  //      dataSetPermsService.ownerName = response.fullName;
+  //    } else if (_.has(response, 'userName') && response.userName) {
+  //      dataSetPermsService.ownerName = response.userName;
+  //    }
+  //    vm.ownerName = dataSetPermsService.ownerName;
+  //  });
+  // };
 
   vm.refreshDataSetSharing();
 }
@@ -53,7 +52,6 @@ angular
     '$location',
     '$window',
     '$log',
-    '_',
     AboutSharingCtrl
   ]);
 
