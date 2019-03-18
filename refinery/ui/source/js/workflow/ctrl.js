@@ -1526,19 +1526,6 @@
     function createNestedToolStateTable (parent) {
       var text = parent[0][0].__data__;
 
-      // prepare json
-      text = text.replace(/\\/g, '');
-      text = text.replace(/\'\{\'/g, '\{\'');
-      text = text.replace(/\'\}\'/g, '\'\}');
-      text = text.replace(/\'\'/g, '\'');
-      text = text.replace(/\}\',/g, '\},');
-      text = text.replace(/\}\'/g, '\}');
-
-      // eliminate __xxxx__ parameters
-      text = text.replace(/\'__(\S*)__\':\s{1}\d*(,\s{1})?/g, '');
-      text = text.replace(/,\s{1}null/g, '');
-      text = text.replace(/,\s{1}\}/g, '\}');
-
       // transform to json object
       var jsonData = JSON.parse(text);
       var obj = d3.entries(jsonData);
