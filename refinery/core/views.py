@@ -305,16 +305,6 @@ def workflow(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def graph_node_shape(node_type):
-    if node_type == "input":
-        return ">"
-
-    if node_type == "tool":
-        return "<"
-
-    return "o"
-
-
 def solr_core_search(request):
     """Query Solr's core index for search.
 
