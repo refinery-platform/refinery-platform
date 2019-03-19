@@ -51,5 +51,6 @@ angular
     'refineryDataSetAbout',
     'refineryToolLaunch',
     'refineryUserFileBrowser',
-    'refineryDataSetVisualization'
+    'refineryDataSetVisualization',
+    'refineryWorkflow'
   ]);
