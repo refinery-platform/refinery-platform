@@ -78,11 +78,11 @@
         rootScope = $rootScope;
       }));
 
-      it('getDataSetSharing is a method', function () {
+      it('getDataSets is a method', function () {
         expect(angular.isFunction(factory.getDataSets)).toBe(true);
       });
 
-      it('getDataSetSharing returns a promise', function () {
+      it('getDataSets returns a promise', function () {
         var successData;
         var response = factory.getDataSets().then(function (responseData) {
           successData = responseData.facet_field_counts[field].length;
@@ -92,7 +92,7 @@
         expect(successData).toEqual(filesResponse.facet_field_counts[field].length);
       });
 
-      it('getDataSetSharing sets attributeNames', function () {
+      it('getDataSets sets attributeNames', function () {
         factory.getDataSets();
         rootScope.$apply();
         expect(factory.attributeNames[0].name).toEqual(
@@ -103,19 +103,19 @@
         );
       });
 
-      it('getDataSetSharing sets attributeNames only char attributes', function () {
+      it('getDataSets sets attributeNames only char attributes', function () {
         factory.getDataSets();
         rootScope.$apply();
         expect(factory.attributeNames.length).toEqual(1);
       });
 
-      it('getDataSetSharing sets Attribute countsArray', function () {
+      it('getDataSets sets Attribute countsArray', function () {
         factory.getDataSets();
         rootScope.$apply();
         expect(factory.attributeFields[field].countsArray).toEqual([143, 27]);
       });
 
-      it('getDataSetSharing sets Attribute countsArray', function () {
+      it('getDataSets sets Attribute countsArray', function () {
         factory.getDataSets();
         rootScope.$apply();
         expect(factory.attributeFields[field].fieldsArray[0]).toEqual(['DNA', 'microarray']);

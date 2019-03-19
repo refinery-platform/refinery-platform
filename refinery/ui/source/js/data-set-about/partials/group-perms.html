@@ -1,9 +1,9 @@
-<div ng-if="ASCtrl.groupList.length > 0">
+<div ng-if="GPCtrl.groupList.length > 0">
   <div class="refinery-subheader">
     <h4>Groups</h4>
   </div>
   <p>
-    <div ng-repeat="group in ASCtrl.groupList track by $index">
+    <div ng-repeat="group in GPCtrl.groupList track by $index">
       <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
       <span
         ng-if="group.perms.read_meta && !group.perms.read && !group.perms.change"

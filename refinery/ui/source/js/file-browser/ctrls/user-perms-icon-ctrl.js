@@ -33,27 +33,15 @@
    * Watchers
    * ---------------------------------------------------------
    */
+    // Gets the data set properties
+    function refreshDataSetProps () {
+      dataSetPropsService.refreshDataSet().then(function () {
+        vm.userPerms = dataSetPropsService.userPerms;
+      });
+    }
+
     vm.$onInit = function () {
-      $scope.$watchCollection(
-        function () {
-          return dataSetPropsService.dataSet;
-        },
-        function (dataSet) {
-          console.log(dataSet);
-          console.log('hummm');
-          if (_.isEmpty(dataSet)) {
-            vm.userPerms = 'none';
-          } else if (dataSet.user_perms.change) {
-            vm.userPerms = 'change';
-          } else if (dataSet.user_perms.read) {
-            vm.userPerms = 'read';
-          } else if (dataSet.user_perms.read_meta) {
-            vm.userPerms = 'read_meta';
-          } else {
-            vm.userPerms = 'none';
-          }
-        }
-      );
+      refreshDataSetProps();
     };
   }
 })();
