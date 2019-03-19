@@ -80,13 +80,20 @@ class refinery::params (
     default => "${project_root}/media",
   }
 
+  $file_store_root = "${media_root}/file_store"
+
+  $solr_data_dir = $deployment_platform ? {
+    'aws'   => "${data_dir}/solr",
+    default => undef,
+  }
+
   $solr_data_set_manager_data = $deployment_platform ? {
-    'aws'   => "${data_dir}/solr/data_set_manager",
+    'aws'   => "${solr_data_dir}/data_set_manager",
     default => undef,
   }
 
   $solr_core_data = $deployment_platform ? {
-    'aws'   => "${data_dir}/solr/core",
+    'aws'   => "${solr_data_dir}/core",
     default => undef,
   }
 
