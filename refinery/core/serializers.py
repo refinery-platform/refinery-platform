@@ -27,6 +27,7 @@ class DataSetSerializer(serializers.ModelSerializer):
     is_clean = serializers.SerializerMethodField()
     file_count = serializers.SerializerMethodField()
     analyses = serializers.SerializerMethodField()
+    user_perms = serializers.SerializerMethodField()
 
     def get_analyses(self, data_set):
         return [dict(uuid=analysis.uuid,
@@ -63,11 +64,24 @@ class DataSetSerializer(serializers.ModelSerializer):
     def get_file_count(self, data_set):
         return data_set.get_file_count()
 
+    def get_user_perms(self, data_set):
+        try:
+            request_user = self.context.get('request').user
+        except AttributeError as e:
+            logger.error("Request is missing a user: %s", e)
+            return {'change': False,
+                    'read': False,
+                    'read_meta': False}
+        user_perms = get_perms(request_user, data_set)
+        return {'change': 'change_dataset' in user_perms,
+                'read': 'read_dataset' in user_perms,
+                'read_meta': 'read_meta_dataset' in user_perms}
+
     class Meta:
         model = DataSet
         fields = ('title', 'accession', 'analyses', 'summary', 'description',
                   'slug', 'uuid', 'modification_date', 'id', 'is_owner',
-                  'owner', 'public', 'is_clean', 'file_count')
+                  'owner', 'public', 'is_clean', 'file_count', 'user_perms')
 
     def partial_update(self, instance, validated_data):
         """
