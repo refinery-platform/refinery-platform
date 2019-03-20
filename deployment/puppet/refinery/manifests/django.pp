@@ -11,7 +11,7 @@ class refinery::django (
   $site_url               = $refinery::params::site_url,
   $virtualenv             = $refinery::params::virtualenv,
 ) inherits refinery::params {
-  file { [ $media_root, $file_store_root ]:
+  file { [ $media_root, $file_store_root, $import_dir ]:
     ensure  => directory,
     owner   => $app_user,
     group   => $app_group,
@@ -23,11 +23,6 @@ class refinery::django (
   }
 
   if $deployment_platform == 'vagrant' {
-    file { "${project_root}/import":
-      ensure => directory,
-      owner  => $app_user,
-      group  => $app_group,
-    }
     exec { 'activate_guest_user':
       command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
       environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],

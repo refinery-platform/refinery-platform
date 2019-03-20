@@ -75,6 +75,8 @@ class refinery::params (
     default => "${project_root}",
   }
 
+  $import_dir = "${data_dir}/import"
+
   $media_root = "${data_dir}/media"
 
   $file_store_root = "${media_root}/file_store"
