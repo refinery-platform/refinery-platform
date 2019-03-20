@@ -851,7 +851,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
             summary='coffee',
             project=self.project,
             data_set=self.data_set,
-            workflow=self.workflow
+            workflow=self.workflow,
+            time_start='2019-03-02T06:12:03.819446Z'
         )
         self.analysis.set_owner(self.user)
 
@@ -860,7 +861,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
             summary='coffee2',
             project=self.project,
             data_set=self.data_set,
-            workflow=self.workflow
+            workflow=self.workflow,
+            time_start='2019-03-02T06:20:41.853987Z'
         )
         self.analysis2.set_owner(self.user)
 
@@ -913,6 +915,43 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
+
+    def test_get_analysis_returns_empty_list_for_no_public_ds(self):
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data, [])
+
+    def test_get_analysis_returns_analyses_for_public_ds(self):
+        self.data_set.share(ExtendedGroup.objects.public_group())
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        analysis_list = [self.analysis.uuid, self.analysis2.uuid]
+        self.assertEqual(len(get_response.data), 2)
+        self.assertIn(get_response.data[0].get('uuid'), analysis_list)
+        self.assertIn(get_response.data[1].get('uuid'), analysis_list)
+
+    def test_get_analysis_returns_sorted_analyses_for_user(self):
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        # sorted in reverse time_start
+        self.assertEqual(get_response.data[1].get('uuid'), self.analysis.uuid)
+        self.assertEqual(get_response.data[0].get('uuid'), self.analysis2.uuid)
+
+    def test_get_analysis_returns_paged_analyses_for_user(self):
+        limit = 1
+        get_request = self.factory.get(self.url_root,
+                                       {'limit': limit, 'offset': 0})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), limit)
+
+    def test_get_analysis_returns_offset_analyses_for_user(self):
+        offset = 1
+        get_request = self.factory.get(self.url_root, {'offset': offset})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), offset)
 
     def test_get_analysis_with_ds_uuid_returns_401(self):
         get_request_with_ds = self.factory.get(
@@ -1019,6 +1058,34 @@ class AnalysisApiV2Tests(APIV2TestCase):
             get_response.data[0].get('owner').get('profile').get('uuid'),
             self.analysis.get_owner().profile.uuid
         )
+
+    def test_get_analysis_with_ds_uuid_returns_sorted_analyses(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        # sorted in reverse time_start
+        self.assertEqual(get_response.data[1].get('uuid'), self.analysis.uuid)
+        self.assertEqual(get_response.data[0].get('uuid'), self.analysis2.uuid)
+
+    def test_get_analysis_with_ds_uuid_returns_paged_analyses(self):
+        limit = 1
+        get_request = self.factory.get(self.url_root,
+                                       {'limit': limit,
+                                        'offset': 0,
+                                        'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), limit)
+
+    def test_get_analysis_with_ds_uuid_returns_offset_analyses(self):
+        offset = 1
+        get_request = self.factory.get(self.url_root,
+                                       {'offset': offset,
+                                        'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), offset)
 
     def test_analysis_delete_successful(self):
 
