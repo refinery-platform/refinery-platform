@@ -51,11 +51,10 @@ import xmltodict
 
 from data_set_manager.models import Attribute
 
-from .forms import UserForm, UserProfileForm, WorkflowForm
+from .forms import UserForm, UserProfileForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, SiteProfile,
-                     SiteStatistics, SiteVideo, UserProfile, Workflow,
-                     WorkflowEngine)
+                     SiteStatistics, SiteVideo, UserProfile, Workflow)
 from .serializers import (DataSetSerializer, EventSerializer, GroupSerializer,
                           SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
@@ -303,61 +302,6 @@ def workflow(request, uuid):
     # load graph dictionary from Galaxy
     workflow = Workflow.objects.filter(uuid=uuid).get()
     return render_to_response('core/workflow.html', {'workflow': workflow},
-                              context_instance=RequestContext(request))
-
-
-def graph_node_shape(node_type):
-    if node_type == "input":
-        return ">"
-
-    if node_type == "tool":
-        return "<"
-
-    return "o"
-
-
-@login_required()
-def workflow_edit(request, uuid):
-    workflow = get_object_or_404(Workflow, uuid=uuid)
-    if not request.user.has_perm('core.change_workflow', workflow):
-        return HttpResponseForbidden(
-            custom_error_page(request, '403.html',
-                              {user: request.user,
-                               'msg': "edit this workflow"}))
-    if request.method == "POST":  # If the form has been submitted...
-        # A form bound to the POST data
-        form = WorkflowForm(data=request.POST, instance=workflow)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('core.views.workflow', args=(uuid,)))
-    else:
-        form = WorkflowForm(instance=workflow)  # An unbound form
-    return render_to_response('core/workflow_edit.html',
-                              {'workflow': workflow, 'form': form},
-                              context_instance=RequestContext(request))
-
-
-def workflow_engine(request, uuid):
-    workflow_engine = get_object_or_404(WorkflowEngine, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_workflowengine', workflow_engine):
-        if 'read_workflowengine' not in get_perms(public_group,
-                                                  workflow_engine):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(request, '403.html',
-                                      {user: request.user,
-                                       'msg': "view this workflow engine"}))
-            else:
-                return HttpResponse(
-                    custom_error_page(request, '401.html',
-                                      {'msg': "view this workflow engine"}),
-                    status='401')
-    return render_to_response('core/workflow_engine.html',
-                              {'workflow_engine': workflow_engine},
                               context_instance=RequestContext(request))
 
 

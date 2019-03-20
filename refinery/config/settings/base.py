@@ -111,8 +111,7 @@ if not os.path.isabs(STATIC_ROOT):
 STATIC_URL = get_setting("STATIC_URL")
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "refinery/static/production"),
-    os.path.join(BASE_DIR, "refinery/ui/production")
+    os.path.join(BASE_DIR, "refinery/ui/production"),
 )
 
 # List of finder classes that know how to find static files in
