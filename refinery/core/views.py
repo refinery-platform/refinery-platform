@@ -856,9 +856,8 @@ class DataSetsViewSet(viewsets.ViewSet):
 
 
 class GroupViewSet(viewsets.ViewSet):
-    """API endpoint for viewing datasets."""
+    """API endpoint for viewing groups."""
     http_method_names = ['get']
-    lookup_field = 'uuid'
 
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
