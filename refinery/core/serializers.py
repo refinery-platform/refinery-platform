@@ -4,10 +4,22 @@ from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (DataSet, Event, SiteProfile, SiteVideo, User,
+from .models import (Analysis, DataSet, Event, SiteProfile, SiteVideo, User,
                      UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
+
+
+class AnalysisSerializer(serializers.ModelSerializer):
+    owner = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Analysis
+        fields = ('name', 'owner', 'status', 'summary', 'time_start',
+                  'time_end', 'uuid', 'workflow')
+
+    def get_owner(self, analysis):
+        return UserSerializer(analysis.get_owner()).data
 
 
 class DataSetSerializer(serializers.ModelSerializer):

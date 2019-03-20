@@ -55,9 +55,10 @@ from .forms import UserForm, UserProfileForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, SiteProfile,
                      SiteStatistics, SiteVideo, UserProfile, Workflow)
-from .serializers import (DataSetSerializer, EventSerializer,
-                          SiteProfileSerializer, SiteVideoSerializer,
-                          UserProfileSerializer, WorkflowSerializer)
+from .serializers import (AnalysisSerializer, DataSetSerializer,
+                          EventSerializer, SiteProfileSerializer,
+                          SiteVideoSerializer, UserProfileSerializer,
+                          WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_non_manager_groups_for_user)
 
@@ -855,9 +856,34 @@ class DataSetsViewSet(viewsets.ViewSet):
                 "groups_without_access": groups_without_access}
 
 
-class AnalysesViewSet(APIView):
-    """API endpoint that allows for Analyses to be deleted"""
-    http_method_names = ['delete']
+class AnalysisViewSet(APIView):
+    """API endpoint that allows for Analyses to be retrieved or deleted"""
+    http_method_names = ['get', 'delete']
+
+    def get(self, request):
+        data_set_uuid = request.query_params.get('dataSetUuid')
+        if data_set_uuid is None:
+            return HttpResponseBadRequest(
+                "Currently, a Data Set UUID is required for "
+                "retrieving related studies."
+            )
+
+        try:
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except DataSet.DoesNotExist as e:
+            return HttpResponseNotFound(e)
+        except DataSet.MultipleObjectsReturned as e:
+            return HttpResponseServerError(e)
+
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        analyses = Analysis.objects.filter(data_set=data_set)
+        serializer = AnalysisSerializer(analyses, many=True)
+
+        return Response(serializer.data)
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():

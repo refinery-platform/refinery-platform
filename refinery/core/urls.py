@@ -9,7 +9,7 @@ from django.conf.urls import patterns, url
 from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
-from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
+from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
                     ObtainAuthTokenValidSession, OpenIDToken,
                     SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet,
                     site_statistics)
@@ -67,8 +67,9 @@ core_router.urls.extend([
     url(r'^events/$', EventViewSet.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         UserProfileViewSet.as_view()),
+    url(r'^analyses/$', AnalysisViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
-        AnalysesViewSet.as_view()),
+        AnalysisViewSet.as_view()),
     url(r'^openid_token/$',
         OpenIDToken.as_view(), name="openid-token"),
     url(r'^obtain-auth-token/', ObtainAuthTokenValidSession.as_view()),
