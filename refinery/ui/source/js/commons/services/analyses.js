@@ -5,16 +5,12 @@ angular
   .factory('analysisService', ['$resource', 'settings',
     function ($resource, settings) {
       var analyses = $resource(
-        settings.appRoot + settings.refineryApi + '/analysis/',
-        {
-          format: 'json',
-          limit: 0,
-          order_by: '-time_start'
-        },
+        settings.appRoot + settings.refineryApiV2 + '/analyses/',
+        {},
         {
           query: {
             method: 'GET',
-            isArray: false
+            isArray: true
           }
         }
       );

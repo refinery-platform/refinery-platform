@@ -9,7 +9,6 @@
 
   angular.module('refineryAnalysisMonitor')
     .component('rpAnalysisMonitorGlobalStatus', {
-      controller: 'AnalysisMonitorGlobalStatusCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl(
           'partials/analysis-monitor/partials/global-status.html'

@@ -13,7 +13,6 @@ function analysisMonitorFactory (
   var analysesGlobalList = [];
   var analysesRunningGlobalList = [];
   var analysesDetail = {};
-  var docCount = {}; // meta data for document count
 
   var initializeAnalysesDetail = function (uuid) {
     analysesDetail[uuid] = {
@@ -111,11 +110,7 @@ function analysisMonitorFactory (
 
   // Copies and sorts analyses list
   var processAnalysesList = function (data, params) {
-    if ('status__in' in params && 'data_set__uuid' in params) {
-      angular.copy(data, analysesRunningList);
-    } else if ('status__in' in params) {
-      angular.copy(data, analysesRunningGlobalList);
-    } else if ('limit' in params && 'data_set__uuid' in params) {
+    if ('dataSetUuid' in params) {
       addElapseAndHumanTime(data);
     } else {
       angular.copy(data, analysesGlobalList);
@@ -128,11 +123,7 @@ function analysisMonitorFactory (
 
     var analysis = analysisService.query(params);
     analysis.$promise.then(function (response) {
-      if ('meta_only' in params) {
-        docCount[params.status__in] = response.meta.total_count;
-      } else {
-        processAnalysesList(response.objects, params);
-      }
+      processAnalysesList(response, params);
     });
 
     return analysis.$promise;
@@ -215,8 +206,7 @@ function analysisMonitorFactory (
     analysesGlobalList: analysesGlobalList,
     analysesDetail: analysesDetail,
     analysesRunningList: analysesRunningList,
-    analysesRunningGlobalList: analysesRunningGlobalList,
-    docCount: docCount
+    analysesRunningGlobalList: analysesRunningGlobalList
   };
 }
 

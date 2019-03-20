@@ -7,25 +7,12 @@
     popover-append-to-body="true"
     popover-placement="left"
     popover-class="global-analysis-popover">
-    <span ng-if="$ctrl.analysesRunningGlobalCount > 0">
-      <span class="spinner" id="global-analysis-status-run-div"
-        refinery-tooltip
-        refinery-tooltip-container="body"
-        refinery-tooltip-placement="left"
-        title="View Recent Analyses">
-        <i class="fa fa-cog" id="global-analysis-status-run"></i>
-        Analyses
-        {{ $ctrl.analysesRunningGlobalCount }}
-      </span>
-    </span>
-    <span ng-if="$ctrl.analysesRunningGlobalCount == 0">
-      <i class="fa fa-cogs" id="global-analysis-status"
-        refinery-tooltip
-        refinery-tooltip-container="body"
-        refinery-tooltip-placement="left"
-        title="View Recent Analyses"></i>
-      Analyses
-    </span>
+    <i class="fa fa-cogs" id="global-analysis-status"
+      refinery-tooltip
+      refinery-tooltip-container="body"
+      refinery-tooltip-placement="left"
+      title="View Recent Analyses"></i>
+    Analyses
   </a>
 </span>
 
