@@ -862,12 +862,22 @@ class AnalysisViewSet(APIView):
 
     def get(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
-        if data_set_uuid is None:
-            return HttpResponseBadRequest(
-                "Currently, a Data Set UUID is required for "
-                "retrieving related studies."
-            )
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 100
 
+        # return cross-dataset analyses per user
+        if data_set_uuid is None:
+            data_sets = get_objects_for_user(request.user,
+                                             'core.read_meta_dataset')
+            filtered_analyses = Analysis.objects.filter(
+                data_set__in=data_sets.values_list("id", flat=True)
+            ).order_by('-time_start')
+            paged_analyses = paginator.paginate_queryset(filtered_analyses,
+                                                         request)
+            serializer = AnalysisSerializer(paged_analyses, many=True)
+            return Response(serializer.data)
+
+        # query with dataSetUuid
         try:
             data_set = DataSet.objects.get(uuid=data_set_uuid)
         except DataSet.DoesNotExist as e:
@@ -883,8 +893,8 @@ class AnalysisViewSet(APIView):
         analyses = Analysis.objects.filter(
             data_set=data_set
         ).order_by('-time_start')
-        serializer = AnalysisSerializer(analyses, many=True)
-
+        paged_analyses = paginator.paginate_queryset(analyses, request)
+        serializer = AnalysisSerializer(paged_analyses, many=True)
         return Response(serializer.data)
 
     def delete(self, request, uuid):
