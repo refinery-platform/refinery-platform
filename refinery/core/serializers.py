@@ -106,9 +106,6 @@ class GroupSerializer(serializers.ModelSerializer):
     perms = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Group
-
     def get_perms(self, group):
         data_set = self.context.get('data_set')
         data_set_perms = get_perms(group, data_set)
@@ -118,6 +115,10 @@ class GroupSerializer(serializers.ModelSerializer):
 
     def get_uuid(self, group):
         return group.extendedgroup.uuid
+
+    class Meta:
+        model = Group
+        fields = ('name', 'id', 'uuid', 'perms')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):

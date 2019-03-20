@@ -35,8 +35,9 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    ObtainAuthTokenValidSession, SiteProfileViewSet,
-                    UserProfileViewSet, WorkflowViewSet, user)
+                    GroupViewSet, ObtainAuthTokenValidSession,
+                    SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet,
+                    user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -304,6 +305,36 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(get_ds_response.data.get('file_count'),
                          self.data_set.get_file_count())
+
+    def test_get_data_set_returns_owner(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(
+            get_ds_response.data.get('owner').get('profile').get('uuid'),
+            self.user.profile.uuid
+        )
+
+    def test_get_data_set_returns_user_perms_for_owner(self):
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        response_perms = get_ds_response.data.get('user_perms')
+        self.assertEqual(True, response_perms.get('change'))
+        self.assertEqual(True, response_perms.get('read'))
+        self.assertEqual(True, response_perms.get('read_meta'))
+
+    def test_get_public_data_set_returns_user_perms_for_anon(self):
+        self.data_set.share(ExtendedGroup.objects.public_group())
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        response_perms = get_ds_response.data.get('user_perms')
+        self.assertEqual(False, response_perms.get('change'))
+        self.assertEqual(True, response_perms.get('read'))
+        self.assertEqual(True, response_perms.get('read_meta'))
 
     def test_dataset_delete_successful(self):
         delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
@@ -814,6 +845,91 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_response = self.view(self.get_request)
         data_set = get_response.data.get('data_sets')[0]
         self.assertFalse(data_set["is_owner"])
+
+
+class GroupApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        super(GroupApiV2Tests, self).setUp(
+            api_base_name="groups/",
+            view=GroupViewSet.as_view({'get': 'list'})
+        )
+        self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.group_2 = ExtendedGroup.objects.create(name="Test Group 2")
+        self.group.user_set.add(self.user)
+        self.group_2.user_set.add(self.user)
+        self.data_set.share(self.group)
+        self.data_set.share(self.group_2)
+
+    def test_get_groups_with_ds_uuid_returns_401_for_anon(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 401)
+
+    def test_get_groups_invalid_ds_uuid_returns_404(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': 'xxx2'})
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 404)
+
+    def test_get_groups_with_ds_uuid_returns_correct_groups(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 2)
+        group_uuid_list = [self.group.uuid, self.group_2.uuid]
+        self.assertIn(get_response.data[0].get('uuid'), group_uuid_list)
+        self.assertIn(get_response.data[1].get('uuid'), group_uuid_list)
+
+    def test_get_groups_with_ds_uuid_returns_public_group(self):
+        public_group = ExtendedGroup.objects.public_group()
+        self.data_set.share(public_group)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 3)
+        group_uuid_list = [get_response.data[0].get('id'),
+                           get_response.data[1].get('id'),
+                           get_response.data[2].get('id')]
+        self.assertIn(public_group.id, group_uuid_list)
+
+    def test_get_groups_with_ds_uuid_has_name_field(self):
+        self.data_set.unshare(self.group_2)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(self.group.name, get_response.data[0].get('name'))
+
+    def test_get_groups_with_ds_uuid_has_id_field(self):
+        self.data_set.unshare(self.group_2)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(self.group.id, get_response.data[0].get('id'))
+
+    def test_get_groups_with_ds_uuid_has_uuid(self):
+        self.data_set.unshare(self.group_2)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(self.group.uuid, get_response.data[0].get('uuid'))
+
+    def test_get_groups_with_ds_uuid_has_correct_perms_field(self):
+        self.data_set.unshare(self.group_2)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        response_perms = get_response.data[0].get('perms')
+        self.assertEqual(False, response_perms.get('change'))
+        self.assertEqual(True, response_perms.get('read'))
+        self.assertEqual(True, response_perms.get('read_meta'))
 
 
 class AnalysisApiV2Tests(APIV2TestCase):
