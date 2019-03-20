@@ -75,7 +75,10 @@ class refinery::params (
     default => "${project_root}",
   }
 
-  $import_dir = "${data_dir}/import"
+  $import_dir = $deployment_platform ? {
+    'aws'   => undef,
+    default => "${data_dir}/import",
+  }
 
   $media_root = "${data_dir}/media"
 
