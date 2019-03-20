@@ -1,7 +1,5 @@
 import os
-from urlparse import urljoin
 
-from django.conf import settings
 from django.test import SimpleTestCase
 
 import mock

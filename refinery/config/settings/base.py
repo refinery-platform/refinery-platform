@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import subprocess
-import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
