@@ -33,6 +33,10 @@ class refinery (
     ensure => running,
   }
 
+  file { $data_dir:
+    ensure => directory,
+  }
+
   if $deployment_platform == 'aws' {
     # configure an EBS volume to store indexing data
     $file_system_type = 'ext3'
@@ -44,17 +48,15 @@ class refinery (
     filesystem { $block_device:
       ensure  => present,
       fs_type => $file_system_type,
+      before  => File[$data_dir],
     }
-    ->
-    file { $data_dir:
-      ensure => directory,
-    }
-    ->
+
     mount { $data_dir:
       ensure  => mounted,
       device  => $block_device,
       fstype  => $file_system_type,
       options => 'defaults',
+      require => File[$data_dir],
     }
   }
 

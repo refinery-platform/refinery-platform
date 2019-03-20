@@ -17,7 +17,7 @@ class refinery::django (
     group   => $app_group,
     mode    => '0755',
     require => $deployment_platform ? {
-      'aws' => Mount[$data_dir],
+      'aws'   => Mount[$data_dir],
       default => File[$data_dir],
     },
   }

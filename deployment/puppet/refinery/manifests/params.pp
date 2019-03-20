@@ -72,13 +72,10 @@ class refinery::params (
 
   $data_dir = $deployment_platform ? {
     'aws'   => '/data',
-    default => undef,
+    default => "${project_root}",
   }
 
-  $media_root = $deployment_platform ? {
-    'aws'   => "${data_dir}/media",
-    default => "${project_root}/media",
-  }
+  $media_root = "${data_dir}/media"
 
   $file_store_root = "${media_root}/file_store"
 
