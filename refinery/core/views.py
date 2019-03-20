@@ -880,7 +880,9 @@ class AnalysisViewSet(APIView):
                 request.user.has_perm('core.read_meta_dataset', data_set)):
             return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        analyses = Analysis.objects.filter(data_set=data_set)
+        analyses = Analysis.objects.filter(
+            data_set=data_set
+        ).order_by('-time_start')
         serializer = AnalysisSerializer(analyses, many=True)
 
         return Response(serializer.data)
