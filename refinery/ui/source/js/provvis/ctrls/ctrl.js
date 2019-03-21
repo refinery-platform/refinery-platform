@@ -90,7 +90,7 @@
 
     function launchProvvis () {
       getData().then(function (response) {
-        analysesList = response[0].objects;
+        analysesList = response[0];
         var _solrResponse = response[1];
         runProvVisPrivate(_studyUuid, analysesList, _solrResponse);
       });
