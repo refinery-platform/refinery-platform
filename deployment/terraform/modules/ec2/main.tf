@@ -131,7 +131,7 @@ resource "aws_instance" "app_server" {
   }
   ebs_block_device {
     delete_on_termination = false
-    device_name           = "/dev/xvdr"
+    device_name           = "${var.data_volume_device_name}"
     snapshot_id           = "${var.data_volume_snapshot_id}"
     volume_size           = "${var.data_volume_size}"
     volume_type           = "${var.data_volume_type}"
@@ -178,6 +178,7 @@ su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-p
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD="${var.django_admin_password}"
 export FACTER_AWS_REGION="${data.aws_region.current.name}"
+export FACTER_DATA_VOLUME_DEVICE_NAME="${var.data_volume_device_name}"
 export FACTER_DEFAULT_FROM_EMAIL="${var.django_default_from_email}"
 export FACTER_SERVER_EMAIL="${var.django_server_email}"
 export FACTER_COGNITO_IDENTITY_POOL_ID="${var.identity_pool_id}"

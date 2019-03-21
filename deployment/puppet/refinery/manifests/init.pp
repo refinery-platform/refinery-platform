@@ -38,11 +38,9 @@ class refinery (
   }
 
   if $deployment_platform == 'aws' {
-    # configure an EBS volume to store indexing data
+    # configure an EBS volume to store Solr indexing and user files (if not on S3)
     $file_system_type = 'ext3'
-    # This is the block device for the external data.
-    # It must match the attachment point for the EC2 EBS volume.
-    $block_device = '/dev/xvdr'
+    $block_device = $data_volume_device_name
 
     # https://forge.puppetlabs.com/puppetlabs/lvm
     filesystem { $block_device:
