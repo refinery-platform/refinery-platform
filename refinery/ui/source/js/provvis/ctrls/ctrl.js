@@ -75,9 +75,7 @@
     // Ajax calls, grabs the analysis & files promises for a particular data set
     function getData () {
       var analysisParams = {
-        format: 'json',
-        limit: 0,
-        data_set__uuid: _dataSetUuid
+        dataSetUuid: _dataSetUuid
       };
 
       var filesParams = {
