@@ -468,7 +468,33 @@
   </span>
 </p>
 
-<rp-data-set-about-sharing></rp-data-set-about-sharing>
+<div class="refinery-header">
+  <span class="refinery-header-left">
+      <h3>Sharing</h3>
+  </span>
+  </div>
+  <div class="refinery-subheader">
+    <h4>Owner</h4>
+  </div>
+  <p>
+    <span class="fa fa-user"></span>&nbsp;
+    <span ng-if="ADCtrl.dataSet.is_owner">
+      <a href="/users/{{ ADCtrl.dataSet.owner.profile.uuid }}">
+       You
+      </a>
+    </span>
+    <span ng-if="!ADCtrl.dataSet.is_owner">
+      <a href="/users/{{ ADCtrl.dataSet.owner.profile.uuid }}">
+      {{ ADCtrl.dataSet.owner.first_name }} &nbsp {{ ADCtrl.dataSet.owner
+      .last_name }}
+      </a>
+    </span>
+     <span ng-if="!ADCtrl.dataSet.is_owner && !ADCtrl.ownerName">
+      <em>Owner's information not available.</em>
+    </span>
+  </p>
+  <rp-data-set-group-perms></rp-data-set-group-perms>
+</div>
 
 <div class="refinery-header">
   <span class="refinery-header-left">

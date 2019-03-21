@@ -11,14 +11,14 @@
     beforeEach(inject(function (
       $rootScope,
       $controller,
-      dataSetPermsService
+      dataSetGroupPermsService
     ) {
-      permsService = dataSetPermsService;
+      permsService = dataSetGroupPermsService;
       scope = $rootScope.$new();
       ctrl = $controller('UserPermsIconCtrl', {
         $scope: scope
       });
-      spyOn(permsService, 'getDataSetSharing');
+      spyOn(permsService, 'getDataSetGroupPerms');
     }));
 
     it('User Perms Icon Ctrl should exist', function () {
