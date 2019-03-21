@@ -48,32 +48,6 @@ function AnalysisMonitorCtrl (
       });
   };
 
-  // This method runs when user is in the data set browser. It triggers
-  // the analysis running icon on tab
-  vm.updateAnalysesRunningList = function () {
-    var params = {
-      format: 'json',
-      limit: 0,
-      data_set__uuid: $window.dataSetUuid,
-      status__in: 'RUNNING,UNKNOWN'
-    };
-
-    analysisMonitorFactory.getAnalysesList(params).then(function () {
-      vm.analysesRunningList = analysisMonitorFactory.analysesRunningList;
-      vm.launchAnalysisFlag = false;
-    });
-
-    vm.timerRunList = $timeout(vm.updateAnalysesRunningList, 10000);
-
-    // Cancels when user is away from dataset browser
-    if (
-      typeof $window.dataSetUuid === 'undefined' ||
-      $window.dataSetUuid === 'None'
-    ) {
-      $timeout.cancel(vm.timerRunList);
-    }
-  };
-
   vm.cancelAnalysis = function (uuid) {
     vm.setCancelAnalysisFlag(true, uuid);
 
@@ -107,8 +81,23 @@ function AnalysisMonitorCtrl (
     }
   };
 
+  /**
+   * @name getRunningAnalyses
+   * @desc  Helper function to update running analyses with details
+   * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+  **/
+  function getRunningAnalyses () {
+    var runningList = [];
+    for (var i = 0; i < vm.analysesList.length; i++) {
+      if (vm.analysesList[i].status === 'RUNNING') {
+        runningList.push(vm.analysesList[i]);
+      }
+    }
+    return runningList;
+  }
+
   vm.refreshAnalysesDetail = function () {
-    vm.analysesRunningList = analysisMonitorFactory.analysesRunningList;
+    vm.analysesRunningList = getRunningAnalyses();
     for (var i = 0; i < vm.analysesRunningList.length; i++) {
       vm.updateAnalysesDetail(i);
     }
@@ -117,13 +106,11 @@ function AnalysisMonitorCtrl (
   // Analysis monitor details gets populated from service - tabular
   vm.updateAnalysesDetail = function (i) {
     (function (j) {
-      if (typeof vm.analysesRunningList[j] !== 'undefined') {
-        var runningUuid = vm.analysesRunningList[j].uuid;
-        analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function () {
-          vm.analysesDetail[runningUuid] =
-            analysisMonitorFactory.analysesDetail[runningUuid];
-        });
-      }
+      var runningUuid = vm.analysesRunningList[j].uuid;
+      analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function () {
+        vm.analysesDetail[runningUuid] =
+          analysisMonitorFactory.analysesDetail[runningUuid];
+      });
     }(i));
   };
 

@@ -64,8 +64,6 @@
         dataSetPropsService.refreshDataSet();
         if (response.tool_definition.tool_type === 'VISUALIZATION') {
           visualizationService.getVisualizations($window.dataSetUuid);
-        } else {
-          $rootScope.$broadcast('rf/launchAnalysis');
         }
         toolLaunchStatusService.addToolLaunchStatus(response, 'success');
       }, function (error) {

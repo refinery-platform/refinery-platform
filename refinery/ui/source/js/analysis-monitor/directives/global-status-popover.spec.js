@@ -24,8 +24,8 @@
       $httpBackend
         .expectGET(
           settings.appRoot +
-          settings.refineryApi +
-          '/analysis/?format=json&limit=10&order_by=-time_start'
+          settings.refineryApiV2 +
+          '/analyses/?limit=10&offset=0'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

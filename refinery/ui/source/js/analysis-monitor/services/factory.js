@@ -9,9 +9,7 @@ function analysisMonitorFactory (
   timeService
 ) {
   var analysesList = [];
-  var analysesRunningList = [];
   var analysesGlobalList = [];
-  var analysesRunningGlobalList = [];
   var analysesDetail = {};
 
   var initializeAnalysesDetail = function (uuid) {
@@ -204,9 +202,7 @@ function analysisMonitorFactory (
     postCancelAnalysis: postCancelAnalysis,
     analysesList: analysesList,
     analysesGlobalList: analysesGlobalList,
-    analysesDetail: analysesDetail,
-    analysesRunningList: analysesRunningList,
-    analysesRunningGlobalList: analysesRunningGlobalList
+    analysesDetail: analysesDetail
   };
 }
 

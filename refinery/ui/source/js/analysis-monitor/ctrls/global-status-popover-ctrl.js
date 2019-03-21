@@ -105,7 +105,6 @@
      * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
     **/
     function updateAnalysesGlobalList () {
-      console.log('should be updating');
       var params = {
         limit: 10,
         offset: 0
