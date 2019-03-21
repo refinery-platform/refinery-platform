@@ -886,6 +886,11 @@ class AnalysisViewSet(APIView):
         except DataSet.MultipleObjectsReturned as e:
             return HttpResponseServerError(e)
 
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+
         analyses = Analysis.objects.filter(
             data_set=data_set
         ).order_by('-time_start')
