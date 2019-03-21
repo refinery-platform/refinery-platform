@@ -142,12 +142,7 @@
               uuid: dataSet.uuid
             };
           },
-          // Refactor data set deletion into it's own component (shared) It
-          // should not be responsible for updating another view's cache [JM]
-          dataSet: dataSet,
-          dataSets: function () { return {}; },
-          analyses: function () { return {}; },
-          analysesReloadService: function () { return {}; }
+          dataSet: dataSet
         }
       });
 
