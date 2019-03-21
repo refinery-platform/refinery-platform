@@ -1,12 +1,7 @@
 """
 * Manages all data files
-* Downloads files from external repositories (by URL)
+* Downloads files from external sources (by URL)
 
-Requirements:
-
-FILE_STORE_DIR setting - main file store directory
-* must be a subdirectory of MEDIA_ROOT
-* must be writeable by the Django server
 """
 
 import logging
@@ -25,12 +20,9 @@ from django_extensions.db.fields import UUIDField
 import constants
 import core
 from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, copy_s3_object,
-                    delete_s3_object, make_dir, move_file)
+                    delete_s3_object, move_file)
 
 logger = logging.getLogger(__name__)
-
-# create data storage directories
-make_dir(settings.FILE_STORE_BASE_DIR)
 
 
 def _map_source(source):

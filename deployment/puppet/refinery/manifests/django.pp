@@ -2,6 +2,7 @@ class refinery::django (
   $deployment_platform    = $refinery::params::deployment_platform,
   $app_user               = $refinery::params::app_user,
   $app_group              = $refinery::params::app_group,
+  $media_root             = $refinery::params::media_root,
   $project_root           = $refinery::params::project_root,
   $django_root            = $refinery::params::django_root,
   $django_settings_module = $refinery::params::django_settings_module,
@@ -10,15 +11,34 @@ class refinery::django (
   $site_url               = $refinery::params::site_url,
   $virtualenv             = $refinery::params::virtualenv,
 ) inherits refinery::params {
+  file { [$media_root, $file_store_root]:
+    ensure  => directory,
+    owner   => $app_user,
+    group   => $app_group,
+    mode    => '0755',
+    require => $deployment_platform ? {
+      'aws'   => Mount[$data_dir],
+      default => File[$data_dir],
+    },
+  }
+
   if $deployment_platform == 'vagrant' {
-    file { "${project_root}/import":
+    file { $import_dir:
       ensure => directory,
       owner  => $app_user,
       group  => $app_group,
     }
+
+    exec { 'activate_guest_user':
+      command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
+      environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+      user        => $app_user,
+      group       => $app_group,
+      require     => Exec['create_guest_user'],
+    }
   }
 
-  file_line { "django_settings_module":
+  file_line { 'django_settings_module':
     path => "/home/${app_user}/.profile",
     line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
   }

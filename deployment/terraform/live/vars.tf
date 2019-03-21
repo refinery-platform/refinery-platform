@@ -183,12 +183,12 @@ variable "refinery_user_files_columns" {
 
 variable "data_volume_size" {
   description = "Size of the EBS data volume in GB"
-  default     = 500
+  default     = 1
 }
 
 variable "data_volume_type" {
   description = "Type of the EBS data volume"
-  default     = "st1"
+  default     = "gp2"
 }
 
 variable "data_volume_snapshot_id" {

@@ -1,16 +1,35 @@
 class refinery::solr (
-  $deployment_platform = $refinery::params::deployment_platform,
-  $app_user            = $refinery::params::app_user,
-  $django_root         = $refinery::params::django_root,
-  $solr_lib_dir        = $refinery::params::solr_lib_dir,
+  $deployment_platform        = $refinery::params::deployment_platform,
+  $app_user                   = $refinery::params::app_user,
+  $django_root                = $refinery::params::django_root,
+  $solr_data_dir              = $refinery::params::solr_data_dir,
+  $solr_core_data             = $refinery::params::solr_core_data,
+  $solr_data_set_manager_data = $refinery::params::solr_data_set_manager_data,
+  $solr_lib_dir               = $refinery::params::solr_lib_dir,
+  $data_dir                   = $refinery::params::data_dir
 ) inherits refinery::params {
-  $solr_version = '5.3.1'
-  $solr_archive = "solr-${solr_version}.tgz"
+  $solr_version  = '5.3.1'
+  $solr_archive  = "solr-${solr_version}.tgz"
   $download_path = "/tmp/${solr_archive}"
-  $solr_url = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
+  $solr_url      = "http://archive.apache.org/dist/lucene/solr/${solr_version}/${solr_archive}"
 
   package { 'java':
     name => 'openjdk-7-jdk',
+  }
+
+  file { '/opt':
+    ensure => directory,
+  }
+
+  if $deployment_platform == 'aws' {
+    file { [ $solr_data_dir, $solr_core_data, $solr_data_set_manager_data ]:
+      ensure  => directory,
+      owner   => $app_user,
+      group   => $app_group,
+      mode    => '0755',
+      before  => Exec['solr_install'],
+      require => Mount[$data_dir],
+    }
   }
 
   archive { 'solr_download':

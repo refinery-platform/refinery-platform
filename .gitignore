@@ -66,6 +66,7 @@ codekit-config.json
 /refinery/ui/cypress/screenshots/
 /refinery/ui/cypress/videos/
 /import/
+/media/
 /static/
 /transfer/
 *.conflict

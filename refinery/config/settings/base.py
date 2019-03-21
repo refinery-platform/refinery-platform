@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import subprocess
-import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
@@ -88,8 +87,6 @@ USE_TZ = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = get_setting("MEDIA_ROOT")
-if not os.path.isabs(MEDIA_ROOT):
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -354,12 +351,11 @@ REFINERY_PUBLIC_GROUP_NAME = "Public"
 # DO NOT CHANGE THIS after initialization of your Refinery instance
 REFINERY_PUBLIC_GROUP_ID = 100
 
-# relative to MEDIA_ROOT
-FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
 # absolute path to the file store root dir
-FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
+REFINERY_FILE_STORE_ROOT = get_setting('REFINERY_FILE_STORE_ROOT')
 # for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
-FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
+REFINERY_FILE_STORE_URL = get_setting('REFINERY_FILE_STORE_URL')
+
 # always keep uploaded files on disk
 FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
                                           default=0)
@@ -369,8 +365,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
 REFINERY_FILE_SOURCE_MAP = get_setting("REFINERY_FILE_SOURCE_MAP")
 
-# data file import directory; it should be located on the same partition as
-# FILE_STORE_DIR and MEDIA_ROOT to make import operations fast
+# data file import directory
 REFINERY_DATA_IMPORT_DIR = get_setting("REFINERY_DATA_IMPORT_DIR")
 
 # location of the Solr server (must be accessible from the web browser)
