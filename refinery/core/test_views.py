@@ -850,8 +850,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 class GroupApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(GroupApiV2Tests, self).setUp(
-            api_base_name="groups/",
-            view=GroupViewSet.as_view({'get': 'list'})
+            api_base_name="groups/", view=GroupViewSet.as_view({'get': 'list'})
         )
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.group = ExtendedGroup.objects.create(name="Test Group")
@@ -861,19 +860,19 @@ class GroupApiV2Tests(APIV2TestCase):
         self.data_set.share(self.group)
         self.data_set.share(self.group_2)
 
-    def test_get_groups_with_ds_uuid_returns_401_for_anon(self):
+    def test_get_groups_with_data_set_uuid_returns_401_for_anon(self):
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 401)
 
-    def test_get_groups_invalid_ds_uuid_returns_404(self):
+    def test_get_groups_invalid_data_set_uuid_returns_404(self):
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': 'xxx2'})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 404)
 
-    def test_get_groups_with_ds_uuid_returns_correct_groups(self):
+    def test_get_groups_with_data_set_uuid_returns_correct_groups(self):
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
         get_request.user = self.user
@@ -883,7 +882,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertIn(get_response.data[0].get('uuid'), group_uuid_list)
         self.assertIn(get_response.data[1].get('uuid'), group_uuid_list)
 
-    def test_get_groups_with_ds_uuid_returns_public_group(self):
+    def test_get_groups_with_data_set_uuid_returns_public_group(self):
         public_group = ExtendedGroup.objects.public_group()
         self.data_set.share(public_group)
         get_request = self.factory.get(self.url_root,
@@ -896,7 +895,7 @@ class GroupApiV2Tests(APIV2TestCase):
                            get_response.data[2].get('id')]
         self.assertIn(public_group.id, group_uuid_list)
 
-    def test_get_groups_with_ds_uuid_has_name_field(self):
+    def test_get_groups_with_data_set_uuid_has_name_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
@@ -904,7 +903,7 @@ class GroupApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(self.group.name, get_response.data[0].get('name'))
 
-    def test_get_groups_with_ds_uuid_has_id_field(self):
+    def test_get_groups_with_data_set_uuid_has_id_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
@@ -912,7 +911,7 @@ class GroupApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(self.group.id, get_response.data[0].get('id'))
 
-    def test_get_groups_with_ds_uuid_has_uuid(self):
+    def test_get_groups_with_data_set_uuid_has_uuid(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
@@ -920,7 +919,7 @@ class GroupApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(self.group.uuid, get_response.data[0].get('uuid'))
 
-    def test_get_groups_with_ds_uuid_has_correct_perms_field(self):
+    def test_get_groups_with_data_set_uuid_has_correct_perms_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
