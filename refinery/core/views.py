@@ -55,10 +55,11 @@ from .forms import UserForm, UserProfileForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, SiteProfile,
                      SiteStatistics, SiteVideo, UserProfile, Workflow)
+
 from .serializers import (AnalysisSerializer, DataSetSerializer,
-                          EventSerializer, SiteProfileSerializer,
-                          SiteVideoSerializer, UserProfileSerializer,
-                          WorkflowSerializer)
+                          EventSerializer, GroupSerializer,
+                          SiteProfileSerializer, SiteVideoSerializer,
+                          UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_non_manager_groups_for_user)
 
@@ -885,11 +886,6 @@ class AnalysisViewSet(APIView):
         except DataSet.MultipleObjectsReturned as e:
             return HttpResponseServerError(e)
 
-        public_group = ExtendedGroup.objects.public_group()
-        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
-                request.user.has_perm('core.read_meta_dataset', data_set)):
-            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
-
         analyses = Analysis.objects.filter(
             data_set=data_set
         ).order_by('-time_start')
@@ -920,6 +916,40 @@ class AnalysisViewSet(APIView):
                     return Response({"data": analysis_deleted[1]})
                 else:
                     return HttpResponseBadRequest(content=analysis_deleted[1])
+
+
+class GroupViewSet(viewsets.ViewSet):
+    """API endpoint for viewing groups."""
+    http_method_names = ['get']
+
+    def list(self, request):
+        data_set_uuid = request.query_params.get('dataSetUuid')
+        try:
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(
+                 content="DataSet with UUID: {} not found.".format(
+                     data_set_uuid
+                 )
+             )
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple dataSets returned for this request"
+            )
+
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        groups_with_perms = get_groups_with_perms(data_set)
+
+        serializer = GroupSerializer(groups_with_perms, many=True,
+                                     context={'data_set': data_set})
+
+        return Response(serializer.data)
 
 
 class CustomRegistrationView(RegistrationView):

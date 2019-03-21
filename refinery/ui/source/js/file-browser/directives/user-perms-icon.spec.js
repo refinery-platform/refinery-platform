@@ -19,7 +19,7 @@
         '<div id="user-perms-icon"></div>'
       );
       $httpBackend
-        .whenGET('/api/v1/data_sets/' + $window.dataSetUuid + '/sharing/?format=json')
+        .whenGET('/api/v2/data_sets/' + $window.dataSetUuid + '/')
         .respond(200);
 
       var scope = $rootScope.$new();

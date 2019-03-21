@@ -13,18 +13,19 @@
     .controller('UserPermsIconCtrl', UserPermsIconCtrl);
 
   UserPermsIconCtrl.$inject = [
+    '_',
     '$scope',
     '$window',
-    'dataSetPermsService'
+    'dataSetPropsService'
   ];
 
 
   function UserPermsIconCtrl (
+    _,
     $scope,
     $window,
-    dataSetPermsService
+    dataSetPropsService
   ) {
-    var permsService = dataSetPermsService;
     var vm = this;
     vm.userPerms = 'none';
    /*
@@ -32,19 +33,15 @@
    * Watchers
    * ---------------------------------------------------------
    */
-    vm.$onInit = function () {
-      permsService.getDataSetSharing($window.dataSetUuid).then(function (response) {
-        vm.userPerms = response.user_perms;
+    // Gets the data set properties
+    function refreshDataSetProps () {
+      dataSetPropsService.refreshDataSet().then(function () {
+        vm.userPerms = dataSetPropsService.userPerms;
       });
+    }
 
-      $scope.$watch(
-        function () {
-          return permsService.userPerms;
-        },
-        function () {
-          vm.userPerms = permsService.userPerms;
-        }
-      );
+    vm.$onInit = function () {
+      refreshDataSetProps();
     };
   }
 })();
