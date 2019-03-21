@@ -1031,12 +1031,12 @@ class AnalysisApiV2Tests(APIV2TestCase):
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
 
-    def test_get_analysis_returns_empty_list_for_no_public_ds(self):
+    def test_get_analysis_returns_empty_list_for_no_public_data_sets(self):
         get_request = self.factory.get(self.url_root)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data, [])
 
-    def test_get_analysis_returns_analyses_for_public_ds(self):
+    def test_get_analysis_returns_analyses_for_public_data_sets(self):
         self.data_set.share(ExtendedGroup.objects.public_group())
         get_request = self.factory.get(self.url_root)
         get_response = self.view(get_request)
