@@ -60,8 +60,8 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
     # SEE: http://stackoverflow.com/a/32349636/6031066
     def __init__(self):
         super(SymlinkedFileSystemStorage, self).__init__(
-            location=settings.FILE_STORE_BASE_DIR,
-            base_url=settings.FILE_STORE_BASE_URL
+            location=settings.REFINERY_FILE_STORE_ROOT,
+            base_url=settings.REFINERY_FILE_STORE_URL
         )
 
     def exists(self, name):
