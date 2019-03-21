@@ -40,10 +40,9 @@ class refinery (
   if $deployment_platform == 'aws' {
     # configure an EBS volume to store Solr indexing and user files (if not on S3)
     $file_system_type = 'ext3'
-    $block_device = $data_volume_device_name
 
     # https://forge.puppetlabs.com/puppetlabs/lvm
-    filesystem { $block_device:
+    filesystem { $data_volume_device_name:
       ensure  => present,
       fs_type => $file_system_type,
       before  => File[$data_dir],
@@ -51,7 +50,7 @@ class refinery (
 
     mount { $data_dir:
       ensure  => mounted,
-      device  => $block_device,
+      device  => $data_volume_device_name,
       fstype  => $file_system_type,
       options => 'defaults',
       require => File[$data_dir],
