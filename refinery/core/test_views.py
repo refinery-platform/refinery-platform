@@ -1069,14 +1069,14 @@ class AnalysisApiV2Tests(APIV2TestCase):
         # know the total length off analyses is 2
         self.assertEqual(len(get_response.data), 1)
 
-    def test_get_analysis_with_ds_uuid_returns_401(self):
+    def test_get_analysis_with_data_set_uuid_returns_401(self):
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
         )
         get_response = self.view(get_request_with_ds)
         self.assertEqual(get_response.status_code, 401)
 
-    def test_get_analysis_with_invalid_ds_uuid_returns_404(self):
+    def test_get_analysis_with_invalid_data_set_uuid_returns_404(self):
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': 'xxx5'}
         )
@@ -1084,7 +1084,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request_with_ds)
         self.assertEqual(get_response.status_code, 404)
 
-    def test_get_analysis_with_ds_uuid_returns_analyses(self):
+    def test_get_analysis_with_data_set_uuid_returns_analyses(self):
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
         )
@@ -1095,7 +1095,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertIn(get_response.data[0].get('uuid'), analysis_list)
         self.assertIn(get_response.data[1].get('uuid'), analysis_list)
 
-    def test_get_analysis_with_ds_uuid_returns_names_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_names_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1104,7 +1104,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request_with_ds)
         self.assertEqual(get_response.data[0].get('name'), self.analysis.name)
 
-    def test_get_analysis_with_ds_uuid_returns_status_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_status_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1114,7 +1114,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('status'),
                          self.analysis.status)
 
-    def test_get_analysis_with_ds_uuid_returns_summary_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_summary_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1124,7 +1124,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('summary'),
                          self.analysis.summary)
 
-    def test_get_analysis_with_ds_uuid_returns_time_start_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_time_start_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1134,7 +1134,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('time_start'),
                          self.analysis.time_start)
 
-    def test_get_analysis_with_ds_uuid_returns_time_end_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_time_end_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1144,7 +1144,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('time_end'),
                          self.analysis.time_end)
 
-    def test_get_analysis_with_ds_uuid_returns_uuid_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_uuid_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1153,7 +1153,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request_with_ds)
         self.assertEqual(get_response.data[0].get('uuid'), self.analysis.uuid)
 
-    def test_get_analysis_with_ds_uuid_returns_workflow_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_workflow_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1163,7 +1163,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('workflow'),
                          self.analysis.workflow.id)
 
-    def test_get_analysis_with_ds_uuid_returns_owner_field(self):
+    def test_get_analysis_with_data_set_uuid_returns_owner_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
             self.url_root, {'dataSetUuid': self.data_set.uuid}
@@ -1175,7 +1175,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
             self.analysis.get_owner().profile.uuid
         )
 
-    def test_get_analysis_with_ds_uuid_returns_sorted_analyses(self):
+    def test_get_analysis_with_data_set_uuid_returns_sorted_analyses(self):
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
@@ -1184,7 +1184,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[1].get('uuid'), self.analysis.uuid)
         self.assertEqual(get_response.data[0].get('uuid'), self.analysis2.uuid)
 
-    def test_get_analysis_with_ds_uuid_returns_paged_analyses(self):
+    def test_get_analysis_with_data_set_uuid_returns_paged_analyses(self):
         limit = 1
         get_request = self.factory.get(self.url_root,
                                        {'limit': limit,
@@ -1194,7 +1194,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), limit)
 
-    def test_get_analysis_with_ds_uuid_returns_offset_analyses(self):
+    def test_get_analysis_with_data_set_uuid_returns_offset_analyses(self):
         offset = 1
         get_request = self.factory.get(self.url_root,
                                        {'offset': offset,
