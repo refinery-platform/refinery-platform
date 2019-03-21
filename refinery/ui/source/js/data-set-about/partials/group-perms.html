@@ -1,35 +1,10 @@
-<div class="refinery-header">
-  <span class="refinery-header-left">
-      <h3>Sharing</h3>
-  </span>
-  </div>
-  <div class="refinery-subheader">
-    <h4>Owner</h4>
-  </div>
-  <p>
-    <span class="fa fa-user"></span>&nbsp;
-    <span ng-if="ASCtrl.dataSetSharing.is_owner">
-      <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
-       You
-      </a>
-    </span>
-    <span ng-if="!ASCtrl.dataSetSharing.is_owner">
-      <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
-      {{ ASCtrl.ownerName }}
-      </a>
-    </span>
-     <span ng-if="!ASCtrl.dataSetSharing.is_owner && !ASCtrl.ownerName">
-      <em>Owner's information not available.</em>
-    </span>
-  </p>
-
-<div ng-if="ASCtrl.groupList.length > 0">
+<div ng-if="GPCtrl.groupList.length > 0">
   <div class="refinery-subheader">
     <h4>Groups</h4>
   </div>
   <p>
-    <div ng-repeat="group in ASCtrl.groupList track by $index">
-      <a href="/groups/{{group.group_uuid}}">{{ group.group_name }}</a>&nbsp;
+    <div ng-repeat="group in GPCtrl.groupList track by $index">
+      <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
       <span
         ng-if="group.perms.read_meta && !group.perms.read && !group.perms.change"
         class="perm-details-icon">

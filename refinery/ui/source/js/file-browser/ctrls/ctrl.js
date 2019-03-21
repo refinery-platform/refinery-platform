@@ -25,7 +25,6 @@
     'uiGridExporterService',
     '_',
     'assayFiltersService',
-    'dataSetPermsService',
     'dataSetPropsService',
     'fileBrowserFactory',
     'fileBrowserSettings',
@@ -52,7 +51,6 @@
     uiGridExporterService,
     _,
     assayFiltersService,
-    dataSetPermsService,
     dataSetPropsService,
     fileBrowserFactory,
     fileBrowserSettings,
@@ -70,7 +68,6 @@
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = activeNodeService;
     var paramService = fileParamService;
-    var permsService = dataSetPermsService;
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
@@ -135,7 +132,7 @@
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
-    vm.userPerms = permsService.userPerms;
+    vm.userPerms = dataSetPropsService.userPerms;
 
     activate();
     /*
@@ -145,7 +142,7 @@
      */
     function activate () {
       // Ensure data owner or group permission to modify (run tools)
-      refreshDataSetProps();
+    //  refreshDataSetProps();
     }
 
     // Helper method to keep track when data should be discard or added
@@ -209,12 +206,10 @@
 
     // Gets the data set properties
     function refreshDataSetProps () {
-      dataSetPropsService.refreshDataSet().then(function () {
-        vm.dataSet = dataSetPropsService.dataSet;
-        vm.setCsvFileName(vm.dataSet.title);
-        // initialize the dataset and updates ui-grid selection, filters, and url
-        initializeDataOnPageLoad();
-      });
+      vm.dataSet = dataSetPropsService.dataSet;
+      vm.setCsvFileName(vm.dataSet.title);
+      // initialize the dataset and updates ui-grid selection, filters, and url
+      initializeDataOnPageLoad();
     }
 
     // Helper method for dynamic scrolling, grabs data when scrolling down
@@ -604,21 +599,21 @@
 
     $scope.$watch(
         function () {
-          return permsService.userPerms;
+          return dataSetPropsService.userPerms;
         },
         function () {
-          vm.userPerms = permsService.userPerms;
+          vm.userPerms = dataSetPropsService.userPerms;
         }
     );
 
     // needed for after a tool_launch and a dataset is not clean
     $scope.$watchCollection(
-        function () {
-          return dataSetPropsService.dataSet;
-        },
-        function (dataSet) {
-          vm.dataSet = dataSet;
-        }
+      function () {
+        return dataSetPropsService.dataSet;
+      },
+      function () {
+        refreshDataSetProps();
+      }
     );
 
     $scope.$watch(function () {
