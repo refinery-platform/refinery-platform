@@ -31,128 +31,96 @@
 {% if workflow %}
 <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 	<div class="row">
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>{{ workflow.name }}</h3>
-			</span>
-		</div>
+    <div class="col-md-12">
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>{{ workflow.name }}</h3>
+        </span>
+      </div>
 
-		<div class="refinery-subheader">
-			<h4>Summary</h4>
-		</div>
-		<p>{% if workflow.summary %} {{ workflow.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
+      <div class="refinery-subheader">
+        <h4>Summary</h4>
+      </div>
+      <p>{% if workflow.summary %} {{ workflow.summary }} {% else %} <i>None provided.</i>{% endif %}</p>
 
-		<div class="refinery-subheader">
-			<h4>Description</h4>
-		</div>
-		<p>{% if workflow.description %} {{ workflow.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
+      <div class="refinery-subheader">
+        <h4>Description</h4>
+      </div>
+      <p>{% if workflow.description %} {{ workflow.description|markdown:"safe" }} {% else %} <i>None provided.</i>{% endif %}</p>
 
-		<div class="refinery-subheader">
-			<h4>Shortcut Name</h4>
-		</div>
-		<p>{% if workflow.slug %} {{ workflow.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
+      <div class="refinery-subheader">
+        <h4>Shortcut Name</h4>
+      </div>
+      <p>{% if workflow.slug %} {{ workflow.slug }} {% else %} <i>None provided.</i>{% endif %}</p>
 
-		<div class="refinery-subheader">
-			<h4>Structure</h4>
-		</div>
-		<p>
-			<div>
-				<div class="row">
-					<div id="vis_workflow" class="col-md-12"></div>
-					<div class="col-md-12">
-					</div>
-				</div>
-			</div>
-		</p>
+      <div class="refinery-subheader">
+        <h4>Structure</h4>
+      </div>
+      <div>
+        <rp-workflow-graph></rp-workflow-graph>
+      </div>
 
-		<div class="refinery-subheader">
-            <a href="#" onclick="workflowVisualizationModule.toggle_visibility('node_table');"><h4>Toggle Selection
-                Details &raquo; </h4></a>
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>Workflow Engine</h3>
+        </span>
+      </div>
+      <div class="refinery-subheader">
+        <h4>Name</h4>
+      </div>
+      {{ workflow.workflow_engine.name }}
+
+      <div class="refinery-subheader">
+        <h4>Workflow Id</h4>
+      </div>
+      <p>{{ workflow.internal_id }} (<a href="{% url 'workflow-graph' workflow.uuid %}">Download</a>)</p>
+
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>Sharing</h3>
+        </span>
+      </div>
+
+      {% if workflow.get_groups|length > 0 %}
+        <div class="refinery-subheader">
+          <h4>Groups</h4>
         </div>
-		<p>
-			<div id="node_table"></div>
-		</p>
+        <p>
+        {% for perm in workflow.get_groups %}
+          {% if perm.group.is_managed %}
+            <a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
+            {% if perm.read %}
+              <i class="fa fa-eye"></i>
+            {% endif %}
+            {% if perm.change %}
+              <i class="fa fa-pencil"></i>
+            {% endif %}
+          </br>
+          {% endif %}
+        {% endfor %}
+        </p>
+      {% endif %}
 
-		<div class="refinery-subheader">
-			<h4>Layout</h4>
-		</div>
-		<p>
-			<label class="radio">
-                <input type="radio" name="optionsRadios" id="cb_layout_kind_refinery" value="1"
-                       onclick="workflowVisualizationModule.reload_workflow(
-                         '{% url 'workflow-graph' workflow.uuid %}')"
-                       checked> Refinery
-			</label>
-			<label class="radio">
-                <input type="radio" name="optionsRadios" id="cb_layout_kind_galaxy"
-                       onclick="workflowVisualizationModule.reload_workflow(
-                         '{% url 'workflow-graph' workflow.uuid %}')"
-                       value="0"> Galaxy
-			</label>
-		</p>
-
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Workflow Engine</h3>
-			</span>
-		</div>
-		<div class="refinery-subheader">
-			<h4>Name</h4>
-		</div>
-		{{ workflow.workflow_engine.name }}
-
-		<div class="refinery-subheader">
-			<h4>Workflow Id</h4>
-		</div>
-		<p>{{ workflow.internal_id }} (<a href="{% url 'workflow-graph' workflow.uuid %}">Download</a>)</p>
-
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Sharing</h3>
-			</span>
-		</div>
-
-		{% if workflow.get_groups|length > 0 %}
-		<div class="refinery-subheader">
-			<h4>Groups</h4>
-		</div>
-			<p>
-			{% for perm in workflow.get_groups %}
-				{% if perm.group.is_managed %}
-					<a href="{% url 'group' perm.group.uuid %}">{{ perm.group.name }}</a>&nbsp;
-					{% if perm.read %}
-						<i class="fa fa-eye"></i>
-					{% endif %}
-					{% if perm.change %}
-						<i class="fa fa-pencil"></i>
-					{% endif %}
-				</br>
-				{% endif %}
-			{% endfor %}
-			</p>
-		{% endif %}
-
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>History</h3>
-			</span>
-		</div>
-		<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
-    {% if perm.change %}
-      <a class="refinery-base btn btn-default"
-        href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>History</h3>
+        </span>
+      </div>
+      <p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
+      {% if perm.change %}
+        <a class="refinery-base btn btn-default"
+          href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
+      {% endif %}
+    {% else %}
+        <p>No valid workflow.</p>
     {% endif %}
-	{% else %}
-	    <p>No valid workflow.</p>
-	{% endif %}
-	</div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block script %}
-<script src="{% static "vendor/d3-tip/index.js" %}"></script>
-<script type="text/javascript" src="{% static "js/refinery/core/workflow_visualization.js" %}"></script>
-<script>
-    workflowVisualizationModule.runWorkflowVisualization("{% url 'workflow-graph' workflow.uuid %}");
-</script>
+ <script type="text/javascript">
+    window.djangoApp.workflowUuid = "{{ workflow.uuid }}";
+  </script>
 {% endblock %}

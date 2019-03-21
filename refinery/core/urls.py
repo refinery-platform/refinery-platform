@@ -39,13 +39,8 @@ urlpatterns = patterns(
 
     url(r'^workflows/(?P<uuid>' + UUID_RE + r')/$',
         'workflow', name="workflow"),
-    url(r'^workflows/(?P<uuid>' + UUID_RE + r')/edit/$',
-        'workflow_edit', name="workflow_edit"),
     url(r'^workflows/(?P<slug>[a-zA-Z0-9\_]+)/$',
         'workflow_slug', name="workflow_slug"),
-
-    url(r'^workflow_engines/(?P<uuid>' + UUID_RE + r')/$',
-        'workflow_engine', name="workflow_engine"),
 
     url(r'^solr/core/select/$', 'solr_core_search', name="solr_core_search"),
 

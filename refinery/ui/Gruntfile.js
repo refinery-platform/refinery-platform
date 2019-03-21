@@ -152,12 +152,6 @@ module.exports = function (grunt) {
       ],
       uiTmp: [
         '<%= cfg.basePath.ui.tmp %>'
-      ],
-      staticBuild: [
-        '<%= cfg.basePath.static.build %>'
-      ],
-      staticCompile: [
-        '<%= cfg.basePath.static.compile %>'
       ]
     },
 
@@ -257,62 +251,6 @@ module.exports = function (grunt) {
             '<%= cfg.files.vendor.font %>'
           ],
           dest: '<%= cfg.basePath.ui.compile %>/vendor/'
-        }]
-      },
-      staticBuild: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/images/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.build %>/images/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/sample-files/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.build %>/sample-files/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/js/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.build %>/js/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/styles/font/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.build %>/styles/font/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/styles/img/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.build %>/styles/img/'
-        }]
-      },
-      staticCompile: {
-        files: [{
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/images/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.compile %>/images/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/sample-files/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.compile %>/sample-files/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/js/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.compile %>/js/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/styles/font/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.compile %>/styles/font/'
-        }, {
-          expand: true,
-          cwd: '<%= cfg.basePath.static.src %>/styles/img/',
-          src: ['**/*'],
-          dest: '<%= cfg.basePath.static.compile %>/styles/img/'
         }]
       }
     },
@@ -440,18 +378,6 @@ module.exports = function (grunt) {
         ),
         tasks: [
           'copy:uiBuildVendor'
-        ]
-      },
-
-      /*
-       * When static script files change we copy them over.
-       */
-      staticScripts: {
-        files: [
-          '<%= cfg.basePath.static.src %>/js/**/*.js'
-        ],
-        tasks: [
-          'newer:copy:staticBuild'
         ]
       },
 
@@ -608,8 +534,7 @@ module.exports = function (grunt) {
       compile: {
         options: {
           paths: [
-            '<%= cfg.basePath.ui.src %>/styles',
-            '<%= cfg.basePath.static.src %>/js/bootstrap/less'
+            '<%= cfg.basePath.ui.src %>/styles'
           ],
           plugins: [
             new (require('less-plugin-autoprefix'))({
@@ -804,14 +729,12 @@ module.exports = function (grunt) {
     'newer:eslint:sourceCode',
     'newer:eslint:gruntfile',
     'clean:uiBuild',
-    'clean:staticBuild',
     'newer:less:build',
     'newer:copy:uiBuildImages',
     'newer:copy:uiBuildSampleFiles',
     'newer:copy:uiBuildScripts',
     'newer:copy:uiBuildTemplates',
     'newer:copy:uiBuildVendor',
-    'newer:copy:staticBuild',
     'concat-by-feature:build'
   ]);
 
@@ -820,7 +743,6 @@ module.exports = function (grunt) {
     'env:compile',
     'eslint:sourceCode',
     'clean:uiCompile',
-    'clean:staticCompile',
     'less:compile',
     // IMPORTANT:
     // `concat-by-feature:compile` has to be called before `ngAnnotate` because
@@ -832,7 +754,6 @@ module.exports = function (grunt) {
     'copy:uiCompileSampleFiles',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
-    'copy:staticCompile',
     'clean:uiTmp',
     'jsdoc'
   ]);

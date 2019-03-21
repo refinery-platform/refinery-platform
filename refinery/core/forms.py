@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 
-from .models import UserProfile, Workflow
+from .models import UserProfile
 
 
 class RegistrationFormCustomFields(RegistrationForm):
@@ -72,9 +72,3 @@ class UserProfileForm(ModelForm):
     class Meta:
         model = UserProfile
         fields = ["affiliation"]
-
-
-class WorkflowForm(ModelForm):
-    class Meta:
-        model = Workflow
-        fields = ["name", "slug", "summary", "description", "is_active"]

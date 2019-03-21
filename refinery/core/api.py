@@ -38,7 +38,6 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from data_set_manager.api import InvestigationResource
 from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                      Invitation, Project, Tutorials, UserAuthentication,
                      UserProfile, Workflow)
@@ -529,15 +528,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 name='api_%s_get_all_ids' % (
                     self._meta.resource_name)
                 ),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
-                    self._meta.resource_name,
-                    UUID_RE,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_investigation'),
-                name='api_%s_get_investigation' % (
-                    self._meta.resource_name)
-                ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
                     UUID_RE,
@@ -689,20 +679,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         return self.create_response(request, return_obj)
 
-    def get_investigation(self, request, **kwargs):
-        try:
-            data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except (DataSet.DoesNotExist,
-                DataSet.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpGone()
-
-        # Assuming 1 to 1 relationship between DataSet and Investigation
-        return InvestigationResource().get_detail(
-            request,
-            uuid=data_set.get_investigation().uuid
-        )
-
     def get_assays(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
@@ -743,82 +719,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             request=request,
             data_set__uuid=kwargs['uuid']
         )
-
-
-class WorkflowResource(ModelResource, SharableResourceAPIInterface):
-    share_list = fields.ListField(attribute='share_list', null=True)
-    public = fields.BooleanField(attribute='public', null=True)
-    is_owner = fields.BooleanField(attribute='is_owner', null=True)
-    is_active = fields.BooleanField(attribute='is_active', null=True)
-
-    def __init__(self):
-        SharableResourceAPIInterface.__init__(self, Workflow)
-        ModelResource.__init__(self)
-
-    class Meta:
-        queryset = Workflow.objects.filter(is_active=True).order_by('name')
-        detail_resource_name = 'workflow'
-        resource_name = 'workflow'
-        detail_uri_name = 'uuid'
-        allowed_methods = ['get', 'patch']
-        fields = ['name', 'uuid', 'summary', 'is_active']
-        # authentication = SessionAuthentication()
-        # authorization = GuardianAuthorization()
-
-    def apply_sorting(self, obj_list, options=None):
-        """Same as dataSet sorting
-        """
-        if options and 'order_by' in options:
-            if options['order_by'][0] == '-':
-                reverse = True
-                sorting = options['order_by'][1:]
-            else:
-                reverse = False
-                sorting = options['order_by']
-        else:
-            # Default sorting
-            sorting = 'name'
-            reverse = False
-
-        obj_list.sort(
-            key=lambda x: getattr(x, sorting),
-            reverse=reverse
-        )
-
-        return obj_list
-
-    def prepend_urls(self):
-        return SharableResourceAPIInterface.prepend_urls(self)
-
-    def obj_get(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
-
-    def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(
-            self, bundle, **kwargs)
-
-    def get_object_list(self, request):
-        obj_list = SharableResourceAPIInterface.get_object_list(self, request)
-        return filter(lambda o: o.is_active, obj_list)
-
-    def obj_create(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
-
-    def dehydrate(self, bundle):
-        # detect if detail
-        if self.get_resource_uri(bundle) == bundle.request.path:
-            # detail detected, add graph as json
-            try:
-                bundle.data['graph'] = json.loads(bundle.obj.graph)
-            except ValueError:
-                logger.error(
-                    "Failed to decode workflow graph into dictionary for " +
-                    "workflow '%s'", str(bundle.obj))
-                # don't include in response if error occurs
-        bundle.data['author'] = bundle.obj.get_owner()
-        bundle.data['galaxy_instance_identifier'] = \
-            bundle.obj.workflow_engine.instance.api_key
-        return bundle
 
 
 class AnalysisResource(ModelResource):
