@@ -3,8 +3,7 @@ import json
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 
-from factory_boy.utils import (create_dataset_with_necessary_models,
-                               make_analyses_with_single_dataset)
+from factory_boy.utils import create_dataset_with_necessary_models
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
@@ -87,33 +86,6 @@ class DataSetResourceTest(LoginResourceTestCase):
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
-
-    def test_get_dataset_expecting_analyses(self):
-        analyses_to_create = 2
-        analyses, dataset = make_analyses_with_single_dataset(
-            analyses_to_create, self.user
-        )
-        dataset_uri = api_uri(DataSetResource, dataset.uuid)
-        response = self.api_client.get(dataset_uri, format='json')
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], dataset.uuid)
-        self.assertEqual(len(data['analyses']), analyses_to_create)
-
-        for analysis in data['analyses']:
-            self.assertEqual(analysis['owner'],
-                             UserProfile.objects.get(user=self.user).uuid)
-            self.assertIsNotNone(analysis.get('status'))
-            self.assertIsNotNone(analysis.get('name'))
-            self.assertIsNotNone(analysis.get('uuid'))
-
-    def test_get_dataset_expecting_no_analyses(self):
-        dataset_uri = api_uri(DataSetResource, self.tabular_dataset.uuid)
-        response = self.api_client.get(dataset_uri, format='json')
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
-        self.assertEqual(data['analyses'], [])
 
     def test_detail_response_with_complete_dataset(self):
         # Properly created DataSets will have version information
