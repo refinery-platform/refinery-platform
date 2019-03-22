@@ -61,6 +61,11 @@ class refinery::params (
     default => 'refinery',
   }
 
+  $data_volume_device_name = $deployment_platform ? {
+    'aws'   => $::data_volume_device_name,
+    default => undef,
+  }
+
   $project_root = $deployment_platform ? {
     'aws'   => '/srv/refinery-platform',
     default => "/${app_user}",
