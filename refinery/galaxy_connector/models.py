@@ -16,7 +16,6 @@ class Instance(models.Model):
     api_key = models.CharField(max_length=50)
     description = models.CharField(max_length=500, default="",
                                    null=True, blank=True)
-    local_download = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.description + " (" + self.api_key + ")"
