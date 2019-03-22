@@ -75,9 +75,7 @@
     // Ajax calls, grabs the analysis & files promises for a particular data set
     function getData () {
       var analysisParams = {
-        format: 'json',
-        limit: 0,
-        data_set__uuid: _dataSetUuid
+        dataSetUuid: _dataSetUuid
       };
 
       var filesParams = {
@@ -92,7 +90,7 @@
 
     function launchProvvis () {
       getData().then(function (response) {
-        analysesList = response[0].objects;
+        analysesList = response[0];
         var _solrResponse = response[1];
         runProvVisPrivate(_studyUuid, analysesList, _solrResponse);
       });

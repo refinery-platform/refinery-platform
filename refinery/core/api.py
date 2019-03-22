@@ -3,8 +3,6 @@ Created on May 4, 2012
 
 @author: nils
 '''
-
-import ast
 from datetime import timedelta
 import json
 import logging
@@ -27,10 +25,10 @@ from guardian.models import GroupObjectPermission
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user
 from guardian.utils import get_anonymous_user
 from tastypie import fields
-from tastypie.authentication import Authentication, SessionAuthentication
+from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
-from tastypie.constants import ALL, ALL_WITH_RELATIONS
+from tastypie.constants import ALL
 from tastypie.exceptions import ImmediateHttpResponse, NotFound
 from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
                            HttpForbidden, HttpGone, HttpMethodNotAllowed,
@@ -38,9 +36,8 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                     Invitation, Project, Tutorials, UserAuthentication,
-                     UserProfile, Workflow)
+from .models import (DataSet, ExtendedGroup, GroupManagement, Invitation,
+                     Project, UserAuthentication, Workflow)
 from .utils import get_resources_for_user, which_default_read_perm
 
 logger = logging.getLogger(__name__)
@@ -369,57 +366,6 @@ class SharableResourceAPIInterface(object):
         return HttpMethodNotAllowed()
 
 
-class UserResource(ModelResource):
-    class Meta:
-        queryset = User.objects.all()
-        allowed_methods = ['get']
-        excludes = ('is_active', 'is_staff', 'is_superuser', 'last_login',
-                    'password', 'date_joined')
-
-
-class UserProfileResource(ModelResource):
-    user = fields.ForeignKey(UserResource, 'user', full=True)
-
-    class Meta:
-        queryset = UserProfile.objects.all()
-        allowed_methods = ['get', 'put']
-        detail_uri_name = 'uuid'
-        resource_name = 'users'
-        authentication = Authentication()
-        authorization = Authorization()
-
-    # Handle PUT requests for updating a User's tutorial views
-    def obj_update(self, bundle, **kwargs):
-        try:
-            userprofile = UserProfile.objects.get(uuid=kwargs[u'uuid'])
-            user = userprofile.user
-        except (UserProfile.DoesNotExist,
-                UserProfile.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch UserProfile: %s", e)
-            return HttpNoContent
-
-        # User not authenticated
-        if not user.is_authenticated():
-            return HttpUnauthorized()
-
-        try:
-            t = Tutorials.objects.get(user_profile=userprofile)
-        except (Tutorials.DoesNotExist,
-                Tutorials.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Tutorial: %s", e)
-            return HttpNoContent
-
-        # Update User's Tutorials based on payload received
-        if bundle.data["collab_viewed"]:
-            t.collaboration_tutorial_viewed = bundle.data["collab_viewed"]
-        if bundle.data["upload_viewed"]:
-            t.data_upload_tutorial_viewed = bundle.data["upload_viewed"]
-
-        t.save()
-
-        return HttpAccepted
-
-
 class DataSetResource(SharableResourceAPIInterface, ModelResource):
     id_regex = '[0-9]+'
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -469,17 +415,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         else:
             bundle.data["pre_isa_archive"] = metadata_file_store_item.uuid
 
-        analyses = [
-            dict(
-                uuid=analysis.uuid,
-                name=analysis.name,
-                status=analysis.status,
-                owner=analysis.get_owner().profile.uuid
-            )
-            for analysis in bundle.obj.get_analyses()
-        ]
-
-        bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["date"] = investigation_link.date
         bundle.data["modification_date"] = bundle.obj.modification_date
@@ -528,24 +463,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 name='api_%s_get_all_ids' % (
                     self._meta.resource_name)
                 ),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
-                    self._meta.resource_name,
-                    UUID_RE,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_assays'),
-                name='api_%s_get_studies' % (
-                    self._meta.resource_name
-                )),
-            url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
-                    self._meta.resource_name,
-                    UUID_RE,
-                    trailing_slash()
-                ),
-                self.wrap_view('get_analyses'),
-                name='api_%s_get_analyses' % (
-                    self._meta.resource_name
-                )),
             url(r'^(?P<resource_name>%s)/(?P<id>%s)%s$' % (
                     self._meta.resource_name,
                     self.id_regex,
@@ -707,130 +624,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             }
         )
 
-    def get_analyses(self, request, **kwargs):
-        try:
-            DataSet.objects.get(uuid=kwargs['uuid'])
-        except (DataSet.DoesNotExist,
-                DataSet.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpGone()
-
-        return AnalysisResource().get_list(
-            request=request,
-            data_set__uuid=kwargs['uuid']
-        )
-
-
-class AnalysisResource(ModelResource):
-    data_set = fields.ToOneField(DataSetResource, 'data_set', use_in='all')
-    uuid = fields.CharField(attribute='uuid', use_in='all')
-    name = fields.CharField(attribute='name', use_in='all')
-    data_set__uuid = fields.CharField(attribute='data_set__uuid', use_in='all')
-    workflow__uuid = fields.CharField(attribute='workflow__uuid', use_in='all')
-    creation_date = fields.CharField(attribute='creation_date', use_in='all')
-    modification_date = fields.CharField(
-        attribute='modification_date',
-        use_in='all'
-    )
-    workflow_steps_num = fields.IntegerField(
-        attribute='workflow_steps_num', blank=True, null=True, use_in='all')
-    workflow_copy = fields.CharField(
-        attribute='workflow_copy', blank=True, null=True, use_in='all')
-    history_id = fields.CharField(
-        attribute='history_id', blank=True, null=True, use_in='all')
-    workflow_galaxy_id = fields.CharField(
-        attribute='workflow_galaxy_id', blank=True, null=True, use_in='all')
-    library_id = fields.CharField(
-        attribute='library_id', blank=True, null=True, use_in='all')
-    time_start = fields.DateTimeField(
-        attribute='time_start', blank=True, null=True, use_in='all')
-    time_end = fields.DateTimeField(
-        attribute='time_end', blank=True, null=True, use_in='all')
-    status = fields.CharField(
-        attribute='status', default=Analysis.INITIALIZED_STATUS, blank=True,
-        null=True, use_in='all')
-
-    class Meta:
-        queryset = Analysis.objects.all()
-        resource_name = Analysis._meta.model_name
-        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
-        # required for public data set access by anonymous users
-        authentication = Authentication()
-        authorization = Authorization()
-        allowed_methods = ["get"]
-        fields = [
-            'data_set', 'data_set__uuid', 'creation_date',
-            'modification_date', 'history_id', 'library_id', 'name',
-            'workflow__uuid', 'resource_uri', 'status', 'time_end',
-            'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy', 'owner', 'is_owner',
-            'facet_name'
-        ]
-
-        filtering = {
-            'data_set': ALL_WITH_RELATIONS,
-            'workflow_steps_num': ALL_WITH_RELATIONS,
-            'data_set__uuid': ALL,
-            'status': ALL,
-            'uuid': ALL
-        }
-        ordering = ['name', 'creation_date', 'time_start', 'time_end']
-
-    def dehydrate(self, bundle):
-        bundle.data['facet_name'] = bundle.obj.facet_name()
-
-        # owner
-        bundle.data['is_owner'] = False
-        owner = bundle.obj.get_owner()
-        if owner:
-            try:
-                bundle.data['owner'] = owner.profile.uuid
-                user = bundle.request.user
-                if (hasattr(user, 'profile') and
-                        user.profile.uuid == bundle.data['owner']):
-                    bundle.data['is_owner'] = True
-            except:
-                bundle.data['owner'] = None
-        else:
-            bundle.data['owner'] = None
-
-        workflow_dict = None
-        try:
-            workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
-        except ValueError, exc:
-            # TODO: Remove this and just let any errors bubble up.
-            # I don't think I should do that at this moment because
-            # I shouldn't make production any fussier about values
-            # in DB than it is right now.
-            logger.warn(
-                '%s: Cannot parse workflow as python repr: %s',
-                exc, bundle.data['workflow_copy']
-            )
-        if workflow_dict:
-            workflow_json = json.dumps(workflow_dict)
-            bundle.data['workflow_json'] = workflow_json
-
-        return bundle
-
-    def get_object_list(self, request, **kwargs):
-        user = request.user
-        perm = 'read_meta_%s' % DataSet._meta.model_name
-        if (user.is_authenticated()):
-            allowed_datasets = get_objects_for_user(user, perm, DataSet)
-        else:
-            allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(), perm, DataSet
-            )
-
-        return Analysis.objects.filter(
-            data_set__in=allowed_datasets.values_list("id", flat=True)
-        )
-
-    def alter_list_data_to_serialize(self, request, data):
-        if request.GET.get('meta_only'):
-            return {'meta': data['meta']}
-        return data
-
 
 class GroupManagementResource(Resource):
     group_id = fields.IntegerField(attribute='group_id', null=True)
@@ -930,7 +723,6 @@ class GroupManagementResource(Resource):
             lambda r: r['read'],
             map(lambda r: self.get_perms(r, group), Workflow.objects.all()))
         # workflow_engine_perms = map(f, WorkflowEngine.objects.all())
-        # analysis_perms = map(f, Analysis.objects.all())
         # download_perms = map(f, Download.objects.all())
         return dataset_perms + project_perms + workflow_perms
 

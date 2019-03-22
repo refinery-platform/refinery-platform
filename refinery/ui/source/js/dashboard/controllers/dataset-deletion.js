@@ -6,23 +6,15 @@ function DataSetDeleteCtrl (
   $uibModalInstance,
   _,
   deletionService,
-  dashboardDataSetsReloadService,
   config,
-  dataSet,
-  dataSets,
-  analyses,
-  analysesReloadService
+  dataSet
 ) {
   this.$log = $log;
   this._ = _;
   this.config = config;
   this.dataSet = dataSet;
-  this.dataSets = dataSets;
-  this.analyses = analyses;
   this.$uibModalInstance = $uibModalInstance;
   this.deletionService = deletionService;
-  this.analysesReloadService = analysesReloadService;
-  this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.userProfileUuid = settings.djangoApp.userprofileUUID;
 }
 
@@ -72,10 +64,6 @@ DataSetDeleteCtrl.prototype.delete = function () {
     })
     .finally(function () {
       vm.isDeleting = false;
-      vm.dataSets.newOrCachedCache(undefined, true);
-      vm.dashboardDataSetsReloadService.reload(true);
-      vm.analyses.newOrCachedCache(undefined, true);
-      vm.analysesReloadService.reload();
     });
 };
 
@@ -87,11 +75,7 @@ angular
     '$uibModalInstance',
     '_',
     'deletionService',
-    'dashboardDataSetsReloadService',
     'config',
     'dataSet',
-    'dataSets',
-    'analyses',
-    'analysesReloadService',
     DataSetDeleteCtrl
   ]);

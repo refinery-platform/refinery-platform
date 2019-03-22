@@ -13,14 +13,18 @@ logger = logging.getLogger(__name__)
 
 class AnalysisSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField()
+    data_set_uuid = serializers.SerializerMethodField()
 
     class Meta:
         model = Analysis
         fields = ('name', 'owner', 'status', 'summary', 'time_start',
-                  'time_end', 'uuid', 'workflow')
+                  'time_end', 'uuid', 'workflow', 'data_set_uuid')
 
     def get_owner(self, analysis):
         return UserSerializer(analysis.get_owner()).data
+
+    def get_data_set_uuid(self, analysis):
+        return analysis.data_set.uuid
 
 
 class DataSetSerializer(serializers.ModelSerializer):

@@ -52,26 +52,6 @@ describe('Controller: AnalysisMonitorCtrl', function () {
       expect(typeof ctrl.timerList).toBeDefined();
       expect(mockAnalysesFlag).toEqual(true);
     });
-
-    it('updateAnalysesRunningList is method', function () {
-      expect(angular.isFunction(ctrl.updateAnalysesRunningList)).toBe(true);
-    });
-
-    it('updateAnalysesRunningList sets timer and returns promise', function () {
-      var mockAnalysesRunningFlag = false;
-      spyOn(factory, 'getAnalysesList').and.callFake(function () {
-        return {
-          then: function () {
-            mockAnalysesRunningFlag = true;
-          }
-        };
-      });
-
-      expect(typeof ctrl.timerRunList).toEqual('undefined');
-      ctrl.updateAnalysesRunningList();
-      expect(typeof ctrl.timerRunList).toBeDefined();
-      expect(mockAnalysesRunningFlag).toEqual(true);
-    });
   });
 
   describe('Canceling Analyses', function () {
@@ -160,22 +140,25 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
 
     it('refreshAnalysesDetail method calls update Analyses Detail', function () {
-      factory.analysesRunningList = [
+      ctrl.analysesList = [
         {
-          uuid: 'xxx0'
+          uuid: 'xxx0',
+          status: 'RUNNING'
         },
         {
-          uuid: 'xxx1'
+          uuid: 'xxx1',
+          status: 'RUNNING'
         },
         {
-          uuid: 'xxx2'
+          uuid: 'xxx2',
+          status: 'RUNNING'
         }
       ];
       spyOn(ctrl, 'updateAnalysesDetail').and.returnValue(true);
       ctrl.refreshAnalysesDetail();
-      expect(ctrl.analysesRunningList).toEqual(factory.analysesRunningList);
+      expect(ctrl.analysesRunningList).toEqual(ctrl.analysesList);
       expect(ctrl.updateAnalysesDetail.calls.count())
-        .toEqual(factory.analysesRunningList.length);
+        .toEqual(ctrl.analysesList.length);
     });
 
     it('cancelTimerRunningList method is function', function () {
