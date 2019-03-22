@@ -11,7 +11,7 @@ from tastypie.api import Api
 from config.utils import RouterCombiner
 from core.api import (DataSetResource, ExtendedGroupResource,
                       GroupManagementResource, InvitationResource,
-                      UserAuthenticationResource, UserProfileResource)
+                      UserAuthenticationResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
@@ -33,7 +33,6 @@ v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())
 v1_api.register(ExtendedGroupResource())
-v1_api.register(UserProfileResource())
 
 
 # patterns for all of the different applications

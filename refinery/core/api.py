@@ -25,7 +25,7 @@ from guardian.models import GroupObjectPermission
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user
 from guardian.utils import get_anonymous_user
 from tastypie import fields
-from tastypie.authentication import Authentication, SessionAuthentication
+from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL
@@ -37,8 +37,7 @@ from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
 from .models import (DataSet, ExtendedGroup, GroupManagement, Invitation,
-                     Project, Tutorials, UserAuthentication, UserProfile,
-                     Workflow)
+                     Project, UserAuthentication, Workflow)
 from .utils import get_resources_for_user, which_default_read_perm
 
 logger = logging.getLogger(__name__)
@@ -365,57 +364,6 @@ class SharableResourceAPIInterface(object):
             res_list = self._build_res_list(request.user)
             return self.process_get_list(request, res_list, **kwargs)
         return HttpMethodNotAllowed()
-
-
-class UserResource(ModelResource):
-    class Meta:
-        queryset = User.objects.all()
-        allowed_methods = ['get']
-        excludes = ('is_active', 'is_staff', 'is_superuser', 'last_login',
-                    'password', 'date_joined')
-
-
-class UserProfileResource(ModelResource):
-    user = fields.ForeignKey(UserResource, 'user', full=True)
-
-    class Meta:
-        queryset = UserProfile.objects.all()
-        allowed_methods = ['get', 'put']
-        detail_uri_name = 'uuid'
-        resource_name = 'users'
-        authentication = Authentication()
-        authorization = Authorization()
-
-    # Handle PUT requests for updating a User's tutorial views
-    def obj_update(self, bundle, **kwargs):
-        try:
-            userprofile = UserProfile.objects.get(uuid=kwargs[u'uuid'])
-            user = userprofile.user
-        except (UserProfile.DoesNotExist,
-                UserProfile.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch UserProfile: %s", e)
-            return HttpNoContent
-
-        # User not authenticated
-        if not user.is_authenticated():
-            return HttpUnauthorized()
-
-        try:
-            t = Tutorials.objects.get(user_profile=userprofile)
-        except (Tutorials.DoesNotExist,
-                Tutorials.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Tutorial: %s", e)
-            return HttpNoContent
-
-        # Update User's Tutorials based on payload received
-        if bundle.data["collab_viewed"]:
-            t.collaboration_tutorial_viewed = bundle.data["collab_viewed"]
-        if bundle.data["upload_viewed"]:
-            t.data_upload_tutorial_viewed = bundle.data["upload_viewed"]
-
-        t.save()
-
-        return HttpAccepted
 
 
 class DataSetResource(SharableResourceAPIInterface, ModelResource):
