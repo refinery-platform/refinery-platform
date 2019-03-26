@@ -41,11 +41,10 @@ Thumbs.db
 .idea/
 .project
 .pydevproject
-/refinery/*.pid
-/refinery/solr/*/data
-/refinery/solr/lib/
+*.pid
 /refinery/solr/*/conf/custom-synonyms.txt
 /refinery/solr/**/conf/solrconfig.xml
+/refinery/solr/lib/
 supervisord.conf
 codekit-config.json
 .vagrant/

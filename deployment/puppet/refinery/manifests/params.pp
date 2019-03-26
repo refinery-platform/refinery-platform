@@ -75,34 +75,19 @@ class refinery::params (
 
   $ui_app_root = "${django_root}/ui"
 
-  $data_dir = $deployment_platform ? {
-    'aws'   => '/data',
-    default => "${project_root}",
-  }
+  $data_dir = '/data'
 
   $import_dir = $deployment_platform ? {
-    'aws'   => undef,
-    default => "${data_dir}/import",
+    'aws'   => undef,  # user data files are uploaded directly to S3 on AWS
+    default => "${project_root}/import",
   }
 
-  $media_root = "${data_dir}/media"
+  $media_root = $deployment_platform ? {
+    'aws'   => "${data_dir}/media",
+    default => "${project_root}/media",
+  }
 
   $file_store_root = "${media_root}/file_store"
-
-  $solr_data_dir = $deployment_platform ? {
-    'aws'   => "${data_dir}/solr",
-    default => undef,
-  }
-
-  $solr_data_set_manager_data = $deployment_platform ? {
-    'aws'   => "${solr_data_dir}/data_set_manager",
-    default => undef,
-  }
-
-  $solr_core_data = $deployment_platform ? {
-    'aws'   => "${solr_data_dir}/core",
-    default => undef,
-  }
 
   $solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
 
