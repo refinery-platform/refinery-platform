@@ -64,7 +64,7 @@ variable "rds_master_user_password" {
 
 variable "app_server_instance_type" {
   description = "EC2 instance type of the main host"
-  default     = "m3.medium"
+  default     = "t2.medium"
 }
 
 variable "app_server_instance_count" {
