@@ -965,7 +965,6 @@ class GroupViewSet(viewsets.ViewSet):
 
     def partial_update(self, request, uuid, format=None):
         data_set_uuid = request.data.get('dataSetUuid')
-        # access groups only when superuser, public, or member?
         group = self.get_object(uuid)
 
         data_set = get_data_set_for_view_set(data_set_uuid)
@@ -986,9 +985,7 @@ class GroupViewSet(viewsets.ViewSet):
         serializer = ExtendedGroupSerializer(group,
                                              context={'data_set': data_set})
 
-        return Response(
-            serializer.data, status=status.HTTP_202_ACCEPTED
-        )
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 class CustomRegistrationView(RegistrationView):

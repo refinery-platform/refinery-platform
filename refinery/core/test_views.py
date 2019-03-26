@@ -931,7 +931,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertEqual(True, response_perms.get('read'))
         self.assertEqual(True, response_perms.get('read_meta'))
 
-    def test_get_groups_with_data_set_uuid_and_all_perms_all_groups(self):
+    def test_get_groups_with_data_set_uuid_and_all_perms_returns_groups(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid,
