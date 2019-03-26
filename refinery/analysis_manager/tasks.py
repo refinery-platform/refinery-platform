@@ -482,18 +482,11 @@ def _get_galaxy_download_task_ids(analysis):
 
             # size of file defined by galaxy
             file_size = results['file_size']
-            # Determining tag if galaxy results should be download through
-            # http or copying files directly to retrieve HTML files as zip
-            # archives via dataset URL
-            if galaxy_instance.local_download and file_extension != 'html':
-                download_url = results['file_name']
-            else:
-                download_url = urlparse.urljoin(
-                        galaxy_instance.base_url, '/'.join(
-                                ['datasets', str(results['dataset_id']),
-                                 'display?to_ext=txt']))
 
-            file_store_item = FileStoreItem(source=download_url)
+            file_store_item = FileStoreItem(source=urlparse.urljoin(
+                galaxy_instance.base_url,
+                "datasets/{}/display?to_ext=txt".format(results['dataset_id'])
+            ))
 
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
