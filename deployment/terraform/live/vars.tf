@@ -174,7 +174,7 @@ variable "refinery_google_recaptcha_secret_key" {
 
 variable "refinery_s3_user_data" {
   description = "Whether or not to use S3 as user data file storage backend"
-  default     = "false"
+  default     = "true"
 }
 
 variable "refinery_user_files_columns" {

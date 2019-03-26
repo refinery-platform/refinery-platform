@@ -66,6 +66,11 @@ class refinery::params (
     default => undef,
   }
 
+  $refinery_s3_user_data = $deployment_platform ? {
+    'aws'   => $::refinery_s3_user_data,
+    default => 'false',
+  }
+
   $project_root = $deployment_platform ? {
     'aws'   => '/srv/refinery-platform',
     default => "/${app_user}",
