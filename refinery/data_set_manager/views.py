@@ -33,7 +33,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
-from core.utils import get_absolute_url
+from core.utils import get_absolute_url, get_data_set_for_view_set
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
@@ -855,7 +855,7 @@ class AssaysFiles(APIView):
         data_set_uuid = params.get('data_set_uuid', None)
         # requires data_set_uuid to check perms
         if data_set_uuid:
-            data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+            data_set = get_data_set_for_view_set(data_set_uuid)
             public_group = ExtendedGroup.objects.public_group()
 
             if request.user.has_perm('core.read_dataset', data_set) or \
@@ -1317,13 +1317,7 @@ class StudiesView(APIView):
                 "retrieving related studies."
             )
 
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except DataSet.DoesNotExist as e:
-            return HttpResponseNotFound(e)
-        except DataSet.MultipleObjectsReturned as e:
-            return HttpResponseServerError(e)
-
+        data_set = get_data_set_for_view_set(data_set_uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):

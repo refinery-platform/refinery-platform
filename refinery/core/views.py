@@ -593,16 +593,6 @@ class DataSetsViewSet(viewsets.ViewSet):
     http_method_names = ['get', 'delete', 'patch']
     lookup_field = 'uuid'
 
-    def get_object(self, uuid):
-        try:
-            return DataSet.objects.get(uuid=uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple objects returned.")
-
     def list(self, request):
         params = request.query_params
         paginator = LimitOffsetPagination()
@@ -690,7 +680,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         'total_data_sets': total_data_sets})
 
     def retrieve(self, request, uuid):
-        data_set = self.get_object(uuid)
+        data_set = data_set = get_data_set_for_view_set(uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
@@ -738,7 +728,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def partial_update(self, request, uuid, format=None):
-        self.data_set = self.get_object(uuid)
+        self.data_set = get_data_set_for_view_set(uuid)
         self.current_site = get_current_site(request)
 
         # check edit permission for user
@@ -878,14 +868,7 @@ class AnalysisViewSet(APIView):
             serializer = AnalysisSerializer(paged_analyses, many=True)
             return Response(serializer.data)
 
-        # query with dataSetUuid
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except DataSet.DoesNotExist as e:
-            return HttpResponseNotFound(e)
-        except DataSet.MultipleObjectsReturned as e:
-            return HttpResponseServerError(e)
-
+        data_set = get_data_set_for_view_set(data_set_uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
