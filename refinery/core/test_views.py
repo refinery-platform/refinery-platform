@@ -852,6 +852,7 @@ class GroupApiV2Tests(APIV2TestCase):
         super(GroupApiV2Tests, self).setUp(
             api_base_name="groups/", view=GroupViewSet.as_view({'get': 'list'})
         )
+        self.patch_view = GroupViewSet.as_view({'patch': 'partial_update'})
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.group = ExtendedGroup.objects.create(name="Test Group")
         self.group_2 = ExtendedGroup.objects.create(name="Test Group 2")
@@ -925,10 +926,160 @@ class GroupApiV2Tests(APIV2TestCase):
                                        {'dataSetUuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
-        response_perms = get_response.data[0].get('perms')
+        response_perms = get_response.data[0].get('perm_list')
         self.assertEqual(False, response_perms.get('change'))
         self.assertEqual(True, response_perms.get('read'))
         self.assertEqual(True, response_perms.get('read_meta'))
+
+    def test_get_groups_with_data_set_uuid_and_all_perms_all_groups(self):
+        self.data_set.unshare(self.group_2)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid,
+                                        'allPerms': True})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        # public plus the two groups created in set-up
+        self.assertEqual(len(get_response.data), 3)
+
+    def test_get_groups_with_data_set_uuid_and_all_perms_returns_perms(self):
+        self.data_set.unshare(self.group_2)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid,
+                                        'allPerms': True})
+        get_request.user = self.user
+        get_response = self.view(get_request)
+
+        for group in get_response.data:
+            response_perms = group.get('perm_list')
+            if (group.get('id') == self.group.id):
+                self.assertEqual(False, response_perms.get('change'))
+                self.assertEqual(True, response_perms.get('read'))
+                self.assertEqual(True, response_perms.get('read_meta'))
+            else:
+                self.assertEqual(False, response_perms.get('change'))
+                self.assertEqual(False, response_perms.get('read'))
+                self.assertEqual(False, response_perms.get('read_meta'))
+
+    def test_get_groups_for_anon_with_all_perms_returns_empty_list(self):
+        public_group = ExtendedGroup.objects.public_group()
+        self.data_set.share(public_group)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid,
+                                        'allPerms': True})
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data, [])
+
+    def test_patch_groups_updates_change_field(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': True,
+                           'read': True,
+                           'read_meta': True},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.data.get('perm_list').get('change'),
+                         True)
+
+    def test_patch_groups_updates_read_field(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': False,
+                           'read': False,
+                           'read_meta': True},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.data.get('perm_list').get('read'),
+                         False)
+        self.assertEqual(patch_response.data.get('perm_list').get('read_meta'),
+                         True)
+
+    def test_patch_groups_updates_read_meta_field(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': False,
+                           'read': False,
+                           'read_meta': False},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.data.get('perm_list').get('read_meta'),
+                         False)
+
+    def test_patch_groups_updates_based_on_highest_perm_field(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': True,
+                           'read': False,
+                           'read_meta': False},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.data.get('perm_list').get('change'),
+                         True)
+        self.assertEqual(patch_response.data.get('perm_list').get('read'),
+                         True)
+        self.assertEqual(patch_response.data.get('perm_list').get('read_meta'),
+                         True)
+
+    def test_patch_groups_only_allows_owners_and_returns_401(self):
+        self.non_owner = User.objects.create_user('Non-owner',
+                                                  'user@fake.com',
+                                                  self.password)
+        self.group.user_set.add(self.non_owner)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': True,
+                           'read': False,
+                           'read_meta': False},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.non_owner)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 401)
+
+    def test_patch_groups_invalid_data_set_uuid_returns_404(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': 'xxxxxx',
+             'perm_list': {'change': True,
+                           'read': False,
+                           'read_meta': False},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 404)
+
+    def test_patch_groups_invalid_group_uuid_returns_404(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, 'xxxxx5'),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': True,
+                           'read': False,
+                           'read_meta': False},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, 'xxxx5')
+        self.assertEqual(patch_response.status_code, 404)
 
 
 class AnalysisApiV2Tests(APIV2TestCase):

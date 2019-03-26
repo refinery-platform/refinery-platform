@@ -966,8 +966,8 @@ class GroupViewSet(viewsets.ViewSet):
             )
         return Response(serializer.data)
 
-    def partial_update(self, request, uuid):
-        data_set_uuid = request.query_params.get('dataSetUuid')
+    def partial_update(self, request, uuid, format=None):
+        data_set_uuid = request.data.get('dataSetUuid')
         # access groups only when superuser, public, or member?
         try:
             group = ExtendedGroup.objects.get(uuid=uuid)
@@ -1001,9 +1001,7 @@ class GroupViewSet(viewsets.ViewSet):
                 content="Multiple dataSets returned for this request"
             )
 
-        public_group = ExtendedGroup.objects.public_group()
-        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
-                request.user.has_perm('core.read_meta_dataset', data_set)):
+        if data_set.get_owner() != request.user:
             return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
 
         group_perm_update = request.data.get('perm_list')
