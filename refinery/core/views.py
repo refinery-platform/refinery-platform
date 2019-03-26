@@ -61,7 +61,7 @@ from .serializers import (AnalysisSerializer, DataSetSerializer,
                           SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
-                    get_non_manager_groups_for_user)
+                    get_data_set_for_view_set, get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -928,24 +928,21 @@ class GroupViewSet(viewsets.ViewSet):
     http_method_names = ['get', 'patch']
     lookup_field = 'uuid'
 
+    def get_object(self, uuid):
+        try:
+            return ExtendedGroup.objects.get(uuid=uuid)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
+
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
         all_perms_flag = request.query_params.get('allPerms', False)
 
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            return HttpResponseNotFound(
-                 content="DataSet with UUID: {} not found.".format(
-                     data_set_uuid
-                 )
-             )
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            return HttpResponseServerError(
-                content="Multiple dataSets returned for this request"
-            )
+        data_set = get_data_set_for_view_set(data_set_uuid)
 
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
@@ -969,38 +966,9 @@ class GroupViewSet(viewsets.ViewSet):
     def partial_update(self, request, uuid, format=None):
         data_set_uuid = request.data.get('dataSetUuid')
         # access groups only when superuser, public, or member?
-        try:
-            group = ExtendedGroup.objects.get(uuid=uuid)
-        except ExtendedGroup.DoesNotExist as e:
-            logger.error(e)
-            return HttpResponseNotFound(
-                content="Group with uuid: {} not found.".format(uuid)
-            )
-        except ExtendedGroup.MultipleObjectsReturned as e:
-            logger.error(e)
-            return HttpResponseServerError(
-                content="Multiple groups returned for this request"
-            )
+        group = self.get_object(uuid)
 
-        if data_set_uuid is None:
-            serializer = ExtendedGroupSerializer(group)
-            return Response(serializer.data)
-
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            return HttpResponseNotFound(
-                content="DataSet with UUID: {} not found.".format(
-                    data_set_uuid
-                )
-            )
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            return HttpResponseServerError(
-                content="Multiple dataSets returned for this request"
-            )
-
+        data_set = get_data_set_for_view_set(data_set_uuid)
         if data_set.get_owner() != request.user:
             return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
 

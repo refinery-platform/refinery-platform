@@ -13,6 +13,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import connection
+from django.http import Http404
 from django.utils import timezone
 
 from celery.task import task
@@ -20,6 +21,7 @@ from guardian.shortcuts import get_objects_for_user
 from guardian.utils import get_anonymous_user
 import py2neo
 import requests
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 
 import constants
@@ -1031,3 +1033,14 @@ def verify_recaptcha(view_function):
                 request.recaptcha_is_valid = True
         return view_function(request, *args, **kwargs)
     return _wrapped_view
+
+
+def get_data_set_for_view_set(uuid):
+    try:
+        return core.models.DataSet.objects.get(uuid=uuid)
+    except core.models.DataSet.DoesNotExist as e:
+        logger.error(e)
+        raise Http404
+    except core.models.DataSet.MultipleObjectsReturned as e:
+        logger.error(e)
+        raise APIException("Multiple dataSets returned for this request.")
