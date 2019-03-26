@@ -53,11 +53,11 @@ from data_set_manager.models import Attribute
 
 from .forms import UserForm, UserProfileForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, SiteProfile,
-                     SiteStatistics, SiteVideo, UserProfile, Workflow)
+                     ExtendedGroup, Invitation, SiteProfile, SiteStatistics,
+                     SiteVideo, UserProfile, Workflow)
 
 from .serializers import (AnalysisSerializer, DataSetSerializer,
-                          EventSerializer, GroupSerializer,
+                          EventSerializer, ExtendedGroupSerializer,
                           SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
@@ -925,10 +925,13 @@ class AnalysisViewSet(APIView):
 
 class GroupViewSet(viewsets.ViewSet):
     """API endpoint for viewing groups."""
-    http_method_names = ['get']
+    http_method_names = ['get', 'patch']
+    lookup_field = 'uuid'
 
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
+        all_perms_flag = request.query_params.get('allPerms', False)
+
         try:
             data_set = DataSet.objects.get(uuid=data_set_uuid)
         except DataSet.DoesNotExist as e:
@@ -949,12 +952,77 @@ class GroupViewSet(viewsets.ViewSet):
                 request.user.has_perm('core.read_meta_dataset', data_set)):
             return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        groups_with_perms = get_groups_with_perms(data_set)
-
-        serializer = GroupSerializer(groups_with_perms, many=True,
-                                     context={'data_set': data_set})
-
+        if all_perms_flag:
+            member_groups = [group for group in ExtendedGroup.objects.all()
+                             if request.user in group.user_set.all() and
+                             not group.is_manager_group()]
+            serializer = ExtendedGroupSerializer(
+                member_groups, many=True, context={'data_set': data_set}
+            )
+        else:
+            groups_with_perms = get_groups_with_perms(data_set)
+            serializer = ExtendedGroupSerializer(
+                groups_with_perms, many=True, context={'data_set': data_set}
+            )
         return Response(serializer.data)
+
+    def partial_update(self, request, uuid):
+        data_set_uuid = request.query_params.get('dataSetUuid')
+        # access groups only when superuser, public, or member?
+        try:
+            group = ExtendedGroup.objects.get(uuid=uuid)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(
+                content="Group with uuid: {} not found.".format(uuid)
+            )
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple groups returned for this request"
+            )
+
+        if data_set_uuid is None:
+            serializer = ExtendedGroupSerializer(group)
+            return Response(serializer.data)
+
+        try:
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(
+                content="DataSet with UUID: {} not found.".format(
+                    data_set_uuid
+                )
+            )
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple dataSets returned for this request"
+            )
+
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        group_perm_update = request.data.get('perm_list')
+        # remove all perms
+        data_set.unshare(group)
+        if group_perm_update.get('change'):
+            # fields for share method: read_only, read_meta only
+            data_set.share(group, False, False)
+        elif group_perm_update.get('read'):
+            data_set.share(group, True, False)
+        elif group_perm_update.get('read_meta'):
+            data_set.share(group, False, True)
+
+        serializer = ExtendedGroupSerializer(group,
+                                             context={'data_set': data_set})
+
+        return Response(
+            serializer.data, status=status.HTTP_202_ACCEPTED
+        )
 
 
 class CustomRegistrationView(RegistrationView):
