@@ -680,7 +680,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         'total_data_sets': total_data_sets})
 
     def retrieve(self, request, uuid):
-        data_set = data_set = get_data_set_for_view_set(uuid)
+        data_set = get_data_set_for_view_set(uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
