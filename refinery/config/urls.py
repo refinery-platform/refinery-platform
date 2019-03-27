@@ -9,9 +9,8 @@ from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 
 from config.utils import RouterCombiner
-from core.api import (DataSetResource, ExtendedGroupResource,
-                      GroupManagementResource, InvitationResource,
-                      UserAuthenticationResource)
+from core.api import (ExtendedGroupResource, GroupManagementResource,
+                      InvitationResource, UserAuthenticationResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
@@ -28,7 +27,6 @@ logger = logging.getLogger(__name__)
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
 
-v1_api.register(DataSetResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
 v1_api.register(InvitationResource())

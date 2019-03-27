@@ -15,12 +15,17 @@
 
   function groupService ($resource, settings) {
     var groups = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/groups/',
-      {},
+      settings.appRoot + settings.refineryApiV2 + '/groups/:uuid/',
+      {
+        uuid: '@uuid'
+      },
       {
         query: {
           method: 'GET',
           isArray: true,
+        },
+        partial_update: {
+          method: 'PATCH'
         }
       }
     );
