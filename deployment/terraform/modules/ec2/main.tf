@@ -155,7 +155,7 @@ set -x
 
 # install dependencies
 /usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -y autoremove
-/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev
+/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev tree
 
 # add extra SSH keys from Github
 for USERNAME in ${join(" ", var.ssh_users)}; do
