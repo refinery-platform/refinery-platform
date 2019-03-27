@@ -74,12 +74,6 @@ function AnalysisMonitorCtrl (
     }
   };
 
-  vm.cancelTimerRunningList = function () {
-    if (typeof vm.timerRunList !== 'undefined') {
-      $timeout.cancel(vm.timerRunList);
-    }
-  };
-
   /**
    * @name getRunningAnalyses
    * @desc  Helper function to update running analyses with details
