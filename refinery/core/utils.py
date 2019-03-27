@@ -17,8 +17,6 @@ from django.http import Http404
 from django.utils import timezone
 
 from celery.task import task
-from guardian.shortcuts import get_objects_for_user
-from guardian.utils import get_anonymous_user
 import py2neo
 import requests
 from rest_framework.exceptions import APIException
@@ -991,21 +989,6 @@ def get_non_manager_groups_for_user(user):
     :return: array of (non-manager) ExtendedGroup objects
     """
     return user.groups.exclude(name__contains='Managers')
-
-
-def get_resources_for_user(user, resource_type):
-    return get_objects_for_user(
-        user if user.is_authenticated()
-        else get_anonymous_user(),
-        which_default_read_perm(resource_type),
-        accept_global_perms=accept_global_perms(resource_type)
-    )
-
-
-def which_default_read_perm(resource_type):
-    if resource_type == 'dataset':
-        return 'core.read_meta_dataset'
-    return 'core.read_%s' % resource_type
 
 
 # False, accept_global_perms will be ignored, which means that only object
