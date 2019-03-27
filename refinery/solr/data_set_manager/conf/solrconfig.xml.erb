@@ -111,7 +111,7 @@
        replication is in use, this should match the replication
        configuration.
     -->
-  <dataDir><%= @solr_data_set_manager_data || "${solr.data.dir:}" %></dataDir>
+  <dataDir><%= @solr_data_set_manager_data %></dataDir>
 
 
   <!-- The DirectoryFactory to use for indexes.
