@@ -5,12 +5,11 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   var factory;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var fakeInvalidUuid = 'xxxxx';
-  var timeout;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
   beforeEach(inject(function (
-    $controller, $rootScope, $timeout, $window, analysisMonitorFactory
+    $controller, $rootScope, $window, analysisMonitorFactory
   ) {
     ctrl = $controller('AnalysisMonitorCtrl', {
       $scope: $rootScope.$new()
@@ -111,9 +110,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   });
 
   describe('Helper functions', function () {
-    beforeEach(inject(function ($timeout) {
-      timeout = $timeout;
-
+    beforeEach(inject(function () {
       ctrl.analysesDetail[fakeUuid] = {
         refineryImport: [{
           status: 'PROGRESS',
@@ -159,17 +156,6 @@ describe('Controller: AnalysisMonitorCtrl', function () {
       expect(ctrl.analysesRunningList).toEqual(ctrl.analysesList);
       expect(ctrl.updateAnalysesDetail.calls.count())
         .toEqual(ctrl.analysesList.length);
-    });
-
-    it('cancelTimerRunningList method is function', function () {
-      expect(angular.isFunction(ctrl.cancelTimerRunningList)).toBe(true);
-    });
-
-    it('cancelTimerRunningList method cancel timerRunList', function () {
-      ctrl.timerRunList = timeout(10);
-      expect(typeof ctrl.timerRunList.$$state.value).toEqual('undefined');
-      ctrl.cancelTimerRunningList();
-      expect(ctrl.timerRunList.$$state.value).toEqual('canceled');
     });
 
     it('setAnalysesLoadingFlag method is function', function () {
