@@ -4,12 +4,13 @@
   describe('Permission Service', function () {
     var deferred;
     var service;
-    var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    var fakeUuid;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryDashboard'));
-    beforeEach(inject(function (_permissionService_) {
-      service = _permissionService_;
+    beforeEach(inject(function (mockParamsFactory, permissionService) {
+      service = permissionService;
+      fakeUuid = mockParamsFactory.generateUuid();
     }));
 
     it('service and variables should exist', function () {
