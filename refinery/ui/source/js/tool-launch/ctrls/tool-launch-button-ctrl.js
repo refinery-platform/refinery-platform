@@ -13,9 +13,9 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
-    'authService',
     '$timeout',
     'dataSetPropsService',
+    'settings',
     'toolLaunchService',
     'toolLaunchStatusService',
     'toolSelectService',
@@ -27,9 +27,9 @@
 
   function ToolLaunchButtonCtrl (
     $log,
-    authService,
     $timeout,
     dataSetPropsService,
+    settings,
     toolLaunchService,
     toolLaunchStatusService,
     toolSelectService,
@@ -41,12 +41,7 @@
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
-
-    authService.isAuthenticated().then(
-      function (isAuthenticated) {
-        vm.userIsAnonymous = !isAuthenticated;
-      }
-    );
+    vm.userIsAnonymous = settings.djangoApp.userId !== undefined;
 
     /*
    * -----------------------------------------------------------------------------
