@@ -22,7 +22,7 @@ resource "aws_db_instance" "default" {
   allocated_storage          = 5
   auto_minor_version_upgrade = false
   availability_zone          = "${var.availability_zone}"
-  backup_window              = "23:34-00:04"  # UTC
+  backup_window              = "07:45-08:15"  # UTC
   backup_retention_period    = 15
   copy_tags_to_snapshot      = true
   db_subnet_group_name       = "${aws_db_subnet_group.default.id}"
