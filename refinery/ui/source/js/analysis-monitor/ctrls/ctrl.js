@@ -26,6 +26,10 @@ function AnalysisMonitorCtrl (
   vm.initializedFlag = {};
   vm.openAnalysisDeleteModal = openAnalysisDeleteModal;
 
+  vm.$onDestroy = function () {
+    $timeout.cancel(vm.timerList);
+  };
+
   // On data set browser analysis tab, method set timer and refreshes the
   // analysis list and refreshes details for running analyses.
   vm.updateAnalysesList = function () {
@@ -34,10 +38,6 @@ function AnalysisMonitorCtrl (
     };
 
     vm.timerList = $timeout(vm.updateAnalysesList, 15000);
-    // Cancels timer when away from analyses tab
-    $scope.$on('refinery/analyze-tab-inactive', function () {
-      $timeout.cancel(vm.timerList);
-    });
 
     return analysisMonitorFactory.getAnalysesList(param)
       .then(function (response) {
@@ -57,7 +57,6 @@ function AnalysisMonitorCtrl (
         $timeout.cancel(vm.timerList);
 
         vm.updateAnalysesList().then(function () {
-          $rootScope.$broadcast('rf/cancelAnalysis');
           // Removes flag because list is updated
           vm.setCancelAnalysisFlag(false, uuid);
         });
