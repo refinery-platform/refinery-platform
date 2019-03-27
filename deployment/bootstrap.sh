@@ -14,4 +14,4 @@ set -x
 
 /usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
 
-cd /vagrant/deployment/puppet && librarian-puppet install
+cd /vagrant/deployment/puppet && librarian-puppet install --path /usr/share/puppet/modules

@@ -169,7 +169,7 @@ su -c 'cd /srv/refinery-platform && /usr/bin/git checkout -q ${var.git_commit}' 
 
 # configure librarian-puppet
 /usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
-su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
+su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install --path /usr/share/puppet/modules' ubuntu
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD="${var.django_admin_password}"
