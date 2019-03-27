@@ -33,12 +33,12 @@
       expect(ctrl.permissionLevel.edit.change).toEqual(true);
     });
 
-    it('cancel is method', function () {
-      expect(angular.isFunction(ctrl.cancel)).toBe(true);
+    it('close is method', function () {
+      expect(angular.isFunction(ctrl.close)).toBe(true);
     });
 
-    it('save is method', function () {
-      expect(angular.isFunction(ctrl.cancel)).toBe(true);
+    it('updatePerms is method', function () {
+      expect(angular.isFunction(ctrl.updatePerms)).toBe(true);
     });
   });
 })();
