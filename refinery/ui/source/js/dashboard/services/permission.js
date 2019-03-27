@@ -1,6 +1,6 @@
 'use strict';
 
-function permissionService (sharingService) {
+function permissionService (groupService) {
   var vm = this;
   vm.permissions = {};
 
@@ -15,22 +15,21 @@ function permissionService (sharingService) {
    * @return  {Object}         Angular promise.
    * */
   vm.getPermissions = function (uuid) {
-    return sharingService.get({
-      model: 'data_sets',
-      uuid: uuid
+    return groupService.query({
+      dataSetUuid: uuid,
+      allPerms: 'True'
     }).$promise
       .then(function (data) {
         var groups = [];
-        for (var i = 0, len = data.share_list.length; i < len; i++) {
+        for (var i = 0, len = data.length; i < len; i++) {
           groups.push({
-            id: data.share_list[i].group_id,
-            name: data.share_list[i].group_name,
-            uuid: data.share_list[i].group_uuid,
-            permission: vm.getPermissionLevel(data.share_list[i].perms)
+            id: data[i].id,
+            name: data[i].name,
+            uuid: data[i].uuid,
+            permission: vm.getPermissionLevel(data[i].perm_list)
           });
         }
         vm.permissions = {
-          isOwner: data.is_owner,
           groups: groups
         };
       });
@@ -62,7 +61,7 @@ function permissionService (sharingService) {
 
 angular.module('refineryDashboard')
   .service('permissionService', [
-    'sharingService',
+    'groupService',
     permissionService
   ]
 );
