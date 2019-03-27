@@ -3,15 +3,20 @@
 
   describe('Controller: Permission Editor Ctrl', function () {
     var ctrl;
+    var fakeUuid;
 
     beforeEach(module('refineryApp'));
     beforeEach(inject(function (
       $rootScope,
-      $controller
+      $componentController,
+      mockParamsFactory
     ) {
-      ctrl = $controller('PermissionEditorCtrl', {
-        $scope: $rootScope.$new(),
-      });
+      ctrl = $componentController(
+        'rpPermissionEditorModal',
+        { $scope: $rootScope.$new() },
+        { resolve: { config: { uuid: mockParamsFactory.generateUuid() } } }
+      );
+      fakeUuid = mockParamsFactory.generateUuid();
     }));
 
     it('Permission Editor Ctrl should exist', function () {
@@ -37,8 +42,44 @@
       expect(angular.isFunction(ctrl.close)).toBe(true);
     });
 
-    it('updatePerms is method', function () {
-      expect(angular.isFunction(ctrl.updatePerms)).toBe(true);
+    describe('updatePerms', function () {
+      var apiResponse;
+      var spyService;
+      var viewGroup;
+
+      beforeEach(inject(function (groupService, $q) {
+        apiResponse = {
+          id: 5,
+          name: 'Public',
+          uuid: fakeUuid,
+          perm_list: { read: true, read_meta: true, change: false }
+        };
+
+        viewGroup = {
+          groups: [
+            {
+              id: 5,
+              name: 'Public',
+              uuid: fakeUuid,
+              permission: 'read'
+            }
+          ]
+        };
+        spyService = spyOn(groupService, 'partial_update').and.callFake(function () {
+          var deferred = $q.defer();
+          deferred.resolve(apiResponse);
+          return { $promise: deferred.promise };
+        });
+      }));
+
+      it('updatePerms is method', function () {
+        expect(angular.isFunction(ctrl.updatePerms)).toBe(true);
+      });
+
+      it('updatePerms calls on service', function () {
+        ctrl.updatePerms(viewGroup);
+        expect(spyService).toHaveBeenCalled();
+      });
     });
   });
 })();

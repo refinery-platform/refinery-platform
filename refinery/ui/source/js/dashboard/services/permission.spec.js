@@ -3,8 +3,8 @@
 
   describe('Permission Service', function () {
     var deferred;
-    var service;
     var fakeUuid;
+    var service;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryDashboard'));
