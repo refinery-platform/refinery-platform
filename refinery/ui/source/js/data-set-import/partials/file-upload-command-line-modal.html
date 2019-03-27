@@ -1,0 +1,24 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="$ctrl.close()"
+      aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <h4 class="modal-title">Upload Data Files</h4>
+  </div>
+  <div class="modal-body">
+    <p>
+      To upload all of the data set files, copy and paste this to your command line:
+    </p>
+    <textarea
+        style="width: 100%; font-family: monospace; overflow-wrap: break-word;"
+        rows="6" cols="80"
+        onclick="this.focus(); this.select();"
+        readonly="readonly">
+   <!--   {{ $ctrl.downloadCsvCurl($ctrl.downloadCsvQuery()) }} -->
+    </textarea>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" ng-click="$ctrl.close()">Close
+    </button>
+  </div>
+</div>
+

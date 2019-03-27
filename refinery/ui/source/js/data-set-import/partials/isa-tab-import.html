@@ -115,6 +115,7 @@
             </label>
           </div>
           <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload && isaTabImport.file || isaTabImport.urlToFile">
+            <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
             <rp-file-upload is-node-update="false" ng-if="!isaTabImport.useS3"></rp-file-upload>
             <rp-file-upload-s3 is-node-update="false" ng-if="isaTabImport.useS3"></rp-file-upload-s3>
           </div>
