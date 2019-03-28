@@ -153,8 +153,12 @@ export DEBIAN_FRONTEND=noninteractive
 # print commands and their expanded arguments
 set -x
 
+export PROJECT_ROOT=/srv/refinery-platform
+
 # install dependencies
-/usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -y autoremove
+/usr/bin/apt-get clean
+/usr/bin/apt-get -qq update
+/usr/bin/apt-get -y autoremove
 /usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev tree
 
 # add extra SSH keys from Github
@@ -163,13 +167,16 @@ for USERNAME in ${join(" ", var.ssh_users)}; do
 done >> /home/ubuntu/.ssh/authorized_keys
 
 # clone Refinery Platform repo
-mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
-su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
-su -c 'cd /srv/refinery-platform && /usr/bin/git checkout -q ${var.git_commit}' ubuntu
+mkdir $PROJECT_ROOT
+chown ubuntu:ubuntu $PROJECT_ROOT
+su -c "git clone https://github.com/refinery-platform/refinery-platform.git $PROJECT_ROOT" ubuntu
+su -c "cd $PROJECT_ROOT && /usr/bin/git checkout -q ${var.git_commit}" ubuntu
 
 # configure librarian-puppet
 /usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
-su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install --path /usr/share/puppet/modules' ubuntu
+cd $PROJECT_ROOT/deployment/puppet
+# need to set $HOME: https://github.com/rodjek/librarian-puppet/issues/258
+HOME=/root /usr/local/bin/librarian-puppet install --path /usr/share/puppet/modules
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD="${var.django_admin_password}"
@@ -203,7 +210,7 @@ export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE="${var.refinery_welcome_email_messa
 export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 
 # run Puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/site.pp
+/usr/bin/puppet apply $PROJECT_ROOT/deployment/puppet/manifests/site.pp
 EOF
 }
 
