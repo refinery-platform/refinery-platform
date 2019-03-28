@@ -47,7 +47,7 @@ class APIV2TestCase(APITestCase):
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, 'user@fake.com',
+        self.user = User.objects.create_user(self.username, 'user@example.com',
                                              self.password)
 
         self.factory = APIRequestFactory()
@@ -100,13 +100,13 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.patch_view = DataSetsViewSet.as_view({'patch': 'partial_update'})
         self.options_response = self.view(self.options_request)
         self.user_2 = User.objects.create_user('jane_lab',
-                                               'jane@fake.com',
+                                               'jane@example.com',
                                                'coffeecoffee')
         self.user_2_data_set = create_dataset_with_necessary_models(
             user=self.user_2
         )
         self.user_3 = User.objects.create_user('john_lab',
-                                               'john@fake.com',
+                                               'john@example.com',
                                                'coffeecoffee')
         self.user_3_data_set = create_dataset_with_necessary_models(
             user=self.user_3
@@ -404,7 +404,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
     @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
     def test_dataset_patch_success_returns_202(self, mock_update, mock_email):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
@@ -419,7 +419,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
     def test_dataset_patch_returns_updated_is_owner(self, mock_update,
                                                     mock_email):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
@@ -434,7 +434,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
             {"transfer_data_set": True,
-             "new_owner_email": 'not_valid@fake.com'}
+             "new_owner_email": 'not_valid@example.com'}
         )
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
@@ -444,7 +444,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
     @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
     def test_dataset_calls_current_mock_methods(self, mock_update, mock_email):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
@@ -459,7 +459,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     @mock.patch('core.views.DataSetsViewSet.update_group_perms',
                 side_effect=RuntimeError)
     def test_dataset_patch_fails_and_rollback_owner(self, mock_update):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
@@ -473,7 +473,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     @mock.patch('core.views.get_groups_with_perms')
     def test_dataset_patch_fails_and_rollback_group_perms(self, mock_perms):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
         group_non_union_0 = ExtendedGroup.objects.create(name="Group 0")
         group_non_union_1 = ExtendedGroup.objects.create(name="Group 1")
@@ -671,7 +671,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.data.get('title'), new_title)
 
     def test_send_transfer_notification_email_corrent_users(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
@@ -685,7 +685,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEquals(email.to, [new_owner_email, self.user.email])
 
     def test_send_transfer_notification_email_sends_names(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
@@ -700,7 +700,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertIn(new_owner.username, email.body)
 
     def test_send_transfer_notification_email_sends_profiles(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1',
                                              new_owner_email,
                                              self.password)
@@ -724,7 +724,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             email.body)
 
     def test_send_transfer_notification_email_sends_data_set(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
@@ -739,7 +739,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertIn(self.data_set.uuid, email.body)
 
     def test_update_group_perms_remove_access(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         self.data_set.share(ExtendedGroup.objects.public_group())
@@ -769,7 +769,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
 
     def test_update_group_perms_retains_access(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         group_union = ExtendedGroup.objects.create(name="Group Union")
@@ -793,7 +793,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
 
     def test_update_group_perms_retains_public(self):
-        new_owner_email = 'new_owner@fake.com'
+        new_owner_email = 'new_owner@example.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         group_public = ExtendedGroup.objects.public_group()
@@ -951,7 +951,7 @@ class GroupApiV2Tests(APIV2TestCase):
 
         for group in get_response.data:
             response_perms = group.get('perm_list')
-            if (group.get('id') == self.group.id):
+            if group.get('id') == self.group.id:
                 self.assertEqual(False, response_perms.get('change'))
                 self.assertEqual(True, response_perms.get('read'))
                 self.assertEqual(True, response_perms.get('read_meta'))
@@ -1037,7 +1037,7 @@ class GroupApiV2Tests(APIV2TestCase):
 
     def test_patch_groups_only_allows_owners_and_returns_401(self):
         self.non_owner = User.objects.create_user('Non-owner',
-                                                  'user@fake.com',
+                                                  'user@example.com',
                                                   self.password)
         self.group.user_set.add(self.non_owner)
         patch_request = self.factory.patch(
@@ -1635,7 +1635,7 @@ class UserViewTest(TestCase):
         self.username = 'test_user'
         self.password = '12345@'
         self.user = User.objects.create_user(self.username,
-                                             'test@fake.com',
+                                             'test@example.com',
                                              self.password)
         self.client = Client()
 
@@ -1664,7 +1664,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
             view=UserProfileViewSet.as_view()
         )
         self.user_lm = User.objects.create_user('lab_member',
-                                                'member@fake.com',
+                                                'member@example.com',
                                                 self.password)
         self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
         self.non_lab_group = ExtendedGroup.objects.create(name="Test Group")

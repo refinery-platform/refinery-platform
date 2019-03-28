@@ -79,7 +79,7 @@ class GetDataSetForViewSetTest(TestCase):
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username,
-                                             'user@fake.com',
+                                             'user@example.com',
                                              self.password)
         self.data_set = create_dataset_with_necessary_models(user=self.user)
 
