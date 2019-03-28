@@ -9,6 +9,7 @@ from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 
 from config.utils import RouterCombiner
+
 from core.api import ExtendedGroupResource, InvitationResource
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
