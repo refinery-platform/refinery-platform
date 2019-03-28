@@ -933,17 +933,22 @@ class GroupViewSet(viewsets.ViewSet):
             return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
 
         if all_perms_flag:
-            member_groups = [group for group in ExtendedGroup.objects.all()
-                             if request.user in group.user_set.all() and
-                             not group.is_manager_group()]
-            serializer = ExtendedGroupSerializer(
-                member_groups, many=True, context={'data_set': data_set}
-            )
+            # all groups user is member of
+            query_set = ExtendedGroup.objects.all()
+
         else:
-            groups_with_perms = get_groups_with_perms(data_set)
-            serializer = ExtendedGroupSerializer(
-                groups_with_perms, many=True, context={'data_set': data_set}
+            # all groups associated with data set and user is a member of
+            query_set = ExtendedGroup.objects.filter(
+                group_ptr__in=get_groups_with_perms(data_set)
             )
+
+        member_groups = [group for group in query_set
+                         if request.user in group.user_set.all() and
+                         not group.is_manager_group()]
+
+        serializer = ExtendedGroupSerializer(member_groups,
+                                             many=True,
+                                             context={'data_set': data_set})
         return Response(serializer.data)
 
     def partial_update(self, request, uuid, format=None):

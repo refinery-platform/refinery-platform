@@ -931,6 +931,23 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertEqual(True, response_perms.get('read'))
         self.assertEqual(True, response_perms.get('read_meta'))
 
+    def test_get_groups_with_data_set_uuid_returns_groups_with_user(self):
+        public_group = ExtendedGroup.objects.public_group()
+        self.data_set.share(public_group)
+        self.new_user = User.objects.create_user('Non-owner',
+                                                 'user@example.com',
+                                                 self.password)
+        self.group.user_set.add(self.new_user)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.new_user)
+        get_response = self.view(get_request)
+        # public group plus group one
+        self.assertEqual(len(get_response.data), 2)
+        group_uuid_list = [self.group.uuid, public_group.uuid]
+        self.assertIn(get_response.data[0].get('uuid'), group_uuid_list)
+        self.assertIn(get_response.data[1].get('uuid'), group_uuid_list)
+
     def test_get_groups_with_data_set_uuid_and_all_perms_returns_groups(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
@@ -968,6 +985,20 @@ class GroupApiV2Tests(APIV2TestCase):
                                         'allPerms': True})
         get_response = self.view(get_request)
         self.assertEqual(get_response.data, [])
+
+    def test_patch_groups_returns_status_code_200(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'dataSetUuid': self.data_set.uuid,
+             'perm_list': {'change': True,
+                           'read': True,
+                           'read_meta': True},
+             },
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
 
     def test_patch_groups_updates_change_field(self):
         patch_request = self.factory.patch(
