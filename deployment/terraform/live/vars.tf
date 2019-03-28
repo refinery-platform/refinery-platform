@@ -64,7 +64,7 @@ variable "rds_master_user_password" {
 
 variable "app_server_instance_type" {
   description = "EC2 instance type of the main host"
-  default     = "m3.medium"
+  default     = "t2.medium"
 }
 
 variable "app_server_instance_count" {
@@ -174,7 +174,7 @@ variable "refinery_google_recaptcha_secret_key" {
 
 variable "refinery_s3_user_data" {
   description = "Whether or not to use S3 as user data file storage backend"
-  default     = "false"
+  default     = "true"
 }
 
 variable "refinery_user_files_columns" {

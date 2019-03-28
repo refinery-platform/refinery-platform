@@ -116,6 +116,12 @@ resource "aws_iam_instance_profile" "app_server" {
   role = "${aws_iam_role.app_server.name}"
 }
 
+locals {
+  app_server_tags = "${merge(
+    var.tags, map("Name", "${var.resource_name_prefix} app server")
+  )}"
+}
+
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
   # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
@@ -136,18 +142,8 @@ resource "aws_instance" "app_server" {
     volume_size           = "${var.data_volume_size}"
     volume_type           = "${var.data_volume_type}"
   }
-  # scheduler:ebs-snapshot tag is used with the EBS Snapshot Scheduler:
-  # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
-  tags                   = "${merge(
-    var.tags,
-    map(
-      "Name", "${var.resource_name_prefix} app server",
-      "scheduler:ebs-snapshot", "default"
-    )
-  )}"
-  volume_tags            = "${merge(
-    var.tags, map("Name", "${var.resource_name_prefix} app server")
-  )}"
+  tags                   = "${local.app_server_tags}"
+  volume_tags            = "${local.app_server_tags}"
   user_data              = <<EOF
 #!/bin/sh
 
@@ -159,7 +155,7 @@ set -x
 
 # install dependencies
 /usr/bin/apt-get clean && /usr/bin/apt-get -qq update && /usr/bin/apt-get -y autoremove
-/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev
+/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev tree
 
 # add extra SSH keys from Github
 for USERNAME in ${join(" ", var.ssh_users)}; do

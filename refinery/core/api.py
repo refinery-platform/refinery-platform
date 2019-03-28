@@ -30,7 +30,7 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 
 from .models import (DataSet, ExtendedGroup, GroupManagement, Invitation,
-                     Project, UserAuthentication, Workflow)
+                     Project, Workflow)
 
 logger = logging.getLogger(__name__)
 
@@ -475,42 +475,6 @@ class GroupManagementResource(Resource):
             return self.process_get_list(request, group_obj_list, **kwargs)
         else:
             return HttpMethodNotAllowed()
-
-
-class UserAuthenticationResource(Resource):
-    is_logged_in = fields.BooleanField(attribute='is_logged_in', default=False)
-    is_admin = fields.BooleanField(attribute='is_admin', default=False)
-    id = fields.IntegerField(attribute='id', default=-1)
-    username = fields.CharField(attribute='username', default='AnonymousUser')
-
-    class Meta:
-        resource_name = 'user_authentication'
-        object_class = UserAuthentication
-
-    def determine_format(self, request):
-        return 'application/json'
-
-    def prepend_urls(self):
-        return [
-            url(r'^user_authentication/$',
-                self.wrap_view('check_user_status'),
-                name='api_user_authentication_check'),
-        ]
-
-    def check_user_status(self, request, **kwargs):
-        user = request.user
-        is_logged_in = user.is_authenticated()
-        is_admin = user.is_staff
-        username = user.username if is_logged_in else 'AnonymousUser'
-        auth_obj = UserAuthentication(
-            is_logged_in,
-            is_admin,
-            user.id,
-            username
-        )
-        built_obj = self.build_bundle(obj=auth_obj, request=request)
-        bundle = self.full_dehydrate(built_obj)
-        return self.create_response(request, bundle)
 
 
 class InvitationResource(ModelResource):
