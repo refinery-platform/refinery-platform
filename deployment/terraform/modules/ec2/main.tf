@@ -175,8 +175,10 @@ su -c "cd $PROJECT_ROOT && /usr/bin/git checkout -q ${var.git_commit}" ubuntu
 # configure librarian-puppet
 /usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
 cd $PROJECT_ROOT/deployment/puppet
+/usr/local/bin/librarian-puppet config path /usr/share/puppet/modules --local
+/usr/local/bin/librarian-puppet config tmp /tmp --local
 # need to set $HOME: https://github.com/rodjek/librarian-puppet/issues/258
-HOME=/root /usr/local/bin/librarian-puppet install --path /usr/share/puppet/modules
+HOME=/root /usr/local/bin/librarian-puppet install
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD="${var.django_admin_password}"
