@@ -5,8 +5,8 @@ from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (Analysis, DataSet, Event, Group, SiteProfile, SiteVideo,
-                     User, UserProfile, Workflow)
+from .models import (Analysis, DataSet, Event, ExtendedGroup, SiteProfile,
+                     SiteVideo, User, UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
 
@@ -118,11 +118,11 @@ class DataSetSerializer(serializers.ModelSerializer):
         return instance
 
 
-class GroupSerializer(serializers.ModelSerializer):
-    perms = serializers.SerializerMethodField()
+class ExtendedGroupSerializer(serializers.ModelSerializer):
+    perm_list = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
 
-    def get_perms(self, group):
+    def get_perm_list(self, group):
         data_set = self.context.get('data_set')
         data_set_perms = get_perms(group, data_set)
         return {'change': 'change_dataset' in data_set_perms,
@@ -133,8 +133,8 @@ class GroupSerializer(serializers.ModelSerializer):
         return group.extendedgroup.uuid
 
     class Meta:
-        model = Group
-        fields = ('name', 'id', 'uuid', 'perms')
+        model = ExtendedGroup
+        fields = ('name', 'id', 'uuid', 'perm_list')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):

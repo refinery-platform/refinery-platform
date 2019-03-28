@@ -53,15 +53,15 @@ from data_set_manager.models import Attribute
 
 from .forms import UserForm, UserProfileForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, SiteProfile,
-                     SiteStatistics, SiteVideo, UserProfile, Workflow)
+                     ExtendedGroup, Invitation, SiteProfile, SiteStatistics,
+                     SiteVideo, UserProfile, Workflow)
 
 from .serializers import (AnalysisSerializer, DataSetSerializer,
-                          EventSerializer, GroupSerializer,
+                          EventSerializer, ExtendedGroupSerializer,
                           SiteProfileSerializer, SiteVideoSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
-                    get_non_manager_groups_for_user)
+                    get_data_set_for_view_set, get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -593,16 +593,6 @@ class DataSetsViewSet(viewsets.ViewSet):
     http_method_names = ['get', 'delete', 'patch']
     lookup_field = 'uuid'
 
-    def get_object(self, uuid):
-        try:
-            return DataSet.objects.get(uuid=uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple objects returned.")
-
     def list(self, request):
         params = request.query_params
         paginator = LimitOffsetPagination()
@@ -690,7 +680,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         'total_data_sets': total_data_sets})
 
     def retrieve(self, request, uuid):
-        data_set = self.get_object(uuid)
+        data_set = get_data_set_for_view_set(uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
@@ -738,7 +728,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def partial_update(self, request, uuid, format=None):
-        self.data_set = self.get_object(uuid)
+        self.data_set = get_data_set_for_view_set(uuid)
         self.current_site = get_current_site(request)
 
         # check edit permission for user
@@ -878,14 +868,7 @@ class AnalysisViewSet(APIView):
             serializer = AnalysisSerializer(paged_analyses, many=True)
             return Response(serializer.data)
 
-        # query with dataSetUuid
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except DataSet.DoesNotExist as e:
-            return HttpResponseNotFound(e)
-        except DataSet.MultipleObjectsReturned as e:
-            return HttpResponseServerError(e)
-
+        data_set = get_data_set_for_view_set(data_set_uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
@@ -925,36 +908,72 @@ class AnalysisViewSet(APIView):
 
 class GroupViewSet(viewsets.ViewSet):
     """API endpoint for viewing groups."""
-    http_method_names = ['get']
+    http_method_names = ['get', 'patch']
+    lookup_field = 'uuid'
+
+    def get_object(self, uuid):
+        try:
+            return ExtendedGroup.objects.get(uuid=uuid)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
 
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
-        try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            return HttpResponseNotFound(
-                 content="DataSet with UUID: {} not found.".format(
-                     data_set_uuid
-                 )
-             )
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            return HttpResponseServerError(
-                content="Multiple dataSets returned for this request"
-            )
+        all_perms_flag = request.query_params.get('allPerms', False)
+
+        data_set = get_data_set_for_view_set(data_set_uuid)
 
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
-            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
 
-        groups_with_perms = get_groups_with_perms(data_set)
+        if all_perms_flag:
+            # all groups user is member of
+            query_set = ExtendedGroup.objects.all()
 
-        serializer = GroupSerializer(groups_with_perms, many=True,
-                                     context={'data_set': data_set})
+        else:
+            # all groups associated with data set and user is a member of
+            query_set = ExtendedGroup.objects.filter(
+                group_ptr__in=get_groups_with_perms(data_set)
+            )
 
+        member_groups = [group for group in query_set
+                         if request.user in group.user_set.all() and
+                         not group.is_manager_group()]
+
+        serializer = ExtendedGroupSerializer(member_groups,
+                                             many=True,
+                                             context={'data_set': data_set})
         return Response(serializer.data)
+
+    def partial_update(self, request, uuid, format=None):
+        data_set_uuid = request.data.get('dataSetUuid')
+        group = self.get_object(uuid)
+
+        data_set = get_data_set_for_view_set(data_set_uuid)
+        if data_set.get_owner() != request.user:
+            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
+
+        group_perm_update = request.data.get('perm_list')
+        # remove all perms
+        data_set.unshare(group)
+        if group_perm_update.get('change'):
+            # fields for share method: read_only, read_meta only
+            data_set.share(group, False, False)
+        elif group_perm_update.get('read'):
+            data_set.share(group, True, False)
+        elif group_perm_update.get('read_meta'):
+            data_set.share(group, False, True)
+
+        serializer = ExtendedGroupSerializer(group,
+                                             context={'data_set': data_set})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CustomRegistrationView(RegistrationView):
