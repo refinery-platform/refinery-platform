@@ -51,8 +51,6 @@ codekit-config.json
 /deployment/puppet/.librarian/
 /deployment/puppet/.tmp/
 /deployment/puppet/Puppetfile.lock
-/deployment/aws-config/config.yaml
-/deployment/aws-config/tags.yaml
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
 /refinery/ui/production/
@@ -74,10 +72,6 @@ codekit-config.json
 /refinery/.coverage
 /refinery/coverage.xml
 .cache/
-
-# to be moved into refinery/ui
-refinery/static/styles/css/font-awesome*.css
-refinery/static/styles/css/refinery-style*.css
 
 ### Terraform template
 # Compiled files
