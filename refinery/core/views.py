@@ -930,7 +930,7 @@ class GroupViewSet(viewsets.ViewSet):
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
-            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
 
         if all_perms_flag:
             member_groups = [group for group in ExtendedGroup.objects.all()
@@ -952,7 +952,7 @@ class GroupViewSet(viewsets.ViewSet):
 
         data_set = get_data_set_for_view_set(data_set_uuid)
         if data_set.get_owner() != request.user:
-            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
 
         group_perm_update = request.data.get('perm_list')
         # remove all perms
@@ -968,7 +968,7 @@ class GroupViewSet(viewsets.ViewSet):
         serializer = ExtendedGroupSerializer(group,
                                              context={'data_set': data_set})
 
-        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CustomRegistrationView(RegistrationView):

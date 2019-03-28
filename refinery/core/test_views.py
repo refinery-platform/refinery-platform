@@ -861,11 +861,11 @@ class GroupApiV2Tests(APIV2TestCase):
         self.data_set.share(self.group)
         self.data_set.share(self.group_2)
 
-    def test_get_groups_with_data_set_uuid_returns_401_for_anon(self):
+    def test_get_groups_with_data_set_uuid_returns_403_for_anon(self):
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': self.data_set.uuid})
         get_response = self.view(get_request)
-        self.assertEqual(get_response.status_code, 401)
+        self.assertEqual(get_response.status_code, 403)
 
     def test_get_groups_invalid_data_set_uuid_returns_404(self):
         get_request = self.factory.get(self.url_root,
@@ -1035,7 +1035,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.data.get('perm_list').get('read_meta'),
                          True)
 
-    def test_patch_groups_only_allows_owners_and_returns_401(self):
+    def test_patch_groups_only_allows_owners_and_returns_403(self):
         self.non_owner = User.objects.create_user('Non-owner',
                                                   'user@example.com',
                                                   self.password)
@@ -1051,7 +1051,7 @@ class GroupApiV2Tests(APIV2TestCase):
         )
         force_authenticate(patch_request, user=self.non_owner)
         patch_response = self.patch_view(patch_request, self.group.uuid)
-        self.assertEqual(patch_response.status_code, 401)
+        self.assertEqual(patch_response.status_code, 403)
 
     def test_patch_groups_invalid_data_set_uuid_returns_404(self):
         patch_request = self.factory.patch(
