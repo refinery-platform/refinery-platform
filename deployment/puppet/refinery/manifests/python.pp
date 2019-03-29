@@ -14,13 +14,10 @@ class refinery::python (
     virtualenv => 'present',
   }
 
-  $virtualenv_dependencies = [
-    'build-essential',
-    'libncurses5-dev',
-    'libffi-dev',  # for SSL modules
-    'libpq-dev',  # for PostgreSQL
-  ]
-  package { $virtualenv_dependencies: }
+  $base_dependencies = ['build-essential', 'libncurses5-dev']
+  $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
+  $postgresql_dependencies = ['libpq5', 'libpq-dev']  # psycopg2 module
+  package { [$base_dependencies, $crypto_dependencies]: }
 
   file { "/home/${app_user}/.virtualenvs":
     # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
@@ -33,7 +30,13 @@ class refinery::python (
     ensure  => present,
     owner   => $app_user,
     group   => $app_group,
-    require => Package[$virtualenv_dependencies],
+    require => [
+      Package[
+        $base_dependencies,
+        $crypto_dependencies,
+        $postgresql_dependencies  # declared in postgresql.pp
+      ],
+    ]
   }
 
   python::requirements { "${project_root}/requirements.txt":
