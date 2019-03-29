@@ -49,7 +49,6 @@ supervisord.conf
 codekit-config.json
 .vagrant/
 /deployment/puppet/.librarian/
-/deployment/puppet/.tmp/
 /deployment/puppet/Puppetfile.lock
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
