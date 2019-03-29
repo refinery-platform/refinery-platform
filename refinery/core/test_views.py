@@ -868,6 +868,25 @@ class GroupApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 403)
 
+    def test_get_groups_returns_all_user_groups(self):
+        public_group = ExtendedGroup.objects.public_group()
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        group_uuid_list = [get_response.data[0].get('id'),
+                           get_response.data[1].get('id'),
+                           get_response.data[2].get('id')]
+        self.assertIn(public_group.id, group_uuid_list)
+        self.assertIn(self.group.id, group_uuid_list)
+        self.assertIn(self.group_2.id, group_uuid_list)
+
+    def test_get_groups_returns_public_for_anon(self):
+        public_group = ExtendedGroup.objects.public_group()
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('uuid'), public_group.uuid)
+
     def test_get_groups_invalid_data_set_uuid_returns_404(self):
         get_request = self.factory.get(self.url_root,
                                        {'dataSetUuid': 'xxx2'})

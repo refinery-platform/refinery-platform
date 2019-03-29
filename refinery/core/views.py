@@ -945,8 +945,10 @@ class GroupViewSet(viewsets.ViewSet):
 
         if data_set_uuid is None:
             query_set = ExtendedGroup.objects.all()
+            context = {'data_set': None}
         else:
             data_set = get_data_set_for_view_set(data_set_uuid)
+            context = {'data_set': data_set}
 
             public_group = ExtendedGroup.objects.public_group()
             if not ('read_meta_dataset' in get_perms(public_group, data_set) or
@@ -970,7 +972,7 @@ class GroupViewSet(viewsets.ViewSet):
 
         serializer = ExtendedGroupSerializer(member_groups,
                                              many=True,
-                                             context={'data_set': data_set})
+                                             context=context)
         return Response(serializer.data)
 
     def partial_update(self, request, uuid, format=None):
