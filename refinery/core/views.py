@@ -943,22 +943,26 @@ class GroupViewSet(viewsets.ViewSet):
         data_set_uuid = request.query_params.get('dataSetUuid')
         all_perms_flag = request.query_params.get('allPerms', False)
 
-        data_set = get_data_set_for_view_set(data_set_uuid)
-
-        public_group = ExtendedGroup.objects.public_group()
-        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
-                request.user.has_perm('core.read_meta_dataset', data_set)):
-            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
-
-        if all_perms_flag:
-            # all groups user is member of
+        if data_set_uuid is None:
             query_set = ExtendedGroup.objects.all()
-
         else:
-            # all groups associated with data set and user is a member of
-            query_set = ExtendedGroup.objects.filter(
-                group_ptr__in=get_groups_with_perms(data_set)
-            )
+            data_set = get_data_set_for_view_set(data_set_uuid)
+
+            public_group = ExtendedGroup.objects.public_group()
+            if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                    request.user.has_perm('core.read_meta_dataset', data_set)):
+                return Response(data_set_uuid,
+                                status=status.HTTP_403_FORBIDDEN)
+
+            if all_perms_flag:
+                # all groups user is member of
+                query_set = ExtendedGroup.objects.all()
+
+            else:
+                # all groups associated with data set and user is a member of
+                query_set = ExtendedGroup.objects.filter(
+                    group_ptr__in=get_groups_with_perms(data_set)
+                )
 
         member_groups = [group for group in query_set
                          if request.user in group.user_set.all() and
