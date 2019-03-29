@@ -1,5 +1,4 @@
 node default {
-
   if $::domain == 'ec2.internal' {
     class { 'refinery::params':
       deployment_platform => 'aws',
@@ -11,21 +10,13 @@ node default {
     }
   }
 
-  class { 'refinery': }
-
-  class { 'refinery::python': }
-
-  class { 'refinery::postgresql': }
-
-  class { 'refinery::apache2': }
-
-  class { 'refinery::django': }
-
-  class { 'refinery::ui': }
-
-  class { 'refinery::solr': }
-
-  class { 'refinery::neo4j': }
-
-  class { 'refinery::docker': }
+  include refinery
+  include refinery::apache2
+  include refinery::django
+  include refinery::docker
+  include refinery::neo4j
+  include refinery::postgresql
+  include refinery::python
+  include refinery::solr
+  include refinery::ui
 }
