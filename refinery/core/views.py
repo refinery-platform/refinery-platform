@@ -922,11 +922,12 @@ class GroupViewSet(viewsets.ViewSet):
             raise APIException("Multiple groups returned for this request.")
 
     def create(self, request):
+        group_name = request.data.get('name')
         if request.user.is_anonymous():
             return Response(
                 self.request.user, status=status.HTTP_401_UNAUTHORIZED
             )
-        serializer = ExtendedGroupSerializer(data=request.data)
+        serializer = ExtendedGroupSerializer(data={'name': group_name})
 
         if serializer.is_valid():
             group = serializer.save()

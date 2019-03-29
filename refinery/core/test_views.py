@@ -853,6 +853,7 @@ class GroupApiV2Tests(APIV2TestCase):
             api_base_name="groups/", view=GroupViewSet.as_view({'get': 'list'})
         )
         self.patch_view = GroupViewSet.as_view({'patch': 'partial_update'})
+        self.post_view = GroupViewSet.as_view({'post': 'create'})
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.group = ExtendedGroup.objects.create(name="Test Group")
         self.group_2 = ExtendedGroup.objects.create(name="Test Group 2")
@@ -1111,6 +1112,43 @@ class GroupApiV2Tests(APIV2TestCase):
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, 'xxxx5')
         self.assertEqual(patch_response.status_code, 404)
+
+    def test_post_groups_returns_401_for_anon(self):
+        post_request = self.factory.post(self.url_root, {'name': 'Group 231'})
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 401)
+
+    def test_post_groups_returns_201_for_new_group(self):
+        post_request = self.factory.post(self.url_root, {'name': 'Group 311'})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 201)
+
+    def test_post_groups_returns_group_object_when_successful(self):
+        new_group_name = 'Test Group 865'
+        post_request = self.factory.post(self.url_root,
+                                         {'name': new_group_name})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.data.get('name'), new_group_name)
+
+    def test_post_groups_returns_400_for_too_short_name(self):
+        post_request = self.factory.post(self.url_root, {'name': 'Ty'})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 400)
+
+    def test_post_groups_returns_400_for_duplicate_name(self):
+        new_group_name = 'Test Group 967'
+        post_request = self.factory.post(self.url_root,
+                                         {'name': new_group_name})
+        force_authenticate(post_request, user=self.user)
+        self.post_view(post_request)
+        post_request = self.factory.post(self.url_root,
+                                         {'name': new_group_name})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 400)
 
 
 class AnalysisApiV2Tests(APIV2TestCase):

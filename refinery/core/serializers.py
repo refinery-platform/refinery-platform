@@ -121,6 +121,10 @@ class DataSetSerializer(serializers.ModelSerializer):
 class ExtendedGroupSerializer(serializers.ModelSerializer):
     perm_list = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
+    name = serializers.CharField(
+        min_length=3,
+        validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
+    )
 
     def get_perm_list(self, group):
         data_set = self.context.get('data_set')
@@ -137,15 +141,6 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtendedGroup
         fields = ('name', 'id', 'uuid', 'perm_list')
-
-    def validate_name(self, name):
-        return name.strip()
-
-    def create(self, validated_data):
-        """
-        Create and return a new ExtendedGroup instance, given validated data.
-        """
-        return ExtendedGroup.objects.create(**validated_data)
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
