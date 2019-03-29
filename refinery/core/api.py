@@ -29,6 +29,7 @@ from tastypie.resources import ModelResource
 
 from .models import ExtendedGroup, Invitation
 
+
 logger = logging.getLogger(__name__)
 
 
