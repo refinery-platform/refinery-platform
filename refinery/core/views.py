@@ -908,7 +908,7 @@ class AnalysisViewSet(APIView):
 
 class GroupViewSet(viewsets.ViewSet):
     """API endpoint for viewing groups."""
-    http_method_names = ['get', 'patch']
+    http_method_names = ['get', 'patch', 'post']
     lookup_field = 'uuid'
 
     def get_object(self, uuid):
@@ -920,6 +920,24 @@ class GroupViewSet(viewsets.ViewSet):
         except ExtendedGroup.MultipleObjectsReturned as e:
             logger.error(e)
             raise APIException("Multiple groups returned for this request.")
+
+    def create(self, request):
+        group_name = request.data.get('name')
+        if request.user.is_anonymous():
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+        serializer = ExtendedGroupSerializer(data={'name': group_name})
+
+        if serializer.is_valid():
+            group = serializer.save()
+            group.user_set.add(request.user)
+            group.manager_group.user_set.add(request.user)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')

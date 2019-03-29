@@ -121,9 +121,15 @@ class DataSetSerializer(serializers.ModelSerializer):
 class ExtendedGroupSerializer(serializers.ModelSerializer):
     perm_list = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
+    name = serializers.CharField(
+        min_length=3,
+        validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
+    )
 
     def get_perm_list(self, group):
         data_set = self.context.get('data_set')
+        if data_set is None:
+            return {}
         data_set_perms = get_perms(group, data_set)
         return {'change': 'change_dataset' in data_set_perms,
                 'read': 'read_dataset' in data_set_perms,
