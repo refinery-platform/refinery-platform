@@ -124,6 +124,8 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
 
     def get_perm_list(self, group):
         data_set = self.context.get('data_set')
+        if data_set is None:
+            return {}
         data_set_perms = get_perms(group, data_set)
         return {'change': 'change_dataset' in data_set_perms,
                 'read': 'read_dataset' in data_set_perms,
@@ -135,6 +137,15 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtendedGroup
         fields = ('name', 'id', 'uuid', 'perm_list')
+
+    def validate_name(self, name):
+        return name.strip()
+
+    def create(self, validated_data):
+        """
+        Create and return a new ExtendedGroup instance, given validated data.
+        """
+        return ExtendedGroup.objects.create(**validated_data)
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
