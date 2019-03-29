@@ -9,21 +9,6 @@ class refinery::postgresql (
   $server_version = '10'
   $package_version = "${server_version}.7-1.pgdg14.04+1"
 
-  # for psycopg2 Python module
-  package { 'libpq5':
-    ensure  => $package_version,
-    require => Class[
-      # make sure repo is set up first
-      'postgresql::globals',
-      # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
-      'apt::update'
-    ],
-  }
-  ->
-  package { 'libpq-dev':  # must install separately after downgrading libpq5
-    ensure => $package_version,
-  }
-
   if $deployment_platform == 'aws' {
     $rds_settings = {
       'PGUSER'     => 'root',

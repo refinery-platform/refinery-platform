@@ -16,8 +16,22 @@ class refinery::python (
 
   $base_dependencies = ['build-essential', 'libncurses5-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
-  $postgresql_dependencies = ['libpq5', 'libpq-dev']  # psycopg2 module
   package { [$base_dependencies, $crypto_dependencies]: }
+
+  # for psycopg2 module
+  package { 'libpq5':
+    ensure  => $refinery::postgresql::package_version,
+    # make sure package repo is configured
+    require => Class[
+      'postgresql::globals',
+      # https://forge.puppet.com/puppetlabs/apt/readme#adding-new-sources-or-ppas
+      'apt::update'
+    ],
+  }
+  ->
+  package { 'libpq-dev':  # must install separately after downgrading libpq5
+    ensure => $refinery::postgresql::package_version,
+  }
 
   file { "/home/${app_user}/.virtualenvs":
     # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
@@ -34,7 +48,8 @@ class refinery::python (
       Package[
         $base_dependencies,
         $crypto_dependencies,
-        $postgresql_dependencies  # declared in postgresql.pp
+        'libpq5',
+        'libpq-dev'
       ],
     ]
   }
