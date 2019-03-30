@@ -862,13 +862,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.data_set.share(self.group)
         self.data_set.share(self.group_2)
 
-    def test_get_groups_with_data_set_uuid_returns_403_for_anon(self):
-        get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
-        get_response = self.view(get_request)
-        self.assertEqual(get_response.status_code, 403)
-
-    def test_get_groups_returns_all_user_groups(self):
+    def test_get_groups_no_params_returns_all_user_groups(self):
         public_group = ExtendedGroup.objects.public_group()
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=self.user)
@@ -880,12 +874,29 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertIn(self.group.id, group_uuid_list)
         self.assertIn(self.group_2.id, group_uuid_list)
 
-    def test_get_groups_returns_public_for_anon(self):
-        public_group = ExtendedGroup.objects.public_group()
+    def test_get_groups_no_params_returns_member_list(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
         get_request = self.factory.get(self.url_root)
-        force_authenticate(get_request, user=self.user)
+        force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
-        self.assertEqual(get_response.data[0].get('uuid'), public_group.uuid)
+        user_ids = [self.user.profile.uuid, new_user.profile.uuid]
+        self.assertEqual(len(get_response.data[0].get('member_list')), 2)
+        member_list = get_response.data[0].get('member_list')
+        self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
+        self.assertIn(member_list[1].get('profile').get('uuid'), user_ids)
+
+    def test_get_groups_no_params_returns_401_for_anon(self):
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 401)
+
+    def test_get_groups_with_data_set_uuid_returns_403_for_anon(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 403)
 
     def test_get_groups_invalid_data_set_uuid_returns_404(self):
         get_request = self.factory.get(self.url_root,

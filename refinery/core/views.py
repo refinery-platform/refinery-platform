@@ -944,6 +944,11 @@ class GroupViewSet(viewsets.ViewSet):
         all_perms_flag = request.query_params.get('allPerms', False)
 
         if data_set_uuid is None:
+            # returns member list, so must be logged in
+            if request.user.is_anonymous():
+                return Response(
+                    self.request.user, status=status.HTTP_401_UNAUTHORIZED
+                )
             query_set = ExtendedGroup.objects.all()
             context = {'data_set': None}
         else:

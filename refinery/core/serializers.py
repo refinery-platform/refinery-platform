@@ -119,12 +119,23 @@ class DataSetSerializer(serializers.ModelSerializer):
 
 
 class ExtendedGroupSerializer(serializers.ModelSerializer):
+    member_list = serializers.SerializerMethodField()
     perm_list = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
     name = serializers.CharField(
         min_length=3,
         validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
     )
+
+    def get_member_list(self, group):
+        # only needed to support dashboard client request
+        data_set = self.context.get('data_set')
+        if data_set is None:
+            users = group.user_set.all().filter(is_active=True).exclude(
+                username=settings.ANONYMOUS_USER_NAME
+            )
+            return UserSerializer(users, many=True).data
+        return []
 
     def get_perm_list(self, group):
         data_set = self.context.get('data_set')
@@ -140,7 +151,7 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExtendedGroup
-        fields = ('name', 'id', 'uuid', 'perm_list')
+        fields = ('name', 'id', 'uuid', 'member_list', 'perm_list')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
