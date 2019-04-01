@@ -13,7 +13,7 @@
     .controller('GroupEditModalCtrl', GroupEditModalCtrl);
 
   GroupEditModalCtrl.$inject = [
-    'groupExtendedService',
+    'groupService',
     'groupMemberService',
     'settings'
   ];

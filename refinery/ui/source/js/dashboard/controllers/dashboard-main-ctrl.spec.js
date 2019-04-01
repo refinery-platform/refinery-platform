@@ -18,7 +18,7 @@
     ) {
       scope = $rootScope.$new();
       service = groupService;
-      mockResponseData = { objects: [{ name: 'Test Group' }] };
+      mockResponseData = [{ name: 'Test Group' }];
 
       spyOn(service, 'query').and.callFake(function () {
         var deferred = $q.defer();
@@ -55,11 +55,11 @@
       it('getGroups returns a promise', function () {
         var successData;
         var response = ctrl.getGroups().then(function (responseData) {
-          successData = responseData.objects[0].name;
+          successData = responseData[0].name;
         });
         scope.$apply();
         expect(typeof response.then).toEqual('function');
-        expect(successData).toEqual(mockResponseData.objects[0].name);
+        expect(successData).toEqual(mockResponseData[0].name);
       });
     });
   });
