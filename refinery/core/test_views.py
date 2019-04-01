@@ -1982,7 +1982,7 @@ class CustomRegistrationViewTests(TestCase):
             }
         )
         self.assertTrue(response.wsgi_request.recaptcha_is_valid)
-        self.assertNotNone(User.objects.get(username=username))
+        self.assertIsNotNone(User.objects.get(username=username))
 
     @override_settings(
         REFINERY_GOOGLE_RECAPTCHA_SITE_KEY="invalid_site_key",
