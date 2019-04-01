@@ -121,11 +121,22 @@ class DataSetSerializer(serializers.ModelSerializer):
 class ExtendedGroupSerializer(serializers.ModelSerializer):
     member_list = serializers.SerializerMethodField()
     perm_list = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
     name = serializers.CharField(
         min_length=3,
         validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
     )
+
+    def get_can_edit(self, group):
+        user = self.context.get('user')
+        if user is None:
+            return ''
+
+        if group.is_manager_group():
+            return user in group.user_set.all()
+        else:
+            return user in group.manager_group.user_set.all()
 
     def get_member_list(self, group):
         # only needed to support dashboard client request
@@ -151,7 +162,7 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExtendedGroup
-        fields = ('name', 'id', 'uuid', 'member_list', 'perm_list')
+        fields = ('can_edit', 'name', 'id', 'uuid', 'member_list', 'perm_list')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
