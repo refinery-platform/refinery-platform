@@ -939,6 +939,15 @@ class GroupViewSet(viewsets.ViewSet):
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
 
+    def destroy(self, request, uuid):
+        user = request.user
+        group = self.get_object(uuid)
+        if not self.user_authorized(user, group):
+            return Response('Only managers may delete groups',
+                            status=status.HTTP_403_FORBIDDEN)
+        group.delete()
+        return Response(uuid)
+
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
         all_perms_flag = request.query_params.get('allPerms', False)
@@ -1002,7 +1011,7 @@ class GroupViewSet(viewsets.ViewSet):
         serializer = ExtendedGroupSerializer(group,
                                              context={'data_set': data_set})
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
 
 class CustomRegistrationView(RegistrationView):
