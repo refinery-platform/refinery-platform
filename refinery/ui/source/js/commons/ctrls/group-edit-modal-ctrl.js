@@ -19,7 +19,7 @@
   ];
 
   function GroupEditModalCtrl (
-    groupExtendedService,
+    groupService,
     groupMemberService,
     settings
   ) {
@@ -50,7 +50,7 @@
      * @memberOf refineryApp.GroupEditModalCtrl
     **/
     function deleteGroup () {
-      groupExtendedService.delete({
+      groupService.delete({
         uuid: vm.resolve.config.group.uuid
       }).$promise.then(function () {
         vm.alertType = 'success';

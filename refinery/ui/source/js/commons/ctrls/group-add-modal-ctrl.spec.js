@@ -10,11 +10,11 @@ describe('Controller: GroupAddModalCtrl', function () {
   beforeEach(inject(function (
     $rootScope,
     $controller,
-    groupExtendedService,
+    groupService,
     _$q_
   ) {
     scope = $rootScope.$new();
-    service = groupExtendedService;
+    service = groupService;
     $q = _$q_;
     ctrl = $controller('GroupAddModalCtrl', {
       $scope: scope

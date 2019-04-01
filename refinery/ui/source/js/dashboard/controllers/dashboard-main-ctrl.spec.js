@@ -3,7 +3,7 @@
 
   describe('Controller: Dashboard Main Ctrl', function () {
     var ctrl;
-    var groupService;
+    var service;
     var mockResponseData;
     var scope;
 
@@ -12,15 +12,15 @@
     beforeEach(inject(function (
       $controller,
       groupInviteService,
-      groupMemberService,
+      groupService,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
-      groupService = groupMemberService;
+      service = groupService;
       mockResponseData = { objects: [{ name: 'Test Group' }] };
 
-      spyOn(groupService, 'query').and.callFake(function () {
+      spyOn(service, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
         return { $promise: deferred.promise };
