@@ -942,11 +942,12 @@ class GroupViewSet(viewsets.ViewSet):
     def destroy(self, request, uuid):
         user = request.user
         group = self.get_object(uuid)
-        if not self.is_user_a_group_manager(user, group):
-            return Response('Only managers may delete groups',
-                            status=status.HTTP_403_FORBIDDEN)
-        group.delete()
-        return Response(uuid)
+        if self.is_user_a_group_manager(user, group):
+            group.delete()
+            return Response(uuid)
+
+        return Response('Only managers may delete groups',
+                        status=status.HTTP_403_FORBIDDEN)
 
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')

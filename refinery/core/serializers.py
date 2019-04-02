@@ -131,7 +131,7 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
     def get_can_edit(self, group):
         user = self.context.get('user')
         if user is None:
-            return ''
+            return False
 
         if group.is_manager_group():
             return user in group.user_set.all()
