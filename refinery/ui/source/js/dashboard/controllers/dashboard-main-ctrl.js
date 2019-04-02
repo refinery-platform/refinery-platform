@@ -15,7 +15,7 @@
     'humanize',
     '_',
     'groupInviteService',
-    'groupService',
+    'groupMemberService',
     'settings'
   ];
 
@@ -23,7 +23,7 @@
     humanize,
     _,
     groupInviteService,
-    groupService,
+    groupMemberService,
     settings
   ) {
     var vm = this;
@@ -35,10 +35,7 @@
     activate();
 
     function activate () {
-      // avoid unneccessary api when user is not logged in
-      if (vm.isLoggedIn) {
-        getGroups();
-      }
+      getGroups();
     }
 
     /**
@@ -47,9 +44,9 @@
      * @memberOf refineryDashboard.DashboardMainCtrl
     **/
     function getGroups () {
-      var members = groupService.query();
+      var members = groupMemberService.query();
       members.$promise.then(function (response) {
-        vm.groups = response;
+        vm.groups = response.objects;
         vm.groups.forEach(function (group) {
           addInviteList(group.id);
         });

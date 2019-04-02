@@ -27,8 +27,8 @@
       $httpBackend
         .whenGET(
           settings.appRoot +
-          settings.refineryApiV2 +
-          '/groups/'
+          settings.refineryApi +
+          '/extended_groups/members/?format=json&id=id'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

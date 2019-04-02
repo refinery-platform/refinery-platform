@@ -3,7 +3,7 @@
 
   describe('Controller: Dashboard Main Ctrl', function () {
     var ctrl;
-    var service;
+    var groupService;
     var mockResponseData;
     var scope;
 
@@ -12,15 +12,15 @@
     beforeEach(inject(function (
       $controller,
       groupInviteService,
-      groupService,
+      groupMemberService,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
-      service = groupService;
-      mockResponseData = [{ name: 'Test Group' }];
+      groupService = groupMemberService;
+      mockResponseData = { objects: [{ name: 'Test Group' }] };
 
-      spyOn(service, 'query').and.callFake(function () {
+      spyOn(groupService, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
         return { $promise: deferred.promise };
@@ -55,11 +55,11 @@
       it('getGroups returns a promise', function () {
         var successData;
         var response = ctrl.getGroups().then(function (responseData) {
-          successData = responseData[0].name;
+          successData = responseData.objects[0].name;
         });
         scope.$apply();
         expect(typeof response.then).toEqual('function');
-        expect(successData).toEqual(mockResponseData[0].name);
+        expect(successData).toEqual(mockResponseData.objects[0].name);
       });
     });
   });

@@ -10,11 +10,11 @@ describe('Controller: GroupAddModalCtrl', function () {
   beforeEach(inject(function (
     $rootScope,
     $controller,
-    groupService,
+    groupExtendedService,
     _$q_
   ) {
     scope = $rootScope.$new();
-    service = groupService;
+    service = groupExtendedService;
     $q = _$q_;
     ctrl = $controller('GroupAddModalCtrl', {
       $scope: scope
@@ -43,7 +43,7 @@ describe('Controller: GroupAddModalCtrl', function () {
       ctrl.groupName = 'Test Group 1';
       var successResponse = true;
       var groupNameAccepted = false;
-      spyOn(service, 'save').and.callFake(function () {
+      spyOn(service, 'create').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(successResponse);
         groupNameAccepted = true;

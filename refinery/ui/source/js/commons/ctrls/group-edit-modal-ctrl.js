@@ -13,13 +13,13 @@
     .controller('GroupEditModalCtrl', GroupEditModalCtrl);
 
   GroupEditModalCtrl.$inject = [
-    'groupService',
+    'groupExtendedService',
     'groupMemberService',
     'settings'
   ];
 
   function GroupEditModalCtrl (
-    groupService,
+    groupExtendedService,
     groupMemberService,
     settings
   ) {
@@ -50,7 +50,7 @@
      * @memberOf refineryApp.GroupEditModalCtrl
     **/
     function deleteGroup () {
-      groupService.delete({
+      groupExtendedService.delete({
         uuid: vm.resolve.config.group.uuid
       }).$promise.then(function () {
         vm.alertType = 'success';

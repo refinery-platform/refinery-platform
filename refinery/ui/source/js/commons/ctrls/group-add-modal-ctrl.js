@@ -13,12 +13,12 @@
 
   GroupAddModalCtrl.$inject = [
     '$log',
-    'groupService'
+    'groupExtendedService'
   ];
 
   function GroupAddModalCtrl (
     $log,
-    groupService
+    groupExtendedService
   ) {
     var vm = this;
 
@@ -50,7 +50,7 @@
     **/
     function createGroup () {
       vm.isLoading = true;
-      groupService.save({ name: vm.groupName }).$promise
+      groupExtendedService.create({ name: vm.groupName }).$promise
         .then(function () {
           vm.isLoading = false;
           generateAlertMessage('success', vm.groupName);
