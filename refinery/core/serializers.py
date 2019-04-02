@@ -119,6 +119,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 
 
 class ExtendedGroupSerializer(serializers.ModelSerializer):
+    manager_group_uuid = serializers.SerializerMethodField()
     member_list = serializers.SerializerMethodField()
     perm_list = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
@@ -127,6 +128,11 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
         min_length=3,
         validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
     )
+
+    def get_manager_group_uuid(self, group):
+        if group.is_manager_group():
+            return ''
+        return group.manager_group.uuid
 
     def get_can_edit(self, group):
         user = self.context.get('user')
@@ -145,7 +151,18 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
             users = group.user_set.all().filter(is_active=True).exclude(
                 username=settings.ANONYMOUS_USER_NAME
             )
-            return UserSerializer(users, many=True).data
+            user_data = UserSerializer(users, many=True).data
+            for user in user_data:
+                if group.is_manager_group():
+                    user['is_manager'] = user.get('id') in \
+                                         group.user_set.all().values_list(
+                                             'id', flat=True
+                                         )
+                else:
+                    user['is_manager'] = user.get('id') in \
+                                         group.manager_group.user_set.all()\
+                                             .values_list('id', flat=True)
+            return user_data
         return []
 
     def get_perm_list(self, group):
@@ -162,7 +179,8 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExtendedGroup
-        fields = ('can_edit', 'name', 'id', 'uuid', 'member_list', 'perm_list')
+        fields = ('can_edit', 'name', 'id', 'uuid', 'manager_group_uuid',
+                  'member_list', 'perm_list')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
@@ -248,7 +266,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'profile', 'username')
+        fields = ('first_name', 'id', 'last_name', 'profile', 'username')
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):

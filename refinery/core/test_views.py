@@ -35,9 +35,9 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
-                    GroupViewSet, ObtainAuthTokenValidSession,
-                    SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet,
-                    user)
+                    GroupViewSet, GroupMemberAPIView,
+                    ObtainAuthTokenValidSession, SiteProfileViewSet,
+                    UserProfileViewSet, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -1246,6 +1246,37 @@ class GroupApiV2Tests(APIV2TestCase):
         force_authenticate(post_request, user=self.user)
         post_response = self.post_view(post_request)
         self.assertEqual(post_response.status_code, 400)
+
+
+class GroupMemberApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        super(GroupMemberApiV2Tests, self).setUp(
+            api_base_name="groups/",
+            view=GroupMemberAPIView.as_view({'get': 'list'})
+        )
+        self.patch_view = GroupViewSet.as_view({'patch': 'partial_update'})
+        self.post_view = GroupViewSet.as_view({'post': 'create'})
+        self.delete_view = GroupViewSet.as_view({'delete': 'destroy'})
+        self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.group.manager_group.user_set.add(self.user)
+        self.group_2 = ExtendedGroup.objects.create(name="Test Group 2")
+        self.group_2.manager_group.user_set.add(self.user)
+        self.group.user_set.add(self.user)
+        self.group_2.user_set.add(self.user)
+        self.data_set.share(self.group)
+        self.data_set.share(self.group_2)
+
+    def test_delete_group_returns_403_for_non_managers(self):
+        non_manager = User.objects.create_user('Non-owner',
+                                               'user@example.com',
+                                               self.password)
+        self.group.user_set.add(non_manager)
+        delete_request = self.factory.delete(urljoin(self.url_root,
+                                                     self.group.uuid))
+        force_authenticate(delete_request, user=non_manager)
+        delete_response = self.delete_view(delete_request, self.group.uuid)
+        self.assertEqual(delete_response.status_code, 403)
 
 
 class AnalysisApiV2Tests(APIV2TestCase):

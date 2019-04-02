@@ -1021,6 +1021,84 @@ class GroupViewSet(viewsets.ViewSet):
             return user in group.manager_group.user_set.all()
 
 
+class GroupMemberAPIView(APIView):
+    """API endpoint that allows for Group Members to be added, promoted,
+    demoted or removed"""
+    http_method_names = ['delete', 'post']
+
+    def get_object(self, uuid):
+        try:
+            return ExtendedGroup.objects.get(uuid=uuid)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
+
+    def get_user(self, id):
+        try:
+            return User.objects.get(id=id)
+        except User.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except User.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple users returned for this request.")
+
+    def post(self, request, uuid):
+        # if group is a manager_group, user is promoted by adding to user set
+        group = self.get_object(uuid)
+        if not self.is_user_a_group_manager(request.user, group):
+            return Response(uuid, status=status.HTTP_403_FORBIDDEN)
+
+        edit_user = self.get_user(request.data.get('userId'))
+        group.user_set.add(edit_user)
+        serializer = ExtendedGroupSerializer(group,
+                                             context={user: edit_user})
+        return Response(serializer.data)
+
+    def delete(self, request, uuid, id):
+        # if group is a manager_group, user is demoted by removal
+        group = self.get_object(uuid)
+        edit_user = self.get_user(id)
+        if not self.is_user_a_group_manager(request.user, group):
+            if request.user != edit_user:
+                return Response(uuid,
+                                status=status.HTTP_403_FORBIDDEN)
+
+        if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
+            return HttpResponseBadRequest(
+                content="Users can not leave public group."
+            )
+        if group.is_manager_group():
+            if len(group.user_set.all()) > 1:
+                group.user_set.remove(edit_user)
+                return Response(uuid)
+            else:
+                return HttpResponseBadRequest(
+                    content="Last manager must delete group to leave."
+                )
+
+        if self.is_user_a_group_manager(request.user, group):
+            return HttpResponseBadRequest(
+                content="Managers can not leave group. Demote user first."
+            )
+        if len(group.user_set.all()) > 1:
+            group.user_set.remove(request.user)
+            return Response(uuid)
+        else:
+            return HttpResponseBadRequest(
+                content="Last user must delete group."
+            )
+
+    def is_user_a_group_manager(self, user, group):
+        if group.is_manager_group():
+            return user in group.user_set.all()
+        else:
+            return user in group.manager_group.user_set.all()
+
+
 class CustomRegistrationView(RegistrationView):
     success_url = "registration_complete"
 
