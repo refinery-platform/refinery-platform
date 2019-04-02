@@ -854,13 +854,92 @@ class GroupApiV2Tests(APIV2TestCase):
         )
         self.patch_view = GroupViewSet.as_view({'patch': 'partial_update'})
         self.post_view = GroupViewSet.as_view({'post': 'create'})
+        self.delete_view = GroupViewSet.as_view({'delete': 'destroy'})
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.group.manager_group.user_set.add(self.user)
         self.group_2 = ExtendedGroup.objects.create(name="Test Group 2")
+        self.group_2.manager_group.user_set.add(self.user)
         self.group.user_set.add(self.user)
         self.group_2.user_set.add(self.user)
         self.data_set.share(self.group)
         self.data_set.share(self.group_2)
+
+    def test_delete_group_returns_403_for_non_managers(self):
+        non_manager = User.objects.create_user('Non-owner',
+                                               'user@example.com',
+                                               self.password)
+        self.group.user_set.add(non_manager)
+        delete_request = self.factory.delete(urljoin(self.url_root,
+                                                     self.group.uuid))
+        force_authenticate(delete_request, user=non_manager)
+        delete_response = self.delete_view(delete_request, self.group.uuid)
+        self.assertEqual(delete_response.status_code, 403)
+
+    def test_delete_group_returns_200(self):
+        delete_request = self.factory.delete(urljoin(self.url_root,
+                                                     self.group.uuid))
+        force_authenticate(delete_request, user=self.user)
+        delete_response = self.delete_view(delete_request, self.group.uuid)
+        self.assertEqual(delete_response.status_code, 200)
+
+    def test_delete_group_deletes_group(self):
+        public_group = ExtendedGroup.objects.public_group()
+        delete_request = self.factory.delete(urljoin(self.url_root,
+                                                     self.group.uuid))
+        force_authenticate(delete_request, user=self.user)
+        delete_response = self.delete_view(delete_request, self.group.uuid)
+        remaining_group_uuids = [self.group_2.uuid, public_group.uuid]
+        self.assertNotIn(delete_response.data, remaining_group_uuids)
+
+    def test_get_groups_no_params_returns_all_user_groups(self):
+        public_group = ExtendedGroup.objects.public_group()
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        group_uuid_list = [get_response.data[0].get('id'),
+                           get_response.data[1].get('id'),
+                           get_response.data[2].get('id')]
+        self.assertIn(public_group.id, group_uuid_list)
+        self.assertIn(self.group.id, group_uuid_list)
+        self.assertIn(self.group_2.id, group_uuid_list)
+
+    def test_get_groups_no_params_returns_member_list(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=new_user)
+        get_response = self.view(get_request)
+        user_ids = [self.user.profile.uuid, new_user.profile.uuid]
+        self.assertEqual(len(get_response.data[0].get('member_list')), 2)
+        member_list = get_response.data[0].get('member_list')
+        self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
+        self.assertIn(member_list[1].get('profile').get('uuid'), user_ids)
+
+    def test_get_groups_no_params_has_can_edit_true(self):
+        # remove user from public group for testing can_edit
+        public_group = ExtendedGroup.objects.public_group()
+        public_group.user_set.remove(self.user)
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), True)
+
+    def test_get_groups_no_params_has_can_edit_false(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
+        self.group.user_set.add(new_user)
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=new_user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), False)
+
+    def test_get_groups_no_params_returns_401_for_anon(self):
+        get_request = self.factory.get(self.url_root)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 401)
 
     def test_get_groups_with_data_set_uuid_returns_403_for_anon(self):
         get_request = self.factory.get(self.url_root,
@@ -920,6 +999,24 @@ class GroupApiV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.uuid, get_response.data[0].get('uuid'))
+
+    def test_get_groups_with_data_set_uuid_has_can_edit_true(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), True)
+
+    def test_get_groups_with_data_set_uuid_has_can_edit_false(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
+        self.group.user_set.add(new_user)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=new_user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), False)
 
     def test_get_groups_with_data_set_uuid_has_correct_perms_field(self):
         self.data_set.unshare(self.group_2)
