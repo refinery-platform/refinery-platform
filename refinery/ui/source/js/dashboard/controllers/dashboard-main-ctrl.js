@@ -35,7 +35,10 @@
     activate();
 
     function activate () {
-      getGroups();
+      // avoid unneccessary api when user is not logged in
+      if (vm.isLoggedIn) {
+        getGroups();
+      }
     }
 
     /**
