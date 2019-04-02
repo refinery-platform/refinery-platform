@@ -908,7 +908,7 @@ class AnalysisViewSet(APIView):
 
 class GroupViewSet(viewsets.ViewSet):
     """API endpoint for viewing groups."""
-    http_method_names = ['get', 'patch', 'post']
+    http_method_names = ['get', 'delete', 'patch', 'post']
     lookup_field = 'uuid'
 
     def get_object(self, uuid):
@@ -938,6 +938,15 @@ class GroupViewSet(viewsets.ViewSet):
         return Response(
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
+    def destroy(self, request, uuid):
+        user = request.user
+        group = self.get_object(uuid)
+        if not self.is_user_a_group_manager(user, group):
+            return Response('Only managers may delete groups',
+                            status=status.HTTP_403_FORBIDDEN)
+        group.delete()
+        return Response(uuid)
 
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
@@ -1002,7 +1011,13 @@ class GroupViewSet(viewsets.ViewSet):
         serializer = ExtendedGroupSerializer(group,
                                              context={'data_set': data_set})
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
+    def is_user_a_group_manager(self, user, group):
+        if group.is_manager_group():
+            return user in group.user_set.all()
+        else:
+            return user in group.manager_group.user_set.all()
 
 
 class CustomRegistrationView(RegistrationView):
