@@ -917,6 +917,25 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
         self.assertIn(member_list[1].get('profile').get('uuid'), user_ids)
 
+    def test_get_groups_no_params_has_can_edit_true(self):
+        # remove user from public group for testing can_edit
+        public_group = ExtendedGroup.objects.public_group()
+        public_group.user_set.remove(self.user)
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), True)
+
+    def test_get_groups_no_params_has_can_edit_false(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
+        self.group.user_set.add(new_user)
+        get_request = self.factory.get(self.url_root)
+        force_authenticate(get_request, user=new_user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), False)
+
     def test_get_groups_no_params_returns_401_for_anon(self):
         get_request = self.factory.get(self.url_root)
         get_response = self.view(get_request)
@@ -980,6 +999,24 @@ class GroupApiV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.uuid, get_response.data[0].get('uuid'))
+
+    def test_get_groups_with_data_set_uuid_has_can_edit_true(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), True)
+
+    def test_get_groups_with_data_set_uuid_has_can_edit_false(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
+        self.group.user_set.add(new_user)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=new_user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('can_edit'), False)
 
     def test_get_groups_with_data_set_uuid_has_correct_perms_field(self):
         self.data_set.unshare(self.group_2)

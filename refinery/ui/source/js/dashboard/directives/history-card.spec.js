@@ -33,8 +33,8 @@
       $httpBackend
         .whenGET(
           settings.appRoot +
-          settings.refineryApi +
-          '/extended_groups/members/?format=json&id=id'
+          settings.refineryApiV2 +
+          '/groups/'
         ).respond(200, []);
 
       $httpBackend

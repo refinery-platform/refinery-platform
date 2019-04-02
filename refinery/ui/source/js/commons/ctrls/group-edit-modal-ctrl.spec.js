@@ -12,12 +12,12 @@ describe('Controller: GroupEditModalCtrl', function () {
     $componentController,
     $q,
     $rootScope,
-    groupExtendedService,
+    groupService,
     groupMemberService,
     mockParamsFactory
   ) {
     scope = $rootScope.$new();
-    service = groupExtendedService;
+    service = groupService;
     memberService = groupMemberService;
     promise = $q;
     ctrl = $componentController(

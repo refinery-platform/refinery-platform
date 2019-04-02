@@ -959,10 +959,10 @@ class GroupViewSet(viewsets.ViewSet):
                     self.request.user, status=status.HTTP_401_UNAUTHORIZED
                 )
             query_set = ExtendedGroup.objects.all()
-            context = {'data_set': None}
+            context = {'data_set': None, 'user': request.user}
         else:
             data_set = get_data_set_for_view_set(data_set_uuid)
-            context = {'data_set': data_set}
+            context = {'data_set': data_set, 'user': request.user}
 
             public_group = ExtendedGroup.objects.public_group()
             if not ('read_meta_dataset' in get_perms(public_group, data_set) or
@@ -1009,7 +1009,8 @@ class GroupViewSet(viewsets.ViewSet):
             data_set.share(group, False, True)
 
         serializer = ExtendedGroupSerializer(group,
-                                             context={'data_set': data_set})
+                                             context={'data_set': data_set,
+                                                      'user': request.user})
 
         return Response(serializer.data)
 
