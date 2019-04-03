@@ -908,7 +908,7 @@ class AnalysisViewSet(APIView):
 
 class GroupViewSet(viewsets.ViewSet):
     """API endpoint for viewing groups."""
-    http_method_names = ['get', 'patch', 'post']
+    http_method_names = ['get', 'delete', 'patch', 'post']
     lookup_field = 'uuid'
 
     def get_object(self, uuid):
@@ -939,26 +939,47 @@ class GroupViewSet(viewsets.ViewSet):
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
 
+    def destroy(self, request, uuid):
+        user = request.user
+        group = self.get_object(uuid)
+        if self.is_user_a_group_manager(user, group):
+            group.delete()
+            return Response(uuid)
+
+        return Response('Only managers may delete groups',
+                        status=status.HTTP_403_FORBIDDEN)
+
     def list(self, request):
         data_set_uuid = request.query_params.get('dataSetUuid')
         all_perms_flag = request.query_params.get('allPerms', False)
 
-        data_set = get_data_set_for_view_set(data_set_uuid)
-
-        public_group = ExtendedGroup.objects.public_group()
-        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
-                request.user.has_perm('core.read_meta_dataset', data_set)):
-            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
-
-        if all_perms_flag:
-            # all groups user is member of
+        if data_set_uuid is None:
+            # returns member list, so must be logged in
+            if request.user.is_anonymous():
+                return Response(
+                    self.request.user, status=status.HTTP_401_UNAUTHORIZED
+                )
             query_set = ExtendedGroup.objects.all()
-
+            context = {'data_set': None, 'user': request.user}
         else:
-            # all groups associated with data set and user is a member of
-            query_set = ExtendedGroup.objects.filter(
-                group_ptr__in=get_groups_with_perms(data_set)
-            )
+            data_set = get_data_set_for_view_set(data_set_uuid)
+            context = {'data_set': data_set, 'user': request.user}
+
+            public_group = ExtendedGroup.objects.public_group()
+            if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                    request.user.has_perm('core.read_meta_dataset', data_set)):
+                return Response(data_set_uuid,
+                                status=status.HTTP_403_FORBIDDEN)
+
+            if all_perms_flag:
+                # all groups user is member of
+                query_set = ExtendedGroup.objects.all()
+
+            else:
+                # all groups associated with data set and user is a member of
+                query_set = ExtendedGroup.objects.filter(
+                    group_ptr__in=get_groups_with_perms(data_set)
+                )
 
         member_groups = [group for group in query_set
                          if request.user in group.user_set.all() and
@@ -966,7 +987,7 @@ class GroupViewSet(viewsets.ViewSet):
 
         serializer = ExtendedGroupSerializer(member_groups,
                                              many=True,
-                                             context={'data_set': data_set})
+                                             context=context)
         return Response(serializer.data)
 
     def partial_update(self, request, uuid, format=None):
@@ -989,9 +1010,16 @@ class GroupViewSet(viewsets.ViewSet):
             data_set.share(group, False, True)
 
         serializer = ExtendedGroupSerializer(group,
-                                             context={'data_set': data_set})
+                                             context={'data_set': data_set,
+                                                      'user': request.user})
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
+    def is_user_a_group_manager(self, user, group):
+        if group.is_manager_group():
+            return user in group.user_set.all()
+        else:
+            return user in group.manager_group.user_set.all()
 
 
 class CustomRegistrationView(RegistrationView):
