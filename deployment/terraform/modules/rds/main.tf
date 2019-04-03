@@ -6,32 +6,33 @@ resource "aws_db_subnet_group" "default" {
 
 resource "aws_security_group" "db" {
   description = "Refinery: allow incoming connections to PostgreSQL DB"
-  name = "${var.resource_name_prefix}-db"
-  tags = "${var.tags}"
-  vpc_id = "${var.vpc_id}"
+  name        = "${var.resource_name_prefix}-db"
+  tags        = "${var.tags}"
+  vpc_id      = "${var.vpc_id}"
 
   ingress {
-    from_port = 5432
-    to_port   = 5432
-    protocol  = "tcp"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
     security_groups = ["${var.app_server_security_group_id}"]
   }
 }
 
 resource "aws_db_instance" "default" {
   allocated_storage          = 5
-  auto_minor_version_upgrade = false
+  auto_minor_version_upgrade = true
   availability_zone          = "${var.availability_zone}"
   backup_window              = "07:45-08:15"  # UTC
   backup_retention_period    = 15
   copy_tags_to_snapshot      = true
   db_subnet_group_name       = "${aws_db_subnet_group.default.id}"
   engine                     = "postgres"
-  engine_version             = "10.5"
+  engine_version             = "10"
   # snapshot IDs must be unique
   final_snapshot_identifier  = "${var.resource_name_prefix}-final-${substr(uuid(), 0, 8)}"
   identifier                 = "${var.resource_name_prefix}"
   instance_class             = "db.t2.small"
+  maintenance_window         = "Wed:08:30-Wed:09:00"  #UTC
   password                   = "${var.master_user_password}"
   publicly_accessible        = false
   snapshot_identifier        = "${var.snapshot_id}"

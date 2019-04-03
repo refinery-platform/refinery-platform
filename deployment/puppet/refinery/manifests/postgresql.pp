@@ -6,9 +6,8 @@ class refinery::postgresql (
   $rds_superuser_password = $refinery::params::rds_superuser_password,
   $rds_endpoint_address   = $refinery::params::rds_endpoint_address,
 ) inherits refinery::params {
-  # Postgres versioning scheme provides latest point releases when
-  # specifying major version: https://www.postgresql.org/support/versioning/
   $server_version = '10'
+  $package_version = "${server_version}.7-1.pgdg14.04+1"
 
   if $deployment_platform == 'aws' {
     $rds_settings = {
@@ -17,12 +16,12 @@ class refinery::postgresql (
       'PGHOST'     => $rds_endpoint_address,
       'PGPORT'     => '5432',
     }
-    class { '::postgresql::globals':
+    class { 'postgresql::globals':
       version                  => $server_version,
-      manage_package_repo      => true,
+      manage_package_repo      => true,  # required to install postgresql-10
       default_connect_settings => $rds_settings,
     }
-    class { '::postgresql::server':
+    class { 'postgresql::server':
       encoding             => 'UTF8',
       locale               => 'en_US.UTF8',
       manage_pg_hba_conf   => false,
@@ -47,7 +46,7 @@ class refinery::postgresql (
       environment => join_keys_to_values($rds_settings, '='),
     }
     ->
-    ::postgresql::server::database { $db_name:
+    postgresql::server::database { $db_name:
       owner => $db_user,
     }
     ->
@@ -62,23 +61,23 @@ class refinery::postgresql (
       ensure => purged,
     }
     ->
-    class { '::postgresql::globals':
+    class { 'postgresql::globals':
       version             => $server_version,
-      manage_package_repo => true,
+      manage_package_repo => true,  # required to install postgresql-10
     }
     ->
-    class { '::postgresql::server':
+    class { 'postgresql::server':
       encoding => 'UTF8',
       locale   => 'en_US.UTF8',
       # to make remote connections via SSH tunnel easier
       ipv4acls => ["host all ${db_user} 127.0.0.1/32 trust"],
     }
 
-    ::postgresql::server::role { $db_user:
+    postgresql::server::role { $db_user:
       createdb => true,  # to allow automated testing
     }
     ->
-    ::postgresql::server::db { $db_name:
+    postgresql::server::db { $db_name:
       user     => $db_user,
       password => '',
       owner    => $db_user,
