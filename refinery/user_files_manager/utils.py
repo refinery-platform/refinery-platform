@@ -24,15 +24,13 @@ def generate_solr_params_for_user(params, user_id):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-
     try:
         user = User.objects.get(id=user_id)
     except:
-        pass
-    try:
-        user = User.get_anonymous()
-    except User.DoesNotExist:
-        raise Http404
+        try:  # catches when guardian anon user is not created
+            user = User.get_anonymous()
+        except User.DoesNotExist:
+            raise Http404
 
     # will update to allow users to view read_meta datasets then we can
     # update to use get_resources_for_user method in core/utils
