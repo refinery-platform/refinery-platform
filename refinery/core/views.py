@@ -1062,7 +1062,7 @@ class GroupMemberAPIView(APIView):
         # if group is a manager_group, user is demoted by removal
         group = self.get_object(uuid)
         edit_user = self.get_user(id)
-        if self.is_user_authorized_to_edit(group, request.user, edit_user):
+        if self.is_user_unauthorized_to_edit(group, request.user, edit_user):
             return Response(uuid, status=status.HTTP_403_FORBIDDEN)
 
         if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
@@ -1088,7 +1088,7 @@ class GroupMemberAPIView(APIView):
             return Response(uuid)
         return HttpResponseBadRequest(content="No users left in group.")
 
-    def is_user_authorized_to_edit(self, group, request_user, edit_user):
+    def is_user_unauthorized_to_edit(self, group, request_user, edit_user):
         return not group.is_user_a_group_manager(request_user) \
                and request_user != edit_user
 
