@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.http import Http404
 
 from guardian.shortcuts import get_objects_for_user
 
@@ -26,8 +27,12 @@ def generate_solr_params_for_user(params, user_id):
 
     try:
         user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
+    except:
+        pass
+    try:
         user = User.get_anonymous()
+    except User.DoesNotExist:
+        raise Http404
 
     # will update to allow users to view read_meta datasets then we can
     # update to use get_resources_for_user method in core/utils
