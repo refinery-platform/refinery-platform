@@ -1053,10 +1053,14 @@ class GroupMemberAPIView(APIView):
             return Response(uuid, status=status.HTTP_403_FORBIDDEN)
 
         edit_user = self.get_user(request.data.get('userId'))
-        group.user_set.add(edit_user)
-        serializer = ExtendedGroupSerializer(group,
-                                             context={user: edit_user})
-        return Response(serializer.data)
+        if group.is_manager_group():
+            group.user_set.add(edit_user)
+            serializer = ExtendedGroupSerializer(group,
+                                                 context={user: edit_user})
+            return Response(serializer.data)
+        return HttpResponseBadRequest(
+            content="Manager groups are required to upgrade."
+        )
 
     def delete(self, request, uuid, id):
         # if group is a manager_group, user is demoted by removal
@@ -1080,16 +1084,16 @@ class GroupMemberAPIView(APIView):
                     content="Last manager must delete group to leave."
                 )
 
-        if self.is_user_a_group_manager(request.user, group):
+        if self.is_user_a_group_manager(edit_user, group):
             return HttpResponseBadRequest(
                 content="Managers can not leave group. Demote user first."
             )
-        if len(group.user_set.all()) > 1:
-            group.user_set.remove(request.user)
+        if len(group.user_set.all()) > 0:
+            group.user_set.remove(edit_user)
             return Response(uuid)
         else:
             return HttpResponseBadRequest(
-                content="Last user must delete group."
+                content="No users left in group."
             )
 
     def is_user_a_group_manager(self, user, group):
