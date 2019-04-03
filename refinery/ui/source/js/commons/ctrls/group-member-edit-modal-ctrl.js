@@ -56,7 +56,7 @@
       vm.isLoading = true;
       groupMemberService.remove({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
-        userId: vm.member.user_id
+        id: vm.member.id
       }).$promise.then(
         function () {
           vm.alertType = 'success';
@@ -83,7 +83,7 @@
       vm.isLoading = true;
       groupMemberService.add({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
-        user_id: vm.member.user_id
+        userId: vm.member.id
       }).$promise.then(
         function () {
           vm.alertType = 'success';
@@ -109,7 +109,7 @@
       vm.isLoading = true;
       groupMemberService.remove({
         uuid: vm.resolve.config.activeGroup.uuid,
-        userId: vm.member.user_id
+        id: vm.member.id
       }).$promise.then(
         function () {
           vm.alertType = 'success';
