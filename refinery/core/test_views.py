@@ -1018,6 +1018,19 @@ class GroupApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('can_edit'), False)
 
+    def test_get_groups_with_data_set_uuid_has_manager_group_uuid(self):
+        new_user = User.objects.create_user('Non-owner',
+                                            'user@example.com',
+                                            self.password)
+        self.group.user_set.add(new_user)
+        ExtendedGroup.objects.public_group().user_set.remove(new_user)
+        get_request = self.factory.get(self.url_root,
+                                       {'dataSetUuid': self.data_set.uuid})
+        force_authenticate(get_request, user=new_user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('manager_group_uuid'),
+                         self.group.manager_group.uuid)
+
     def test_get_groups_with_data_set_uuid_has_correct_perms_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,

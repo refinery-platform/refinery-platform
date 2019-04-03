@@ -813,10 +813,10 @@ class ExtendedGroupModelTests(TestCase):
         )
 
     def test_is_user_a_group_manager_returns_false_for_group(self):
-        self.assertTrue(self.group.is_user_a_group_manager(self.non_manager))
+        self.assertFalse(self.group.is_user_a_group_manager(self.non_manager))
 
     def test_is_user_a_group_manager_returns_false_for_manager_group(self):
-        self.assertTrue(
+        self.assertFalse(
             self.group.manager_group.is_user_a_group_manager(self.non_manager)
         )
 
