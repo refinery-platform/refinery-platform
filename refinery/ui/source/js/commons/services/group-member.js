@@ -15,7 +15,7 @@ angular
           remove: {
             method: 'DELETE'
           },
-          save: {
+          add: {
             method: 'POST'
           }
         }

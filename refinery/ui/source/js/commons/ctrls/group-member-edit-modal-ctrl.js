@@ -26,7 +26,6 @@
     vm.close = close;
     vm.demote = demote;
     vm.isLoading = false;
-    vm.group = vm.resolve.config.activeGroup;
     vm.member = vm.resolve.config.activeMember;
     vm.promote = promote;
     vm.remove = remove;
@@ -82,7 +81,7 @@
     **/
     function promote () {
       vm.isLoading = true;
-      groupMemberService.save({
+      groupMemberService.add({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         userId: vm.member.id
       }).$promise.then(

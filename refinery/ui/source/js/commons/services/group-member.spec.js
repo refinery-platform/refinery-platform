@@ -44,7 +44,7 @@
               { userId: mockUserId, uuid: mockUuid }
           ).respond(200, mockResponseStatus);
 
-          var promise = service.save({ userId: mockUserId, uuid: mockUuid }).$promise;
+          var promise = service.add({ userId: mockUserId, uuid: mockUuid }).$promise;
           expect(typeof promise.then).toEqual('function');
         });
 
@@ -59,7 +59,7 @@
               { userId: mockUserId, uuid: mockUuid }
           ).respond(200, mockResponse);
 
-          service.save({ uuid: mockUuid, userId: mockUserId })
+          service.add({ uuid: mockUuid, userId: mockUserId })
             .$promise.then(function (response) {
               results = response.name;
             });

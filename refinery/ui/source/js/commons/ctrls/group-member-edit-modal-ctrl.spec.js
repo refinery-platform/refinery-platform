@@ -70,7 +70,7 @@ describe('Controller: GroupEditModalCtrl', function () {
     it('promote calls memberService', function () {
       var successResponse = true;
       var memberPromoted = false;
-      spyOn(memberService, 'save').and.callFake(function () {
+      spyOn(memberService, 'add').and.callFake(function () {
         var deferred = promise.defer();
         deferred.resolve(successResponse);
         memberPromoted = true;
