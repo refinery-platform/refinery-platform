@@ -1863,6 +1863,12 @@ class ExtendedGroup(Group):
         except:
             return None
 
+    def is_user_a_group_manager(self, user):
+        if self.is_manager_group():
+            return user in self.user_set.all()
+        else:
+            return user in self.manager_group.user_set.all()
+
 
 # automatic creation of a managed group when an extended group is created:
 def create_manager_group(sender, instance, created, **kwargs):

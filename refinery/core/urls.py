@@ -71,8 +71,6 @@ core_router.urls.extend([
         GroupMemberAPIView.as_view()),
     url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/(?P<id>\d)/$',
         GroupMemberAPIView.as_view()),
-    url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/$',
-        GroupMemberAPIView.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         UserProfileViewSet.as_view()),
     url(r'^analyses/$', AnalysisViewSet.as_view()),

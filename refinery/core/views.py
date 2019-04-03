@@ -942,7 +942,7 @@ class GroupViewSet(viewsets.ViewSet):
     def destroy(self, request, uuid):
         user = request.user
         group = self.get_object(uuid)
-        if self.is_user_a_group_manager(user, group):
+        if group.is_user_a_group_manager(user):
             group.delete()
             return Response(uuid)
 
@@ -1015,15 +1015,9 @@ class GroupViewSet(viewsets.ViewSet):
 
         return Response(serializer.data)
 
-    def is_user_a_group_manager(self, user, group):
-        if group.is_manager_group():
-            return user in group.user_set.all()
-        else:
-            return user in group.manager_group.user_set.all()
-
 
 class GroupMemberAPIView(APIView):
-    """API endpoint that allows for Group Members to be added, promoted,
+    """API endpoint that allows for Group Members to be promoted,
     demoted or removed"""
     http_method_names = ['delete', 'post']
 
@@ -1050,27 +1044,26 @@ class GroupMemberAPIView(APIView):
     def post(self, request, uuid):
         # if group is a manager_group, user is promoted by adding to user set
         group = self.get_object(uuid)
-        if not self.is_user_a_group_manager(request.user, group):
-            return Response(uuid, status=status.HTTP_403_FORBIDDEN)
 
-        edit_user = self.get_user(request.data.get('userId'))
-        if group.is_manager_group():
-            group.user_set.add(edit_user)
-            serializer = ExtendedGroupSerializer(group,
-                                                 context={user: edit_user})
-            return Response(serializer.data)
-        return HttpResponseBadRequest(
-            content="Manager groups are required to upgrade."
-        )
+        if group.is_user_a_group_manager(request.user):
+            edit_user = self.get_user(request.data.get('userId'))
+            if group.is_manager_group():
+                group.user_set.add(edit_user)
+                serializer = ExtendedGroupSerializer(group,
+                                                     context={user: edit_user})
+                return Response(serializer.data)
+            return HttpResponseBadRequest(
+                content="Manager groups are required to upgrade."
+                )
+        # not a group manager
+        return Response(uuid, status=status.HTTP_403_FORBIDDEN)
 
     def delete(self, request, uuid, id):
         # if group is a manager_group, user is demoted by removal
         group = self.get_object(uuid)
         edit_user = self.get_user(id)
-        if not self.is_user_a_group_manager(request.user, group):
-            if request.user != edit_user:
-                return Response(uuid,
-                                status=status.HTTP_403_FORBIDDEN)
+        if self.is_user_authorized_to_edit(group, request.user, edit_user):
+            return Response(uuid, status=status.HTTP_403_FORBIDDEN)
 
         if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
             return HttpResponseBadRequest(
@@ -1085,23 +1078,18 @@ class GroupMemberAPIView(APIView):
                     content="Last manager must delete group to leave."
                 )
 
-        if self.is_user_a_group_manager(edit_user, group):
+        if group.is_user_a_group_manager(edit_user):
             return HttpResponseBadRequest(
                 content="Managers can not leave group. Demote user first."
             )
         if len(group.user_set.all()) > 0:
             group.user_set.remove(edit_user)
             return Response(uuid)
-        else:
-            return HttpResponseBadRequest(
-                content="No users left in group."
-            )
+        return HttpResponseBadRequest(content="No users left in group.")
 
-    def is_user_a_group_manager(self, user, group):
-        if group.is_manager_group():
-            return user in group.user_set.all()
-        else:
-            return user in group.manager_group.user_set.all()
+    def is_user_authorized_to_edit(self, group, request_user, edit_user):
+        return not group.is_user_a_group_manager(request_user) \
+               and request_user != edit_user
 
 
 class CustomRegistrationView(RegistrationView):

@@ -796,6 +796,31 @@ class DataSetTests(TestCase):
         self.assertTrue(data_set.is_clean())
 
 
+class ExtendedGroupModelTests(TestCase):
+    def setUp(self):
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.user = User.objects.create_user('managerUser')
+        self.non_manager = User.objects.create_user('regularUser')
+        self.group.user_set.add(self.user)
+        self.group.manager_group.user_set.add(self.user)
+
+    def test_is_user_a_group_manager_returns_true_for_group(self):
+        self.assertTrue(self.group.is_user_a_group_manager(self.user))
+
+    def test_is_user_a_group_manager_returns_true_for_manager_group(self):
+        self.assertTrue(
+            self.group.manager_group.is_user_a_group_manager(self.user)
+        )
+
+    def test_is_user_a_group_manager_returns_false_for_group(self):
+        self.assertTrue(self.group.is_user_a_group_manager(self.non_manager))
+
+    def test_is_user_a_group_manager_returns_false_for_manager_group(self):
+        self.assertTrue(
+            self.group.manager_group.is_user_a_group_manager(self.non_manager)
+        )
+
+
 class EventTests(TestCase):
 
     def setUp(self):
