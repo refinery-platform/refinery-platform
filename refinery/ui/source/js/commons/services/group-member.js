@@ -5,32 +5,18 @@ angular
   .factory('groupMemberService', ['$resource', 'settings',
     function ($resource, settings) {
       return $resource(
-        settings.appRoot + settings.refineryApi + '/extended_groups/members/',
+        settings.appRoot + settings.refineryApiV2 + '/groups/:uuid/members/:id/',
         {
           uuid: '@uuid',
-          userId: '@userId',
-          id: 'id',
+          id: '@id',
           format: 'json'
         },
         {
-          query: {
-            method: 'GET'
-          },
-          add: {
-            method: 'POST',
-            url: (
-              settings.appRoot +
-              settings.refineryApi +
-              '/extended_groups/:uuid/members/'
-            )
-          },
           remove: {
-            method: 'DELETE',
-            url: (
-              settings.appRoot +
-              settings.refineryApi +
-              '/extended_groups/:uuid/members/:userId/'
-            )
+            method: 'DELETE'
+          },
+          save: {
+            method: 'POST'
           }
         }
       );
