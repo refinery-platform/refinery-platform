@@ -1069,6 +1069,7 @@ class GroupMemberAPIView(APIView):
             return HttpResponseBadRequest(
                 content="Users can not leave public group."
             )
+        # Demote
         if group.is_manager_group():
             if len(group.user_set.all()) > 1:
                 group.user_set.remove(edit_user)
@@ -1077,7 +1078,7 @@ class GroupMemberAPIView(APIView):
                 return HttpResponseBadRequest(
                     content="Last manager must delete group to leave."
                 )
-
+        # Leave
         if group.is_user_a_group_manager(edit_user):
             return HttpResponseBadRequest(
                 content="Managers can not leave group. Demote user first."

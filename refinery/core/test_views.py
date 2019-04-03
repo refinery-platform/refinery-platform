@@ -1290,8 +1290,8 @@ class GroupMemberApiV2Tests(APIV2TestCase):
 
     def test_delete_member_returns_400_user_leaves_public_group(self):
         delete_request = self.factory.delete(
-            '/groups/' + self.public_group.uuid + '/members/'
-            + str(self.non_manager.id) + '/'
+            '/groups/' + self.public_group.uuid + '/members/' +
+            str(self.non_manager.id) + '/'
         )
         force_authenticate(delete_request, user=self.non_manager)
         delete_response = self.view(delete_request,
@@ -1301,8 +1301,8 @@ class GroupMemberApiV2Tests(APIV2TestCase):
 
     def test_delete_member_returns_400_manager_removes_user_from_public(self):
         delete_request = self.factory.delete(
-            '/groups/' + self.public_group.uuid + '/members/'
-            + str(self.non_manager.id) + '/'
+            '/groups/' + self.public_group.uuid + '/members/' +
+            str(self.non_manager.id) + '/'
         )
         force_authenticate(delete_request, user=self.user)
         delete_response = self.view(delete_request,
@@ -1312,8 +1312,8 @@ class GroupMemberApiV2Tests(APIV2TestCase):
 
     def test_delete_member_returns_400_last_manager_demotes_self(self):
         delete_request = self.factory.delete(
-            '/groups/' + self.group.manager_group.uuid + '/members/'
-            + str(self.user.id) + '/'
+            '/groups/' + self.group.manager_group.uuid + '/members/' +
+            str(self.user.id) + '/'
         )
         force_authenticate(delete_request, user=self.user)
         delete_response = self.view(delete_request,
