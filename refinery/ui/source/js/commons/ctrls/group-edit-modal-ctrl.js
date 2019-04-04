@@ -70,7 +70,7 @@
     function leaveGroup () {
       groupMemberService.remove({
         uuid: vm.resolve.config.group.uuid,
-        userId: settings.djangoApp.userId
+        id: settings.djangoApp.userId
       }).$promise.then(function () {
         vm.alertType = 'success';
         vm.modalInstance.close(vm.alertType);
