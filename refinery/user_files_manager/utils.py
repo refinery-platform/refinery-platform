@@ -1,11 +1,13 @@
-from django.contrib.auth.models import User
 from django.http import Http404
 
+from guardian.compat import get_user_model
 from guardian.shortcuts import get_objects_for_user
 
 from core.utils import accept_global_perms
 from data_set_manager.models import Assay, Study
 from data_set_manager.utils import generate_solr_params
+
+User = get_user_model()
 
 
 def generate_solr_params_for_user(params, user_id):
