@@ -1,7 +1,9 @@
 import csv
+from datetime import timedelta
 import json
 import logging
 import urllib
+import uuid
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
@@ -23,6 +25,7 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
 from django.shortcuts import (get_object_or_404, redirect, render,
                               render_to_response)
 from django.template import RequestContext, loader
+from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 
 import boto3
@@ -58,8 +61,9 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
 
 from .serializers import (AnalysisSerializer, DataSetSerializer,
                           EventSerializer, ExtendedGroupSerializer,
-                          SiteProfileSerializer, SiteVideoSerializer,
-                          UserProfileSerializer, WorkflowSerializer)
+                          InvitationSerializer, SiteProfileSerializer,
+                          SiteVideoSerializer, UserProfileSerializer,
+                          WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_data_set_for_view_set, get_non_manager_groups_for_user)
 
@@ -1091,6 +1095,96 @@ class GroupMemberAPIView(APIView):
     def is_user_unauthorized_to_edit(self, group, request_user, edit_user):
         return not group.is_user_a_group_manager(request_user) \
                and request_user != edit_user
+
+
+class InvitationViewSet(viewsets.ViewSet):
+    """API endpoint that allows for Group Members to be promoted,
+       demoted or removed"""
+    http_method_names = ['delete', 'get', 'post', 'put']
+    lookup_field = 'id'
+
+    def get_object(self, id):
+        try:
+            return Invitation.objects.get(id=id)
+        except Invitation.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Invitation.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple invitations returned for this "
+                               "request.")
+
+    def get_group_object(self, uuid):
+        try:
+            return ExtendedGroup.objects.get(uuid=uuid)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
+
+    def create(self, request):
+        group_uuid = request.data.get('group_uuid')
+        group = self.get_group_object(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = InvitationSerializer(data=request.data)
+        if serializer.is_valid():
+            invite = serializer.save()
+            invite.group_id = group.id
+            invite.sender = request.user
+            invite.token_uuid = uuid.uuid1()
+            invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
+            invite.expires = timezone.now() + invite.token_duration
+            invite.save()
+            self.send_email(request, invite, group)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        group_uuid = request.query_params.get('group_uuid')
+        group = self.get_group_object(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(group_uuid, status=status.HTTP_403_FORBIDDEN)
+
+        invites = Invitation.objects.all().filter(group_id=group.id)\
+            .order_by('-recipient_email')
+        # Remove expired invites
+        for invite in invites:
+            if invite.expires is None:
+                invite.delete()
+
+        serializer = InvitationSerializer(invites, many=True)
+        return Response(serializer.data)
+
+    def destroy(self, request, id):
+        group_uuid = request.query_params.get('group_uuid')
+        group = self.get_group_object(group_uuid)
+        invitation = self.get_object(id=id)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        invitation.delete()
+        return Response(id)
+
+    def send_email(self, request, invitation, group):
+        subject = "Invitation to join group {}".format(group.name)
+        temp_loader = loader.get_template(
+            'group_invitation/group_invite_email.txt')
+        context_dict = {
+            'group_name': group.name,
+            'site': get_current_site(request),
+            'token': invitation.token_uuid
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[invitation.recipient_email]
+        )
+        email.send()
 
 
 class CustomRegistrationView(RegistrationView):
