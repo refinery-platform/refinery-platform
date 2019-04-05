@@ -1100,7 +1100,7 @@ class GroupMemberAPIView(APIView):
 class InvitationViewSet(viewsets.ViewSet):
     """API endpoint that allows for Group Members to be promoted,
        demoted or removed"""
-    http_method_names = ['delete', 'get', 'post', 'put']
+    http_method_names = ['delete', 'get', 'post', 'patch']
     lookup_field = 'id'
 
     def get_object(self, id):
@@ -1144,6 +1144,16 @@ class InvitationViewSet(viewsets.ViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, id):
+        group_uuid = request.query_params.get('group_uuid')
+        group = self.get_group_object(group_uuid)
+        invitation = self.get_object(id=id)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        invitation.delete()
+        return Response(id)
+
     def list(self, request):
         group_uuid = request.query_params.get('group_uuid')
         group = self.get_group_object(group_uuid)
@@ -1160,14 +1170,18 @@ class InvitationViewSet(viewsets.ViewSet):
         serializer = InvitationSerializer(invites, many=True)
         return Response(serializer.data)
 
-    def destroy(self, request, id):
+    def partial_update(self, request, id):
         group_uuid = request.query_params.get('group_uuid')
         group = self.get_group_object(group_uuid)
-        invitation = self.get_object(id=id)
         if not group.is_user_a_group_manager(request.user):
             return Response(id, status=status.HTTP_403_FORBIDDEN)
 
-        invitation.delete()
+        invite = self.get_object(id)
+        invite.token_uuid = uuid.uuid1()
+        invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
+        invite.expires = timezone.now() + invite.token_duration
+        invite.save()
+        self.send_email(request, invite, group)
         return Response(id)
 
     def send_email(self, request, invitation, group):
