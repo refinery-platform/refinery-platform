@@ -132,9 +132,10 @@
      * @desc  VM method to resend an email invite
      * @memberOf refineryDashboard.CollaborationCardCtrl
     **/
-    function resendInvitation (tokenUuid) {
+    function resendInvitation (id, groupUuid) {
       groupInviteService.resend({
-        token: tokenUuid
+        id: id,
+        group_uuid: groupUuid
       }).$promise.then(function () {
         vm.dashboardParentCtrl.getGroups();
       }).catch(function () {
@@ -147,8 +148,11 @@
      * @desc  VM method to cancel an user's invite to a group
      * @memberOf refineryDashboard.CollaborationCardCtrl
     **/
-    function revokeInvitation (tokenUuid) {
-      groupInviteService.revoke({ token: tokenUuid }).$promise.then(function () {
+    function revokeInvitation (id, groupUuid) {
+      groupInviteService.revoke({
+        id: id,
+        group_uuid: groupUuid
+      }).$promise.then(function () {
         vm.dashboardParentCtrl.getGroups();
       }).catch(function () {
         $log.error('Invitation could not be revoked');
