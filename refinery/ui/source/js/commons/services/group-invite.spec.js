@@ -104,7 +104,7 @@
         expect(typeof promise.then).toEqual('function');
       });
 
-      it('should return a group', function () {
+      it('should return an invite object', function () {
         var mockResponse = { recipient_email: 'jane_doe@example.com', group_uuid: mockUuid };
         var results = {};
         httpBackend

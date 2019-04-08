@@ -1,7 +1,7 @@
 /**
  * Invitation V2 Service
  * @namespace invitationV2Service
- * @desc Service to query invitation API with a group uuid
+ * @desc Service to query, send, resend, and delete invites
  * @memberOf refineryApp
  */
 (function () {
