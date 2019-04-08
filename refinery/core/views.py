@@ -65,7 +65,8 @@ from .serializers import (AnalysisSerializer, DataSetSerializer,
                           SiteVideoSerializer, UserProfileSerializer,
                           WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
-                    get_data_set_for_view_set, get_non_manager_groups_for_user)
+                    get_data_set_for_view_set, get_group_for_view_set,
+                    get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -597,6 +598,9 @@ class DataSetsViewSet(viewsets.ViewSet):
     http_method_names = ['get', 'delete', 'patch']
     lookup_field = 'uuid'
 
+    def get_object(self, uuid):
+        return get_data_set_for_view_set(uuid)
+
     def list(self, request):
         params = request.query_params
         paginator = LimitOffsetPagination()
@@ -684,7 +688,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         'total_data_sets': total_data_sets})
 
     def retrieve(self, request, uuid):
-        data_set = get_data_set_for_view_set(uuid)
+        data_set = self.get_object(uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
@@ -732,7 +736,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def partial_update(self, request, uuid, format=None):
-        self.data_set = get_data_set_for_view_set(uuid)
+        self.data_set = self.get_object(uuid)
         self.current_site = get_current_site(request)
 
         # check edit permission for user
@@ -916,14 +920,7 @@ class GroupViewSet(viewsets.ViewSet):
     lookup_field = 'uuid'
 
     def get_object(self, uuid):
-        try:
-            return ExtendedGroup.objects.get(uuid=uuid)
-        except ExtendedGroup.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except ExtendedGroup.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple groups returned for this request.")
+        return get_group_for_view_set(uuid)
 
     def create(self, request):
         group_name = request.data.get('name')
@@ -1026,14 +1023,7 @@ class GroupMemberAPIView(APIView):
     http_method_names = ['delete', 'post']
 
     def get_object(self, uuid):
-        try:
-            return ExtendedGroup.objects.get(uuid=uuid)
-        except ExtendedGroup.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except ExtendedGroup.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple groups returned for this request.")
+        return get_group_for_view_set(uuid)
 
     def get_user(self, id):
         try:
@@ -1113,19 +1103,9 @@ class InvitationViewSet(viewsets.ViewSet):
             raise APIException("Multiple invitations returned for this "
                                "request.")
 
-    def get_group_object(self, uuid):
-        try:
-            return ExtendedGroup.objects.get(uuid=uuid)
-        except ExtendedGroup.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except ExtendedGroup.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple groups returned for this request.")
-
     def create(self, request):
         group_uuid = request.data.get('group_uuid')
-        group = self.get_group_object(group_uuid)
+        group = get_group_for_view_set(group_uuid)
         if not group.is_user_a_group_manager(request.user):
             return Response(id, status=status.HTTP_403_FORBIDDEN)
 
@@ -1145,7 +1125,7 @@ class InvitationViewSet(viewsets.ViewSet):
 
     def destroy(self, request, id):
         group_uuid = request.data.get('group_uuid')
-        group = self.get_group_object(group_uuid)
+        group = get_group_for_view_set(group_uuid)
         invitation = self.get_object(id=id)
         if not group.is_user_a_group_manager(request.user):
             return Response(id, status=status.HTTP_403_FORBIDDEN)
@@ -1155,7 +1135,7 @@ class InvitationViewSet(viewsets.ViewSet):
 
     def list(self, request):
         group_uuid = request.query_params.get('group_uuid')
-        group = self.get_group_object(group_uuid)
+        group = get_group_for_view_set(group_uuid)
         if not group.is_user_a_group_manager(request.user):
             return Response(group_uuid, status=status.HTTP_403_FORBIDDEN)
 
@@ -1171,7 +1151,7 @@ class InvitationViewSet(viewsets.ViewSet):
 
     def partial_update(self, request, id):
         group_uuid = request.data.get('group_uuid')
-        group = self.get_group_object(group_uuid)
+        group = get_group_for_view_set(group_uuid)
         if not group.is_user_a_group_manager(request.user):
             return Response(id, status=status.HTTP_403_FORBIDDEN)
 

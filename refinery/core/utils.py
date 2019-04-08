@@ -1027,3 +1027,14 @@ def get_data_set_for_view_set(uuid):
     except core.models.DataSet.MultipleObjectsReturned as e:
         logger.error(e)
         raise APIException("Multiple dataSets returned for this request.")
+
+
+def get_group_for_view_set(uuid):
+    try:
+        return core.models.ExtendedGroup.objects.get(uuid=uuid)
+    except core.models.ExtendedGroup.DoesNotExist as e:
+        logger.error(e)
+        raise Http404
+    except core.models.ExtendedGroup.MultipleObjectsReturned as e:
+        logger.error(e)
+        raise APIException("Multiple groups returned for this request.")
