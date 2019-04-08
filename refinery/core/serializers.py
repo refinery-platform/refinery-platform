@@ -186,7 +186,7 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
 class InvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invitation
-        fields = ('created',  'expires', 'group_id', 'id', 'recipient_email')
+        fields = ('created', 'expires', 'group_id', 'id', 'recipient_email')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):

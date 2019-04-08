@@ -1098,8 +1098,7 @@ class GroupMemberAPIView(APIView):
 
 
 class InvitationViewSet(viewsets.ViewSet):
-    """API endpoint that allows for Group Members to be promoted,
-       demoted or removed"""
+    """API endpoint for creating, getting, resending, & removing invitations"""
     http_method_names = ['delete', 'get', 'post', 'patch']
     lookup_field = 'id'
 
