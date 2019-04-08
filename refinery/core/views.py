@@ -1145,7 +1145,7 @@ class InvitationViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, id):
-        group_uuid = request.query_params.get('group_uuid')
+        group_uuid = request.data.get('group_uuid')
         group = self.get_group_object(group_uuid)
         invitation = self.get_object(id=id)
         if not group.is_user_a_group_manager(request.user):
@@ -1164,25 +1164,30 @@ class InvitationViewSet(viewsets.ViewSet):
             .order_by('-recipient_email')
         # Remove expired invites
         for invite in invites:
-            if invite.expires is None:
+            if self.has_invite_expired(invite):
                 invite.delete()
 
-        serializer = InvitationSerializer(invites, many=True)
+        serializer = InvitationSerializer(invites.all(), many=True)
         return Response(serializer.data)
 
     def partial_update(self, request, id):
-        group_uuid = request.query_params.get('group_uuid')
+        group_uuid = request.data.get('group_uuid')
         group = self.get_group_object(group_uuid)
         if not group.is_user_a_group_manager(request.user):
             return Response(id, status=status.HTTP_403_FORBIDDEN)
 
         invite = self.get_object(id)
-        invite.token_uuid = uuid.uuid1()
         invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
         invite.expires = timezone.now() + invite.token_duration
         invite.save()
         self.send_email(request, invite, group)
-        return Response(id)
+        serializer = InvitationSerializer(invite)
+        return Response(serializer.data)
+
+    def has_invite_expired(self, invite):
+        return (
+            timezone.now() - invite.expires
+        ).total_seconds() >= 0
 
     def send_email(self, request, invitation, group):
         subject = "Invitation to join group {}".format(group.name)
