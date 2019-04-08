@@ -1,29 +1,39 @@
-'use strict';
+/**
+ * Invitation V2 Service
+ * @namespace invitationV2Service
+ * @desc Service to query invitation API with a group uuid
+ * @memberOf refineryApp
+ */
+(function () {
+  'use strict';
 
-angular
-  .module('refineryApp')
-  .factory('groupInviteService', ['$resource', 'settings',
-    function ($resource, settings) {
-      return $resource(
-        settings.appRoot + settings.refineryApiV2 + '/invitations/:id/',
-        {
-          id: '@id',
-          format: 'json'
+  angular
+    .module('refineryApp')
+    .factory('groupInviteService', groupInviteService);
+
+  groupInviteService.$inject = ['$resource', 'settings'];
+
+  function groupInviteService ($resource, settings) {
+    var invites = $resource(
+      settings.appRoot + settings.refineryApiV2 + '/invitations/:id/',
+      {
+        id: '@id'
+      },
+      {
+        query: {
+          method: 'GET',
+          isArray: true
         },
-        {
-          query: {
-            method: 'GET',
-            isArray: true
-          },
-          send: {
-            method: 'POST'
-          },
-          resend: {
-            method: 'PATCH'
-          },
-          revoke: {
-            method: 'DELETE'
-          }
+        send: {
+          method: 'POST'
+        },
+        resend: {
+          method: 'PATCH'
+        },
+        revoke: {
+          method: 'DELETE'
         }
-      );
-    }]);
+      });
+    return invites;
+  }
+})();
