@@ -1124,9 +1124,15 @@ class InvitationViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, id):
-        group_uuid = request.data.get('group_uuid')
-        group = get_group_for_view_set(group_uuid)
         invitation = self.get_object(id=id)
+        try:
+            group = ExtendedGroup.objects.get(id=invitation.group_id)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
         if not group.is_user_a_group_manager(request.user):
             return Response(id, status=status.HTTP_403_FORBIDDEN)
 
