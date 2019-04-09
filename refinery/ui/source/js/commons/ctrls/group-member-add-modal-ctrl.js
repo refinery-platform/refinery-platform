@@ -66,8 +66,8 @@
       vm.responseMessage = '';
       vm.isLoading = true;
       groupInviteService.send({
-        email: vm.form.email,
-        group_id: vm.resolve.config.group.id
+        recipient_email: vm.form.email,
+        group_uuid: vm.resolve.config.group.uuid
       })
       .$promise
       .then(
