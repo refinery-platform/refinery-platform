@@ -1471,8 +1471,7 @@ class InvitationApiV2Tests(APIV2TestCase):
 
     def test_delete_invites_returns_403_for_non_managers(self):
         delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.invite.id)),
-            {'id': self.invite.id, 'group_uuid': self.group.uuid}
+            urljoin(self.url_root, str(self.invite.id))
         )
         force_authenticate(delete_request, user=self.non_manager)
         delete_response = self.delete_view(delete_request, self.invite.id)
@@ -1480,8 +1479,7 @@ class InvitationApiV2Tests(APIV2TestCase):
 
     def test_delete_invites_removes_invites_for_managers(self):
         delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.invite.id)),
-            {'id': self.invite.id, 'group_uuid': self.group.uuid}
+            urljoin(self.url_root, str(self.invite.id))
         )
         force_authenticate(delete_request, user=self.user)
         delete_response = self.delete_view(delete_request, self.invite.id)
