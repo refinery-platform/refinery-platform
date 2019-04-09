@@ -148,10 +148,9 @@
      * @desc  VM method to cancel an user's invite to a group
      * @memberOf refineryDashboard.CollaborationCardCtrl
     **/
-    function revokeInvitation (id, groupUuid) {
+    function revokeInvitation (id) {
       groupInviteService.revoke({
-        id: id,
-        group_uuid: groupUuid
+        id: id
       }).$promise.then(function () {
         vm.dashboardParentCtrl.getGroups();
       }).catch(function () {
