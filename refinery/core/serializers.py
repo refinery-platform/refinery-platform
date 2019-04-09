@@ -5,8 +5,8 @@ from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (Analysis, DataSet, Event, ExtendedGroup, SiteProfile,
-                     SiteVideo, User, UserProfile, Workflow)
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
+                     SiteProfile, SiteVideo, User, UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +181,12 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
         model = ExtendedGroup
         fields = ('can_edit', 'name', 'id', 'uuid', 'manager_group_uuid',
                   'member_list', 'perm_list')
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('created', 'expires', 'group_id', 'id', 'recipient_email')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):

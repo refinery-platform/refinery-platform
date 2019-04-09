@@ -1,7 +1,9 @@
 import csv
+from datetime import timedelta
 import json
 import logging
 import urllib
+import uuid
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
@@ -23,6 +25,7 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
 from django.shortcuts import (get_object_or_404, redirect, render,
                               render_to_response)
 from django.template import RequestContext, loader
+from django.utils import timezone
 from django.views.decorators.gzip import gzip_page
 
 import boto3
@@ -58,10 +61,12 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
 
 from .serializers import (AnalysisSerializer, DataSetSerializer,
                           EventSerializer, ExtendedGroupSerializer,
-                          SiteProfileSerializer, SiteVideoSerializer,
-                          UserProfileSerializer, WorkflowSerializer)
+                          InvitationSerializer, SiteProfileSerializer,
+                          SiteVideoSerializer, UserProfileSerializer,
+                          WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
-                    get_data_set_for_view_set, get_non_manager_groups_for_user)
+                    get_data_set_for_view_set, get_group_for_view_set,
+                    get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -593,6 +598,9 @@ class DataSetsViewSet(viewsets.ViewSet):
     http_method_names = ['get', 'delete', 'patch']
     lookup_field = 'uuid'
 
+    def get_object(self, uuid):
+        return get_data_set_for_view_set(uuid)
+
     def list(self, request):
         params = request.query_params
         paginator = LimitOffsetPagination()
@@ -680,7 +688,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         'total_data_sets': total_data_sets})
 
     def retrieve(self, request, uuid):
-        data_set = get_data_set_for_view_set(uuid)
+        data_set = self.get_object(uuid)
         public_group = ExtendedGroup.objects.public_group()
         if not ('read_meta_dataset' in get_perms(public_group, data_set) or
                 request.user.has_perm('core.read_meta_dataset', data_set)):
@@ -728,7 +736,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                         '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def partial_update(self, request, uuid, format=None):
-        self.data_set = get_data_set_for_view_set(uuid)
+        self.data_set = self.get_object(uuid)
         self.current_site = get_current_site(request)
 
         # check edit permission for user
@@ -912,14 +920,7 @@ class GroupViewSet(viewsets.ViewSet):
     lookup_field = 'uuid'
 
     def get_object(self, uuid):
-        try:
-            return ExtendedGroup.objects.get(uuid=uuid)
-        except ExtendedGroup.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except ExtendedGroup.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple groups returned for this request.")
+        return get_group_for_view_set(uuid)
 
     def create(self, request):
         group_name = request.data.get('name')
@@ -1022,14 +1023,7 @@ class GroupMemberAPIView(APIView):
     http_method_names = ['delete', 'post']
 
     def get_object(self, uuid):
-        try:
-            return ExtendedGroup.objects.get(uuid=uuid)
-        except ExtendedGroup.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except ExtendedGroup.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple groups returned for this request.")
+        return get_group_for_view_set(uuid)
 
     def get_user(self, id):
         try:
@@ -1091,6 +1085,110 @@ class GroupMemberAPIView(APIView):
     def is_user_unauthorized_to_edit(self, group, request_user, edit_user):
         return not group.is_user_a_group_manager(request_user) \
                and request_user != edit_user
+
+
+class InvitationViewSet(viewsets.ViewSet):
+    """API endpoint for creating, getting, resending, & removing invitations"""
+    http_method_names = ['delete', 'get', 'post', 'patch']
+    lookup_field = 'id'
+
+    def get_object(self, id):
+        try:
+            return Invitation.objects.get(id=id)
+        except Invitation.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Invitation.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple invitations returned for this "
+                               "request.")
+
+    def create(self, request):
+        group_uuid = request.data.get('group_uuid')
+        group = get_group_for_view_set(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = InvitationSerializer(data=request.data)
+        if serializer.is_valid():
+            invite = serializer.save()
+            invite.group_id = group.id
+            invite.sender = request.user
+            invite.token_uuid = uuid.uuid1()
+            invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
+            invite.expires = timezone.now() + invite.token_duration
+            invite.save()
+            self.send_email(request, invite, group)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, id):
+        invitation = self.get_object(id=id)
+        try:
+            group = ExtendedGroup.objects.get(id=invitation.group_id)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        invitation.delete()
+        return Response(id)
+
+    def list(self, request):
+        group_uuid = request.query_params.get('group_uuid')
+        group = get_group_for_view_set(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(group_uuid, status=status.HTTP_403_FORBIDDEN)
+
+        invites = Invitation.objects.all().filter(group_id=group.id)\
+            .order_by('-recipient_email')
+        # Remove expired invites
+        for invite in invites:
+            if self.has_invite_expired(invite):
+                invite.delete()
+
+        serializer = InvitationSerializer(invites.all(), many=True)
+        return Response(serializer.data)
+
+    def partial_update(self, request, id):
+        group_uuid = request.data.get('group_uuid')
+        group = get_group_for_view_set(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        invite = self.get_object(id)
+        invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
+        invite.expires = timezone.now() + invite.token_duration
+        invite.save()
+        self.send_email(request, invite, group)
+        serializer = InvitationSerializer(invite)
+        return Response(serializer.data)
+
+    def has_invite_expired(self, invite):
+        return (
+            timezone.now() - invite.expires
+        ).total_seconds() >= 0
+
+    def send_email(self, request, invitation, group):
+        subject = "Invitation to join group {}".format(group.name)
+        temp_loader = loader.get_template(
+            'group_invitation/group_invite_email.txt')
+        context_dict = {
+            'group_name': group.name,
+            'site': get_current_site(request),
+            'token': invitation.token_uuid
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[invitation.recipient_email]
+        )
+        email.send()
 
 
 class CustomRegistrationView(RegistrationView):

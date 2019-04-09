@@ -1,15 +1,20 @@
+from datetime import datetime
+from datetime import timedelta
 import json
 import random
 import string
+import uuid
 from urlparse import urljoin
 
 from cuser.middleware import CuserMiddleware
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.http import Http404
 from django.test import Client, override_settings
 from django.test.testcases import TestCase
+from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
 from guardian.shortcuts import get_groups_with_perms
@@ -27,15 +32,15 @@ from factory_boy.django_model_factories import (
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
-from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
-                     SiteProfile, SiteStatistics, SiteVideo, Workflow,
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
+                     Project, SiteProfile, SiteStatistics, SiteVideo, Workflow,
                      WorkflowEngine)
 
 
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
-                    GroupViewSet, GroupMemberAPIView,
+                    GroupViewSet, GroupMemberAPIView, InvitationViewSet,
                     ObtainAuthTokenValidSession, SiteProfileViewSet,
                     UserProfileViewSet, WorkflowViewSet, user)
 
@@ -1400,6 +1405,139 @@ class GroupMemberApiV2Tests(APIV2TestCase):
         self.assertEqual(post_request.status_code, 200)
         self.assertIn(self.non_manager,
                       self.group.manager_group.user_set.all())
+
+
+class InvitationApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        super(InvitationApiV2Tests, self).setUp(
+            api_base_name="invitations/",
+            view=InvitationViewSet.as_view({'get': 'list'})
+        )
+        self.patch_view = InvitationViewSet.as_view(
+            {'patch': 'partial_update'}
+        )
+        self.post_view = InvitationViewSet.as_view({'post': 'create'})
+        self.delete_view = InvitationViewSet.as_view({'delete': 'destroy'})
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.group.manager_group.user_set.add(self.user)
+        self.group.user_set.add(self.user)
+        self.public_group = ExtendedGroup.objects.public_group()
+        self.public_group.manager_group.user_set.add(self.user)
+        self.non_manager = User.objects.create_user('Non-owner',
+                                                    'user@example.com',
+                                                    self.password)
+        self.group.user_set.add(self.non_manager)
+        self.non_member = User.objects.create_user('Non-member',
+                                                   'user2@example.com',
+                                                   self.password)
+        self.invite = Invitation(token_uuid=uuid.uuid1(),
+                                 group_id=self.group.id)
+        self.time_duration = timedelta(days=settings.TOKEN_DURATION)
+        self.invite.expires = timezone.now() + self.time_duration
+        self.invite.sender = self.user
+        self.invite.recipient_email = self.non_manager.email
+        self.invite.save()
+
+    def test_create_invites_returns_403_for_non_managers(self):
+        post_request = self.factory.post(
+            self.url_root,
+            {'group_uuid': self.group.uuid,
+             'recipient_email': self.non_member.email}
+        )
+        force_authenticate(post_request, user=self.non_manager)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 403)
+
+    def test_create_invites_returns_201_for_manager(self):
+        post_request = self.factory.post(
+            self.url_root,
+            {'group_uuid': self.group.uuid,
+             'recipient_email': self.non_member.email}
+        )
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 201)
+
+    def test_create_invites_returns_new_invite_object_for_manager(self):
+        post_request = self.factory.post(
+            self.url_root,
+            {'group_uuid': self.group.uuid,
+             'recipient_email': self.non_member.email}
+        )
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.data.get('recipient_email'),
+                         self.non_member.email)
+
+    def test_delete_invites_returns_403_for_non_managers(self):
+        delete_request = self.factory.delete(
+            urljoin(self.url_root, str(self.invite.id))
+        )
+        force_authenticate(delete_request, user=self.non_manager)
+        delete_response = self.delete_view(delete_request, self.invite.id)
+        self.assertEqual(delete_response.status_code, 403)
+
+    def test_delete_invites_removes_invites_for_managers(self):
+        delete_request = self.factory.delete(
+            urljoin(self.url_root, str(self.invite.id))
+        )
+        force_authenticate(delete_request, user=self.user)
+        delete_response = self.delete_view(delete_request, self.invite.id)
+        self.assertEqual(delete_response.status_code, 200)
+        self.assertEqual(len(Invitation.objects.all()), 0)
+
+    def test_get_invites_returns_403_for_non_managers(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'group_uuid': self.group.uuid})
+        force_authenticate(get_request, user=self.non_manager)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 403)
+
+    def test_get_invites_returns_invites_for_managers(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'group_uuid': self.group.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('id'), self.invite.id)
+
+    def test_get_invites_deletes_expired_invites(self):
+        exp_invite = Invitation(token_uuid=uuid.uuid1(),
+                                group_id=self.group.id)
+        exp_invite.expires = timezone.now()
+        exp_invite.sender = self.user
+        exp_invite.recipient_email = self.non_member.email
+        exp_invite.save()
+        get_request = self.factory.get(self.url_root,
+                                       {'group_uuid': self.group.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 1)
+        self.assertEqual(get_response.data[0].get('id'), self.invite.id)
+
+    def test_patch_invites_returns_403_for_non_managers(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, str(self.invite.id)),
+            {'group_uuid': self.group.uuid},
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.invite.id)
+        self.assertEqual(patch_response.status_code, 403)
+
+    def test_patch_invites_extends_expiration_for_managers(self):
+        previous_invite_expire = self.invite.expires
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, str(self.invite.id)),
+            {'group_uuid': self.group.uuid},
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.invite.id)
+        # drf formatting to isoformat
+        isoformat = datetime.isoformat(previous_invite_expire)
+        drf_isoformat_previous_expire = isoformat[:-6] + 'Z'
+        self.assertGreater(patch_response.data.get('expires'),
+                           drf_isoformat_previous_expire)
 
 
 class AnalysisApiV2Tests(APIV2TestCase):

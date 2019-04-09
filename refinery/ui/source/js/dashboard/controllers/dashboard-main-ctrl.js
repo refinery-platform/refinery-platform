@@ -51,7 +51,9 @@
       members.$promise.then(function (response) {
         vm.groups = response;
         vm.groups.forEach(function (group) {
-          addInviteList(group.id);
+          if (group.name !== 'Public') {
+            addInviteList(group.uuid);
+          }
         });
       });
       return members.$promise;
@@ -62,14 +64,14 @@
      * @memberOf refineryDashboard.DashboardMainCtrl
      * @param {int} groupID - group ID number
     **/
-    function addInviteList (groupID) {
+    function addInviteList (groupUuid) {
       groupInviteService.query({
-        group_id: groupID
+        group_uuid: groupUuid
       }).$promise.then(function (data) {
-        if (!_.has(vm.groupInvites, 'groupID')) {
-          vm.groupInvites[groupID] = [];
+        if (!_.has(vm.groupInvites, 'groupUuid')) {
+          vm.groupInvites[groupUuid] = [];
         }
-        angular.copy(data.objects, vm.groupInvites[groupID]);
+        angular.copy(data, vm.groupInvites[groupUuid]);
       });
     }
   }

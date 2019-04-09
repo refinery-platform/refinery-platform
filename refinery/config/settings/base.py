@@ -189,8 +189,6 @@ INSTALLED_APPS = (
     'haystack',
     # NG: added for celery (task queue)
     'djcelery',  # django-celery
-    # NG: added for API
-    "tastypie",
     'djangular',
     'galaxy_connector',
     'analysis_manager',

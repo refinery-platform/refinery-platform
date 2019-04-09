@@ -10,7 +10,7 @@ from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
-                    GroupViewSet, GroupMemberAPIView,
+                    GroupViewSet, GroupMemberAPIView, InvitationViewSet,
                     ObtainAuthTokenValidSession, OpenIDToken,
                     SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet,
                     site_statistics)
@@ -65,6 +65,7 @@ core_router = DefaultRouter()
 core_router.register(r'workflows', WorkflowViewSet)
 core_router.register(r'data_sets', DataSetsViewSet, 'data_sets')
 core_router.register(r'groups', GroupViewSet, 'groups')
+core_router.register(r'invitations', InvitationViewSet, 'invitations')
 core_router.urls.extend([
     url(r'^events/$', EventViewSet.as_view()),
     url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/$',
