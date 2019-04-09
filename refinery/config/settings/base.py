@@ -7,8 +7,6 @@ import subprocess
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
 
-import djcelery
-
 logger = logging.getLogger(__name__)
 
 # get the absolute path of the top level project dir
@@ -50,9 +48,6 @@ def get_setting(name, settings=local_settings, default=None):
         else:
             raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
-
-# TODO: remove after switching to the new Celery API
-djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
 # (convert JSON list of lists to tuple of tuples)
@@ -187,8 +182,6 @@ INSTALLED_APPS = (
     'django_markwhat',
     # NG: added for search and faceting (Solr support)
     'haystack',
-    # NG: added for celery (task queue)
-    'djcelery',  # django-celery
     # NG: added for API
     "tastypie",
     'djangular',

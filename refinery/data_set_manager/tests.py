@@ -17,7 +17,6 @@ from django.http import QueryDict
 from django.test import TestCase, override_settings
 
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
-from djcelery.models import TaskMeta
 
 from core.utils import get_absolute_url
 from factory_boy.utils import (create_dataset_with_necessary_models,
@@ -1503,10 +1502,6 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.import_task_id = str(uuid.uuid4())
         self.file_store_item.save()
 
-        self.import_task = TaskMeta.objects.create(
-            task_id=self.file_store_item.import_task_id
-        )
-
         self.node = Node.objects.create(
             assay=assay,
             study=study,
@@ -1615,27 +1610,6 @@ class NodeIndexTests(APITestCase):
                 self._prepare_node_index(self.node),
                 expected_download_url=constants.NOT_AVAILABLE
             )
-
-    def test_prepare_node_pending_non_existent_file_import_task(self):
-        self.import_task.delete()
-        with mock.patch.object(FileStoreItem, 'get_datafile_url',
-                               return_value=None):
-            with mock.patch.object(FileStoreItem, 'get_import_status',
-                                   return_value=FAILURE):
-                self._assert_node_index_prepared_correctly(
-                    self._prepare_node_index(self.node),
-                    expected_download_url=constants.NOT_AVAILABLE
-                )
-
-    def test_prepare_node_no_file_import_task_id_yet(self):
-        self.file_store_item.import_task_id = ""
-        self.file_store_item.save()
-        self.import_task.delete()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=PENDING,
-            expected_datafile=self.file_store_item.datafile
-        )
 
     def test_prepare_node_no_file_store_item(self):
         with mock.patch('celery.result.AsyncResult'):

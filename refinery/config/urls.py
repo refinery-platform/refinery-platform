@@ -8,18 +8,18 @@ from django.contrib import admin
 from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 
-from config.utils import RouterCombiner
 from core.api import InvitationResource
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.utils import verify_recaptcha
 from core.views import CustomRegistrationView
-from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
+from data_set_manager.urls import data_set_manager_router
 from tool_manager.urls import django_docker_engine_url, tool_manager_router
 from user_files_manager.urls import (user_files_csv_url, user_files_router,
                                      user_files_url)
+from .utils import RouterCombiner
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,6 @@ urlpatterns = patterns(
     url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
-    url(r'^tasks/', include('djcelery.urls')),
     url(r'^docs/', include('rest_framework_swagger.urls')),
 
     # NG: added to include additional views for admin
