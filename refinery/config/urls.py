@@ -6,10 +6,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 from registration.backends.default.views import ActivationView
-from tastypie.api import Api
 
 from config.utils import RouterCombiner
-from core.api import InvitationResource
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
@@ -22,11 +20,6 @@ from user_files_manager.urls import (user_files_csv_url, user_files_router,
                                      user_files_url)
 
 logger = logging.getLogger(__name__)
-
-# NG: added for tastypie URL
-v1_api = Api(api_name='v1')
-
-v1_api.register(InvitationResource())
 
 
 # patterns for all of the different applications
@@ -86,9 +79,6 @@ urlpatterns = patterns(
     ),
 
     url(r'^accounts/', include('registration.backends.default.urls')),
-
-    # NG: tastypie API urls
-    url(r'^api/', include(v1_api.urls)),
 
     user_files_url,
     user_files_csv_url
