@@ -100,7 +100,7 @@
                 <span class="col-md-11 col-xs-offset-1 col-xs-11
                 col-md-offset-1 p-l-1 border-line"></span>
               </li>
-              <li class='row' ng-repeat="invite in $ctrl.invitations[group.id]"
+              <li class='row' ng-repeat="invite in $ctrl.invitations[group.uuid]"
                 class="p-t-1">
                 <span class="col-md-9 col-xs-8 member-info">
                   {{ invite.recipient_email }}
@@ -108,11 +108,11 @@
                 <span ng-if="group.can_edit"
                   class="invite-actions col-md-3 col-xs-2">
                   <a class="pointer p-r-1"
-                    ng-click="$ctrl.revokeInvitation(invite.token_uuid)">
+                    ng-click="$ctrl.revokeInvitation(invite.id)">
                     Revoke
                   </a>
                   <a class="pointer"
-                    ng-click="$ctrl.resendInvitation(invite.token_uuid)"
+                    ng-click="$ctrl.resendInvitation(invite.id, group.uuid)"
                     class="p-l-1">
                     Resend
                   </a>

@@ -1,10 +1,13 @@
-from django.contrib.auth.models import User
+from django.http import Http404
 
+from guardian.compat import get_user_model
 from guardian.shortcuts import get_objects_for_user
 
 from core.utils import accept_global_perms
 from data_set_manager.models import Assay, Study
 from data_set_manager.utils import generate_solr_params
+
+User = get_user_model()
 
 
 def generate_solr_params_for_user(params, user_id):
@@ -23,11 +26,13 @@ def generate_solr_params_for_user(params, user_id):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-
     try:
         user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        user = User.get_anonymous()
+    except:
+        try:  # catches when guardian anon user is not created
+            user = User.get_anonymous()
+        except User.DoesNotExist:
+            raise Http404
 
     # will update to allow users to view read_meta datasets then we can
     # update to use get_resources_for_user method in core/utils

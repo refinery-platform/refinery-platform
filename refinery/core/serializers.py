@@ -5,8 +5,8 @@ from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (Analysis, DataSet, Event, Group, SiteProfile, SiteVideo,
-                     User, UserProfile, Workflow)
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
+                     SiteProfile, SiteVideo, User, UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
 
@@ -118,12 +118,57 @@ class DataSetSerializer(serializers.ModelSerializer):
         return instance
 
 
-class GroupSerializer(serializers.ModelSerializer):
-    perms = serializers.SerializerMethodField()
+class ExtendedGroupSerializer(serializers.ModelSerializer):
+    manager_group_uuid = serializers.SerializerMethodField()
+    member_list = serializers.SerializerMethodField()
+    perm_list = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
     uuid = serializers.SerializerMethodField()
+    name = serializers.CharField(
+        min_length=3,
+        validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
+    )
 
-    def get_perms(self, group):
+    def get_manager_group_uuid(self, group):
+        if group.is_manager_group():
+            return ''
+        return group.manager_group.uuid
+
+    def get_can_edit(self, group):
+        user = self.context.get('user')
+        if user is None:
+            return False
+
+        if group.is_manager_group():
+            return user in group.user_set.all()
+        else:
+            return user in group.manager_group.user_set.all()
+
+    def get_member_list(self, group):
+        # only needed to support dashboard client request
         data_set = self.context.get('data_set')
+        if data_set is None:
+            users = group.user_set.all().filter(is_active=True).exclude(
+                username=settings.ANONYMOUS_USER_NAME
+            )
+            user_data = UserSerializer(users, many=True).data
+            for user in user_data:
+                if group.is_manager_group():
+                    user['is_manager'] = user.get('id') in \
+                                         group.user_set.all().values_list(
+                                             'id', flat=True
+                                         )
+                else:
+                    user['is_manager'] = user.get('id') in \
+                                         group.manager_group.user_set.all()\
+                                             .values_list('id', flat=True)
+            return user_data
+        return []
+
+    def get_perm_list(self, group):
+        data_set = self.context.get('data_set')
+        if data_set is None:
+            return {}
         data_set_perms = get_perms(group, data_set)
         return {'change': 'change_dataset' in data_set_perms,
                 'read': 'read_dataset' in data_set_perms,
@@ -133,8 +178,15 @@ class GroupSerializer(serializers.ModelSerializer):
         return group.extendedgroup.uuid
 
     class Meta:
-        model = Group
-        fields = ('name', 'id', 'uuid', 'perms')
+        model = ExtendedGroup
+        fields = ('can_edit', 'name', 'id', 'uuid', 'manager_group_uuid',
+                  'member_list', 'perm_list')
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('created', 'expires', 'group_id', 'id', 'recipient_email')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
@@ -220,7 +272,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'profile', 'username')
+        fields = ('first_name', 'id', 'last_name', 'profile', 'username')
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):

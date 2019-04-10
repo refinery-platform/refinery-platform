@@ -13,13 +13,13 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import connection
+from django.http import Http404
 from django.utils import timezone
 
 from celery.task import task
-from guardian.shortcuts import get_objects_for_user
-from guardian.utils import get_anonymous_user
 import py2neo
 import requests
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 
 import constants
@@ -991,21 +991,6 @@ def get_non_manager_groups_for_user(user):
     return user.groups.exclude(name__contains='Managers')
 
 
-def get_resources_for_user(user, resource_type):
-    return get_objects_for_user(
-        user if user.is_authenticated()
-        else get_anonymous_user(),
-        which_default_read_perm(resource_type),
-        accept_global_perms=accept_global_perms(resource_type)
-    )
-
-
-def which_default_read_perm(resource_type):
-    if resource_type == 'dataset':
-        return 'core.read_meta_dataset'
-    return 'core.read_%s' % resource_type
-
-
 # False, accept_global_perms will be ignored, which means that only object
 # permissions will be checked.
 def accept_global_perms(resource_type):
@@ -1031,3 +1016,25 @@ def verify_recaptcha(view_function):
                 request.recaptcha_is_valid = True
         return view_function(request, *args, **kwargs)
     return _wrapped_view
+
+
+def get_data_set_for_view_set(uuid):
+    try:
+        return core.models.DataSet.objects.get(uuid=uuid)
+    except core.models.DataSet.DoesNotExist as e:
+        logger.error(e)
+        raise Http404
+    except core.models.DataSet.MultipleObjectsReturned as e:
+        logger.error(e)
+        raise APIException("Multiple dataSets returned for this request.")
+
+
+def get_group_for_view_set(uuid):
+    try:
+        return core.models.ExtendedGroup.objects.get(uuid=uuid)
+    except core.models.ExtendedGroup.DoesNotExist as e:
+        logger.error(e)
+        raise Http404
+    except core.models.ExtendedGroup.MultipleObjectsReturned as e:
+        logger.error(e)
+        raise APIException("Multiple groups returned for this request.")
