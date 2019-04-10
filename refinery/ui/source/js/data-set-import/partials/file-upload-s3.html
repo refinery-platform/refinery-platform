@@ -9,7 +9,7 @@
 
     <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
     <div class="row fileupload-buttonbar v-centered-row">
-      <div class="col-lg-4">
+      <div class="col-lg-12">
         <!-- The fileinput-button span is used to style the file input field as button -->
         <div
           class="refinery-base btn btn-default btn-sm fileinput-button"
@@ -17,8 +17,8 @@
           ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() || FileCtrl
           .areUploadsInProgress(), 'banned': FileCtrl.isNodeUpdate && files.length >= 1 }">
           <i class="fa fa-plus"></i>
-          <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip;</span>
-          <span ng-if="FileCtrl.isNodeUpdate">Add file &hellip;</span>
+          <span ng-if="!FileCtrl.isNodeUpdate">Add files from browser</span>
+          <span ng-if="FileCtrl.isNodeUpdate">Add file from browser</span>
           <input
             type="file"
             class="refinery-base"
