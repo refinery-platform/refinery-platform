@@ -5,9 +5,10 @@
     </h3>
   </div>
   <div id="home-chart-ui-select">
-    <label class="ui-select-label">
-      Top Five Categories
-    </label>
+    <label class="block label-block label-text-left">
+        <span class="label-text label-left ui-select-label">
+           Top Five Categories
+        </span>
     <ui-select
       append-to-body="true"
       ng-model="DSCtrl.selectedAttribute.select"
@@ -23,6 +24,7 @@
         <span ng-bind-html="attribute.name"></span>
       </ui-select-choices>
     </ui-select>
+    </label>
   </div>
   <canvas id="files-bar-chart"></canvas>
 </div>
