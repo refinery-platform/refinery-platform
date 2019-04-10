@@ -142,7 +142,7 @@ class TutorialsAdmin(GuardedModelAdmin):
 
 class OntologyAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'acronym', 'name', 'uri', 'version',
-                    'owl2neo4j_version', 'import_date', 'update_date']
+                    'import_date', 'update_date']
 
 
 class SiteProfileAdmin(GuardedModelAdmin):

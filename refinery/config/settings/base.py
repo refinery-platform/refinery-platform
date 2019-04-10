@@ -267,9 +267,6 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
-        'httpstream': {  # dependency of py2neo
-            'level': 'INFO',
-        },
         'pysolr': {
             'level': 'INFO',
         },
@@ -472,55 +469,6 @@ except (ValueError, subprocess.CalledProcessError) as exc:
     logger.debug("Error retrieving hash of the most recent commit: %s",
                  exc)
     CURRENT_COMMIT = ""
-
-# Neo4J Settings
-NEO4J_BASE_URL = "http://localhost:7474"
-NEO4J_CONSTRAINTS = [
-    {
-        "label": "Class",
-        "properties": [
-            {
-                "name": "name",
-                "unique": False
-            },
-            {
-                "name": "uri",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "Ontology",
-        "properties": [
-            {
-                "name": "acronym",
-                "unique": True
-            },
-            {
-                "name": "uri",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "User",
-        "properties": [
-            {
-                "name": "id",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "DataSet",
-        "properties": [
-            {
-                "name": "id",
-                "unique": True
-            }
-        ]
-    }
-]
 
 SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
 SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")

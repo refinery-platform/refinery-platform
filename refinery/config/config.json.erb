@@ -33,55 +33,6 @@
   "LIBS_DIR": "/opt",
   "MEDIA_ROOT": "<%= @media_root %>",
   "MEDIA_URL": "/media/",
-  "NEO4J": {
-    "BASE_URL": "http://localhost:7474",
-    "CONSTRAINTS": [
-      {
-        "label": "Class",
-        "property": [
-          {
-            "name": "name",
-            "unique": true
-          },
-          {
-            "name": "uri",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "Ontology",
-        "property": [
-          {
-            "name": "acronym",
-            "unique": true
-          },
-          {
-            "name": "uri",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "User",
-        "property": [
-          {
-            "name": "id",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "DataSet",
-        "property": [
-          {
-            "name": "id",
-            "unique": true
-          }
-        ]
-      }
-    ]
-  },
   "REFINERY_AUXILIARY_FILE_GENERATION": "on_file_import",
   "REFINERY_AWS_REGION": "<%= @aws_region %>",
   "REFINERY_BANNER": "<%= @refinery_banner || "" %>",

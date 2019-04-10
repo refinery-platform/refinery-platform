@@ -16,8 +16,6 @@ from data_set_manager.models import Assay, Contact, Investigation, Study
 from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import create_dataset_with_necessary_models
 
-from .management.commands.import_annotations import \
-    Command as ImportAnnotationsCommand
 from .models import (DataSet, ExtendedGroup, WorkflowEngine,
                      invalidate_cached_object)
 from .search_indexes import DataSetIndex
@@ -406,13 +404,6 @@ class TestManagementCommands(TestCase):
 
         call_command("activate_user", guest_username)
         self.assertTrue(User.objects.get(username=guest_username).is_active)
-
-    def test_import_annotations(self):
-        """ We just care about this in the context of the optparse -> argparse
-        upgrade for Django 1.8 and don't necessarily want to test the
-        neo4j interactions """
-        with mock.patch.object(ImportAnnotationsCommand, "handle"):
-            call_command("import_annotations", "-c")
 
     def test_create_workflow_engine(self):
         galaxy_instance = GalaxyInstanceFactory()

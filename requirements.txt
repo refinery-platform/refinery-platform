@@ -39,7 +39,6 @@ mockcache==1.0.2
 ndg-httpsclient==0.3.2
 networkx==1.7
 psycopg2-binary==2.7.4
-py2neo==2.0.8
 pyasn1==0.1.9
 pycparser==2.13
 Pygments==1.6rc1

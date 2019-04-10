@@ -4,7 +4,6 @@ import json
 import logging
 import urllib
 import uuid
-from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
 from django.conf import settings
@@ -14,7 +13,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -26,7 +24,6 @@ from django.shortcuts import (get_object_or_404, redirect, render,
                               render_to_response)
 from django.template import RequestContext, loader
 from django.utils import timezone
-from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
@@ -34,7 +31,6 @@ from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
                                 get_perms)
 
 from guardian.core import ObjectPermissionChecker
-from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
 import requests
@@ -508,54 +504,6 @@ def pubmed_summary(request, id):
         logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
-
-    return HttpResponse(response, content_type='application/json')
-
-
-@gzip_page
-def neo4j_dataset_annotations(request):
-    """Query Neo4J for dataset annotations per user"""
-
-    if request.user.username:
-        user_name = request.user.username
-    else:
-        try:
-            user_name = get_anonymous_user().username
-        except(User.DoesNotExist, User.MultipleObjectsReturned,
-               ImproperlyConfigured) as e:
-            error_message = \
-                "Could not properly fetch the AnonymousUser: {}".format(e)
-            logger.error(error_message)
-            return HttpResponseServerError(error_message)
-
-    url = urljoin(
-        settings.NEO4J_BASE_URL,
-        'ontology/unmanaged/annotations/{}'.format(user_name)
-    )
-
-    headers = {
-        'Accept': 'application/json; charset=UTF-8',
-        'Accept-Encoding': 'gzip,deflate',
-        'Content-type': 'application/json'
-    }
-
-    params = {
-        'objectification': 2
-    }
-
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-    except requests.exceptions.ConnectionError as e:
-        logger.error('Neo4J seems to be offline.')
-        logger.error(e)
-        return HttpResponse(
-            'Neo4J seems to be offline.',
-            content_type='text/plain',
-            status=503
-        )
 
     return HttpResponse(response, content_type='application/json')
 
