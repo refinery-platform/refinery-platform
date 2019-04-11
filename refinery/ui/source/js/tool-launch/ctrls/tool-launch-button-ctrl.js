@@ -13,6 +13,7 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
+    '$scope',
     '$timeout',
     'dataSetPropsService',
     'settings',
@@ -21,12 +22,12 @@
     'toolSelectService',
     '$uibModal',
     'visualizationService',
-    '$rootScope',
     '$window'
   ];
 
   function ToolLaunchButtonCtrl (
     $log,
+    $scope,
     $timeout,
     dataSetPropsService,
     settings,
@@ -35,13 +36,12 @@
     toolSelectService,
     $uibModal,
     visualizationService,
-    $rootScope,
     $window
   ) {
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
-    vm.userIsAnonymous = settings.djangoApp.userId !== undefined;
+    vm.userIsAnonymous = settings.djangoApp.userId === undefined;
 
     /*
    * -----------------------------------------------------------------------------
@@ -75,5 +75,20 @@
     function needMoreNodes () {
       return toolLaunchService.checkNeedMoreNodes();
     }
+    /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return settings.djangoApp;
+        },
+        function (djangoApp) {
+          vm.userIsAnonymous = djangoApp.userId === undefined;
+        }
+      );
+    };
   }
 })();
