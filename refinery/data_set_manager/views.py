@@ -1109,8 +1109,7 @@ class NodeViewSet(viewsets.ViewSet):
     attribute related siblings. "
      ---
     list:
-        description: Returns nodes filtered by studies and user's read_meta
-        perms
+        description: Returns nodes filtered by study and user's read_meta perms
         parameters:
             - name: studyUuid
               description: study's uuid
@@ -1154,7 +1153,7 @@ class NodeViewSet(viewsets.ViewSet):
             - name: related_attribute_nodes
               description: data set uuid
               paramType: query
-              type: string
+              type: boolean
               required: true
     ...
     """

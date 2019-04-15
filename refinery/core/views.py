@@ -631,12 +631,12 @@ class DataSetsViewSet(viewsets.ViewSet):
                 - name: is_owner
                   description: Returns the users' owned data set
                   paramType: query
-                  type: string
+                  type: boolean
                   required: false
                 - name: is_public
                   description: Returns public data sets
                   paramType: query
-                  type: string
+                  type: boolean
                   required: false
                 - name: group
                   description: Requires group id to return data sets visible
@@ -650,11 +650,16 @@ class DataSetsViewSet(viewsets.ViewSet):
                 query: merge
             description: Update a data set's owner and or update meta fields
             parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
                 - name: transfer_data_set
                   description: Flag to transfer a data set, requires
                   new_owner_email field
                   paramType: form
-                  type: string
+                  type: boolean
                   required: false
                 - name: new_owner_email
                   description: Requires a valid user email to transfer data
@@ -683,7 +688,7 @@ class DataSetsViewSet(viewsets.ViewSet):
                   type: string
                   required: false
         retrieve:
-            description: Returns data sets
+            description: Returns data set
             parameters:
                 - name: uuid
                   description: data set uuid
@@ -1033,7 +1038,7 @@ class AnalysisViewSet(APIView):
 
 class GroupViewSet(viewsets.ViewSet):
     """
-        API endpoint for creating, deleting, and get groups. Also, data set
+        API endpoint for creating, deleting, and getting groups. Also, data set
         owners can update a group's data set permissions.
         ---
         create:
@@ -1053,7 +1058,7 @@ class GroupViewSet(viewsets.ViewSet):
                   type: string
                   required: true
         list:
-            description: Returns groups filters on data sets or user
+            description: Returns groups filtered on data set or user
             (defaults to read_meta perms)
             parameters:
                 - name: dataSetUuid
@@ -1062,14 +1067,11 @@ class GroupViewSet(viewsets.ViewSet):
                   type: string
                   required: false
                 - name: allPerms
-                  description: Limits query set to groups user is member of
+                  description: Limits query set to groups the user is member of
                   paramType: query
-                  type: string
+                  type: boolean
                   required: false
         partial_update:
-             parameters_strategy:
-                form: replace
-                query: merge
             description: Data set owners can update group's perms for data sets
             parameters:
                 - name: dataSetUuid
@@ -1188,21 +1190,18 @@ class GroupViewSet(viewsets.ViewSet):
 
 class GroupMemberAPIView(APIView):
     """
-    API endpoint that allows for Group Members to be promoted,
-    demoted or removed
+    API endpoint that allows for group members to be promoted,
+    demoted, or removed
     ---
     delete:
-        description: Group managers can either demotes or removes a user
+        description: Group managers can either demote or remove a user
         parameters:
             - name: id
-              description: User id
+              description: user id
               paramType: path
               type: string
               required: true
     post:
-         parameters_strategy:
-            form: replace
-            query: merge
         description:  Group managers can promote a user
         parameters:
             - name: userId
