@@ -60,9 +60,8 @@ from .serializers import (AnalysisSerializer, DataSetSerializer,
                           InvitationSerializer, SiteProfileSerializer,
                           SiteVideoSerializer, UserProfileSerializer,
                           WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations,
-                    get_data_set_for_view_set, get_group_for_view_set,
-                    get_non_manager_groups_for_user)
+from .utils import (api_error_response, get_data_set_for_view_set,
+                    get_group_for_view_set, get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -338,62 +337,10 @@ def solr_core_search(request):
             ' OR '.join(access))
 
     try:
-        allIds = params['allIds'] in ['1', 'true', 'True']
-    except KeyError:
-        allIds = False
-
-    try:
-        annotations = params['annotations'] in ['1', 'true', 'True']
-    except KeyError:
-        annotations = False
-    try:
         response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
-
-    if allIds or annotations:
-        # Query for all uuids given the same query. Solr shold be very fast
-        # because we just queried for almost the same information, only limited
-        # in size.
-        all_ids_params = {
-            'defType': params['defType'],
-            'fl': 'dbid',
-            'fq': params['fq'],
-            'q': params['q'],
-            'qf': params['qf'],
-            'rows': 2147483647,
-            'start': 0,
-            'wt': 'json'
-        }
-        try:
-            response_ids = requests.get(
-                url,
-                params=all_ids_params,
-                headers=headers
-            )
-            response_ids.raise_for_status()
-        except HTTPError as e:
-            logger.error(e)
-
-        if response_ids.status_code == 200:
-            response_ids = response_ids.json()
-            ids = []
-
-            for ds in response_ids['response']['docs']:
-                ids.append(ds['dbid'])
-
-            annotation_data = get_data_sets_annotations(ids)
-
-            response = response.json()
-
-            if allIds:
-                response['response']['allIds'] = ids
-
-            if annotations:
-                response['response']['annotations'] = annotation_data
-
-            return JsonResponse(response)
 
     return HttpResponse(response, content_type='application/json')
 

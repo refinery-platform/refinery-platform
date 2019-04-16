@@ -1917,50 +1917,6 @@ class Invitation(models.Model):
         return super(Invitation, self).save(*arg, **kwargs)
 
 
-class Ontology(models.Model):
-    """Store meta information of imported ontologies
-    """
-
-    # Stores the most recent import date, i.e. this will be overwritten when a
-    # ontology is re-imported.
-    import_date = models.DateTimeField(
-        default=timezone.now,
-        editable=False,
-        auto_now=False
-    )
-
-    # Full name of the ontology
-    # E.g.: Gene Ontology
-    name = models.CharField(max_length=64, blank=True)
-
-    # Equals the abbreviation / acronym / prefix specified during the import.
-    # Note that prefix constist of uppercase letters only. Similar to the OBO
-    # naming convention.
-    # E.g.: GO
-    acronym = models.CharField(max_length=8, blank=True, unique=True)
-
-    # Base URI of the ontology
-    # E.g.: http://purl.obolibrary.org/obo/go.owl
-    uri = models.CharField(max_length=128, blank=True, unique=True)
-
-    # Stores the most recent date when the model was updated in whatever way.
-    update_date = models.DateTimeField(auto_now=True)
-
-    # Stores the versionIRI of the ontology. Can be useful to check which
-    # version is currently imported.
-    version = models.CharField(
-        max_length=256,
-        null=True,
-        blank=True
-    )
-
-    def __unicode__(self):
-        return '{name} ({acronym})'.format(
-            name=self.name,
-            acronym=self.acronym
-        )
-
-
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']

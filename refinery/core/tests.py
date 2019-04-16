@@ -9,7 +9,6 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-import mock
 import mockcache as memcache
 
 from data_set_manager.models import Assay, Contact, Investigation, Study
@@ -19,8 +18,7 @@ from factory_boy.utils import create_dataset_with_necessary_models
 from .models import (DataSet, ExtendedGroup, WorkflowEngine,
                      invalidate_cached_object)
 from .search_indexes import DataSetIndex
-from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    move_obj_to_front)
+from .utils import get_aware_local_time
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -261,107 +259,6 @@ class UtilitiesTest(TestCase):
                 {'uuid': 'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'}
             ]
         return {'nodes': response_node_uuids}
-
-    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
-                fake_generate_solr_params)
-    @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
-    @mock.patch("data_set_manager.utils.format_solr_response",
-                fake_format_solr_response)
-    def test_filter_nodes_uuids_in_solr_with_uuids(self):
-        response_node_uuids = [
-            'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
-            '57d2b371-a364-4806-b7ee-366a722ca9f4',
-            'c9d7f81f-2274-4179-ad00-28227bf4b9b7',
-            'e082ce03-0a83-4162-af5c-7472e450d7d0',
-            '880e60f7-7036-4468-b9c8-fdeebe7c21c3',
-            '945aaca7-dc58-47b8-8012-e9821249ca7a',
-            '2b939cb3-5b40-48c2-8df7-e5472c3bdcca',
-            'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'
-        ]
-        response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
-        self.assertItemsEqual(response, response_node_uuids)
-
-    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
-                fake_generate_solr_params)
-    @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
-    @mock.patch("data_set_manager.utils.format_solr_response",
-                fake_format_solr_response)
-    def test_filter_nodes_uuids_in_solr_no_uuids(self):
-        response_node_uuids = [
-            '1a50204d-49fa-4082-a708-26ee93fb0f86',
-            '32e977fc-b906-4315-b6ed-6a644d173492',
-            '910117c5-fda2-4700-ae87-dc897f3a5d85',
-            'd2041706-ad2e-4f5b-a6ac-2122fe2a9751',
-            '57d2b371-a364-4806-b7ee-366a722ca9f4',
-            'c9d7f81f-2274-4179-ad00-28227bf4b9b7',
-            'e082ce03-0a83-4162-af5c-7472e450d7d0',
-            '880e60f7-7036-4468-b9c8-fdeebe7c21c3',
-            '945aaca7-dc58-47b8-8012-e9821249ca7a',
-            '2b939cb3-5b40-48c2-8df7-e5472c3bdcca',
-            'd5e6fef8-d8c9-4df9-b5f0-dd757fe79f7d'
-        ]
-        response = filter_nodes_uuids_in_solr(self.valid_uuid, [])
-        self.assertItemsEqual(response, response_node_uuids)
-
-    def test_move_obj_to_front_valid(self):
-        nodes_list = [
-            {
-                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
-                'name': 'Test Node Group'
-            },
-            {
-                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
-                'name': 'Completement Nodes 2'
-            },
-            {
-                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
-                'name': 'Current Selection'
-            },
-            {
-                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
-                'name': 'Another NodeGroup'
-            },
-        ]
-        response_arr = nodes_list
-        self.assertNotEqual(response_arr[0].get('name'),
-                            nodes_list[2].get('name'))
-        # Should move current selection node to front
-        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
-                                                             'Selection')
-        self.assertEqual(response_arr[0].get('name'),
-                         nodes_list[0].get('name'))
-        # Should leave leading node in front
-        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
-                                                             'Selection')
-        self.assertEqual(response_arr[0].get('name'),
-                         nodes_list[0].get('name'))
-
-    def test_move_obj_to_front_missing_prop(self):
-        # Method does not throw errors if obj is missing prop_key
-        nodes_list = [
-            {
-                'uuid': 'b55c3f8b-693b-4918-861b-c3e9268ec597',
-            },
-            {
-                'uuid': 'c18d7a3d-f54a-42ae-9a30-37f631fa7e73',
-            },
-            {
-                'uuid': '22b3dc7e-bcbd-4dfc-bccb-db72b02b4d0e',
-                'name': 'Another NodeGroup'
-            },
-            {
-                'uuid': '0c6dc0e6-1a79-427d-b7a8-1b4f4c422755',
-                'name': 'Current Selection'
-            },
-        ]
-        response_arr = nodes_list
-        self.assertNotEqual(response_arr[0].get('name'),
-                            nodes_list[3].get('name'))
-        # Should move current selection node to front
-        response_arr = move_obj_to_front(nodes_list, 'name', 'Current '
-                                                             'Selection')
-        self.assertEqual(response_arr[0].get('name'),
-                         nodes_list[0].get('name'))
 
 
 class TestManagementCommands(TestCase):

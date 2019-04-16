@@ -13,8 +13,8 @@ from tool_manager.utils import AdminFieldPopulator
 
 from .models import (
     Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, Download,
-    ExtendedGroup, Event, InvestigationLink, Invitation, Ontology, Project,
-    SiteProfile, SiteStatistics, SiteVideo, Tutorials, UserProfile, Workflow,
+    ExtendedGroup, Event, InvestigationLink, Invitation, Project, SiteProfile,
+    SiteStatistics, SiteVideo, Tutorials, UserProfile, Workflow,
     WorkflowEngine)
 from .utils import admin_ui_deletion
 
@@ -140,11 +140,6 @@ class TutorialsAdmin(GuardedModelAdmin):
                     'data_upload_tutorial_viewed']
 
 
-class OntologyAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'acronym', 'name', 'uri', 'version',
-                    'import_date', 'update_date']
-
-
 class SiteProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'site']
 
@@ -174,7 +169,6 @@ admin.site.register(AnalysisNodeConnection, AnalysisNodeConnectionAdmin)
 admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Tutorials, TutorialsAdmin)
-admin.site.register(Ontology, OntologyAdmin)
 admin.site.register(SiteProfile, SiteProfileAdmin)
 admin.site.register(SiteVideo, SiteVideoAdmin)
 admin.site.register(SiteStatistics, SiteStatisticsAdmin)
