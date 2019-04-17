@@ -56,7 +56,6 @@ describe('DataSet.search-api: unit tests', function () {
 
   function params (_query, _limit, _offset, _allIds, _synonyms) {
     var parameters = {
-      allIds: _allIds,
       defType: _synonyms ? 'synonym_edismax' : 'edismax',
       'f.description.hl.alternateField': 'description',
       'f.title.hl.alternateField': 'title',
