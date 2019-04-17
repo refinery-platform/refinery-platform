@@ -561,7 +561,19 @@ def neo4j_dataset_annotations(request):
 
 
 class WorkflowViewSet(viewsets.ModelViewSet):
-    """API endpoint that allows Workflows to be viewed"""
+    """
+        API endpoint that allows a workflow graph to be viewed.
+        ---
+        graph:
+            description: Returns workflow json
+            parameters:
+                - name: uuid
+                  description: workflow uuid
+                  paramType: query
+                  type: string
+                  required: true
+    ...
+    """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
     lookup_field = 'uuid'
@@ -575,7 +587,14 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
 
 class EventViewSet(APIView):
-    """API endpoint that allows Events to be viewed"""
+    """
+        API endpoint that allows Events to be viewed
+        ---
+        get:
+            description: End point which returns events associated with data
+            sets the request user has access to
+    ...
+    """
     def get(self, request):
         """Queryset based on DataSets that the requesting User has permission
          to access"""
@@ -594,7 +613,90 @@ class EventViewSet(APIView):
 
 
 class DataSetsViewSet(viewsets.ViewSet):
-    """API endpoint for viewing, editing, and deleting datasets."""
+    """
+        API endpoint for viewing, editing, and deleting datasets.
+        ---
+        destroy:
+            description: Owners can delete the dataset and associated objects
+            parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+        list:
+            description: Returns data_sets for user and filter params
+            (defaults to read_meta perms)
+            parameters:
+                - name: is_owner
+                  description: Returns the users' owned data set
+                  paramType: query
+                  type: boolean
+                  required: false
+                - name: is_public
+                  description: Returns public data sets
+                  paramType: query
+                  type: boolean
+                  required: false
+                - name: group
+                  description: Requires group id to return data sets visible
+                  to a group with read_meta
+                  paramType: query
+                  type: string
+                  required: false
+        partial_update:
+             parameters_strategy:
+                form: replace
+                query: merge
+            description: Update a data set's owner and or update meta fields
+            parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+                - name: transfer_data_set
+                  description: Flag to transfer a data set, requires
+                  new_owner_email field
+                  paramType: form
+                  type: boolean
+                  required: false
+                - name: new_owner_email
+                  description: Requires a valid user email to transfer data
+                  set ownership
+                  paramType: form
+                  type: string
+                  required: false
+                - name: description
+                  description: Update data set's description
+                  paramType: form
+                  type: string
+                  required: false
+                - name: slug
+                  description: Update data set url
+                  paramType: form
+                  type: string
+                  required: false
+                - name: summary
+                  description: Update data set's summary
+                  paramType: form
+                  type: string
+                  required: false
+                - name: title
+                  description: Update data set's title
+                  paramType: form
+                  type: string
+                  required: false
+        retrieve:
+            description: Returns data set
+            parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+    ...
+    """
     http_method_names = ['get', 'delete', 'patch']
     lookup_field = 'uuid'
 
@@ -856,7 +958,27 @@ class DataSetsViewSet(viewsets.ViewSet):
 
 
 class AnalysisViewSet(APIView):
-    """API endpoint that allows for Analyses to be retrieved or deleted"""
+    """
+        API endpoint that allows for Analyses to be retrieved or deleted.
+        ---
+        delete:
+            description: Owners can delete an analyses
+            parameters:
+                - name: uuid
+                  description: used to indentify analysis
+                  paramType: param
+                  type: string
+                  required: true
+        get:
+            description: Returns analyses filtered by either data set or user
+            parameters:
+                - name: dataSetUuid
+                  description: param to have analyses filtered by a data set
+                  paramType: param
+                  type: string
+                  required: false
+    ...
+    """
     http_method_names = ['get', 'delete']
 
     def get(self, request):
@@ -915,7 +1037,56 @@ class AnalysisViewSet(APIView):
 
 
 class GroupViewSet(viewsets.ViewSet):
-    """API endpoint for viewing groups."""
+    """
+        API endpoint for creating, deleting, and getting groups. Also, data set
+        owners can update a group's data set permissions.
+        ---
+        create:
+            description: Users can create groups
+            parameters:
+                - name: name
+                  description: Group name needs to be unique
+                  paramType: form
+                  type: string
+                  required: true
+        destroy:
+            description: Managers can delete groups
+            parameters:
+                - name: uuid
+                  description: group uuid
+                  paramType: path
+                  type: string
+                  required: true
+        list:
+            description: Returns groups filtered on data set or user
+            (defaults to read_meta perms)
+            parameters:
+                - name: dataSetUuid
+                  description: Returns groups based on data set
+                  paramType: query
+                  type: string
+                  required: false
+                - name: allPerms
+                  description: Limits query set to groups the user is member of
+                  paramType: query
+                  type: boolean
+                  required: false
+        partial_update:
+            description: Data set owners can update group's perms for data sets
+            parameters:
+                - name: dataSetUuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+                - name: perm_list
+                  description: object containing change, read, and read_meta
+                  field perms.
+                  paramType: form
+                  type: string
+                  required: false
+    ...
+    """
     http_method_names = ['get', 'delete', 'patch', 'post']
     lookup_field = 'uuid'
 
@@ -1018,8 +1189,28 @@ class GroupViewSet(viewsets.ViewSet):
 
 
 class GroupMemberAPIView(APIView):
-    """API endpoint that allows for Group Members to be promoted,
-    demoted or removed"""
+    """
+    API endpoint that allows for group members to be promoted,
+    demoted, or removed
+    ---
+    delete:
+        description: Group managers can either demote or remove a user
+        parameters:
+            - name: id
+              description: user id
+              paramType: path
+              type: string
+              required: true
+    post:
+        description:  Group managers can promote a user
+        parameters:
+            - name: userId
+              description: user id
+              paramType: form
+              type: string
+              required: false
+    ...
+    """
     http_method_names = ['delete', 'post']
 
     def get_object(self, uuid):
@@ -1088,7 +1279,48 @@ class GroupMemberAPIView(APIView):
 
 
 class InvitationViewSet(viewsets.ViewSet):
-    """API endpoint for creating, getting, resending, & removing invitations"""
+    """
+    API endpoint for creating, getting, resending, & removing invitations
+    ---
+    create:
+        description: Managers can send invites to user
+        parameters:
+            - name: group_uuid
+              description: (extended) group's uuid
+              paramType: form
+              type: string
+              required: true
+            - name: recipient_email
+              description: existing or non-users can be invited
+              paramType: form
+              type: string
+              required: true
+    destroy:
+        description: Revoke a user's invitation
+        parameters:
+            - name: id
+              description: invitation id
+              paramType: path
+              type: string
+              required: true
+    list:
+        description: Returns invitations filtered by groups
+        parameters:
+            - name: group_uuid
+              description: group's uuid
+              paramType: query
+              type: string
+              required: false
+    partial_update:
+        description: Resend an invitation which restart the expiration time
+        parameters:
+            - name: id
+              description: invitation id
+              paramType: path
+              type: string
+              required: true
+    ...
+    """
     http_method_names = ['delete', 'get', 'post', 'patch']
     lookup_field = 'id'
 

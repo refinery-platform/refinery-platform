@@ -1108,9 +1108,15 @@ class NodeViewSet(viewsets.ViewSet):
     supports viewing nodes filtered by studyUuid and viewing a node's
     attribute related siblings. "
      ---
-    #YAML
-
-    PATCH:
+    list:
+        description: Returns nodes filtered by study and user's read_meta perms
+        parameters:
+            - name: studyUuid
+              description: study's uuid
+              paramType: query
+              type: string
+              required: true
+    partial_update:
         parameters_strategy:
         form: replace
         query: merge
@@ -1136,6 +1142,19 @@ class NodeViewSet(viewsets.ViewSet):
               type: string
               paramType: form
               required: false
+    retrieve:
+        description: Returns a node and it's related nodes info
+        parameters:
+            - name: node's uuid
+              description: node's uuid
+              paramType: path
+              type: string
+              required: true
+            - name: related_attribute_nodes
+              description: data set uuid
+              paramType: query
+              type: boolean
+              required: true
     ...
     """
     http_method_names = ['get', 'patch']
