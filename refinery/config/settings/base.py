@@ -437,9 +437,6 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Directory for custom libraries
-LIBS_DIR = get_setting("LIBS_DIR")
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',

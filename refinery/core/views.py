@@ -19,7 +19,7 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import (get_object_or_404, render, render_to_response)
+from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext, loader
 from django.utils import timezone
 
