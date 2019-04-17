@@ -33,8 +33,8 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
-                     Project, SiteProfile, SiteStatistics, SiteVideo, Workflow,
-                     WorkflowEngine)
+                     InvestigationLink, Project, SiteProfile, SiteStatistics,
+                     SiteVideo, Workflow, WorkflowEngine)
 
 
 from .serializers import DataSetSerializer, UserSerializer
@@ -1564,6 +1564,9 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
         # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
+        InvestigationLink.objects.create(data_set=self.data_set,
+                                         investigation=self.investigation,
+                                         version=1)
 
         # Create Studys and Assays
         self.study = Study.objects.create(investigation=self.investigation)
