@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import ast
 from functools import wraps
 import logging
 import sys
@@ -894,14 +893,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
     # Add attribute filters and facet params to generate solr_params
     if filter_attribute:
         params['filter_attribute'] = filter_attribute
-        # unicode to object to grab keys
-        if isinstance(filter_attribute, unicode):
-            # handling unicode sent by swagger
-            params['facets'] = ','.join(
-                ast.literal_eval(filter_attribute).keys()
-            )
-        else:
-            params['facets'] = ','.join(filter_attribute.keys())
+        params['facets'] = ','.join(filter_attribute.keys())
 
     solr_params = data_set_manager.utils.generate_solr_params_for_assay(
         params, assay_uuid)
