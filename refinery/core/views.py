@@ -8,7 +8,6 @@ from xml.parsers.expat import ExpatError
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site
@@ -20,8 +19,7 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import (get_object_or_404, redirect, render,
-                              render_to_response)
+from django.shortcuts import (get_object_or_404, render, render_to_response)
 from django.template import RequestContext, loader
 from django.utils import timezone
 
@@ -79,33 +77,6 @@ def about(request):
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
-
-
-def auto_login(request):
-    try:
-        user = int(request.GET.get('user', -1))
-    except ValueError:
-        user = -1
-
-    exploration = request.GET.get('exploration', False)
-
-    if user >= 0 and user in settings.AUTO_LOGIN:
-        if request.user.is_authenticated():
-            logout(request)
-
-        try:
-            user = User.objects.get(id=user)
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-        except Exception:
-            logger.error('Auto login for user ID {} failed.'.format(user))
-            return redirect('{}'.format(reverse('home')))
-
-        login(request, user)
-
-        if exploration:
-            return redirect('{}#/exploration'.format(reverse('home')))
-
-    return redirect('{}'.format(reverse('home')))
 
 
 @login_required

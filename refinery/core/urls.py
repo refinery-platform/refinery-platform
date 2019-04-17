@@ -53,7 +53,6 @@ urlpatterns = patterns(
         'pubmed_search', name="pubmed_search"),
     url(r'^pubmed/summary/(?P<id>.+)/',
         'pubmed_summary', name="pubmed_summary"),
-    url(r'^auto_login/$', 'auto_login', name='auto_login'),
     url(r'^sitestatistics/(?P<type>(deltas)|(totals)).csv', site_statistics)
 )
 

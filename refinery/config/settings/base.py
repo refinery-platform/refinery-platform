@@ -484,8 +484,6 @@ REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_NAME = "AnonymousUser"
 
-AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
-
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 # Required for pre-Django 1.9 TransactionTestCases utilizing
