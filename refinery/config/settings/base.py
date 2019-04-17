@@ -198,7 +198,6 @@ INSTALLED_APPS = (
     'flatblocks',
     'chunked_upload',
     'rest_framework',
-    'rest_framework_swagger',
     'django_docker_engine',
     'revproxy',
     'cuser',

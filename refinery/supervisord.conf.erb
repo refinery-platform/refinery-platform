@@ -1,7 +1,5 @@
-; Sample config file for managing Celery, Solr and Django dev server processes
-; using Supervisor.
-; Copy to refinery-platform/refinery/supervisord.conf and customize to match
-; your environment.
+; Template config file for managing Celery and Django dev server processes
+; using Supervisor
 
 [supervisord]
 logfile = %(here)s/log/supervisord.log
@@ -10,12 +8,11 @@ logfile_backups = 4
 pidfile = /tmp/supervisord.pid
 nocleanup = true
 
-[inet_http_server]         ; inet (TCP) server disabled by default
-port = *:9001        ; (ip_address:port specifier, *:port for all iface)
+[unix_http_server]
+file = /tmp/supervisord.sock
 
 [supervisorctl]
-;serverurl = unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
-serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
+serverurl = unix:///tmp/supervisord.sock
 
 ; the below section must remain in the config file for RPC
 ; (supervisorctl/web interface) to work, additional interfaces may be
@@ -23,15 +20,11 @@ serverurl = http://localhost:9001 ; use an http:// url to specify an inet socket
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
-[group:celeryd]
-programs = worker1,worker2
-priority = 995
-
-[program:worker1]
+[program:celery-w1]
 ; minimum of four processes required to avoid problems with monitoring tasks
-command = python %(here)s/manage.py celeryd -c 4 -Q celery -E -n worker1.%%h
+command = python %(here)s/manage.py celery worker -n w1@%%h -c 4 -Q celery -E
 environment = PATH="<%= @virtualenv %>/bin"
-stdout_logfile = %(here)s/log/celeryd-w1.log
+stdout_logfile = %(here)s/log/celery-w1.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -40,16 +33,13 @@ autorestart = true
 startsecs = 5
 stopasgroup = true
 killasgroup = true
-; Need to wait for currently executing tasks to finish at shutdown.
-; Increase this if you have very long running tasks.
-;stopwaitsecs = 60
 priority = 995
 
-[program:worker2]
+[program:celery-w2]
 ; limits concurrency of file imports to one to avoid overloading system IO
-command = python %(here)s/manage.py celeryd -c 1 -Q file_import -E -n worker2.%%h
+command = python %(here)s/manage.py celery worker -n w2@%%h -c 1 -Q file_import -E
 environment = PATH="<%= @virtualenv %>/bin"
-stdout_logfile = %(here)s/log/celeryd-w2.log
+stdout_logfile = %(here)s/log/celery-w2.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
@@ -73,19 +63,19 @@ redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 3
-priority= 994
+priority= 993
 
-[program:celerybeat]
-command = python %(here)s/manage.py celerybeat
+[program:celery-beat]
+command = python %(here)s/manage.py celery beat
 environment = PATH="<%= @virtualenv %>/bin"
-stdout_logfile = %(here)s/log/celerybeat.log
+stdout_logfile = %(here)s/log/celery-beat.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
 redirect_stderr = true
 autostart = true
 autorestart = true
 startsecs = 3
-priority= 996
+priority= 997
 
 [program:runserver]
 command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
