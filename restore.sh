@@ -29,8 +29,6 @@ mkdir -p "$BACKUP_TEMP"
 BACKUP_FILE=$(basename $BACKUP_FILE_PATH)
 BACKUP="${BACKUP_FILE%%.*}"
 
-NEO4J_DATA="/var/lib/neo4j/data/graph.db/"
-
 DEFAULT="\e[39m"
 DIM="\e[2m"
 GREEN="\e[92m"
@@ -120,22 +118,6 @@ if [ ! -d "$BACKUP_TEMP/$BACKUP/file_store/" ]; then
 fi
 mkdir -p "/vagrant/media/file_store"
 sudo rsync -az --partial "$BACKUP_TEMP/$BACKUP/file_store/" "/vagrant/media/file_store"
-
-TIME_INTERMEDIATE_END=$(date +"%s")
-TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
-echo -e "restored! $DIM($(($TIME_INTERMEDIATE_DIFF / 60)) min and $(($TIME_INTERMEDIATE_DIFF % 60)) sec)$RESET"
-
-# Restore Neo4J
-echo -e "Neo4J graph db... \c"
-TIME_INTERMEDIATE_START=$(date +"%s")
-
-if [ ! -d "$BACKUP_TEMP/$BACKUP/neo4j/" ]; then
-  echo -e "$RED\xE2\x9A\xA0 Neo4J graph db not found!$DEFAULT"
-  exit 1
-fi
-sudo service neo4j-service stop
-sudo rsync -az --partial "$BACKUP_TEMP/$BACKUP/neo4j/" "$NEO4J_DATA"
-sudo service neo4j-service start > /dev/null
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))

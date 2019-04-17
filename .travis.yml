@@ -61,7 +61,7 @@ before_script:
   - cd ../
 
   # Required for cypress tests; TODO: Move to puppet.
-  # TODO: Start up solr (and neo4j?)
+  # TODO: Start up solr
   - python manage.py loaddata guest.json
   - python manage.py activate_user guest
   - python manage.py add_users_to_public_group

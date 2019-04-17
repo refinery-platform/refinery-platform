@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 def skip_if_test_run(func):
     """Decorator to be used on functions that don't necessarily need to
-    be run during tests or CI i.e. Neo4J and Solr stuff tend to pollute
+    be run during tests or CI i.e. Solr stuff tend to pollute
     log output
     """
     def func_wrapper(*args, **kwargs):
