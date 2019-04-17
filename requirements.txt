@@ -24,7 +24,6 @@ django-override-storage==0.1.2
 django-registration-redux==1.9
 djangorestframework==3.3.3
 djangorestframework-recursive==0.1.1
-django-rest-swagger==0.3.4
 django-storages==1.6.0
 djangular==0.3.0b1
 factory_boy==2.8.1
