@@ -89,8 +89,7 @@
       </label>
 
       <div class="refinery-subheader m-t-1">
-        <h1 ng-show="!isaTabImport.isMetaDataRevision">Complete Submission</h1>
-        <h1 ng-show="isaTabImport.isMetaDataRevision">Complete Metadata Revision Submission</h1>
+        <h1>Upload Data Files</h1>
       </div>
       <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-12 col-md-12 col-lg-12">
@@ -114,29 +113,48 @@
               Yes
             </label>
           </div>
+          <div>
+          </div>
           <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload && isaTabImport.file || isaTabImport.urlToFile">
-            <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
-            <rp-file-upload is-node-update="false" ng-if="!isaTabImport.useS3"></rp-file-upload>
-            <rp-file-upload-s3 is-node-update="false" ng-if="isaTabImport.useS3"></rp-file-upload-s3>
+            <div>
+              <rp-file-upload is-node-update="false" ng-if="!isaTabImport.useS3"></rp-file-upload>
+              <rp-file-upload-s3 is-node-update="false" ng-if="isaTabImport.useS3"></rp-file-upload-s3>
+            </div>
+            <div class="p-b-1-3">
+              <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
+            </div>
           </div>
         </div>
       </div>
-      <button
-        id="isa-import-button"
-        class="block refinery-base btn btn-primary float-left"
-        ng-click="isaTabImport.confirmImport()"
-        ng-disabled="(!isaTabImport.file && !isaTabImport.urlToFile) ||
-        isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
-         || isaTabImport.fileStatus !== 'none' || isaTabImport.isImporting">
-        Submit
-      </button>
-      <span class="m-l-1 float-left" ng-if="isaTabImport.showFileUpload">
-        <span class="text-warning"
-          ng-if="isaTabImport.fileStatus==='queuing'">
-          <i class="fa fa-warning" aria-hidden="true"></i>
-          All data files have not been uploaded.
-        </span>
-      </span>
+      <div class="refinery-subheader m-t-1">
+        <h1 ng-show="!isaTabImport.isMetaDataRevision">Complete Submission</h1>
+        <h1 ng-show="isaTabImport.isMetaDataRevision">Complete Metadata Revision Submission</h1>
+      </div>
+      <div class="row m-t-1-4 m-b-1-4">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+          <div class="m-t-1 m-b-1">
+            <button class="btn btn-default" data-toggle="confirmation">Confirmation</button>
+            <button
+              id="isa-import-button"
+              class="block refinery-base btn btn-primary float-left"
+              data-toggle="confirmation"
+              data-title="Are all remote data files uploaded?"
+              ng-click="isaTabImport.confirmImport()"
+              ng-disabled="(!isaTabImport.file && !isaTabImport.urlToFile) ||
+              isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
+               || isaTabImport.fileStatus !== 'none' || isaTabImport.isImporting">
+              Submit
+            </button>
+            <span class="m-l-1 float-left" ng-if="isaTabImport.showFileUpload">
+              <span class="text-warning"
+                ng-if="isaTabImport.fileStatus==='queuing'">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                All data files have not been uploaded through the browser.
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

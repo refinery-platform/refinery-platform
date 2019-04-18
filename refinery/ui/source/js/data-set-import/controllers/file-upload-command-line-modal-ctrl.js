@@ -12,13 +12,20 @@
     .module('refineryDataSetImport')
     .controller('FileUploadCommandLineModalCtrl', FileUploadCommandLineModalCtrl);
 
-  FileUploadCommandLineModalCtrl.$inject = [];
+  FileUploadCommandLineModalCtrl.$inject = ['settings'];
 
   function FileUploadCommandLineModalCtrl (
+    settings
   ) {
     var vm = this;
     vm.close = close;
     console.log('in the modal ctrl');
+    console.log(AWS.config);
+    vm.accessKeyId = '';
+    vm.secertAccessKey = '';
+    vm.sessionToken = '';
+    vm.bucketName = settings.djangoApp.uploadBucket;
+    vm.identityId = '';
     /*
      * ---------------------------------------------------------
      * Methods Definitions
