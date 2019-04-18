@@ -36,7 +36,6 @@
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
-      solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
       staticUrl: '{{ STATIC_URL|escapejs }}',

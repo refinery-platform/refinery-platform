@@ -54,9 +54,8 @@ describe('DataSet.search-api: unit tests', function () {
     '  }' +
     '}';
 
-  function params (_query, _limit, _offset, _allIds, _synonyms) {
+  function params (_query, _limit, _offset) {
     var parameters = {
-      defType: _synonyms ? 'synonym_edismax' : 'edismax',
       'f.description.hl.alternateField': 'description',
       'f.title.hl.alternateField': 'title',
       'f.title.hl.fragsize': '0',
@@ -71,7 +70,6 @@ describe('DataSet.search-api: unit tests', function () {
       qf: 'title%5E0.5+accession+submitter+text+description',
       rows: _limit,
       start: _offset,
-      synonyms: '' + !!_synonyms + '',
       wt: 'json'
     };
     var url = '';
@@ -124,38 +122,6 @@ describe('DataSet.search-api: unit tests', function () {
               limit,
               offset,
               0
-            )
-          )
-          .respond(200, fakeQueryResponse);
-
-        $httpBackend.flush();
-
-        promise.then(function (data) {
-          results = data;
-        });
-
-        $rootScope.$digest();
-
-        expect(results.meta.total).toEqual(1);
-      }
-    );
-
-    it('should use different `defType` when synonym search is turned on',
-      function () {
-        settings.djangoApp.solrSynonymSearch = true;
-        factoryInstance = new Factory(query, true);
-
-        var results;
-        var promise = factoryInstance(limit, offset);
-
-        $httpBackend
-          .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select/' + params(
-              query,
-              limit,
-              offset,
-              1,
-              true
             )
           )
           .respond(200, fakeQueryResponse);

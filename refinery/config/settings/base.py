@@ -463,10 +463,6 @@ except (ValueError, subprocess.CalledProcessError) as exc:
                  exc)
     CURRENT_COMMIT = ""
 
-SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
-SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
-SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
-
 REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")
 
 

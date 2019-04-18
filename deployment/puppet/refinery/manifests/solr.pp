@@ -4,7 +4,6 @@ class refinery::solr (
   $app_group                  = $refinery::params::app_group,
   $data_dir                   = $refinery::params::data_dir,
   $django_root                = $refinery::params::django_root,
-  $solr_lib_dir               = $refinery::params::solr_lib_dir,
 ) inherits refinery::params {
   $solr_version = '5.3.1'
   $solr_archive = "solr-${solr_version}.tgz"
@@ -92,19 +91,5 @@ class refinery::solr (
   service { 'solr':
     ensure     => running,
     hasrestart => true,
-  }
-
-  $solr_synonym_analyzer_url = "https://github.com/refinery-platform/solr-synonyms-analyzer/releases/download/v2.0.0/hon-lucene-synonyms.jar"
-
-  # Need to remove the old file manually as wget throws a weird
-  # `HTTP request sent, awaiting response... 403 Forbidden` error when the file
-  # already exists.
-  exec { 'solr_synonym_analyzer_download':
-    command => "rm -f ${solr_lib_dir}/hon-lucene-synonyms.jar && wget -P ${solr_lib_dir} ${solr_synonym_analyzer_url}",
-    creates => "${solr_lib_dir}/hon-lucene-synonyms.jar",
-    path    => '/usr/bin:/bin',
-    timeout => 120,  # downloading can take some time
-    notify  => Service['solr'],
-    require => Exec['solr_install'],
   }
 }

@@ -94,13 +94,6 @@ class refinery::params (
 
   $file_store_root = "${media_root}/file_store"
 
-  $solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
-
-  $solr_lib_dir = $deployment_platform ? {
-    'aws'   => '/opt/solr/server/solr-webapp/webapp/WEB-INF/lib',
-    default => "${django_root}/solr/lib",
-  }
-
   $email_host = $deployment_platform ? {
     'aws'   => 'email-smtp.us-east-1.amazonaws.com',
     default => 'localhost',
