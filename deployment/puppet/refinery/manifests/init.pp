@@ -78,7 +78,6 @@ class refinery (
       Class['refinery::django'],
       Class['refinery::ui'],
       Class['refinery::solr'],
-      Class['refinery::neo4j'],
       Class['::rabbitmq'],
       Service['memcached'],
     ],

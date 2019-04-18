@@ -14,7 +14,6 @@ node default {
   include refinery::apache2
   include refinery::django
   include refinery::docker
-  include refinery::neo4j
   include refinery::postgresql
   include refinery::python
   include refinery::solr

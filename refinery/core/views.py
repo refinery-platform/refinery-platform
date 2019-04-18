@@ -4,17 +4,14 @@ import json
 import logging
 import urllib
 import uuid
-from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -22,11 +19,9 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import (get_object_or_404, redirect, render,
-                              render_to_response)
+from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext, loader
 from django.utils import timezone
-from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
@@ -34,7 +29,6 @@ from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
                                 get_perms)
 
 from guardian.core import ObjectPermissionChecker
-from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
 import requests
@@ -64,9 +58,8 @@ from .serializers import (AnalysisSerializer, DataSetSerializer,
                           InvitationSerializer, SiteProfileSerializer,
                           SiteVideoSerializer, UserProfileSerializer,
                           WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations,
-                    get_data_set_for_view_set, get_group_for_view_set,
-                    get_non_manager_groups_for_user)
+from .utils import (api_error_response, get_data_set_for_view_set,
+                    get_group_for_view_set, get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -84,33 +77,6 @@ def about(request):
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
-
-
-def auto_login(request):
-    try:
-        user = int(request.GET.get('user', -1))
-    except ValueError:
-        user = -1
-
-    exploration = request.GET.get('exploration', False)
-
-    if user >= 0 and user in settings.AUTO_LOGIN:
-        if request.user.is_authenticated():
-            logout(request)
-
-        try:
-            user = User.objects.get(id=user)
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-        except Exception:
-            logger.error('Auto login for user ID {} failed.'.format(user))
-            return redirect('{}'.format(reverse('home')))
-
-        login(request, user)
-
-        if exploration:
-            return redirect('{}#/exploration'.format(reverse('home')))
-
-    return redirect('{}'.format(reverse('home')))
 
 
 @login_required
@@ -342,62 +308,10 @@ def solr_core_search(request):
             ' OR '.join(access))
 
     try:
-        allIds = params['allIds'] in ['1', 'true', 'True']
-    except KeyError:
-        allIds = False
-
-    try:
-        annotations = params['annotations'] in ['1', 'true', 'True']
-    except KeyError:
-        annotations = False
-    try:
         response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
-
-    if allIds or annotations:
-        # Query for all uuids given the same query. Solr shold be very fast
-        # because we just queried for almost the same information, only limited
-        # in size.
-        all_ids_params = {
-            'defType': params['defType'],
-            'fl': 'dbid',
-            'fq': params['fq'],
-            'q': params['q'],
-            'qf': params['qf'],
-            'rows': 2147483647,
-            'start': 0,
-            'wt': 'json'
-        }
-        try:
-            response_ids = requests.get(
-                url,
-                params=all_ids_params,
-                headers=headers
-            )
-            response_ids.raise_for_status()
-        except HTTPError as e:
-            logger.error(e)
-
-        if response_ids.status_code == 200:
-            response_ids = response_ids.json()
-            ids = []
-
-            for ds in response_ids['response']['docs']:
-                ids.append(ds['dbid'])
-
-            annotation_data = get_data_sets_annotations(ids)
-
-            response = response.json()
-
-            if allIds:
-                response['response']['allIds'] = ids
-
-            if annotations:
-                response['response']['annotations'] = annotation_data
-
-            return JsonResponse(response)
 
     return HttpResponse(response, content_type='application/json')
 
@@ -508,54 +422,6 @@ def pubmed_summary(request, id):
         logger.error(e)
     except requests.exceptions.ConnectionError:
         return HttpResponse('Service currently unavailable', status=503)
-
-    return HttpResponse(response, content_type='application/json')
-
-
-@gzip_page
-def neo4j_dataset_annotations(request):
-    """Query Neo4J for dataset annotations per user"""
-
-    if request.user.username:
-        user_name = request.user.username
-    else:
-        try:
-            user_name = get_anonymous_user().username
-        except(User.DoesNotExist, User.MultipleObjectsReturned,
-               ImproperlyConfigured) as e:
-            error_message = \
-                "Could not properly fetch the AnonymousUser: {}".format(e)
-            logger.error(error_message)
-            return HttpResponseServerError(error_message)
-
-    url = urljoin(
-        settings.NEO4J_BASE_URL,
-        'ontology/unmanaged/annotations/{}'.format(user_name)
-    )
-
-    headers = {
-        'Accept': 'application/json; charset=UTF-8',
-        'Accept-Encoding': 'gzip,deflate',
-        'Content-type': 'application/json'
-    }
-
-    params = {
-        'objectification': 2
-    }
-
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-    except requests.exceptions.ConnectionError as e:
-        logger.error('Neo4J seems to be offline.')
-        logger.error(e)
-        return HttpResponse(
-            'Neo4J seems to be offline.',
-            content_type='text/plain',
-            status=503
-        )
 
     return HttpResponse(response, content_type='application/json')
 

@@ -6,7 +6,6 @@
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"
     <%= @site_url ? ', "' + @site_url +  '"' : "" %>
     ],
-  "AUTO_LOGIN": [],
   "BROKER_URL": "amqp://guest:guest@localhost:5672//",
   "CELERYD_MAX_TASKS_PER_CHILD": 100,
   "COGNITO_IDENTITY_POOL_ID": "<%= @cognito_identity_pool_id %>",
@@ -28,60 +27,9 @@
   "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",
   "EMAIL_USE_TLS": <%= @email_use_tls || false %>,
   "EMAIL_SUBJECT_PREFIX": "<%= @email_subject_prefix || "[Refinery] " %>",
-  "JAVA_ENTITY_EXPANSION_LIMIT": 1000000,
   "LANGUAGE_CODE": "en-us",
-  "LIBS_DIR": "/opt",
   "MEDIA_ROOT": "<%= @media_root %>",
   "MEDIA_URL": "/media/",
-  "NEO4J": {
-    "BASE_URL": "http://localhost:7474",
-    "CONSTRAINTS": [
-      {
-        "label": "Class",
-        "property": [
-          {
-            "name": "name",
-            "unique": true
-          },
-          {
-            "name": "uri",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "Ontology",
-        "property": [
-          {
-            "name": "acronym",
-            "unique": true
-          },
-          {
-            "name": "uri",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "User",
-        "property": [
-          {
-            "name": "id",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "DataSet",
-        "property": [
-          {
-            "name": "id",
-            "unique": true
-          }
-        ]
-      }
-    ]
-  },
   "REFINERY_AUXILIARY_FILE_GENERATION": "on_file_import",
   "REFINERY_AWS_REGION": "<%= @aws_region %>",
   "REFINERY_BANNER": "<%= @refinery_banner || "" %>",

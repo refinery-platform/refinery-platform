@@ -56,7 +56,6 @@ describe('DataSet.search-api: unit tests', function () {
 
   function params (_query, _limit, _offset, _allIds, _synonyms) {
     var parameters = {
-      allIds: _allIds,
       defType: _synonyms ? 'synonym_edismax' : 'edismax',
       'f.description.hl.alternateField': 'description',
       'f.title.hl.alternateField': 'title',
@@ -117,51 +116,6 @@ describe('DataSet.search-api: unit tests', function () {
 
         var results;
         var promise = factoryInstance(limit, offset);
-
-        $httpBackend
-          .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select/' + params(
-              query,
-              limit,
-              offset,
-              0
-            )
-          )
-          .respond(200, fakeQueryResponse);
-
-        $httpBackend.flush();
-
-        promise.then(function (data) {
-          results = data;
-        });
-
-        $rootScope.$digest();
-
-        expect(results.meta.total).toEqual(1);
-      }
-    );
-
-    it('should alter `allIds` parameter',
-      function () {
-        factoryInstance = new Factory(query, true);
-
-        var results;
-        var promise = factoryInstance(limit, offset);
-
-        $httpBackend
-          .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select/' + params(
-              query,
-              limit,
-              offset,
-              1
-            )
-          )
-          .respond(200, fakeQueryResponse);
-
-        $httpBackend.flush();
-
-        promise = factoryInstance(limit, offset);
 
         $httpBackend
           .expectGET(

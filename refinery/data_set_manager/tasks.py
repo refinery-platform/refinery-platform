@@ -10,7 +10,6 @@ from celery.task import task
 import pysam
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
 from file_store.tasks import FileImportTask
 
@@ -92,7 +91,6 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     dataset.file_size = dataset.get_file_size()
     dataset.file_count = dataset.get_file_count()
     dataset.save()
-    add_data_set_to_neo4j(dataset, user.id)
     return dataset.uuid
 
 

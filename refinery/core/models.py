@@ -39,10 +39,8 @@ from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
-from guardian.shortcuts import (
-    assign_perm, get_groups_with_perms, get_objects_for_group,
-    get_users_with_perms, remove_perm
-)
+from guardian.shortcuts import (assign_perm, get_groups_with_perms,
+                                get_users_with_perms, remove_perm)
 import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
@@ -61,13 +59,9 @@ from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
 import tool_manager
 
-from .utils import (
-    add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-    async_update_annotation_sets_neo4j, delete_data_set_index,
-    delete_data_set_neo4j, delete_ontology_from_neo4j, delete_user_in_neo4j,
-    email_admin, invalidate_cached_object, remove_read_access_in_neo4j,
-    skip_if_test_run, sync_update_annotation_sets_neo4j, update_data_set_index
-)
+from .utils import (delete_data_set_index, email_admin,
+                    invalidate_cached_object, skip_if_test_run,
+                    update_data_set_index)
 
 logger = logging.getLogger(__name__)
 
@@ -706,11 +700,6 @@ class DataSet(SharableResource):
         if group.id == ExtendedGroup.objects.public_group().id:
             user_ids.append(-1)
 
-        add_read_access_in_neo4j(
-            [self.uuid],
-            user_ids
-        )
-
     def unshare(self, group):
         super(DataSet, self).unshare(group)
         remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
@@ -727,12 +716,6 @@ class DataSet(SharableResource):
         # We need to give the anonymous user read access too.
         if group.id == ExtendedGroup.objects.public_group().id:
             user_ids.append(-1)
-
-        if user_ids:
-            remove_read_access_in_neo4j(
-                [self.uuid],
-                user_ids
-            )
 
     def get_file_store_items(self):
         """Get a list of FileStoreItem instances corresponding to a
@@ -860,14 +843,11 @@ def _dataset_delete(sender, instance, *args, **kwargs):
             investigation_link.get_node_collection().delete()
 
     delete_data_set_index(instance)
-    delete_data_set_neo4j(instance.uuid)
-    async_update_annotation_sets_neo4j()
     invalidate_cached_object(instance)
 
 
 @receiver(post_save, sender=DataSet)
 def _dataset_saved(sender, instance, *args, **kwargs):
-    async_update_annotation_sets_neo4j()
     update_data_set_index(instance)
     invalidate_cached_object(instance)
 
@@ -1935,89 +1915,6 @@ class Invitation(models.Model):
         if not self.id:
             self.created = timezone.now()
         return super(Invitation, self).save(*arg, **kwargs)
-
-
-@receiver(post_save, sender=User)
-@skip_if_test_run
-def _add_user_to_neo4j(sender, **kwargs):
-    user = kwargs['instance']
-
-    if not user.is_active:
-        logger.debug("User: %s has not been activated. Not adding them to "
-                     "Neo4J.", user.username)
-        return
-    add_or_update_user_to_neo4j(user.id, user.username)
-    add_read_access_in_neo4j(
-        map(
-            lambda ds: ds.uuid, get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                'core.read_dataset'
-            )
-        ),
-        [user.id]
-    )
-    sync_update_annotation_sets_neo4j(user.username)
-
-
-@receiver(pre_delete, sender=User)
-def _delete_user_from_neo4J(sender, instance, *args, **kwargs):
-    delete_user_in_neo4j(instance.id, instance.username)
-
-
-class Ontology(models.Model):
-    """Store meta information of imported ontologies
-    """
-
-    # Stores the most recent import date, i.e. this will be overwritten when a
-    # ontology is re-imported.
-    import_date = models.DateTimeField(
-        default=timezone.now,
-        editable=False,
-        auto_now=False
-    )
-
-    # Full name of the ontology
-    # E.g.: Gene Ontology
-    name = models.CharField(max_length=64, blank=True)
-
-    # Equals the abbreviation / acronym / prefix specified during the import.
-    # Note that prefix constist of uppercase letters only. Similar to the OBO
-    # naming convention.
-    # E.g.: GO
-    acronym = models.CharField(max_length=8, blank=True, unique=True)
-
-    # Base URI of the ontology
-    # E.g.: http://purl.obolibrary.org/obo/go.owl
-    uri = models.CharField(max_length=128, blank=True, unique=True)
-
-    # Stores the most recent date when the model was updated in whatever way.
-    update_date = models.DateTimeField(auto_now=True)
-
-    # Stores the versionIRI of the ontology. Can be useful to check which
-    # version is currently imported.
-    version = models.CharField(
-        max_length=256,
-        null=True,
-        blank=True
-    )
-
-    # Stores the version of Owl2Neo4J. This can be helpful to figure out which
-    # ontology needs a re-import when the parser changed dramatically
-    owl2neo4j_version = models.CharField(
-        max_length=16,
-        null=True
-    )
-
-    def __unicode__(self):
-        return '{name} ({acronym})'.format(
-            name=self.name,
-            acronym=self.acronym
-        )
-
-
-@receiver(pre_delete, sender=Ontology)
-def _ontology_delete(sender, instance, *args, **kwargs):
-    delete_ontology_from_neo4j(instance.acronym)
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
