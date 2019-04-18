@@ -137,36 +137,5 @@ describe('DataSet.search-api: unit tests', function () {
         expect(results.meta.total).toEqual(1);
       }
     );
-
-    it('should use different `defType` when synonym search is turned on',
-      function () {
-        factoryInstance = new Factory(query, true);
-
-        var results;
-        var promise = factoryInstance(limit, offset);
-
-        $httpBackend
-          .expectGET(
-            settings.appRoot + settings.solrApi + '/core/select/' + params(
-              query,
-              limit,
-              offset,
-              1,
-              true
-            )
-          )
-          .respond(200, fakeQueryResponse);
-
-        $httpBackend.flush();
-
-        promise.then(function (data) {
-          results = data;
-        });
-
-        $rootScope.$digest();
-
-        expect(results.meta.total).toEqual(1);
-      }
-    );
   });
 });
