@@ -5,10 +5,6 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
     return function (limit, offset) {
       var query = solrService.get(
         {
-          // Synonym eDisMax Query Parser
-          // https://github.com/healthonnet/hon-lucene-synonyms
-          defType: settings.djangoApp.solrSynonymSearch ?
-            'synonym_edismax' : 'edismax',
           // Alternative field for `title` when no highlights were
           // found
           'f.title.hl.alternateField': 'title',
@@ -40,9 +36,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // # results returned
           rows: limit,
           // Start of return
-          start: offset,
-          // Enable synonym search
-          synonyms: !!settings.djangoApp.solrSynonymSearch
+          start: offset
         },
         {
           index: 'core'
