@@ -43,7 +43,6 @@ Thumbs.db
 .pydevproject
 *.pid
 /refinery/solr/**/conf/solrconfig.xml
-/refinery/solr/lib/
 supervisord.conf
 codekit-config.json
 .vagrant/
