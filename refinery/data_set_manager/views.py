@@ -787,7 +787,7 @@ class AssayAPIView(APIView):
             raise Http404
 
 
-class AssaysFiles(APIView):
+class AssayFileAPIView(APIView):
 
     """
     Return solr response. Query requires assay_uuid.
@@ -883,7 +883,7 @@ class AssaysFiles(APIView):
             )
 
 
-class AssaysAttributes(APIView):
+class AssayAttributeAPIView(APIView):
     """
     AttributeOrder Resource.
     Returns/Updates AttributeOrder model queries. Requires assay_uuid.
@@ -1309,7 +1309,7 @@ class NodeViewSet(viewsets.ViewSet):
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class StudiesView(APIView):
+class StudyViewSet(APIView):
     """
     API end point for retrieving studies based on a data set uuid
 
