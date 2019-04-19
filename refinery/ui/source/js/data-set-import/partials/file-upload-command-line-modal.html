@@ -1,21 +1,27 @@
-<div class="modal-content">
+<div class="modal-content" id="modal-upload-command-line">
   <div class="modal-header">
     <button type="button" class="close" ng-click="$ctrl.close()"
       aria-label="Close"><span aria-hidden="true">&times;</span></button>
-    <h4 class="modal-title">Upload Data Files</h4>
+    <h4 class="modal-title">Upload Remote Data Files</h4>
   </div>
   <div class="modal-body">
     <p>
-      To upload all of the data set files, copy and paste this to your command line:
+      If your files are on a remote server, copy and
+      paste the provided command into your terminal window to directly
+      upload them. This script requires AWS CLI tool to be installed.
+      <br>
+      <strong>
+        Note, data file uploads must be complete before submitting the metadata file.
+      </strong>
     </p>
     <textarea
         style="width: 100%; font-family: monospace; overflow-wrap: break-word;"
-        rows="6" cols="80"
-        onclick="this.focus(); this.select();"
+        rows="8" onclick="this.focus(); this.select();"
         readonly="readonly">
-        export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"<br>
-        export AWS_SECRET_ACCESS_KEY="wJaPxRfiCYEXAMPLEKEY"<br>
-        export AWS_SESSION_TOKEN="AQoDYXdzEJr"<br>
+export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+export AWS_SESSION_TOKEN="AQoDYXdzEJr..."
+aws s3 sync . s3://dev-scc-upload/us-east-1:4ba81545-8e6a-4c65-80bc-2415617f3a46
     </textarea>
   </div>
   <div class="modal-footer">
