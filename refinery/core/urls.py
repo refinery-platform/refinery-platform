@@ -6,9 +6,9 @@ Created on Feb 20, 2012
 
 from django.conf.urls import url
 
-from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
+from constants import UUID_RE
 from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
                     GroupViewSet, GroupMemberAPIView, InvitationViewSet,
                     ObtainAuthTokenValidSession, OpenIDToken,

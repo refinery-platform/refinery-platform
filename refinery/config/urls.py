@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 urlpatterns = patterns(
     '',
     url(r'', include('core.urls')),
-    url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
+    url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^tasks/', include('djcelery.urls')),
 
