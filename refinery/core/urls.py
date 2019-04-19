@@ -9,7 +9,7 @@ from django.conf.urls import patterns, url
 from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
-from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
+from .views import (AnalysisViewSet, DataSetViewSet, EventViewSet,
                     GroupViewSet, GroupMemberAPIView, InvitationViewSet,
                     ObtainAuthTokenValidSession, OpenIDToken,
                     SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet,
@@ -59,7 +59,7 @@ urlpatterns = patterns(
 # DRF url routing
 core_router = DefaultRouter()
 core_router.register(r'workflows', WorkflowViewSet)
-core_router.register(r'data_sets', DataSetsViewSet, 'data_sets')
+core_router.register(r'data_sets', DataSetViewSet, 'data_sets')
 core_router.register(r'groups', GroupViewSet, 'groups')
 core_router.register(r'invitations', InvitationViewSet, 'invitations')
 core_router.urls.extend([
