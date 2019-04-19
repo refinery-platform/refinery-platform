@@ -26,8 +26,8 @@ from file_store.tasks import FileImportTask
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .tests import MetadataImportTestBase
-from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
-                    StudiesView)
+from .views import (AddFileToNodeView, AssayAPIView, AssaysAttributes,
+                    NodeViewSet, StudiesView)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -187,7 +187,7 @@ class AddFileToNodeViewTests(APITestCase):
         self.assertTrue(update_solr_mock.called)
 
 
-class AssaysAPITests(APITestCase):
+class AssayAPIViewTests(APITestCase):
 
     def setUp(self):
         self.factory = APIRequestFactory()
@@ -212,7 +212,7 @@ class AssaysAPITests(APITestCase):
         self.assay['study'] = self.study.id
         self.valid_uuid = assay.uuid
         self.url_root = '/api/v2/assays/'
-        self.view = Assays.as_view()
+        self.view = AssayAPIView.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 

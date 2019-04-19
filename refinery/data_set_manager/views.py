@@ -732,7 +732,7 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
         return {"message": message}
 
 
-class Assays(APIView):
+class AssayAPIView(APIView):
     """
     Return assay object
 
