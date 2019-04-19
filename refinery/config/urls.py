@@ -21,12 +21,9 @@ from user_files_manager.urls import (user_files_csv_url, user_files_router,
 
 logger = logging.getLogger(__name__)
 
-
-# patterns for all of the different applications
 urlpatterns = patterns(
     '',
-    # links in core urls
-    url(r'^', include('core.urls')),
+    url(r'', include('core.urls')),
     url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
