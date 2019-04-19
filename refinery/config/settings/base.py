@@ -198,7 +198,6 @@ INSTALLED_APPS = (
     'flatblocks',
     'chunked_upload',
     'rest_framework',
-    'rest_framework_swagger',
     'django_docker_engine',
     'revproxy',
     'cuser',
@@ -266,9 +265,6 @@ LOGGING = {
         },
         'factory': {
             'level': 'ERROR',
-        },
-        'httpstream': {  # dependency of py2neo
-            'level': 'INFO',
         },
         'pysolr': {
             'level': 'INFO',
@@ -441,12 +437,6 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Directory for custom libraries
-LIBS_DIR = get_setting("LIBS_DIR")
-
-# Java settings
-JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -473,59 +463,6 @@ except (ValueError, subprocess.CalledProcessError) as exc:
                  exc)
     CURRENT_COMMIT = ""
 
-# Neo4J Settings
-NEO4J_BASE_URL = "http://localhost:7474"
-NEO4J_CONSTRAINTS = [
-    {
-        "label": "Class",
-        "properties": [
-            {
-                "name": "name",
-                "unique": False
-            },
-            {
-                "name": "uri",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "Ontology",
-        "properties": [
-            {
-                "name": "acronym",
-                "unique": True
-            },
-            {
-                "name": "uri",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "User",
-        "properties": [
-            {
-                "name": "id",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "DataSet",
-        "properties": [
-            {
-                "name": "id",
-                "unique": True
-            }
-        ]
-    }
-]
-
-SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
-SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
-SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
-
 REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")
 
 
@@ -538,8 +475,6 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_NAME = "AnonymousUser"
-
-AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 

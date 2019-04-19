@@ -26,7 +26,7 @@ describe.skip('Visualization', function() {
   });
 
   after(function() {
-    // This hits solr and neo4j, so may not work on travis, but should keep local environments clean.
+    // This hits solr, so may not work on travis, but should keep local environments clean.
     cy.django_shell(
       'from refinery.core.models import DataSet; ' +
       'DataSet.objects.get(slug="' + slug + '").delete()'

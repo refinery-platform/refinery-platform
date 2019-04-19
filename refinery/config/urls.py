@@ -31,7 +31,6 @@ urlpatterns = patterns(
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^tasks/', include('djcelery.urls')),
-    url(r'^docs/', include('rest_framework_swagger.urls')),
 
     # NG: added to include additional views for admin
     # (this is not the recommended way but the only one I got to work)

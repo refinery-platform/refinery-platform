@@ -687,13 +687,6 @@ class DataSetTests(TestCase):
         dataset.save()
         self.assertFalse(dataset.is_valid)
 
-    def test_neo4j_called_on_post_save(self):
-        with mock.patch(
-            "core.models.async_update_annotation_sets_neo4j"
-        ) as neo4j_mock:
-            self.isa_tab_dataset.save()
-            self.assertTrue(neo4j_mock.called)
-
     def test_solr_called_on_post_save(self):
         with mock.patch(
             "core.models.update_data_set_index"

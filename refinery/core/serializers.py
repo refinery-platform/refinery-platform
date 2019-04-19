@@ -17,8 +17,8 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Analysis
-        fields = ('name', 'owner', 'status', 'summary', 'time_start',
-                  'time_end', 'uuid', 'workflow', 'data_set_uuid')
+        fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
+                  'summary', 'time_start', 'time_end', 'uuid', 'workflow')
 
     def get_owner(self, analysis):
         return UserSerializer(analysis.get_owner()).data
