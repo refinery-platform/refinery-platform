@@ -1,4 +1,4 @@
-<div id="metadata-table-form">
+<div id="metadata-table-form" class="p-b-1 m-b-1">
   <div class="refinery-subheader m-t-1">
     <h1> Before You Get Started </h1>
   </div>
@@ -514,8 +514,13 @@
                         <i class="fa fa-question-circle info-icon icon-only"></i>
                     </a>
                   </div>
-                <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
-                <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
+                <div>
+                  <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
+                  <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
+                </div>
+                 <div class="p-t-1" ng-if="$ctrl.useS3">
+                  <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
+                </div>
               </div>
             </div>
           </div>
@@ -523,10 +528,16 @@
             <div class="col-sm-12 col-md-12 col-lg-12">
               <button
                 class="refinery-base btn btn-primary"
-                ng-click="metadataTable.confirmImport()"
+                data-toggle="confirmation"
+                data-title="Are all remote data files uploaded?"
                 ng-disabled="importMetadataTableForm.$invalid ||
                 metadataTable.fileStatus === 'queuing' ||
-                metadataTable.fileStatus === 'running'">
+                metadataTable.fileStatus === 'running'"
+                popover-placement="right"
+                uib-popover-template="'tabularimportconfirmationpopover.html'"
+                popover-title="Are all remote data files uploaded?"
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true">
                 Submit
               </button>
               <span class="m-l-1">
@@ -578,4 +589,16 @@
       </div>
     </div>
   </div>
+   <script type="text/ng-template" id="tabularimportconfirmationpopover.html">
+   <div class="full-width text-align-center">
+     <button class="btn btn-primary btn-sm m-r-1" ng-click="metadataTable.confirmImport()">
+       Confirm
+     </button>
+      <button
+        class="refinery-basfe btn btn-default btn-sm"
+        ng-click="metadataTable.closeSubmitPopover()">
+       Cancel
+     </button>
+   </div>
+  </script>
 </div>

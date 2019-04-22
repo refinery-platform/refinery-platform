@@ -144,6 +144,8 @@
               popover-placement="right"
               uib-popover-template="'dataimportconfirmationpopover.html'"
               popover-title="Are all remote data files uploaded?"
+              popover-trigger="'outsideClick'"
+              popover-append-to-body="true"
               tabindex="0">
               Submit
             </button>
@@ -154,7 +156,8 @@
                 Upload of local data files to the server is not complete.
               </span>
             </span>
-            <span class="m-l-1 float-left p-t-1-2" ng-if="$ctrl.showFileUpload">
+            <span class="m-l-1 float-left p-t-1-2"
+              ng-if="$ctrl.showFileUpload && $ctrl.useS3">
               <span class="text-warning">
                 <i class="fa fa-warning" aria-hidden="true"></i>
                 All data files (local and remote) must be uploaded before
@@ -171,7 +174,9 @@
      <button class="btn btn-primary btn-sm m-r-1" ng-click="$ctrl.confirmImport()">
        Confirm
      </button>
-      <button class="refinery-basfe btn btn-default btn-sm">
+      <button
+        class="refinery-basfe btn btn-default btn-sm"
+        ng-click="$ctrl.closeSubmitPopover()">
        Cancel
      </button>
    </div>

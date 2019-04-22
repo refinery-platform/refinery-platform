@@ -108,7 +108,12 @@
     this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
   };
 
+  IsaTabImportCtrl.prototype.closeSubmitPopover = function () {
+    angular.element('body').click();
+  };
+
   IsaTabImportCtrl.prototype.confirmImport = function () {
+    this.closeSubmitPopover();
     var self = this;
     if (self.isMetaDataRevision) {
       var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });

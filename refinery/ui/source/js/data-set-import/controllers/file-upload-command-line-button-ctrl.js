@@ -14,7 +14,6 @@
     vm.launchCommandLineModal = launchCommandLineModal;
 
     function launchCommandLineModal () {
-      console.log('launching');
       var modalInstance = $uibModal.open({
         component: 'rpFileUploadCommandLineModal'
       });

@@ -274,7 +274,12 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
 };
 
+MetadataTableImportCtrl.prototype.closeSubmitPopover = function () {
+  angular.element('body').click();
+};
+
 MetadataTableImportCtrl.prototype.confirmImport = function () {
+  this.closeSubmitPopover();
   var self = this;
   if (self.isMetaDataRevision) {
     var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
