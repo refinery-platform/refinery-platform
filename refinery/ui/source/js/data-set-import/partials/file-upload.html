@@ -20,7 +20,7 @@
             ng-class="{ 'disabled': disabled, 'banned': FileCtrl.isNodeUpdate && queue.length >= 1}"
             ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1">
             <i class="fa fa-plus"></i>
-            <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip</span>
+            <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip;</span>
             <span ng-if="FileCtrl.isNodeUpdate">Add file</span>
             <input
               class="refinery-base"
