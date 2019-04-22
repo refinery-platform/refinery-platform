@@ -478,7 +478,7 @@ class EventViewSet(APIView):
         return Response(serializer.data)
 
 
-class DataSetsViewSet(viewsets.ViewSet):
+class DataSetViewSet(viewsets.ViewSet):
     """
         API endpoint for viewing, editing, and deleting datasets.
         ---

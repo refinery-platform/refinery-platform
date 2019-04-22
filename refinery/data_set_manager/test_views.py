@@ -26,8 +26,8 @@ from file_store.tasks import FileImportTask
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .tests import MetadataImportTestBase
-from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
-                    StudiesView)
+from .views import (AddFileToNodeView, AssayAPIView, AssayAttributeAPIView,
+                    NodeViewSet, StudyViewSet)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -187,7 +187,7 @@ class AddFileToNodeViewTests(APITestCase):
         self.assertTrue(update_solr_mock.called)
 
 
-class AssaysAPITests(APITestCase):
+class AssayAPIViewTests(APITestCase):
 
     def setUp(self):
         self.factory = APIRequestFactory()
@@ -212,7 +212,7 @@ class AssaysAPITests(APITestCase):
         self.assay['study'] = self.study.id
         self.valid_uuid = assay.uuid
         self.url_root = '/api/v2/assays/'
-        self.view = Assays.as_view()
+        self.view = AssayAPIView.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
@@ -256,7 +256,7 @@ class AssaysAPITests(APITestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class AssaysAttributesAPITests(APITestCase):
+class AssayAttributeAPITests(APITestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
@@ -379,7 +379,7 @@ class AssaysAttributesAPITests(APITestCase):
         list.sort(self.attribute_order_response)
         self.valid_uuid = assay.uuid
         self.url_root = '/api/v2/assays'
-        self.view = AssaysAttributes.as_view()
+        self.view = AssayAttributeAPIView.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
@@ -501,7 +501,7 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
-class AssaysFilesAPITests(APITestCase):
+class AssayFileAPITests(APITestCase):
 
     def setUp(self):
         self.user_owner = 'owner'
@@ -544,7 +544,7 @@ class AssaysFilesAPITests(APITestCase):
 
     def tearDown(self):
         self.client.logout()
-        super(AssaysFilesAPITests, self).tearDown()
+        super(AssayFileAPITests, self).tearDown()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
@@ -1805,10 +1805,10 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
 
-class StudiesViewAPIV2Tests(APIV2TestCase):
+class StudyViewAPIV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
-        super(StudiesViewAPIV2Tests, self).setUp(api_base_name="studies/",
-                                                 view=StudiesView.as_view())
+        super(StudyViewAPIV2Tests, self).setUp(api_base_name="studies/",
+                                               view=StudyViewSet.as_view())
         self.data_set = create_dataset_with_necessary_models(user=self.user)
 
     def test_get_missing_data_set_uuid_returns_400(self):

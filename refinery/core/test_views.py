@@ -39,7 +39,7 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
 
 from .serializers import DataSetSerializer, UserSerializer
 
-from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
+from .views import (AnalysisViewSet, DataSetViewSet, EventViewSet,
                     GroupViewSet, GroupMemberAPIView, InvitationViewSet,
                     ObtainAuthTokenValidSession, SiteProfileViewSet,
                     UserProfileViewSet, WorkflowViewSet, user)
@@ -72,7 +72,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(DataSetApiV2Tests, self).setUp(
             api_base_name="datasets/",
-            view=DataSetsViewSet.as_view({'get': 'list'})
+            view=DataSetViewSet.as_view({'get': 'list'})
         )
 
         # Create Datasets
@@ -101,8 +101,8 @@ class DataSetApiV2Tests(APIV2TestCase):
             data=self.node_json,
             format="json"
         )
-        self.get_ds_view = DataSetsViewSet.as_view({'get': 'retrieve'})
-        self.patch_view = DataSetsViewSet.as_view({'patch': 'partial_update'})
+        self.get_ds_view = DataSetViewSet.as_view({'get': 'retrieve'})
+        self.patch_view = DataSetViewSet.as_view({'patch': 'partial_update'})
         self.options_response = self.view(self.options_request)
         self.user_2 = User.objects.create_user('jane_lab',
                                                'jane@example.com',
@@ -342,7 +342,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(True, response_perms.get('read_meta'))
 
     def test_dataset_delete_successful(self):
-        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
+        delete_view = DataSetViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request1 = self.factory.delete(
@@ -371,7 +371,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 2)
 
     def test_dataset_delete_no_auth(self):
-        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
+        delete_view = DataSetViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request = self.factory.delete(
@@ -386,7 +386,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 4)
 
     def test_dataset_delete_not_found(self):
-        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
+        delete_view = DataSetViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         uuid = self.data_set.uuid
@@ -406,8 +406,8 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         self.assertEqual(DataSet.objects.all().count(), 3)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
+    @mock.patch('core.views.DataSetViewSet.update_group_perms')
+    @mock.patch('core.views.DataSetViewSet.send_transfer_notification_email')
     def test_dataset_patch_success_returns_202(self, mock_update, mock_email):
         new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
@@ -420,8 +420,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
+    @mock.patch('core.views.DataSetViewSet.update_group_perms')
+    @mock.patch('core.views.DataSetViewSet.send_transfer_notification_email')
     def test_dataset_patch_returns_updated_is_owner(self, mock_update,
                                                     mock_email):
         new_owner_email = 'new_owner@example.com'
@@ -446,8 +446,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 404)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
+    @mock.patch('core.views.DataSetViewSet.update_group_perms')
+    @mock.patch('core.views.DataSetViewSet.send_transfer_notification_email')
     def test_dataset_calls_current_mock_methods(self, mock_update, mock_email):
         new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
@@ -461,7 +461,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertTrue(mock_update.called)
         self.assertTrue(mock_email.called)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms',
+    @mock.patch('core.views.DataSetViewSet.update_group_perms',
                 side_effect=RuntimeError)
     def test_dataset_patch_fails_and_rollback_owner(self, mock_update):
         new_owner_email = 'new_owner@example.com'
@@ -680,7 +680,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -694,7 +694,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -710,7 +710,7 @@ class DataSetApiV2Tests(APIV2TestCase):
                                              new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -733,7 +733,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -756,7 +756,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.data_set.share(group_non_union)
         group_non_union.user_set.add(self.user)
 
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
@@ -782,7 +782,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_union.user_set.add(self.user)
         group_union.user_set.add(new_owner)
 
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
@@ -804,7 +804,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_public = ExtendedGroup.objects.public_group()
         self.data_set.share(group_public)
 
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
