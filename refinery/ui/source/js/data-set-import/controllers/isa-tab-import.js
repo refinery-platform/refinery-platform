@@ -108,6 +108,11 @@
     this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
   };
 
+  /**
+   * @name closeSubmitPopover
+   * @desc  View method to which closes the popover trigger by outsideClick
+   * @memberOf IsaTabImportCtrl.closeSubmitPopover
+  **/
   IsaTabImportCtrl.prototype.closeSubmitPopover = function () {
     angular.element('body').click();
   };

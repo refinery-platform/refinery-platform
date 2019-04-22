@@ -274,6 +274,11 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
 };
 
+/**
+ * @name closeSubmitPopover
+ * @desc  View method to which closes the popover trigger by outsideClick
+ * @memberOf IsaTabImportCtrl.closeSubmitPopover
+**/
 MetadataTableImportCtrl.prototype.closeSubmitPopover = function () {
   angular.element('body').click();
 };

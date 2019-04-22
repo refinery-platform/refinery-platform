@@ -11,7 +11,6 @@
     <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
     <div class="row fileupload-buttonbar v-centered-row">
       <div class="col-lg-12">
-        <!-- The fileinput-button span is used to style the file input field as button -->
          <label class="block label-block label-text-left p-b-1-4">
            <span class="label-text label-left min-width-75">
              Local files:
@@ -21,8 +20,8 @@
             ng-class="{ 'disabled': disabled, 'banned': FileCtrl.isNodeUpdate && queue.length >= 1}"
             ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1">
             <i class="fa fa-plus"></i>
-            <span ng-if="!FileCtrl.isNodeUpdate">Add files...</span>
-            <span ng-if="FileCtrl.isNodeUpdate">Add file...</span>
+            <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip</span>
+            <span ng-if="FileCtrl.isNodeUpdate">Add file</span>
             <input
               class="refinery-base"
               ng-disabled="disabled"

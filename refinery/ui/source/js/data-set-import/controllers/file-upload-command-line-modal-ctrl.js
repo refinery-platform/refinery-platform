@@ -4,7 +4,6 @@
  * @desc Main controller for the file upload command line modal
  * @memberOf refineryApp.refineryDataSetImport
  */
-
 (function () {
   'use strict';
 
@@ -12,9 +11,10 @@
     .module('refineryDataSetImport')
     .controller('FileUploadCommandLineModalCtrl', FileUploadCommandLineModalCtrl);
 
-  FileUploadCommandLineModalCtrl.$inject = ['AWS', 'settings'];
+  FileUploadCommandLineModalCtrl.$inject = ['_', 'AWS', 'settings'];
 
   function FileUploadCommandLineModalCtrl (
+    _,
     AWS,
     settings
   ) {
@@ -39,12 +39,17 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
-      // credentials initialized in file-upload-s3-service when user selects yes
-      vm.accessKeyId = AWS.config.credentials.accessKeyId;
-      vm.secertAccessKey = AWS.config.credentials.secretAccessKey;
-      vm.sessionToken = AWS.config.credentials.sessionToken;
-      vm.bucketName = settings.djangoApp.uploadBucket;
-      vm.identityId = AWS.config.credentials.identityId;
+      if (AWS.config.credentials) { // otherwise equals null
+        // credentials initialized in file-upload-s3-service when user selects yes
+        vm.accessKeyId = AWS.config.credentials.accessKeyId;
+        vm.secertAccessKey = AWS.config.credentials.secretAccessKey;
+        vm.sessionToken = AWS.config.credentials.sessionToken;
+        vm.identityId = AWS.config.credentials.identityId;
+      }
+
+      if (!_.isEmpty(settings.djanoApp)) {
+        vm.bucketName = settings.djangoApp.uploadBucket;
+      }
     };
   }
 })();

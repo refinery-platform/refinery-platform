@@ -1,3 +1,9 @@
+/**
+ * File Upload Command Line Button Control
+ * @namespace FileUploadCommandLineButtonCtrl
+ * @desc Main controller for the button to launch modal component
+ * @memberOf refineryApp.refineryDataSetImport
+ */
 (function () {
   'use strict';
 
@@ -12,13 +18,19 @@
   ) {
     var vm = this;
     vm.launchCommandLineModal = launchCommandLineModal;
-
+    /*
+     * ---------------------------------------------------------
+     * Methods Definitions
+     * ---------------------------------------------------------
+     */
+    /**
+     * @name launchCommandLineModal
+     * @desc  View method to launch modal
+     * @memberOf FileUploadCommandLineButtonCtrl.launchCommandLineModal
+    **/
     function launchCommandLineModal () {
-      var modalInstance = $uibModal.open({
+      $uibModal.open({
         component: 'rpFileUploadCommandLineModal'
-      });
-      modalInstance.result.then(function () {
-        console.log('modal closes');
       });
     }
   }

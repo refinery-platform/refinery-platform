@@ -518,7 +518,7 @@
                   <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
                   <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
                 </div>
-                 <div class="p-t-1" ng-if="$ctrl.useS3">
+                 <div class="p-t-1" ng-if="metadataTable.useS3">
                   <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
                 </div>
               </div>
@@ -549,6 +549,11 @@
                 ng-if="metadataTable.fileStatus === 'queuing'">
                 <i class="fa fa-warning" aria-hidden="true"></i>
                 All data files have not been uploaded.
+              </span>
+              <span class="text-warning p-1-2"
+                ng-if="metadataTable.showFileUpload && metadataTable.useS3">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                All data files (local and remote) must be uploaded before submitting.
               </span>
               <span
                 ng-messages="importMetadataTableForm.title.$error"

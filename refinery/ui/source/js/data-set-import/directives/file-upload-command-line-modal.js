@@ -1,3 +1,9 @@
+/**
+ * File Upload Command Line Modal
+ * @namespace rpFileUploadCommandLineModal
+ * @desc Component for modal which displays command to upload files
+ * @memberOf refineryApp.refineryDataSetImport
+ */
 (function () {
   'use strict';
   angular

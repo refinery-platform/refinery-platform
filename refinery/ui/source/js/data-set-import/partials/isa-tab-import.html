@@ -120,7 +120,7 @@
               <rp-file-upload is-node-update="false" ng-if="!$ctrl.useS3"></rp-file-upload>
               <rp-file-upload-s3 is-node-update="false" ng-if="$ctrl.useS3"></rp-file-upload-s3>
             </div>
-            <div class="p-t-1">
+            <div class="p-t-1" ng-if="$ctrl.useS3">
               <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
             </div>
           </div>
