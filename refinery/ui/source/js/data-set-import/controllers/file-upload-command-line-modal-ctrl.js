@@ -12,20 +12,14 @@
     .module('refineryDataSetImport')
     .controller('FileUploadCommandLineModalCtrl', FileUploadCommandLineModalCtrl);
 
-  FileUploadCommandLineModalCtrl.$inject = ['settings'];
+  FileUploadCommandLineModalCtrl.$inject = ['AWS', 'settings'];
 
   function FileUploadCommandLineModalCtrl (
+    AWS,
     settings
   ) {
     var vm = this;
     vm.close = close;
-    console.log('in the modal ctrl');
-    console.log(AWS.config);
-    vm.accessKeyId = '';
-    vm.secertAccessKey = '';
-    vm.sessionToken = '';
-    vm.bucketName = settings.djangoApp.uploadBucket;
-    vm.identityId = '';
     /*
      * ---------------------------------------------------------
      * Methods Definitions
@@ -39,5 +33,18 @@
     function close () {
       vm.modalInstance.close(vm.alertType);
     }
+    /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      // credentials initialized in file-upload-s3-service when user selects yes
+      vm.accessKeyId = AWS.config.credentials.accessKeyId;
+      vm.secertAccessKey = AWS.config.credentials.secretAccessKey;
+      vm.sessionToken = AWS.config.credentials.sessionToken;
+      vm.bucketName = settings.djangoApp.uploadBucket;
+      vm.identityId = AWS.config.credentials.identityId;
+    };
   }
 })();

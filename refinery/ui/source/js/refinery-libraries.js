@@ -3,6 +3,7 @@
 angular
   .module('refineryApp')
   .constant('$', window.jQuery)
+  .constant('AWS', window.AWS)
   .constant('d3', window.d3)
   .constant('dagre', window.dagre)
   .constant('filesize', window.filesize)

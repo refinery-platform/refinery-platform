@@ -460,7 +460,7 @@
 
         <div>
           <div class="refinery-subheader m-t-1">
-             <h1>Complete Submission</h1>
+             <h1>Upload Data File</h1>
           </div>
           <div class="row m-t-1-4 m-b-1-4">
             <div class="col-sm-12 col-md-12 col-lg-12">
@@ -524,81 +524,84 @@
               </div>
             </div>
           </div>
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-12 col-md-12 col-lg-12">
-              <button
-                class="refinery-base btn btn-primary"
-                data-toggle="confirmation"
-                data-title="Are all remote data files uploaded?"
-                ng-disabled="importMetadataTableForm.$invalid ||
-                metadataTable.fileStatus === 'queuing' ||
-                metadataTable.fileStatus === 'running'"
-                popover-placement="right"
-                uib-popover-template="'tabularimportconfirmationpopover.html'"
-                popover-title="Are all remote data files uploaded?"
-                popover-trigger="'outsideClick'"
-                popover-append-to-body="true">
-                Submit
-              </button>
-              <span class="m-l-1">
-                <span class="text-warning"
-                  ng-if="metadataTable.fileStatus === 'queuing'">
-                  <i class="fa fa-warning" aria-hidden="true"></i>
-                  All data files have not been uploaded.
-                </span>
-                <span
-                  ng-messages="importMetadataTableForm.title.$error"
-                  role="alert"
-                  class="text-danger">
-                  <div ng-message="required">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Required: Enter a title.
-                  </div>
-                  <div ng-message="minlength">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Error: Title is too short.
-                  </div>
-                  <div ng-message="maxlength">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Error: Title is too long.
-                  </div>
-                </span>
-                <span
-                  ng-messages="importMetadataTableForm.source_column_index.$error"
-                  role="alert"
-                  class="text-danger">
-                  <div ng-message="required">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Required: Select a Sample Identifier.
-                  </div>
-                </span>
-                <span
-                  ng-messages="importMetadataTableForm.slug.$error"
-                  role="alert"
-                  class="text-danger">
-                  <div ng-message="pattern">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Invalid URL shortcut, can only contain alphanumeric
-                    characters and "_".
-                  </div>
-                </span>
+        </div>
+        <div class="refinery-subheader m-t-1">
+          <h1>Complete Submission</h1>
+        </div>
+        <div class="row m-t-1-4 m-b-1-4">
+          <div class="col-sm-12 col-md-12 col-lg-12">
+            <button
+              class="refinery-base btn btn-primary"
+              data-toggle="confirmation"
+              data-title="Are all remote data files uploaded?"
+              ng-disabled="importMetadataTableForm.$invalid ||
+              metadataTable.fileStatus === 'queuing' ||
+              metadataTable.fileStatus === 'running'"
+              popover-placement="right"
+              uib-popover-template="'tabularimportconfirmationpopover.html'"
+              popover-title="Are all remote data files uploaded?"
+              popover-trigger="'outsideClick'"
+              popover-append-to-body="true">
+              Submit
+            </button>
+            <span class="m-l-1">
+              <span class="text-warning"
+                ng-if="metadataTable.fileStatus === 'queuing'">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                All data files have not been uploaded.
               </span>
-            </div>
+              <span
+                ng-messages="importMetadataTableForm.title.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Enter a title.
+                </div>
+                <div ng-message="minlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too short.
+                </div>
+                <div ng-message="maxlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too long.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.source_column_index.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Select a Sample Identifier.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.slug.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="pattern">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Invalid URL shortcut, can only contain alphanumeric
+                  characters and "_".
+                </div>
+              </span>
+            </span>
           </div>
         </div>
       </div>
     </div>
   </div>
-   <script type="text/ng-template" id="tabularimportconfirmationpopover.html">
-   <div class="full-width text-align-center">
-     <button class="btn btn-primary btn-sm m-r-1" ng-click="metadataTable.confirmImport()">
-       Confirm
-     </button>
+  <script type="text/ng-template" id="tabularimportconfirmationpopover.html">
+    <div class="full-width text-align-center">
+      <button class="btn btn-primary btn-sm m-r-1" ng-click="metadataTable.confirmImport()">
+        Confirm
+      </button>
       <button
         class="refinery-basfe btn btn-default btn-sm"
         ng-click="metadataTable.closeSubmitPopover()">
-       Cancel
-     </button>
-   </div>
+         Cancel
+      </button>
+    </div>
   </script>
 </div>
