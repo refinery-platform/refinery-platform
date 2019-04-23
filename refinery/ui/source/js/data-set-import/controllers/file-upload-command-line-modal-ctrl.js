@@ -31,7 +31,7 @@
      * @memberOf refineryDataSetImport.FileUploadCommandLineModalCtrl
     **/
     function close () {
-      vm.modalInstance.close(vm.alertType);
+      vm.modalInstance.close();
     }
     /*
    * ---------------------------------------------------------
