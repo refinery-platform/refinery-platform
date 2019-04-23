@@ -2,7 +2,7 @@
  * Studies V2 Service
  * @namespace studyService
  * @desc Service to retrieve studies. Note, current API requires a
- * dataSetUuid and returns the related studies.
+ * data_set_uuid and returns the related studies.
  * @memberOf refineryApp
  */
 (function () {
