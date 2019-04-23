@@ -1683,14 +1683,14 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
     def test_get_analysis_with_data_set_uuid_returns_401(self):
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         get_response = self.view(get_request_with_ds)
         self.assertEqual(get_response.status_code, 401)
 
     def test_get_analysis_with_invalid_data_set_uuid_returns_404(self):
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': 'xxx5'}
+            self.url_root, {'data_set_uuid': 'xxx5'}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1698,7 +1698,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
     def test_get_analysis_with_data_set_uuid_returns_analyses(self):
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1710,7 +1710,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_names_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1719,7 +1719,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_status_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1729,7 +1729,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_summary_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1739,7 +1739,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_time_start_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1749,7 +1749,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_time_end_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1759,7 +1759,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_uuid_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1768,7 +1768,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_workflow_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1778,7 +1778,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_owner_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1789,7 +1789,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
     def test_get_analysis_with_data_set_uuid_returns_sorted_analyses(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         # sorted in reverse time_start
@@ -1801,7 +1801,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root,
                                        {'limit': limit,
                                         'offset': 0,
-                                        'dataSetUuid': self.data_set.uuid})
+                                        'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), limit)
@@ -1810,7 +1810,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         offset = 1
         get_request = self.factory.get(self.url_root,
                                        {'offset': offset,
-                                        'dataSetUuid': self.data_set.uuid})
+                                        'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         # know the total length off analysis is 2

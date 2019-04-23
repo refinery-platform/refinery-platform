@@ -4,7 +4,7 @@ describe('Common.service.analysis: unit tests', function () {
   var $httpBackend;
   var $rootScope;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
-  var params = '/?dataSetUuid=' + fakeUuid;
+  var params = '/?data_set_uuid=' + fakeUuid;
   var service;
   var fakeResponse = {
     meta: {
@@ -55,7 +55,7 @@ describe('Common.service.analysis: unit tests', function () {
     it('should return a resolving promise', function () {
       var results;
       var promise = service.get({
-        dataSetUuid: fakeUuid
+        data_set_uuid: fakeUuid
       }).$promise.then(function (response) {
         results = response;
       });
