@@ -20,7 +20,7 @@
       $window.dataSetUuid = mockParamsFactory.generateUuid();
       $httpBackend.expectGET(
         settings.appRoot + settings.refineryApiV2
-        + '/groups/?dataSetUuid=' + $window.dataSetUuid
+        + '/groups/?data_set_uuid=' + $window.dataSetUuid
       ).respond(200, {});
 
       $templateCache.put(

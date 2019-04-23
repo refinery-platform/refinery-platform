@@ -11,8 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.routers import DefaultRouter
 
 from constants import UUID_RE
-from .views import (AddFileToNodeView, Assays, AssaysAttributes,
-                    AssaysFiles, NodeViewSet, StudiesView)
+from .views import (AddFileToNodeView, AssayAPIView, AssayAttributeAPIView,
+                    AssayFileAPIView, NodeViewSet, StudyViewSet)
 from . import views
 
 urlpatterns = [
@@ -47,12 +47,12 @@ urlpatterns = [
 data_set_manager_router = DefaultRouter()
 data_set_manager_router.register(r'^nodes', NodeViewSet, 'nodes')
 data_set_manager_router.urls.extend([
-    url(r'^assays/$', Assays.as_view()),
+    url(r'^assays/$', AssayAPIView.as_view()),
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/files/$',
-        AssaysFiles.as_view()),
+        AssayFileAPIView.as_view()),
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/attributes/$',
-        AssaysAttributes.as_view()),
+        AssayAttributeAPIView.as_view()),
     url(r'^data_set_manager/add-file/$',
         AddFileToNodeView.as_view()),
-    url(r'^studies/$', StudiesView.as_view()),
+    url(r'^studies/$', StudyViewSet.as_view()),
 ])

@@ -478,7 +478,7 @@ class EventViewSet(APIView):
         return Response(serializer.data)
 
 
-class DataSetsViewSet(viewsets.ViewSet):
+class DataSetViewSet(viewsets.ViewSet):
     """
         API endpoint for viewing, editing, and deleting datasets.
         ---
@@ -838,7 +838,7 @@ class AnalysisViewSet(APIView):
         get:
             description: Returns analyses filtered by either data set or user
             parameters:
-                - name: dataSetUuid
+                - name: data_set_uuid
                   description: param to have analyses filtered by a data set
                   paramType: param
                   type: string
@@ -848,7 +848,7 @@ class AnalysisViewSet(APIView):
     http_method_names = ['get', 'delete']
 
     def get(self, request):
-        data_set_uuid = request.query_params.get('dataSetUuid')
+        data_set_uuid = request.query_params.get('data_set_uuid')
         paginator = LimitOffsetPagination()
         paginator.default_limit = 100
 
@@ -927,12 +927,12 @@ class GroupViewSet(viewsets.ViewSet):
             description: Returns groups filtered on data set or user
             (defaults to read_meta perms)
             parameters:
-                - name: dataSetUuid
+                - name: data_set_uuid
                   description: Returns groups based on data set
                   paramType: query
                   type: string
                   required: false
-                - name: allPerms
+                - name: all_perms
                   description: Limits query set to groups the user is member of
                   paramType: query
                   type: boolean
@@ -940,7 +940,7 @@ class GroupViewSet(viewsets.ViewSet):
         partial_update:
             description: Data set owners can update group's perms for data sets
             parameters:
-                - name: dataSetUuid
+                - name: data_set_uuid
                   description: data set uuid
                   paramType: path
                   type: string
@@ -988,8 +988,8 @@ class GroupViewSet(viewsets.ViewSet):
                         status=status.HTTP_403_FORBIDDEN)
 
     def list(self, request):
-        data_set_uuid = request.query_params.get('dataSetUuid')
-        all_perms_flag = request.query_params.get('allPerms', False)
+        data_set_uuid = request.query_params.get('data_set_uuid')
+        all_perms_flag = request.query_params.get('all_perms', False)
 
         if data_set_uuid is None:
             # returns member list, so must be logged in
@@ -1029,7 +1029,7 @@ class GroupViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def partial_update(self, request, uuid, format=None):
-        data_set_uuid = request.data.get('dataSetUuid')
+        data_set_uuid = request.data.get('data_set_uuid')
         group = self.get_object(uuid)
 
         data_set = get_data_set_for_view_set(data_set_uuid)
@@ -1070,7 +1070,7 @@ class GroupMemberAPIView(APIView):
     post:
         description:  Group managers can promote a user
         parameters:
-            - name: userId
+            - name: user_id
               description: user id
               paramType: form
               type: string
@@ -1097,7 +1097,7 @@ class GroupMemberAPIView(APIView):
         group = self.get_object(uuid)
 
         if group.is_user_a_group_manager(request.user):
-            edit_user = self.get_user(request.data.get('userId'))
+            edit_user = self.get_user(request.data.get('user_id'))
             if group.is_manager_group():
                 group.user_set.add(edit_user)
                 serializer = ExtendedGroupSerializer(group,

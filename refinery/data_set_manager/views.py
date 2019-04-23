@@ -732,7 +732,7 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
         return {"message": message}
 
 
-class Assays(APIView):
+class AssayAPIView(APIView):
     """
     Return assay object
 
@@ -787,7 +787,7 @@ class Assays(APIView):
             raise Http404
 
 
-class AssaysFiles(APIView):
+class AssayFileAPIView(APIView):
 
     """
     Return solr response. Query requires assay_uuid.
@@ -883,7 +883,7 @@ class AssaysFiles(APIView):
             )
 
 
-class AssaysAttributes(APIView):
+class AssayAttributeAPIView(APIView):
     """
     AttributeOrder Resource.
     Returns/Updates AttributeOrder model queries. Requires assay_uuid.
@@ -1111,7 +1111,7 @@ class NodeViewSet(viewsets.ViewSet):
     list:
         description: Returns nodes filtered by study and user's read_meta perms
         parameters:
-            - name: studyUuid
+            - name: study_uuid
               description: study's uuid
               paramType: query
               type: string
@@ -1170,7 +1170,7 @@ class NodeViewSet(viewsets.ViewSet):
             raise APIException("Multiple objects returned.")
 
     def list(self, request):
-        study_uuid = request.query_params.get('studyUuid')
+        study_uuid = request.query_params.get('study_uuid')
 
         if study_uuid is None:
             return Response(
@@ -1309,7 +1309,7 @@ class NodeViewSet(viewsets.ViewSet):
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class StudiesView(APIView):
+class StudyViewSet(APIView):
     """
     API end point for retrieving studies based on a data set uuid
 
@@ -1321,7 +1321,7 @@ class StudiesView(APIView):
         omit_serializer: false
 
         parameters:
-            - name: dataSetUuid
+            - name: data_set_uuid
               description: data set uuid containing the studies
               paramType: query
               type: string
@@ -1329,7 +1329,7 @@ class StudiesView(APIView):
     ...
     """
     def get(self, request):
-        data_set_uuid = request.query_params.get('dataSetUuid')
+        data_set_uuid = request.query_params.get('data_set_uuid')
         if data_set_uuid is None:
             return HttpResponseBadRequest(
                 "Currently, a Data Set UUID is required for "

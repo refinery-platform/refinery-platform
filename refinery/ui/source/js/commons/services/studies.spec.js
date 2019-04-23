@@ -47,11 +47,11 @@
           .expectGET(
             settings.appRoot +
             settings.refineryApiV2 +
-            '/studies/?dataSetUuid=' + fakeUuid
+            '/studies/?data_set_uuid=' + fakeUuid
           ).respond(200, fakeResponse);
 
         var studyResult;
-        var promise = service.query({ dataSetUuid: fakeUuid })
+        var promise = service.query({ data_set_uuid: fakeUuid })
           .$promise.then(function (response) {
             studyResult = response[0];
           });
