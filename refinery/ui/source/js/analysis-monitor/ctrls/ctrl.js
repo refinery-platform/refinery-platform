@@ -34,7 +34,7 @@ function AnalysisMonitorCtrl (
   // analysis list and refreshes details for running analyses.
   vm.updateAnalysesList = function () {
     var param = {
-      dataSetUuid: $window.dataSetUuid
+      data_set_uuid: $window.dataSetUuid
     };
 
     vm.timerList = $timeout(vm.updateAnalysesList, 15000);

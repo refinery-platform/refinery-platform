@@ -838,7 +838,7 @@ class AnalysisViewSet(APIView):
         get:
             description: Returns analyses filtered by either data set or user
             parameters:
-                - name: dataSetUuid
+                - name: data_set_uuid
                   description: param to have analyses filtered by a data set
                   paramType: param
                   type: string
@@ -848,7 +848,7 @@ class AnalysisViewSet(APIView):
     http_method_names = ['get', 'delete']
 
     def get(self, request):
-        data_set_uuid = request.query_params.get('dataSetUuid')
+        data_set_uuid = request.query_params.get('data_set_uuid')
         paginator = LimitOffsetPagination()
         paginator.default_limit = 100
 

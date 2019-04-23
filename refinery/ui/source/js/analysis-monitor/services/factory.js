@@ -108,7 +108,7 @@ function analysisMonitorFactory (
 
   // Copies and sorts analyses list
   var processAnalysesList = function (data, params) {
-    if ('dataSetUuid' in params) {
+    if ('data_set_uuid' in params) {
       addElapseAndHumanTime(data);
     } else {
       angular.copy(data, analysesGlobalList);
