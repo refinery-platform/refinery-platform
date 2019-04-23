@@ -23,7 +23,7 @@
      */
     function getDataSetGroupPerms (dataSetUuid) {
       var params = {
-        dataSetUuid: dataSetUuid
+        data_set_uuid: dataSetUuid
       };
       var dataSetRequest = groupService.query(params);
       dataSetRequest.$promise.then(function (response) {

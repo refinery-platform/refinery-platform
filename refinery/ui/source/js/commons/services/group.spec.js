@@ -60,7 +60,7 @@
 
     describe('partial_update', function () {
       var params = {
-        dataSetUuid: mockDataSetUuid,
+        data_set_uuid: mockDataSetUuid,
         perm_list: { change: 'True', read: 'True', read_meta: 'True' }
       };
       it('should return a resolving promise', function () {

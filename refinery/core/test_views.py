@@ -948,19 +948,19 @@ class GroupApiV2Tests(APIV2TestCase):
 
     def test_get_groups_with_data_set_uuid_returns_403_for_anon(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 403)
 
     def test_get_groups_invalid_data_set_uuid_returns_404(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': 'xxx2'})
+                                       {'data_set_uuid': 'xxx2'})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 404)
 
     def test_get_groups_with_data_set_uuid_returns_correct_groups(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), 2)
@@ -972,7 +972,7 @@ class GroupApiV2Tests(APIV2TestCase):
         public_group = ExtendedGroup.objects.public_group()
         self.data_set.share(public_group)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), 3)
@@ -984,7 +984,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_name_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.name, get_response.data[0].get('name'))
@@ -992,7 +992,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_id_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.id, get_response.data[0].get('id'))
@@ -1000,14 +1000,14 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_uuid(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.uuid, get_response.data[0].get('uuid'))
 
     def test_get_groups_with_data_set_uuid_has_can_edit_true(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('can_edit'), True)
@@ -1018,7 +1018,7 @@ class GroupApiV2Tests(APIV2TestCase):
                                             self.password)
         self.group.user_set.add(new_user)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('can_edit'), False)
@@ -1030,7 +1030,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.group.user_set.add(new_user)
         ExtendedGroup.objects.public_group().user_set.remove(new_user)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('manager_group_uuid'),
@@ -1039,7 +1039,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_correct_perms_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         response_perms = get_response.data[0].get('perm_list')
@@ -1055,7 +1055,7 @@ class GroupApiV2Tests(APIV2TestCase):
                                                  self.password)
         self.group.user_set.add(self.new_user)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.new_user)
         get_response = self.view(get_request)
         # public group plus group one
@@ -1067,8 +1067,8 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_and_all_perms_returns_groups(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid,
-                                        'allPerms': True})
+                                       {'data_set_uuid': self.data_set.uuid,
+                                        'all_perms': True})
         get_request.user = self.user
         get_response = self.view(get_request)
         # public plus the two groups created in set-up
@@ -1077,8 +1077,8 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_and_all_perms_returns_perms(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid,
-                                        'allPerms': True})
+                                       {'data_set_uuid': self.data_set.uuid,
+                                        'all_perms': True})
         get_request.user = self.user
         get_response = self.view(get_request)
 
@@ -1097,15 +1097,15 @@ class GroupApiV2Tests(APIV2TestCase):
         public_group = ExtendedGroup.objects.public_group()
         self.data_set.share(public_group)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid,
-                                        'allPerms': True})
+                                       {'data_set_uuid': self.data_set.uuid,
+                                        'all_perms': True})
         get_response = self.view(get_request)
         self.assertEqual(get_response.data, [])
 
     def test_patch_groups_returns_status_code_200(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': True,
                            'read_meta': True},
@@ -1119,7 +1119,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_change_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': True,
                            'read_meta': True},
@@ -1134,7 +1134,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_read_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': False,
                            'read': False,
                            'read_meta': True},
@@ -1151,7 +1151,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_read_meta_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': False,
                            'read': False,
                            'read_meta': False},
@@ -1166,7 +1166,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_based_on_highest_perm_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1189,7 +1189,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.group.user_set.add(self.non_owner)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1203,7 +1203,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_invalid_data_set_uuid_returns_404(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': 'xxxxxx',
+            {'data_set_uuid': 'xxxxxx',
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1217,7 +1217,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_invalid_group_uuid_returns_404(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, 'xxxxx5'),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1388,7 +1388,7 @@ class GroupMemberApiV2Tests(APIV2TestCase):
 
     def test_post_group_member_returns_403_for_non_managers(self):
         post_request = self.factory.post(self.url_root,
-                                         {'userId': self.non_manager.id})
+                                         {'user_id': self.non_manager.id})
         force_authenticate(post_request, user=self.non_manager)
         post_request = self.view(post_request,
                                  self.group.uuid)
@@ -1397,7 +1397,7 @@ class GroupMemberApiV2Tests(APIV2TestCase):
     def test_post_group_member_promotes_for_user(self):
         post_request = self.factory.post(
             '/groups/' + self.group.manager_group.uuid + '/members/',
-            {'userId': self.non_manager.id}
+            {'user_id': self.non_manager.id}
         )
         force_authenticate(post_request, user=self.user)
         post_request = self.view(post_request,

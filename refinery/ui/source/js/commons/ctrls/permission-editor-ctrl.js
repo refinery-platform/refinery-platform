@@ -78,7 +78,7 @@
     function updatePerms (group) {
       groupService
         .partial_update({
-          dataSetUuid: vm.resolve.config.uuid,
+          data_set_uuid: vm.resolve.config.uuid,
           uuid: group.uuid,
           perm_list: vm.permissionLevel[group.permission]
         })
