@@ -808,20 +808,22 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(get_response.status_code, 400)
 
     def test_get_with_incorrect_study_uuid_returns_404(self):
-        get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.hg_19_data_set.uuid})
+        get_request = self.factory.get(
+            self.url_root,
+            {'study_uuid': self.hg_19_data_set.uuid}
+        )
         get_response = self.get_list_view(get_request)
         self.assertEqual(get_response.status_code, 404)
 
     def test_get_with_study_uuid_returns_401(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_response = self.get_list_view(get_request)
         self.assertEqual(get_response.status_code, 401)
 
     def test_get_with_study_uuid_returns_study_nodes(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         self.assertEqual(len(get_response.data),
@@ -834,7 +836,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_children_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -845,7 +847,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_parents_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -856,7 +858,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_file_uuid_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -867,7 +869,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_name_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -878,7 +880,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_type_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -889,7 +891,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_genome_build_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -900,7 +902,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_species_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -911,7 +913,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_is_annotation_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -922,7 +924,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_analysis_uuid_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -933,7 +935,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_is_auxiliary_node_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -944,7 +946,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_subanalysis_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -955,7 +957,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_workflow_output_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -966,7 +968,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_study_id_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -977,7 +979,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_assay_id_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -1819,21 +1821,21 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_401_for_unauthorized_users(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 401)
 
     def test_get_returns_public_studies_for_anon(self):
         self.data_set.share(ExtendedGroup.objects.public_group())
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('uuid'),
                          self.data_set.get_studies()[0].uuid)
 
     def test_get_returns_studies_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('uuid'),
@@ -1841,7 +1843,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_title_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('title'),
@@ -1849,7 +1851,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_description_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('description'),
@@ -1857,7 +1859,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_submission_date_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('submission_date'),
@@ -1865,7 +1867,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_identifier_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('identifier'),
@@ -1873,7 +1875,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_release_date_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('release_date'),
@@ -1881,7 +1883,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_file_name_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('file_name'),
@@ -1889,7 +1891,7 @@ class StudyViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_investigation_id_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('investigation'),
