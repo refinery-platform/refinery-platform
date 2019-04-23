@@ -1111,7 +1111,7 @@ class NodeViewSet(viewsets.ViewSet):
     list:
         description: Returns nodes filtered by study and user's read_meta perms
         parameters:
-            - name: studyUuid
+            - name: study_uuid
               description: study's uuid
               paramType: query
               type: string
@@ -1170,7 +1170,7 @@ class NodeViewSet(viewsets.ViewSet):
             raise APIException("Multiple objects returned.")
 
     def list(self, request):
-        study_uuid = request.query_params.get('studyUuid')
+        study_uuid = request.query_params.get('study_uuid')
 
         if study_uuid is None:
             return Response(
@@ -1321,7 +1321,7 @@ class StudyViewSet(APIView):
         omit_serializer: false
 
         parameters:
-            - name: dataSetUuid
+            - name: data_set_uuid
               description: data set uuid containing the studies
               paramType: query
               type: string
@@ -1329,7 +1329,7 @@ class StudyViewSet(APIView):
     ...
     """
     def get(self, request):
-        data_set_uuid = request.query_params.get('dataSetUuid')
+        data_set_uuid = request.query_params.get('data_set_uuid')
         if data_set_uuid is None:
             return HttpResponseBadRequest(
                 "Currently, a Data Set UUID is required for "

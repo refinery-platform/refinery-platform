@@ -107,7 +107,7 @@
 
       /* Only allow one instance of ProvVis. */
       if (vis instanceof provvisDecl.ProvVis === false) {
-        var url = settings.appRoot + settings.refineryApiV2 + '/nodes/?studyUuid=' + studyUuid;
+        var url = settings.appRoot + settings.refineryApiV2 + '/nodes/?study_uuid=' + studyUuid;
         var analysesData = studyAnalyses.filter(function (a) {
           return a.status === 'SUCCESS';
         });

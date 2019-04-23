@@ -63,7 +63,7 @@
       it('getDataSetGroupPerms returns a promise', function () {
         var successData;
         var response = factory.getDataSetGroupPerms({
-          dataSetUuid: fakeUuid
+          data_set_uuid: fakeUuid
         }).then(function (responseData) {
           successData = responseData;
         });
