@@ -1,0 +1,34 @@
+<div class="modal-content" id="modal-upload-command-line">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="$ctrl.close()"
+      aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <h4 class="modal-title">Upload Remote Data Files</h4>
+  </div>
+  <div class="modal-body">
+    <p>
+      If your files are on a remote server, copy and paste the provided command
+      into your terminal window to directly upload them. This script requires the
+      <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html">
+        AWS CLI tool
+      </a> to be installed and the aws command be available on your $PATH.
+      <br>
+      <strong>
+        Note: Upload all remote files before completing submission of the data set on the website.
+      </strong>
+    </p>
+    <textarea
+        style="width: 100%; font-family: monospace; overflow-wrap: break-word;"
+        rows="8" onclick="this.focus(); this.select();"
+        readonly="readonly">
+export AWS_ACCESS_KEY_ID="{{ $ctrl.accessKeyId }}"
+export AWS_SECRET_ACCESS_KEY="{{ $ctrl.secretAccessKey }}
+export AWS_SESSION_TOKEN="{{ $ctrl.sessionToken }}"
+aws s3 sync . s3://{{ $ctrl.bucketName }}/{{ $ctrl.identityId }}
+    </textarea>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" ng-click="$ctrl.close()">Close
+    </button>
+  </div>
+</div>
+
