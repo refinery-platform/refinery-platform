@@ -3,15 +3,16 @@ from datetime import timedelta
 import uuid
 
 from django.conf import settings
+from django.utils import timezone
 from django.test.testcases import TestCase
 from guardian.compat import get_user_model
-from django.utils import timezone
 from factory_boy.django_model_factories import GalaxyInstanceFactory
 
 from .models import (Analysis, Assay, DataSet, ExtendedGroup, Investigation,
                      InvestigationLink, Invitation, Project, Study, Workflow,
                      WorkflowEngine)
-from .serializers import AnalysisSerializer, InvitationSerializer
+from .serializers import (AnalysisSerializer, DateTimeWithTimeZone,
+                          InvitationSerializer)
 
 User = get_user_model()
 
@@ -83,9 +84,10 @@ class AnalysisSerializerTests(TestCase):
                          self.analysis.summary)
 
     def test_serializer_returns_time_start(self):
-        isoformat = datetime.isoformat(self.analysis.time_start)
-        drf_isoformat = isoformat[:-6] + 'Z'
-        self.assertEqual(self.serializer.data.get('time_start'), drf_isoformat)
+        isoformat = datetime.isoformat(
+            timezone.localtime(self.analysis.time_start)
+        )
+        self.assertEqual(self.serializer.data.get('time_start'), isoformat)
 
     def test_serializer_returns_time_end(self):
         self.assertEqual(self.serializer.data.get('time_end'),
@@ -98,6 +100,15 @@ class AnalysisSerializerTests(TestCase):
     def test_serializer_returns_workflow(self):
         self.assertEqual(self.serializer.data.get('workflow'),
                          self.analysis.workflow.id)
+
+
+class DateTimeWithTimeZoneTests(TestCase):
+    def test_returns_localtime(self):
+        utc_time = timezone.now()
+        # isoformat is DRF default
+        expected_local_time = datetime.isoformat(timezone.localtime(utc_time))
+        self.assertEqual(DateTimeWithTimeZone().to_representation(utc_time),
+                         expected_local_time)
 
 
 class InvitationSerializerTests(TestCase):

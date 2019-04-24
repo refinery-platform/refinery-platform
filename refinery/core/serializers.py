@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.utils import timezone
 from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -11,9 +12,18 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
 logger = logging.getLogger(__name__)
 
 
+class DateTimeWithTimeZone(serializers.DateTimeField):
+    '''Helper to override default UTC date time for local time.'''
+    def to_representation(self, utc_time):
+        local_time = timezone.localtime(utc_time)
+        return super(DateTimeWithTimeZone, self).to_representation(local_time)
+
+
 class AnalysisSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField()
     data_set_uuid = serializers.SerializerMethodField()
+    time_end = DateTimeWithTimeZone()
+    time_start = DateTimeWithTimeZone()
 
     class Meta:
         model = Analysis
