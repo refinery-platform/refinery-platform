@@ -93,8 +93,12 @@
         "angular-sanitize/angular-sanitize.min.js.map",
         "angular-messages/angular-messages.min.js.map",
         "angular-intro-js/build/angular-intro.min.js.map",
+        "filesize/lib/filesize.min.js.map",
         "fontawesome/css/font-awesome.css.map",
-        "jquery/dist/jquery.min.map"
+        "jquery/dist/jquery.min.map",
+        "ui-select/dist/select.min.css.map",
+        "ui-select/dist/select.min.js.map"
+
       ],
       "font": [
         "angular-ui-grid/ui-grid.eot",
