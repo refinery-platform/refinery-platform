@@ -44,6 +44,7 @@ class DataSetSerializer(serializers.ModelSerializer):
     file_count = serializers.SerializerMethodField()
     analyses = serializers.SerializerMethodField()
     user_perms = serializers.SerializerMethodField()
+    version = serializers.SerializerMethodField()
 
     def get_analyses(self, data_set):
         return [dict(uuid=analysis.uuid,
@@ -93,11 +94,15 @@ class DataSetSerializer(serializers.ModelSerializer):
                 'read': 'read_dataset' in user_perms,
                 'read_meta': 'read_meta_dataset' in user_perms}
 
+    def get_version(self, data_set):
+        return data_set.get_version()
+
     class Meta:
         model = DataSet
-        fields = ('title', 'accession', 'analyses', 'summary', 'description',
-                  'slug', 'uuid', 'modification_date', 'id', 'is_owner',
-                  'owner', 'public', 'is_clean', 'file_count', 'user_perms')
+        fields = ('creation_date', 'title', 'accession', 'analyses', 'summary',
+                  'description', 'slug', 'uuid', 'modification_date', 'id',
+                  'is_owner', 'owner', 'public', 'is_clean', 'file_count',
+                  'user_perms', 'version')
 
     def partial_update(self, instance, validated_data):
         """
