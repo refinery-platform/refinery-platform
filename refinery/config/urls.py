@@ -18,7 +18,7 @@ from data_set_manager.urls import data_set_manager_api_urls
 from file_store.urls import file_store_api_urls
 from tool_manager.urls import tool_manager_api_urls
 from tool_manager.views import AutoRelaunchProxy
-from user_files_manager.urls import user_files_router
+from user_files_manager.urls import user_files_api_urls
 from user_files_manager.views import user_files, user_files_csv
 
 from . import utils
@@ -61,12 +61,12 @@ urlpatterns = [
 # RouterCombiner.extend(<router instance>) to include DRF Routers defined in
 # other apps urls.py files
 router = utils.RouterCombiner()
-router.extend(user_files_router)
 # Wire up our DRF APIs using automatic URL routing
 urlpatterns += [
     url(r'^api/v2/', include(router.urls)),
     url(r'^api/v2/', include(core_api_urls + data_set_manager_api_urls +
-                             file_store_api_urls + tool_manager_api_urls)),
+                             file_store_api_urls + tool_manager_api_urls +
+                             user_files_api_urls)),
 ]
 
 # for using DjDT with mod_wsgi
