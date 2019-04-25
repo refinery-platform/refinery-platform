@@ -488,13 +488,12 @@
        You
       </a>
     </span>
-    <span ng-if="!ADCtrl.dataSet.is_owner">
+    <span ng-if="!ADCtrl.dataSet.is_owner && ADCtrl.dataSet.owner.last_name.length">
       <a href="/users/{{ ADCtrl.dataSet.owner.profile.uuid }}">
-      {{ ADCtrl.dataSet.owner.first_name }} &nbsp {{ ADCtrl.dataSet.owner
-      .last_name }}
+      {{ ADCtrl.dataSet.owner.first_name }} &nbsp {{ ADCtrl.dataSet.owner.last_name }}
       </a>
     </span>
-     <span ng-if="!ADCtrl.dataSet.is_owner && !ADCtrl.ownerName">
+     <span ng-if="!ADCtrl.dataSet.is_owner && !ADCtrl.dataSet.owner.last_name.length">
       <em>Owner's information not available.</em>
     </span>
   </p>
