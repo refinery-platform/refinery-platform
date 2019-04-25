@@ -21,8 +21,6 @@ from tool_manager.views import AutoRelaunchProxy
 from user_files_manager.urls import user_files_api_urls
 from user_files_manager.views import user_files, user_files_csv
 
-from . import utils
-
 logger = logging.getLogger(__name__)
 
 urlpatterns = [
@@ -54,20 +52,11 @@ urlpatterns = [
     url(r'^files/$', user_files, name='user_files'),
     url(r'^files_download$', user_files_csv, name='user_files_csv'),
     url(r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_BASE_URL),
-        include(AutoRelaunchProxy().url_patterns()))
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# Django REST Framework Url Routing
-# RouterCombiner.extend(<router instance>) to include DRF Routers defined in
-# other apps urls.py files
-router = utils.RouterCombiner()
-# Wire up our DRF APIs using automatic URL routing
-urlpatterns += [
-    url(r'^api/v2/', include(router.urls)),
+        include(AutoRelaunchProxy().url_patterns())),
     url(r'^api/v2/', include(core_api_urls + data_set_manager_api_urls +
                              file_store_api_urls + tool_manager_api_urls +
                              user_files_api_urls)),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # for using DjDT with mod_wsgi
 # https://github.com/django-debug-toolbar/django-debug-toolbar/issues/529
