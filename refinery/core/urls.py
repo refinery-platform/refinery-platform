@@ -50,7 +50,7 @@ router.register(r'groups', views.GroupViewSet, 'groups')
 router.register(r'invitations', views.InvitationViewSet, 'invitations')
 router.register(r'workflows', views.WorkflowViewSet)
 
-core_api_urls = [
+core_api_urls = router.urls + [
     url(r'^analyses/$', views.AnalysisViewSet.as_view()),
     url(r'^events/$', views.EventViewSet.as_view()),
     url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/$',
@@ -64,4 +64,4 @@ core_api_urls = [
     url(r'^openid_token/$', views.OpenIDToken.as_view(), name='openid-token'),
     url(r'^obtain-auth-token/', views.ObtainAuthTokenValidSession.as_view()),
     url(r'^site_profiles/$', views.SiteProfileViewSet.as_view()),
-] + router.urls
+]

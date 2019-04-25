@@ -11,8 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.routers import DefaultRouter
 
 from constants import UUID_RE
-from .views import (AddFileToNodeView, AssayAPIView, AssayAttributeAPIView,
-                    AssayFileAPIView, NodeViewSet, StudyViewSet)
+
 from . import views
 
 urlpatterns = [
@@ -43,16 +42,15 @@ urlpatterns = [
         name='take_ownership_of_public_dataset')
 ]
 
-# DRF url routing
-data_set_manager_router = DefaultRouter()
-data_set_manager_router.register(r'^nodes', NodeViewSet, 'nodes')
-data_set_manager_router.urls.extend([
-    url(r'^assays/$', AssayAPIView.as_view()),
+router = DefaultRouter()
+router.register(r'^nodes', views.NodeViewSet, 'nodes')
+
+data_set_manager_api_urls = router.urls + [
+    url(r'^assays/$', views.AssayAPIView.as_view()),
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/files/$',
-        AssayFileAPIView.as_view()),
+        views.AssayFileAPIView.as_view()),
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/attributes/$',
-        AssayAttributeAPIView.as_view()),
-    url(r'^data_set_manager/add-file/$',
-        AddFileToNodeView.as_view()),
-    url(r'^studies/$', StudyViewSet.as_view()),
-])
+        views.AssayAttributeAPIView.as_view()),
+    url(r'^data_set_manager/add-file/$', views.AddFileToNodeView.as_view()),
+    url(r'^studies/$', views.StudyViewSet.as_view()),
+]
