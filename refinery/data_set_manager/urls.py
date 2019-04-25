@@ -43,7 +43,7 @@ urlpatterns = [
 ]
 
 router = DefaultRouter()
-router.register(r'^nodes', views.NodeViewSet, 'nodes')
+router.register(r'nodes', views.NodeViewSet, 'nodes')
 
 data_set_manager_api_urls = router.urls + [
     url(r'^assays/$', views.AssayAPIView.as_view()),
