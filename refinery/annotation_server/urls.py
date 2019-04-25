@@ -1,34 +1,35 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
-urlpatterns = patterns(
-    'annotation_server.views',
+from . import views
+
+urlpatterns = [
     url(r'^search_genes/'
         r'(?P<genome>[a-zA-Z0-9]+)/(?P<search_string>[a-zA-Z0-9]+)/$',
-        'search_genes'),
+        views.search_genes),
     url(r'^sequence/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_sequence'),
+        views.get_sequence),
     url(r'^genes/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_genes'),
+        views.get_genes),
     url(r'^chromlength/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/$',
-        'get_chrom_length'),
-    url(r'^chromlength/(?P<genome>[a-zA-Z0-9]+)/$', 'get_length'),
+        views.get_chrom_length),
+    url(r'^chromlength/(?P<genome>[a-zA-Z0-9]+)/$', views.get_length),
     url(r'^cytoband/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/$',
-        'get_cytoband'),
+        views.get_cytoband),
     url(r'^gc/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_gc'),
+        views.get_gc),
     url(r'^maptheo/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_maptheo'),
+        views.get_maptheo),
     url(r'^mapemp/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_mapemp'),
+        views.get_mapemp),
     url(r'^conservation/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_conservation'),
+        views.get_conservation),
     url(r'^gapregion/(?P<genome>[a-zA-Z0-9]+)/(?P<chrom>[a-zA-Z0-9]+)/'
         r'(?P<start>[0-9]+)/(?P<end>[0-9]+)/$',
-        'get_gapregion'),
-)
+        views.get_gapregion),
+]
