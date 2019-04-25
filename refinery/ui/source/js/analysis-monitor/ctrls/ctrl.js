@@ -7,7 +7,8 @@ function AnalysisMonitorCtrl (
   $uibModal,
   $window,
   analysisMonitorFactory,
-  fileRelationshipService
+  fileRelationshipService,
+  settings
 ) {
   var vm = this;
   // Long list of analysis
@@ -18,6 +19,7 @@ function AnalysisMonitorCtrl (
   // details
   vm.analysesRunningList = [];
   // For refreshing lists
+  vm.loggedUserId = settings.djangoApp.userId;
   vm.timerList = undefined;
   vm.timerRunList = undefined;
   // Used for UI displays
@@ -170,5 +172,6 @@ angular
     '$window',
     'analysisMonitorFactory',
     'fileRelationshipService',
+    'settings',
     AnalysisMonitorCtrl
   ]);
