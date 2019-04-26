@@ -113,8 +113,9 @@
                   {{ analysis.name }}
               </span>
             </span>
-            <span ng-show="analysis.is_owner && (analysis.status=='RUNNING' ||
-             analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN')"
+            <span
+              ng-show="analysis.owner.id == AMCtrl.loggedUserId && (analysis.status=='RUNNING'
+              || analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN')"
               class="analysis-cancel-col">
               &nbsp;
               <a rp-analysis-monitor-cancel-confirm
