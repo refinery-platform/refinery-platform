@@ -7,11 +7,13 @@ from django.test.testcases import TestCase
 from guardian.compat import get_user_model
 from django.utils import timezone
 from factory_boy.django_model_factories import GalaxyInstanceFactory
+from factory_boy.utils import create_dataset_with_necessary_models
 
 from .models import (Analysis, Assay, DataSet, ExtendedGroup, Investigation,
                      InvestigationLink, Invitation, Project, Study, Workflow,
                      WorkflowEngine)
-from .serializers import AnalysisSerializer, InvitationSerializer
+from .serializers import (AnalysisSerializer, DataSetSerializer,
+                          InvitationSerializer)
 
 User = get_user_model()
 
@@ -98,6 +100,26 @@ class AnalysisSerializerTests(TestCase):
     def test_serializer_returns_workflow(self):
         self.assertEqual(self.serializer.data.get('workflow'),
                          self.analysis.workflow.id)
+
+
+class DataSetSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('JaneDoe',
+                                             'user@example.com',
+                                             'test1234')
+        self.data_set = create_dataset_with_necessary_models(user=self.user)
+
+    def test_serializer_returns_creation_date(self):
+        serializer = DataSetSerializer(self.data_set)
+        isoformat = datetime.isoformat(self.data_set.creation_date)
+        drf_isoformat_creation_date = isoformat[:-6] + 'Z'
+        self.assertEqual(serializer.data.get('creation_date'),
+                         drf_isoformat_creation_date)
+
+    def test_serializer_returns_version_field(self):
+        serializer = DataSetSerializer(self.data_set)
+        self.assertEqual(serializer.data.get('version'),
+                         self.data_set.get_version())
 
 
 class InvitationSerializerTests(TestCase):

@@ -395,7 +395,7 @@
   ng-if="ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change'">
   <h3>Metadata</h3>
 </span>
-<div ng-if="ADCtrl.dataSet.isa_archive">
+<div ng-if="ADCtrl.dataSet.isa_archive_uuid">
   <p>
      <a href="{{ADCtrl.fileStoreItem.datafile}}">
       {{ADCtrl.fileStoreItem.datafile | basePathFilter}}
@@ -426,7 +426,7 @@
       </a>
   </span>
 </div>
-<div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
+<div ng-if="ADCtrl.dataSet.pre_isa_archive_uuid && ADCtrl.fileStoreItem.datafile">
   <p>
     <a href="{{ADCtrl.fileStoreItem.datafile}}">
     {{ADCtrl.fileStoreItem.datafile | basePathFilter}}
@@ -434,10 +434,11 @@
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
 </div>
-<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile)">
+<div ng-if="!(ADCtrl.dataSet.isa_archive_uuid || ADCtrl.dataSet.pre_isa_archive_uuid
+&& ADCtrl.fileStoreItem.datafile)">
   <p class="emphasized">Not available.</p>
 </div>
-<div ng-if="ADCtrl.dataSet.pre_isa_archive">
+<div ng-if="ADCtrl.dataSet.pre_isa_archive_uuid">
   <span
      class="p-l-1"
      ng-class="{banned: !FBCtrl.dataSet.is_clean}"
@@ -514,8 +515,8 @@
 <div
   id="isaTabImportForm"
   ng-if="(ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change') &&
-  (ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl
-  .fileStoreItem.datafile) && !ADCtrl.dataSet.is_owner && ADCtrl.loggedIn">
+  (ADCtrl.dataSet.isa_archive_uuid || ADCtrl.dataSet.pre_isa_archive_uuid &&
+  ADCtrl.fileStoreItem.datafile) && !ADCtrl.dataSet.is_owner && ADCtrl.loggedIn">
   <button
     id="isa-import-button"
     class="refinery-base btn btn-default"
