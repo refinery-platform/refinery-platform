@@ -109,12 +109,12 @@ class DataSetSerializerTests(TestCase):
                                              'test1234')
         self.data_set = create_dataset_with_necessary_models(user=self.user)
 
-    def test_seriailzer_returns_creation_date(self):
+    def test_serializer_returns_creation_date(self):
         serializer = DataSetSerializer(self.data_set)
         self.assertEqual(serializer.data.get('creation_date'),
                          self.data_set.creation_date())
 
-    def test_seriailzer_returns_version_field(self):
+    def test_serializer_returns_version_field(self):
         serializer = DataSetSerializer(self.data_set)
         self.assertEqual(serializer.data.get('version'),
                          self.data_set.get_version())
