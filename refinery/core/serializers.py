@@ -99,9 +99,9 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataSet
-        fields = ('creation_date', 'title', 'accession', 'analyses', 'summary',
-                  'description', 'slug', 'uuid', 'modification_date', 'id',
-                  'is_owner', 'owner', 'public', 'is_clean', 'file_count',
+        fields = ('accession', 'analyses', 'creation_date', 'description',
+                  'id', 'is_owner', 'modification_date', 'owner', 'public',
+                  'is_clean', 'file_count', 'slug', 'summary', 'title', 'uuid',
                   'user_perms', 'version')
 
     def partial_update(self, instance, validated_data):

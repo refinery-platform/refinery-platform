@@ -665,7 +665,20 @@ class DataSetViewSet(viewsets.ViewSet):
             )
 
         serializer = DataSetSerializer(data_set, context={'request': request})
-        return Response(serializer.data)
+        serialized_data = serializer.data
+        # isa_archive only needed for data set details
+        investigation_link = data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+
+        if investigation.is_isa_tab_based():
+            serialized_data['isa_archive'] = file_store_item.uuid
+            serialized_data['isa_archive_url'] = \
+                file_store_item.get_datafile_url()
+        else:
+            serialized_data['pre_isa_archive'] = file_store_item.uuid
+
+        return Response(serialized_data)
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or
