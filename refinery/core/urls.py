@@ -9,10 +9,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from constants import UUID_RE
-from .views import (AnalysisViewSet, DataSetViewSet, EventViewSet,
-                    GroupViewSet, GroupMemberAPIView, InvitationViewSet,
-                    ObtainAuthTokenValidSession, OpenIDToken,
-                    SiteProfileViewSet, UserProfileViewSet, WorkflowViewSet)
+
 from . import views
 
 urlpatterns = [
@@ -47,25 +44,24 @@ urlpatterns = [
         name='workflow_slug'),
 ]
 
-# DRF url routing
-core_router = DefaultRouter()
-core_router.register(r'workflows', WorkflowViewSet)
-core_router.register(r'data_sets', DataSetViewSet, 'data_sets')
-core_router.register(r'groups', GroupViewSet, 'groups')
-core_router.register(r'invitations', InvitationViewSet, 'invitations')
-core_router.urls.extend([
-    url(r'^events/$', EventViewSet.as_view()),
+router = DefaultRouter()
+router.register(r'data_sets', views.DataSetViewSet, 'data_sets')
+router.register(r'groups', views.GroupViewSet, 'groups')
+router.register(r'invitations', views.InvitationViewSet, 'invitations')
+router.register(r'workflows', views.WorkflowViewSet)
+
+core_api_urls = router.urls + [
+    url(r'^analyses/$', views.AnalysisViewSet.as_view()),
+    url(r'^events/$', views.EventViewSet.as_view()),
     url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/$',
-        GroupMemberAPIView.as_view()),
+        views.GroupMemberAPIView.as_view()),
     url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/(?P<id>\d)/$',
-        GroupMemberAPIView.as_view()),
+        views.GroupMemberAPIView.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
-        UserProfileViewSet.as_view()),
-    url(r'^analyses/$', AnalysisViewSet.as_view()),
+        views.UserProfileViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
-        AnalysisViewSet.as_view()),
-    url(r'^openid_token/$',
-        OpenIDToken.as_view(), name="openid-token"),
-    url(r'^obtain-auth-token/', ObtainAuthTokenValidSession.as_view()),
-    url(r'^site_profiles/$', SiteProfileViewSet.as_view()),
-])
+        views.AnalysisViewSet.as_view()),
+    url(r'^openid_token/$', views.OpenIDToken.as_view(), name='openid-token'),
+    url(r'^obtain-auth-token/', views.ObtainAuthTokenValidSession.as_view()),
+    url(r'^site_profiles/$', views.SiteProfileViewSet.as_view()),
+]
