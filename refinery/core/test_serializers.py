@@ -111,8 +111,10 @@ class DataSetSerializerTests(TestCase):
 
     def test_serializer_returns_creation_date(self):
         serializer = DataSetSerializer(self.data_set)
+        isoformat = datetime.isoformat(self.data_set.creation_date)
+        drf_isoformat_creation_date = isoformat[:-6] + 'Z'
         self.assertEqual(serializer.data.get('creation_date'),
-                         self.data_set.creation_date())
+                         drf_isoformat_creation_date)
 
     def test_serializer_returns_version_field(self):
         serializer = DataSetSerializer(self.data_set)
