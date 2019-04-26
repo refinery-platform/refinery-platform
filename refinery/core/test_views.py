@@ -255,19 +255,19 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(get_ds_response.data.get('uuid'), self.data_set.uuid)
 
-    def test_get_data_set_returns_isa_archive(self):
+    def test_get_data_set_returns_isa_archive_uuid(self):
         investigation_link = \
             self.user_3_data_set.get_latest_investigation_link()
         investigation = investigation_link.investigation
         file_store_item = investigation.get_file_store_item()
-        isa_archive = file_store_item.uuid
+        isa_archive_uuid = file_store_item.uuid
         get_request = self.factory.get(urljoin(self.url_root,
                                                self.user_3_data_set.uuid))
         get_request.user = self.user_3
         get_ds_response = self.get_ds_view(get_request,
                                            self.user_3_data_set.uuid)
-        self.assertEqual(get_ds_response.data.get('isa_archive'),
-                         isa_archive)
+        self.assertEqual(get_ds_response.data.get('isa_archive_uuid'),
+                         isa_archive_uuid)
 
     def test_get_data_set_returns_isa_archive_url(self):
         investigation_link = \
@@ -283,17 +283,17 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(get_ds_response.data.get('isa_archive_url'),
                          isa_archive_url)
 
-    def test_get_data_set_returns_pre_isa_archive(self):
+    def test_get_data_set_returns_pre_isa_archive_uuid(self):
         investigation_link = self.data_set.get_latest_investigation_link()
         investigation = investigation_link.investigation
         file_store_item = investigation.get_file_store_item()
-        pre_isa_archive = file_store_item.uuid
+        pre_isa_archive_uuid = file_store_item.uuid
         get_request = self.factory.get(urljoin(self.url_root,
                                                self.data_set.uuid))
         get_request.user = self.user
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
-        self.assertEqual(get_ds_response.data.get('pre_isa_archive'),
-                         pre_isa_archive)
+        self.assertEqual(get_ds_response.data.get('pre_isa_archive_uuid'),
+                         pre_isa_archive_uuid)
 
     def test_get_data_set_returns_title(self):
         get_request = self.factory.get(urljoin(self.url_root,

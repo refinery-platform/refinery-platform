@@ -79,10 +79,10 @@
           // initialize the edited dataset, avoids updating while user edits
           angular.copy(vm.dataSet, vm.editedDataSet);
           // grab meta-data info
-          if (dataSetAboutFactory.dataSet.isa_archive) {
-            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
-          } else if (dataSetAboutFactory.dataSet.pre_isa_archive) {
-            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
+          if (dataSetAboutFactory.dataSet.isa_archive_uuid) {
+            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive_uuid);
+          } else if (dataSetAboutFactory.dataSet.pre_isa_archive_uuid) {
+            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive_uuid);
           }
         }, function (error) {
           $log.error(error);
