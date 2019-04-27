@@ -1619,7 +1619,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
             project=self.project,
             data_set=self.data_set,
             workflow=self.workflow,
-            time_start='2019-03-02T06:12:03.819446Z'
+            time_start=timezone.now()
         )
         self.analysis.set_owner(self.user)
 
@@ -1629,7 +1629,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
             project=self.project,
             data_set=self.data_set,
             workflow=self.workflow,
-            time_start='2019-03-02T06:20:41.853987Z'
+            time_start=timezone.now()
         )
         self.analysis2.set_owner(self.user)
 
@@ -1783,8 +1783,11 @@ class AnalysisApiV2Tests(APIV2TestCase):
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
+        drf_isoformat = datetime.isoformat(
+            timezone.localtime(self.analysis.time_start)
+        )
         self.assertEqual(get_response.data[0].get('time_start'),
-                         self.analysis.time_start)
+                         drf_isoformat)
 
     def test_get_analysis_with_data_set_uuid_returns_time_end_field(self):
         self.analysis2.delete()
