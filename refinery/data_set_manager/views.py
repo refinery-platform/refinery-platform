@@ -1158,6 +1158,7 @@ class NodeViewSet(viewsets.ViewSet):
     ...
     """
     http_method_names = ['get', 'patch']
+    lookup_field = 'uuid'
 
     def get_object(self, uuid):
         try:

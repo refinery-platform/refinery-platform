@@ -113,8 +113,9 @@
                   {{ analysis.name }}
               </span>
             </span>
-            <span ng-show="analysis.is_owner && (analysis.status=='RUNNING' ||
-             analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN')"
+            <span
+              ng-show="analysis.owner.id == AMCtrl.loggedUserId && (analysis.status=='RUNNING'
+              || analysis.status=='INITIALIZED' || analysis.status=='UNKNOWN')"
               class="analysis-cancel-col">
               &nbsp;
               <a rp-analysis-monitor-cancel-confirm
@@ -155,7 +156,7 @@
           </div>
           <div class="col-md-1 p-b-1-3">
             <button
-              ng-if='analysis.is_owner'
+              ng-if='analysis.owner.id == AMCtrl.loggedUserId'
               class="btn btn-danger btn-xs"
               title="Delete Analysis"
               ng-click="AMCtrl.openAnalysisDeleteModal(analysis)"

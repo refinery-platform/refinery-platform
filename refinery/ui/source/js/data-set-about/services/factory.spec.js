@@ -46,7 +46,7 @@ describe('Data Set About Factory', function () {
           id: 5,
           is_owner: true,
           is_shared: false,
-          isa_archive: '89774554-c1c4-459f-af3a-059de6eaffdf',
+          isa_archive_uuid: '89774554-c1c4-459f-af3a-059de6eaffdf',
           modification_date: '2016-05-27T09:33:18.696246',
           name: 'Test 1: Request for Comments (RFC) Test',
           owner: '5377caec-0e4f-4de5-9db5-3214b6ef0857',

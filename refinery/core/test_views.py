@@ -114,7 +114,7 @@ class DataSetApiV2Tests(APIV2TestCase):
                                                'john@example.com',
                                                'coffeecoffee')
         self.user_3_data_set = create_dataset_with_necessary_models(
-            user=self.user_3
+            is_isatab_based=True, user=self.user_3
         )
         self.user_2_data_set.share(ExtendedGroup.objects.public_group())
         self.user_3_data_set.share(ExtendedGroup.objects.public_group())
@@ -254,6 +254,46 @@ class DataSetApiV2Tests(APIV2TestCase):
                                                self.data_set.uuid))
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(get_ds_response.data.get('uuid'), self.data_set.uuid)
+
+    def test_get_data_set_returns_isa_archive_uuid(self):
+        investigation_link = \
+            self.user_3_data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+        isa_archive_uuid = file_store_item.uuid
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.user_3_data_set.uuid))
+        get_request.user = self.user_3
+        get_ds_response = self.get_ds_view(get_request,
+                                           self.user_3_data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('isa_archive_uuid'),
+                         isa_archive_uuid)
+
+    def test_get_data_set_returns_isa_archive_url(self):
+        investigation_link = \
+            self.user_3_data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+        isa_archive_url = file_store_item.get_datafile_url()
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.user_3_data_set.uuid))
+        get_request.user = self.user_3
+        get_ds_response = self.get_ds_view(get_request,
+                                           self.user_3_data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('isa_archive_url'),
+                         isa_archive_url)
+
+    def test_get_data_set_returns_pre_isa_archive_uuid(self):
+        investigation_link = self.data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+        pre_isa_archive_uuid = file_store_item.uuid
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('pre_isa_archive_uuid'),
+                         pre_isa_archive_uuid)
 
     def test_get_data_set_returns_title(self):
         get_request = self.factory.get(urljoin(self.url_root,
