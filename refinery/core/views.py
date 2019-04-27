@@ -751,7 +751,10 @@ class DataSetViewSet(viewsets.ViewSet):
 
             # update data set's fields
             serializer = DataSetSerializer(
-                self.data_set, data=request.data, partial=True
+                self.data_set,
+                data=request.data,
+                partial=True,
+                context={'request': request}
             )
             if serializer.is_valid():
                 serializer.save()
