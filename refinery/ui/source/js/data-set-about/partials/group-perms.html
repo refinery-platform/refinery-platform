@@ -6,7 +6,7 @@
     <div ng-repeat="group in GPCtrl.groupList track by $index">
       <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
       <span
-        ng-if="group.perms.read_meta && !group.perms.read && !group.perms.change"
+        ng-if="group.perm_list.read_meta && !group.perm_list.read && !group.perm_list.change"
         class="perm-details-icon">
          <span
            class="fa-stack"
@@ -19,7 +19,7 @@
           <i class="fa fa-file-o"></i>
          </span>
       </span>
-      <span ng-if="group.perms.read && !group.perms.change" class="perm-details-icon">
+      <span ng-if="group.perm_list.read && !group.perm_list.change" class="perm-details-icon">
          <span
            class="fa-stack"
            refinery-tooltip
@@ -30,7 +30,7 @@
           <i class="fa fa-file-text-o"></i>
          </span>
       </span>
-      <span ng-if="group.perms.change" class="perm-details-icon">
+      <span ng-if="group.perm_list.change" class="perm-details-icon">
          <span
            class="fa-stack"
            refinery-tooltip
