@@ -41,10 +41,10 @@
               refinerySettings.appRoot +
               refinerySettings.refineryApiV2 +
               '/groups/' + mockUuid + '/members/?format=json',
-              { userId: mockUserId, uuid: mockUuid }
+              { user_id: mockUserId, uuid: mockUuid }
           ).respond(200, mockResponseStatus);
 
-          var promise = service.add({ userId: mockUserId, uuid: mockUuid }).$promise;
+          var promise = service.add({ user_id: mockUserId, uuid: mockUuid }).$promise;
           expect(typeof promise.then).toEqual('function');
         });
 
@@ -56,10 +56,10 @@
               refinerySettings.appRoot +
               refinerySettings.refineryApiV2 +
               '/groups/' + mockUuid + '/members/?format=json',
-              { userId: mockUserId, uuid: mockUuid }
+              { user_id: mockUserId, uuid: mockUuid }
           ).respond(200, mockResponse);
 
-          service.add({ uuid: mockUuid, userId: mockUserId })
+          service.add({ uuid: mockUuid, user_id: mockUserId })
             .$promise.then(function (response) {
               results = response.name;
             });
