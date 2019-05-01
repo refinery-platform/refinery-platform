@@ -5,6 +5,7 @@ import time
 from django.contrib.auth.models import User
 from django.db import transaction
 
+import botocore
 import celery
 from celery.task import task
 import pysam
@@ -191,19 +192,21 @@ def parse_isatab(username, public, path, identity_id=None,
                         # 3. Finally we need to get the checksum so that we can
                         # compare that to our given file.
                         investigation = ds.get_investigation()
-                        fileStoreItem = FileStoreItem.objects.get(
-                            uuid=investigation.isarchive_file)
-                        if fileStoreItem:
-                            try:
-                                logger.info("Get file: %s", fileStoreItem)
-                                checksum = calculate_checksum(
-                                    fileStoreItem.datafile
-                                )
-                            except IOError as exc:
-                                logger.error(
-                                    "Original ISA-tab archive wasn't found. "
-                                    "Error: '%s'", exc
-                                )
+                        file_store_item = FileStoreItem.objects.get(
+                            uuid=investigation.isarchive_file
+                        )
+                        logger.info("Get file: %s", file_store_item)
+                        try:
+                            checksum = calculate_checksum(
+                                file_store_item.datafile
+                            )
+                        except (EnvironmentError,
+                                botocore.exceptions.BotoCoreError,
+                                botocore.exceptions.ClientError) as exc:
+                            logger.error(
+                                "Original ISA-tab archive was not found: %s",
+                                exc
+                            )
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
         if checksum:
