@@ -83,7 +83,7 @@
       vm.isLoading = true;
       groupMemberService.add({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
-        userId: vm.member.id
+        user_id: vm.member.id
       }).$promise.then(
         function () {
           vm.alertType = 'success';
