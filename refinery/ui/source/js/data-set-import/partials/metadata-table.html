@@ -530,18 +530,30 @@
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-12 col-lg-12">
-            <button
-              class="refinery-base btn btn-primary"
-              ng-disabled="importMetadataTableForm.$invalid ||
-              metadataTable.fileStatus === 'queuing' ||
-              metadataTable.fileStatus === 'running'"
-              popover-placement="right"
-              uib-popover-template="'tabularimportconfirmationpopover.html'"
-              popover-title="Are all remote data files uploaded?"
-              popover-trigger="'outsideClick'"
-              popover-append-to-body="true">
-              Submit
-            </button>
+            <span ng-if="metadataTable.showFileUpload">
+              <button
+                class="refinery-base btn btn-primary"
+                ng-disabled="importMetadataTableForm.$invalid ||
+                metadataTable.fileStatus === 'queuing' ||
+                metadataTable.fileStatus === 'running'"
+                popover-placement="right"
+                uib-popover-template="'tabularimportconfirmationpopover.html'"
+                popover-title="If you have remote files, have they finished uploading? If not, please wait until they have before submitting."
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true">
+                Submit
+              </button>
+            </span>
+            <span ng-if="!metadataTable.showFileUpload">
+              <button
+                class="refinery-base btn btn-primary"
+                ng-disabled="importMetadataTableForm.$invalid ||
+                metadataTable.fileStatus === 'queuing' ||
+                metadataTable.fileStatus === 'running'"
+                ng-click="metadataTable.confirmImport()">
+                Submit
+              </button>
+            </span>
             <span class="m-l-1">
               <span class="text-warning"
                 ng-if="metadataTable.fileStatus === 'queuing'">
