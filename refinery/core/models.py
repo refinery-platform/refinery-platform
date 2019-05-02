@@ -26,7 +26,6 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.db import models, transaction
 from django.db.models import Sum
-from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
@@ -1719,9 +1718,8 @@ class AnalysisNodeConnection(models.Model):
     # an identifier assigned to all connections to a specific instance of the
     # workflow template
     # (unique within the analysis)
-    subanalysis = IntegerField(null=True, blank=False)
-    node = models.ForeignKey(Node,
-                             related_name="workflow_node_connections",
+    subanalysis = models.IntegerField(null=True, blank=False)
+    node = models.ForeignKey(Node, related_name="workflow_node_connections",
                              null=True, blank=True, default=None)
     # step id in the expanded workflow template, e.g. 10
     step = models.IntegerField(null=False, blank=False)
