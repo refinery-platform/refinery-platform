@@ -68,9 +68,9 @@
      * @param {int} depth - group nav index
     **/
     function leaveGroup () {
-      groupMemberService.remove({
+      groupMemberService.update({
         uuid: vm.resolve.config.group.uuid,
-        id: settings.djangoApp.userId
+        user_id: settings.djangoApp.userId
       }).$promise.then(function () {
         vm.alertType = 'success';
         vm.modalInstance.close(vm.alertType);
