@@ -1075,16 +1075,8 @@ class GroupMemberAPIView(APIView):
     API endpoint that allows for group members to be promoted,
     demoted, or removed
     ---
-    delete:
-        description: Group managers can either demote or remove a user
-        parameters:
-            - name: id
-              description: user id
-              paramType: path
-              type: string
-              required: true
     post:
-        description:  Group managers can promote a user
+        description:  Group managers can promote, demote, or remove a user
         parameters:
             - name: user_id
               description: user id
@@ -1093,7 +1085,7 @@ class GroupMemberAPIView(APIView):
               required: false
     ...
     """
-    http_method_names = ['delete', 'post']
+    http_method_names = ['post']
 
     def get_object(self, uuid):
         return get_group_for_view_set(uuid)
@@ -1109,11 +1101,44 @@ class GroupMemberAPIView(APIView):
             raise APIException("Multiple users returned for this request.")
 
     def post(self, request, uuid):
-        # if group is a manager_group, user is promoted by adding to user set
+        ''' handles promoting, demoting, and removing users. Note, adding
+        members to a group handled to Invitations API.'''
         group = self.get_object(uuid)
+        edit_user = self.get_user(request.data.get('user_id'))
 
-        if group.is_user_a_group_manager(request.user):
-            edit_user = self.get_user(request.data.get('user_id'))
+        # check if edit_user is member of group, yes -> demote/remove member
+        if edit_user in group.user_set.all():
+            if self.is_user_unauthorized_to_edit(group, request.user,
+                                                 edit_user):
+                return Response(uuid, status=status.HTTP_403_FORBIDDEN)
+
+            if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
+                return HttpResponseBadRequest(
+                    content="Users can not leave public group."
+                )
+            # Demote
+            if group.is_manager_group():
+                if len(group.user_set.all()) > 1:
+                    group.user_set.remove(edit_user)
+                    return Response(uuid)
+                else:
+                    return HttpResponseBadRequest(
+                        content="Last manager must delete group to leave."
+                    )
+            # Leave
+            if group.is_user_a_group_manager(edit_user):
+                return HttpResponseBadRequest(
+                    content="Managers can not leave group. Demote user first."
+                )
+            if len(group.user_set.all()) > 0:
+                group.user_set.remove(edit_user)
+                return Response(uuid)
+            return HttpResponseBadRequest(content="No users left in group.")
+
+        # no -> add member to manager group to promote
+        else:
+            if not group.is_user_a_group_manager(request.user):
+                return Response(uuid, status=status.HTTP_403_FORBIDDEN)
             if group.is_manager_group():
                 group.user_set.add(edit_user)
                 serializer = ExtendedGroupSerializer(group,
@@ -1122,38 +1147,6 @@ class GroupMemberAPIView(APIView):
             return HttpResponseBadRequest(
                 content="Manager groups are required to upgrade."
                 )
-        # not a group manager
-        return Response(uuid, status=status.HTTP_403_FORBIDDEN)
-
-    def delete(self, request, uuid, id):
-        # if group is a manager_group, user is demoted by removal
-        group = self.get_object(uuid)
-        edit_user = self.get_user(id)
-        if self.is_user_unauthorized_to_edit(group, request.user, edit_user):
-            return Response(uuid, status=status.HTTP_403_FORBIDDEN)
-
-        if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
-            return HttpResponseBadRequest(
-                content="Users can not leave public group."
-            )
-        # Demote
-        if group.is_manager_group():
-            if len(group.user_set.all()) > 1:
-                group.user_set.remove(edit_user)
-                return Response(uuid)
-            else:
-                return HttpResponseBadRequest(
-                    content="Last manager must delete group to leave."
-                )
-        # Leave
-        if group.is_user_a_group_manager(edit_user):
-            return HttpResponseBadRequest(
-                content="Managers can not leave group. Demote user first."
-            )
-        if len(group.user_set.all()) > 0:
-            group.user_set.remove(edit_user)
-            return Response(uuid)
-        return HttpResponseBadRequest(content="No users left in group.")
 
     def is_user_unauthorized_to_edit(self, group, request_user, edit_user):
         return not group.is_user_a_group_manager(request_user) \

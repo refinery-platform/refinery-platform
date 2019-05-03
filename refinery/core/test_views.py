@@ -1323,115 +1323,86 @@ class GroupMemberApiV2Tests(APIV2TestCase):
                                                     self.password)
         self.group.user_set.add(self.non_manager)
 
-    def test_delete_member_returns_403_for_non_self_and_manager(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.user.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.user.id)
-        self.assertEqual(delete_response.status_code, 403)
+    def test_post_member_returns_403_for_non_self_and_manager(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.user.id})
+        force_authenticate(post_request, user=self.non_manager)
+        post_response = self.view(post_request,
+                                  self.group.uuid)
+        self.assertEqual(post_response.status_code, 403)
 
-    def test_delete_member_returns_400_user_leaves_public_group(self):
-        delete_request = self.factory.delete(
-            '/groups/' + self.public_group.uuid + '/members/' +
-            str(self.non_manager.id) + '/'
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.public_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 400)
+    def test_post_member_returns_400_user_leaves_public_group(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.non_manager.id})
+        force_authenticate(post_request, user=self.non_manager)
+        post_response = self.view(post_request, self.public_group.uuid)
+        self.assertEqual(post_response.status_code, 400)
 
-    def test_delete_member_returns_400_manager_removes_user_from_public(self):
-        delete_request = self.factory.delete(
-            '/groups/' + self.public_group.uuid + '/members/' +
-            str(self.non_manager.id) + '/'
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.public_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 400)
+    def test_post_member_returns_400_manager_removes_user_from_public(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.non_manager.id})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.view(post_request, self.public_group.uuid)
+        self.assertEqual(post_response.status_code, 400)
 
-    def test_delete_member_returns_400_last_manager_demotes_self(self):
-        delete_request = self.factory.delete(
-            '/groups/' + self.group.manager_group.uuid + '/members/' +
-            str(self.user.id) + '/'
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.user.id)
-        self.assertEqual(delete_response.status_code, 400)
+    def test_post_member_returns_400_last_manager_demotes_self(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.user.id})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.view(post_request, self.group.uuid)
+        self.assertEqual(post_response.status_code, 400)
 
-    def test_delete_member_returns_400_manager_leaves(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.user.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.user.id)
-        self.assertEqual(delete_response.status_code, 400)
+    def test_post_member_returns_400_manager_leaves(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.user.id})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.view(post_request, self.group.uuid)
+        self.assertEqual(post_response.status_code, 400)
 
-    def test_delete_member_leaves_group_success(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
+    def test_post_member_leaves_group_success(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.non_manager.id})
+        force_authenticate(post_request, user=self.non_manager)
+        post_response = self.view(post_request, self.group.uuid)
+        self.assertEqual(post_response.status_code, 200)
         self.assertNotIn(self.non_manager,
                          self.group.user_set.all())
 
-    def test_delete_member_by_manager_removes_member(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
+    def test_post_member_by_manager_removes_member(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.non_manager.id})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.view(post_request, self.group.uuid)
+        self.assertEqual(post_response.status_code, 200)
         self.assertNotIn(self.non_manager,
                          self.group.user_set.all())
 
-    def test_delete_member_by_manager_demotes_member(self):
+    def test_post_member_by_manager_demotes_member(self):
         self.group.manager_group.user_set.add(self.non_manager)
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.manager_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.non_manager.id})
+        force_authenticate(post_request, user=self.user)
+        post_response = self.view(post_request, self.group.manager_group.uuid)
+        self.assertEqual(post_response.status_code, 200)
         self.assertNotIn(self.non_manager,
                          self.group.manager_group.user_set.all())
 
-    def test_delete_member_by_demoting_self(self):
+    def test_post_member_by_demoting_self(self):
         self.group.manager_group.user_set.add(self.non_manager)
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.group.manager_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
+        post_request = self.factory.post(self.url_root,
+                                         {'user_id': self.non_manager.id})
+        force_authenticate(post_request, user=self.non_manager)
+        post_response = self.view(post_request, self.group.manager_group.uuid)
+        self.assertEqual(post_response.status_code, 200)
         self.assertNotIn(self.non_manager,
                          self.group.manager_group.user_set.all())
 
-    def test_post_group_member_returns_403_for_non_managers(self):
+    def test_post_group_member_returns_403_for_promoting_non_managers(self):
         post_request = self.factory.post(self.url_root,
                                          {'user_id': self.non_manager.id})
         force_authenticate(post_request, user=self.non_manager)
         post_request = self.view(post_request,
-                                 self.group.uuid)
+                                 self.group.manager_group.uuid)
         self.assertEqual(post_request.status_code, 403)
 
     def test_post_group_member_promotes_for_user(self):

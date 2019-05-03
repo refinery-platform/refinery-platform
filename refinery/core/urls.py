@@ -55,8 +55,6 @@ core_api_urls = router.urls + [
     url(r'^events/$', views.EventViewSet.as_view()),
     url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/$',
         views.GroupMemberAPIView.as_view()),
-    url(r'^groups/(?P<uuid>' + UUID_RE + r')/members/(?P<id>\d)/$',
-        views.GroupMemberAPIView.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         views.UserProfileViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
