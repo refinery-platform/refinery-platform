@@ -14,6 +14,7 @@ import os
 import smtplib
 import socket
 from urlparse import urljoin
+import uuid as uuid_lib
 
 from django import forms
 from django.conf import settings
@@ -80,7 +81,8 @@ class UserProfile(models.Model):
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/#extending-the-existing-user-model
 
     """
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
     primary_group = models.ForeignKey(Group, on_delete=models.SET_NULL,
