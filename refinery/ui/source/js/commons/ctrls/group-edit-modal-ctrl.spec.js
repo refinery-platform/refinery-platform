@@ -48,7 +48,7 @@ describe('Controller: GroupEditModalCtrl', function () {
     it('leaveGroup calls checks authoservice', function () {
       var successResponse = true;
       var leftGroup = false;
-      spyOn(memberService, 'remove').and.callFake(function () {
+      spyOn(memberService, 'update').and.callFake(function () {
         var deferred = promise.defer();
         deferred.resolve(successResponse);
         leftGroup = true;

@@ -44,7 +44,7 @@
               { user_id: mockUserId, uuid: mockUuid }
           ).respond(200, mockResponseStatus);
 
-          var promise = service.add({ user_id: mockUserId, uuid: mockUuid }).$promise;
+          var promise = service.update({ user_id: mockUserId, uuid: mockUuid }).$promise;
           expect(typeof promise.then).toEqual('function');
         });
 
@@ -59,47 +59,13 @@
               { user_id: mockUserId, uuid: mockUuid }
           ).respond(200, mockResponse);
 
-          service.add({ uuid: mockUuid, user_id: mockUserId })
+          service.update({ uuid: mockUuid, user_id: mockUserId })
             .$promise.then(function (response) {
               results = response.name;
             });
           httpBackend.flush();
           rootScope.$digest();
           expect(results).toEqual(mockResponse.name);
-        });
-      });
-
-      describe('delete', function () {
-        var mockResponseStatus = { status: 200 };
-        it('should return a resolving promise', function () {
-          httpBackend
-            .expectDELETE(
-              refinerySettings.appRoot +
-              refinerySettings.refineryApiV2 +
-              '/groups/' + mockUuid + '/members/' + mockUserId + '/?format=json'
-          ).respond(200, mockResponseStatus);
-
-          var promise = service.remove({ uuid: mockUuid, id: mockUserId }).$promise;
-          expect(typeof promise.then).toEqual('function');
-        });
-
-        it('should return a group', function () {
-          var mockResponse = { uuid: mockUuid };
-          var results = '';
-          httpBackend
-            .expectDELETE(
-              refinerySettings.appRoot +
-              refinerySettings.refineryApiV2 +
-              '/groups/' + mockUuid + '/members/' + mockUserId + '/?format=json'
-          ).respond(200, mockResponse);
-
-          service.remove({ uuid: mockUuid, id: mockUserId })
-            .$promise.then(function (response) {
-              results = response.uuid;
-            });
-          httpBackend.flush();
-          rootScope.$digest();
-          expect(results).toEqual(mockResponse.uuid);
         });
       });
     });
