@@ -1077,6 +1077,7 @@ class GroupMemberAPIView(APIView):
     ---
     post:
         description:  Group managers can promote, demote, or remove a user
+        and users can leave a group
         parameters:
             - name: user_id
               description: user id
