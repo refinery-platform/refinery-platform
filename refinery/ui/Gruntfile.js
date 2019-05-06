@@ -436,6 +436,24 @@ module.exports = function (grunt) {
         src: 'Gruntfile.js'
       }
     },
+
+    /*
+     * Generate documentation
+     */
+    jsdoc: {
+      dist: {
+        src: [
+          '<%= cfg.basePath.ui.src %>/**/!(*spec).js'
+        ],
+        options: {
+          // Doesn't seem to work right now, so we have to specify the right
+          // location manually
+          // destination: '<%= cfg.basePath.ui.docs %>'
+          destination: 'docs'
+        }
+      }
+    },
+
     /*
      * The Karma configurations.
      */
@@ -736,7 +754,8 @@ module.exports = function (grunt) {
     'copy:uiCompileSampleFiles',
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
-    'clean:uiTmp'
+    'clean:uiTmp',
+    'jsdoc'
   ]);
 
   grunt.renameTask('watch', 'delta');
