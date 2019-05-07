@@ -40,7 +40,7 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysisViewSet, DataSetViewSet, EventViewSet,
-                    GroupViewSet, GroupMemberAPIView, InvitationViewSet,
+                    GroupViewSet, InvitationViewSet,
                     ObtainAuthTokenValidSession, SiteProfileViewSet,
                     UserProfileViewSet, WorkflowViewSet, user)
 
@@ -909,6 +909,12 @@ class GroupApiV2Tests(APIV2TestCase):
         self.group_2.user_set.add(self.user)
         self.data_set.share(self.group)
         self.data_set.share(self.group_2)
+        self.public_group = ExtendedGroup.objects.public_group()
+        self.public_group.manager_group.user_set.add(self.user)
+        self.non_manager = User.objects.create_user('Non-manager',
+                                                    'non_manager@example.com',
+                                                    self.password)
+        self.group.user_set.add(self.non_manager)
 
     def test_delete_group_returns_403_for_non_managers(self):
         non_manager = User.objects.create_user('Non-owner',
@@ -956,11 +962,14 @@ class GroupApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
-        user_ids = [self.user.profile.uuid, new_user.profile.uuid]
-        self.assertEqual(len(get_response.data[0].get('member_list')), 2)
+        user_ids = [self.user.profile.uuid,
+                    new_user.profile.uuid,
+                    self.non_manager.profile.uuid]
+        self.assertEqual(len(get_response.data[0].get('member_list')), 3)
         member_list = get_response.data[0].get('member_list')
         self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
         self.assertIn(member_list[1].get('profile').get('uuid'), user_ids)
+        self.assertIn(member_list[2].get('profile').get('uuid'), user_ids)
 
     def test_get_groups_no_params_has_can_edit_true(self):
         # remove user from public group for testing can_edit
@@ -1268,6 +1277,121 @@ class GroupApiV2Tests(APIV2TestCase):
         patch_response = self.patch_view(patch_request, 'xxxx5')
         self.assertEqual(patch_response.status_code, 404)
 
+    def test_patch_member_returns_403_for_non_self_and_manager(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.user.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 403)
+
+    def test_patch_member_returns_400_user_leaves_public_group(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.public_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.public_group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_returns_400_manager_removes_user_from_public(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.public_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.public_group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_returns_400_last_manager_demotes_self(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.user.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_returns_400_manager_leaves(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.user.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_leaves_group_success(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.user_set.all())
+
+    def test_patch_member_by_manager_removes_member(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.user_set.all())
+
+    def test_patch_member_by_manager_demotes_member(self):
+        self.group.manager_group.user_set.add(self.non_manager)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.manager_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request,
+                                         self.group.manager_group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.manager_group.user_set.all())
+
+    def test_patch_member_by_demoting_self(self):
+        self.group.manager_group.user_set.add(self.non_manager)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.manager_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request,
+                                         self.group.manager_group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.manager_group.user_set.all())
+
+    def test_patch_group_member_returns_403_for_promoting_non_managers(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_request = self.patch_view(patch_request,
+                                        self.group.manager_group.uuid)
+        self.assertEqual(patch_request.status_code, 403)
+
+    def test_patch_member_promotes_for_user(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.manager_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_request = self.patch_view(patch_request,
+                                        self.group.manager_group.uuid)
+        self.assertEqual(patch_request.status_code, 200)
+        self.assertIn(self.non_manager,
+                      self.group.manager_group.user_set.all())
+
     def test_post_groups_returns_401_for_anon(self):
         post_request = self.factory.post(self.url_root, {'name': 'Group 231'})
         post_response = self.post_view(post_request)
@@ -1304,118 +1428,6 @@ class GroupApiV2Tests(APIV2TestCase):
         force_authenticate(post_request, user=self.user)
         post_response = self.post_view(post_request)
         self.assertEqual(post_response.status_code, 400)
-
-
-class GroupMemberApiV2Tests(APIV2TestCase):
-    def setUp(self):
-        self.group = ExtendedGroup.objects.create(name="Test Group")
-        super(GroupMemberApiV2Tests, self).setUp(
-            api_base_name='groups/' + self.group.uuid + '/members/',
-            view=GroupMemberAPIView.as_view()
-        )
-        self.data_set = create_dataset_with_necessary_models(user=self.user)
-        self.group.manager_group.user_set.add(self.user)
-        self.group.user_set.add(self.user)
-        self.public_group = ExtendedGroup.objects.public_group()
-        self.public_group.manager_group.user_set.add(self.user)
-        self.non_manager = User.objects.create_user('Non-owner',
-                                                    'user@example.com',
-                                                    self.password)
-        self.group.user_set.add(self.non_manager)
-
-    def test_post_member_returns_403_for_non_self_and_manager(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.user.id})
-        force_authenticate(post_request, user=self.non_manager)
-        post_response = self.view(post_request,
-                                  self.group.uuid)
-        self.assertEqual(post_response.status_code, 403)
-
-    def test_post_member_returns_400_user_leaves_public_group(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.non_manager)
-        post_response = self.view(post_request, self.public_group.uuid)
-        self.assertEqual(post_response.status_code, 400)
-
-    def test_post_member_returns_400_manager_removes_user_from_public(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.user)
-        post_response = self.view(post_request, self.public_group.uuid)
-        self.assertEqual(post_response.status_code, 400)
-
-    def test_post_member_returns_400_last_manager_demotes_self(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.user.id})
-        force_authenticate(post_request, user=self.user)
-        post_response = self.view(post_request, self.group.uuid)
-        self.assertEqual(post_response.status_code, 400)
-
-    def test_post_member_returns_400_manager_leaves(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.user.id})
-        force_authenticate(post_request, user=self.user)
-        post_response = self.view(post_request, self.group.uuid)
-        self.assertEqual(post_response.status_code, 400)
-
-    def test_post_member_leaves_group_success(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.non_manager)
-        post_response = self.view(post_request, self.group.uuid)
-        self.assertEqual(post_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.user_set.all())
-
-    def test_post_member_by_manager_removes_member(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.user)
-        post_response = self.view(post_request, self.group.uuid)
-        self.assertEqual(post_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.user_set.all())
-
-    def test_post_member_by_manager_demotes_member(self):
-        self.group.manager_group.user_set.add(self.non_manager)
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.user)
-        post_response = self.view(post_request, self.group.manager_group.uuid)
-        self.assertEqual(post_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.manager_group.user_set.all())
-
-    def test_post_member_by_demoting_self(self):
-        self.group.manager_group.user_set.add(self.non_manager)
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.non_manager)
-        post_response = self.view(post_request, self.group.manager_group.uuid)
-        self.assertEqual(post_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.manager_group.user_set.all())
-
-    def test_post_group_member_returns_403_for_promoting_non_managers(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'user_id': self.non_manager.id})
-        force_authenticate(post_request, user=self.non_manager)
-        post_request = self.view(post_request,
-                                 self.group.manager_group.uuid)
-        self.assertEqual(post_request.status_code, 403)
-
-    def test_post_group_member_promotes_for_user(self):
-        post_request = self.factory.post(
-            '/groups/' + self.group.manager_group.uuid + '/members/',
-            {'user_id': self.non_manager.id}
-        )
-        force_authenticate(post_request, user=self.user)
-        post_request = self.view(post_request,
-                                 self.group.manager_group.uuid)
-        self.assertEqual(post_request.status_code, 200)
-        self.assertIn(self.non_manager,
-                      self.group.manager_group.user_set.all())
 
 
 class InvitationApiV2Tests(APIV2TestCase):

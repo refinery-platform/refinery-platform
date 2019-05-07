@@ -975,6 +975,16 @@ class GroupViewSet(viewsets.ViewSet):
     def get_object(self, uuid):
         return get_group_for_view_set(uuid)
 
+    def get_user(self, id):
+        try:
+            return User.objects.get(id=id)
+        except User.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except User.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple users returned for this request.")
+
     def create(self, request):
         group_name = request.data.get('name')
         if request.user.is_anonymous():
@@ -1048,106 +1058,83 @@ class GroupViewSet(viewsets.ViewSet):
         data_set_uuid = request.data.get('data_set_uuid')
         group = self.get_object(uuid)
 
-        data_set = get_data_set_for_view_set(data_set_uuid)
-        if data_set.get_owner() != request.user:
-            return Response(data_set_uuid, status=status.HTTP_403_FORBIDDEN)
+        if data_set_uuid is not None:
+            # update
+            data_set = get_data_set_for_view_set(data_set_uuid)
+            if data_set.get_owner() != request.user:
+                return Response(data_set_uuid,
+                                status=status.HTTP_403_FORBIDDEN)
 
-        group_perm_update = request.data.get('perm_list')
-        # remove all perms
-        data_set.unshare(group)
-        if group_perm_update.get('change'):
-            # fields for share method: read_only, read_meta only
-            data_set.share(group, False, False)
-        elif group_perm_update.get('read'):
-            data_set.share(group, True, False)
-        elif group_perm_update.get('read_meta'):
-            data_set.share(group, False, True)
+            group_perm_update = request.data.get('perm_list')
+            # remove all perms
+            data_set.unshare(group)
+            if group_perm_update.get('change'):
+                # fields for share method: read_only, read_meta only
+                data_set.share(group, False, False)
+            elif group_perm_update.get('read'):
+                data_set.share(group, True, False)
+            elif group_perm_update.get('read_meta'):
+                data_set.share(group, False, True)
 
-        serializer = ExtendedGroupSerializer(group,
-                                             context={'data_set': data_set,
-                                                      'user': request.user})
+            serializer = ExtendedGroupSerializer(
+                group,
+                context={'data_set': data_set, 'user': request.user}
+            )
+            return Response(serializer.data)
 
-        return Response(serializer.data)
+        user_id = request.data.get('user_id')
+        if user_id is not None:
+            # Handles promoting, demoting, and removing users.
+            edit_user = self.get_user(user_id)
+            # check if edit_user is member of group, yes->demote/remove member
+            if edit_user in group.user_set.all():
+                if self.is_user_unauthorized_to_edit(group, request.user,
+                                                     edit_user):
+                    return Response(uuid, status=status.HTTP_403_FORBIDDEN)
 
-
-class GroupMemberAPIView(APIView):
-    """
-    API endpoint that allows for group members to be promoted,
-    demoted, or removed
-    ---
-    post:
-        description:  Group managers can promote, demote, or remove a user
-        and users can leave a group
-        parameters:
-            - name: user_id
-              description: user id
-              paramType: form
-              type: string
-              required: false
-    ...
-    """
-    http_method_names = ['post']
-
-    def get_object(self, uuid):
-        return get_group_for_view_set(uuid)
-
-    def get_user(self, id):
-        try:
-            return User.objects.get(id=id)
-        except User.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except User.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple users returned for this request.")
-
-    def post(self, request, uuid):
-        ''' handles promoting, demoting, and removing users. Note, adding
-        members to a group handled to Invitations API.'''
-        group = self.get_object(uuid)
-        edit_user = self.get_user(request.data.get('user_id'))
-
-        # check if edit_user is member of group, yes -> demote/remove member
-        if edit_user in group.user_set.all():
-            if self.is_user_unauthorized_to_edit(group, request.user,
-                                                 edit_user):
-                return Response(uuid, status=status.HTTP_403_FORBIDDEN)
-
-            if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
-                return HttpResponseBadRequest(
-                    content="Users can not leave public group."
-                )
-            # Demote
-            if group.is_manager_group():
-                if len(group.user_set.all()) > 1:
+                if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
+                    return HttpResponseBadRequest(
+                        content="Users can not leave public group."
+                    )
+                # Demote
+                if group.is_manager_group():
+                    if len(group.user_set.all()) > 1:
+                        group.user_set.remove(edit_user)
+                        return Response(uuid)
+                    else:
+                        return HttpResponseBadRequest(
+                            content="Last manager must delete group to leave."
+                        )
+                # Leave
+                if group.is_user_a_group_manager(edit_user):
+                    return HttpResponseBadRequest(
+                        content="Managers can not leave group. "
+                                "Demote user first."
+                    )
+                if len(group.user_set.all()) > 0:
                     group.user_set.remove(edit_user)
                     return Response(uuid)
-                else:
-                    return HttpResponseBadRequest(
-                        content="Last manager must delete group to leave."
-                    )
-            # Leave
-            if group.is_user_a_group_manager(edit_user):
                 return HttpResponseBadRequest(
-                    content="Managers can not leave group. Demote user first."
+                    content="No users left in group."
                 )
-            if len(group.user_set.all()) > 0:
-                group.user_set.remove(edit_user)
-                return Response(uuid)
-            return HttpResponseBadRequest(content="No users left in group.")
 
-        # no -> add member to manager group to promote
-        else:
-            if not group.is_user_a_group_manager(request.user):
-                return Response(uuid, status=status.HTTP_403_FORBIDDEN)
-            if group.is_manager_group():
-                group.user_set.add(edit_user)
-                serializer = ExtendedGroupSerializer(group,
-                                                     context={user: edit_user})
-                return Response(serializer.data)
-            return HttpResponseBadRequest(
-                content="Manager groups are required to upgrade."
+            # no -> add member to manager group to promote
+            else:
+                if not group.is_user_a_group_manager(request.user):
+                    return Response(uuid, status=status.HTTP_403_FORBIDDEN)
+                if group.is_manager_group():
+                    group.user_set.add(edit_user)
+                    serializer = ExtendedGroupSerializer(
+                        group, context={user: edit_user}
+                    )
+                    return Response(serializer.data)
+                return HttpResponseBadRequest(
+                    content="Manager groups are required to upgrade."
                 )
+
+        return HttpResponseBadRequest(
+            content="API supports editing user memberships and perms."
+        )
 
     def is_user_unauthorized_to_edit(self, group, request_user, edit_user):
         return not group.is_user_a_group_manager(request_user) \
