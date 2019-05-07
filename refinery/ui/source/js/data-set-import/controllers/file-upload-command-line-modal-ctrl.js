@@ -42,7 +42,7 @@
       if (AWS.config.credentials) { // otherwise equals null
         // credentials initialized in file-upload-s3-service when user selects yes
         vm.accessKeyId = AWS.config.credentials.accessKeyId;
-        vm.secertAccessKey = AWS.config.credentials.secretAccessKey;
+        vm.secretAccessKey = AWS.config.credentials.secretAccessKey;
         vm.sessionToken = AWS.config.credentials.sessionToken;
         vm.identityId = AWS.config.credentials.identityId;
       }
