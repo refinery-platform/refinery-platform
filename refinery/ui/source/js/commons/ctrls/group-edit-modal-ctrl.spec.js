@@ -2,7 +2,6 @@
 
 describe('Controller: GroupEditModalCtrl', function () {
   var ctrl;
-  var memberService;
   var promise;
   var service;
   var scope;
@@ -13,12 +12,10 @@ describe('Controller: GroupEditModalCtrl', function () {
     $q,
     $rootScope,
     groupService,
-    groupMemberService,
     mockParamsFactory
   ) {
     scope = $rootScope.$new();
     service = groupService;
-    memberService = groupMemberService;
     promise = $q;
     ctrl = $componentController(
       'rpGroupEditModal',
@@ -48,7 +45,7 @@ describe('Controller: GroupEditModalCtrl', function () {
     it('leaveGroup calls checks authoservice', function () {
       var successResponse = true;
       var leftGroup = false;
-      spyOn(memberService, 'update').and.callFake(function () {
+      spyOn(service, 'partial_update').and.callFake(function () {
         var deferred = promise.defer();
         deferred.resolve(successResponse);
         leftGroup = true;

@@ -10,12 +10,12 @@ describe('Controller: GroupEditModalCtrl', function () {
   beforeEach(inject(function (
     $rootScope,
     $componentController,
-    groupMemberService,
+    groupService,
     mockParamsFactory,
     $q
   ) {
     scope = $rootScope.$new();
-    memberService = groupMemberService;
+    memberService = groupService;
     promise = $q;
     ctrl = $componentController(
       'rpGroupMemberEditModal',
@@ -49,7 +49,7 @@ describe('Controller: GroupEditModalCtrl', function () {
     it('demote calls memberService', function () {
       var successResponse = true;
       var memberDemoted = false;
-      spyOn(memberService, 'update').and.callFake(function () {
+      spyOn(memberService, 'partial_update').and.callFake(function () {
         var deferred = promise.defer();
         deferred.resolve(successResponse);
         memberDemoted = true;
@@ -70,7 +70,7 @@ describe('Controller: GroupEditModalCtrl', function () {
     it('promote calls memberService', function () {
       var successResponse = true;
       var memberPromoted = false;
-      spyOn(memberService, 'update').and.callFake(function () {
+      spyOn(memberService, 'partial_update').and.callFake(function () {
         var deferred = promise.defer();
         deferred.resolve(successResponse);
         memberPromoted = true;
@@ -91,7 +91,7 @@ describe('Controller: GroupEditModalCtrl', function () {
     it('remove calls memberService', function () {
       var successResponse = true;
       var memberRemoved = false;
-      spyOn(memberService, 'update').and.callFake(function () {
+      spyOn(memberService, 'partial_update').and.callFake(function () {
         var deferred = promise.defer();
         deferred.resolve(successResponse);
         memberRemoved = true;

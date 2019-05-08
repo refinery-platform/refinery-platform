@@ -14,12 +14,12 @@
 
   GroupMemberEditModalCtrl.$inject = [
     '$timeout',
-    'groupMemberService'
+    'groupService'
   ];
 
   function GroupMemberEditModalCtrl (
     $timeout,
-    groupMemberService
+    groupService
   ) {
     var vm = this;
     vm.alertType = 'info';
@@ -54,7 +54,7 @@
     **/
     function demote () {
       vm.isLoading = true;
-      groupMemberService.update({
+      groupService.partial_update({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         user_id: vm.member.id
       }).$promise.then(
@@ -81,7 +81,7 @@
     **/
     function promote () {
       vm.isLoading = true;
-      groupMemberService.update({
+      groupService.partial_update({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         user_id: vm.member.id
       }).$promise.then(
@@ -107,7 +107,7 @@
     **/
     function remove () {
       vm.isLoading = true;
-      groupMemberService.update({
+      groupService.partial_update({
         uuid: vm.resolve.config.activeGroup.uuid,
         user_id: vm.member.id
       }).$promise.then(
