@@ -47,7 +47,7 @@
         vm.identityId = AWS.config.credentials.identityId;
       }
 
-      if (!_.isEmpty(settings.djanoApp)) {
+      if (!_.isEmpty(settings.djangoApp)) {
         vm.bucketName = settings.djangoApp.uploadBucket;
       }
     };
