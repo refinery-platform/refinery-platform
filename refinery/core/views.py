@@ -1059,7 +1059,7 @@ class GroupViewSet(viewsets.ViewSet):
         group = self.get_object(uuid)
 
         if data_set_uuid is not None:
-            # update
+            # update group perms for a data set
             data_set = get_data_set_for_view_set(data_set_uuid)
             if data_set.get_owner() != request.user:
                 return Response(data_set_uuid,
@@ -1086,7 +1086,7 @@ class GroupViewSet(viewsets.ViewSet):
         if user_id is not None:
             # Handles promoting, demoting, and removing users.
             edit_user = self.get_user(user_id)
-            # check if edit_user is member of group, yes->demote/remove member
+            # check if edit_user is a group member, yes -> demote/remove member
             if edit_user in group.user_set.all():
                 if self.is_user_unauthorized_to_edit(group, request.user,
                                                      edit_user):
@@ -1117,9 +1117,8 @@ class GroupViewSet(viewsets.ViewSet):
                 return HttpResponseBadRequest(
                     content="No users left in group."
                 )
-
-            # no -> add member to manager group to promote
             else:
+                # no -> add member to manager group to promote
                 if not group.is_user_a_group_manager(request.user):
                     return Response(uuid, status=status.HTTP_403_FORBIDDEN)
                 if group.is_manager_group():
