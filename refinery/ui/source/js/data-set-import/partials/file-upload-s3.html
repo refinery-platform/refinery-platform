@@ -15,7 +15,7 @@
             Local files:
           </span>
           <div
-            class="refinery-base btn btn-default btn-sm fileinput-button"
+            class="refinery-base btn btn-default btn-sm fileinput-button m-l-1-3"
             ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1"
             ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() || FileCtrl
             .areUploadsInProgress(), 'banned': FileCtrl.isNodeUpdate && files.length >= 1 }">
@@ -31,7 +31,7 @@
             >
           </div>
           <button
-            class="active-group refinery-base btn btn-default btn-sm start"
+            class="active-group refinery-base btn btn-default btn-sm start m-l-1-3"
             ng-class="{'banned': FileCtrl.isNodeUpdate && files[0].name !== FileCtrl.fileName}"
             ng-click="FileCtrl.uploadFiles()"
             ng-disabled="!FileCtrl.areUploadsEnabled() || (FileCtrl
@@ -40,7 +40,7 @@
               <span>Start upload</span>
           </button>
           <button
-            class="refinery-base btn btn-default btn-sm cancel"
+            class="refinery-base btn btn-default btn-sm cancel m-l-1-3"
             ng-class="{'banned': FileCtrl.isNodeUpdate && files[0].name !== FileCtrl.fileName}"
             ng-click="FileCtrl.cancelUploads()"
             ng-disabled="!FileCtrl.areUploadsCancellable()">
