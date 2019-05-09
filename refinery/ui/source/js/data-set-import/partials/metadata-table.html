@@ -474,7 +474,7 @@
                     checked>
                   No
                 </label>
-                <label class="p-l-1-2">
+                <label class="p-l-1-2 p-r-1-2">
                   <input
                     type="radio"
                     ng-value="true"
@@ -492,11 +492,18 @@
                   popover-trigger="'outsideClick'"
                   popover-append-to-body="true"
                   tabindex="0">
-                      <i class="fa fa-question-circle info-icon icon-only"></i>
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
                   </a>
               </div>
               <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
-                <div class="p-b-1">
+                <div>
+                  <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
+                  <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
+                </div>
+                 <div class="p-t-1" ng-if="metadataTable.useS3">
+                  <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
+                </div>
+                <div class="p-t-1">
                    <button
                       class="refinery-base btn btn-default btn-sm"
                       ng-click="metadataTable.checkFiles()"
@@ -504,22 +511,16 @@
                       Check Data Files
                     </button>
                     <a
-                    popover-placement="right"
-                    uib-popover="Use this button to check that you have
-                    successfully uploaded all of your data files."
-                    popover-title="Check Data Files"
-                    popover-trigger="'outsideClick'"
-                    popover-append-to-body="true"
-                    tabindex="0">
+                      class="p-l-1-2"
+                      popover-placement="right"
+                      uib-popover="Use this button to check that you have
+                      successfully uploaded all of your data files."
+                      popover-title="Check Data Files"
+                      popover-trigger="'outsideClick'"
+                      popover-append-to-body="true"
+                      tabindex="0">
                         <i class="fa fa-question-circle info-icon icon-only"></i>
                     </a>
-                  </div>
-                <div>
-                  <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
-                  <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
-                </div>
-                 <div class="p-t-1" ng-if="metadataTable.useS3">
-                  <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
                 </div>
               </div>
             </div>
