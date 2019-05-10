@@ -33,17 +33,11 @@ def create_missing_attribute_orders(apps, schema_editor):
     attribute_order_model.objects.bulk_create(attribute_orders_to_create)
 
 
-def noop(apps, schema_editor):
-    return None  # Newer Django's >= 1.8 have a migrations.RunPython.noop to
-    # be able to move backwards in migrations yet have a data migration's
-    # results remain
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ('data_set_manager', '0004_auto_20171211_1145'),
     ]
 
     operations = [
-        migrations.RunPython(create_missing_attribute_orders, noop),
+        migrations.RunPython(create_missing_attribute_orders, migrations.RunPython.noop),
     ]
