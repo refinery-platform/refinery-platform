@@ -25,7 +25,7 @@
           type="button"
           class="refinery-base btn btn-warning"
           ng-click="$ctrl.remove()"
-          ng-disabled="$ctrl.totalMembers===1">
+          ng-disabled="$ctrl.totalMembers===1 || $ctrl.member.is_manager">
           Remove
         </button>
       </div>

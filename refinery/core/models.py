@@ -1866,38 +1866,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
-class GroupManagement(object):
-    def __init__(
-            self,
-            group_id=None,
-            group_name=None,
-            member_list=None,
-            perm_list=None,
-            can_edit=False,
-            is_manager_group=False,
-            manager_group_id=None):
-        self.group_id = group_id
-        self.group_name = group_name
-        self.member_list = member_list
-        self.perm_list = perm_list
-        self.can_edit = can_edit
-        self.is_manager_group = is_manager_group
-        self.manager_group_id = manager_group_id
-
-
-class UserAuthentication(object):
-    def __init__(
-            self,
-            is_logged_in=None,
-            is_admin=None,
-            id=None,
-            username=None):
-        self.is_logged_in = is_logged_in
-        self.is_admin = is_admin
-        self.id = id
-        self.username = username
-
-
 class Invitation(models.Model):
     token_uuid = UUIDField(unique=True, auto=True)
     group_id = models.IntegerField(blank=True, null=True)

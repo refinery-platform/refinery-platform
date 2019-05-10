@@ -94,7 +94,7 @@
       <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-12 col-md-12 col-lg-12">
           <div class="m-t-1 m-b-1">
-            Would you like to upload data files?
+            Do you have files to upload now?
             <label class="p-l-1-2">
               <input
                 ng-disabled="!$ctrl.file && !$ctrl.urlToFile"
@@ -133,20 +133,34 @@
       <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-12 col-md-12 col-lg-12">
           <div class="m-t-1 m-b-1">
-            <button
-              id="isa-import-button"
-              class="block refinery-base btn btn-primary float-left"
-              ng-disabled="(!$ctrl.file && !$ctrl.urlToFile) ||
-              $ctrl.isSuccessfullyImported || !$ctrl.checkImportOption
-               || $ctrl.fileStatus !== 'none' || $ctrl.isImporting"
-              popover-placement="right"
-              uib-popover-template="'dataimportconfirmationpopover.html'"
-              popover-title="Are all remote data files uploaded?"
-              popover-trigger="'outsideClick'"
-              popover-append-to-body="true"
-              tabindex="0">
-              Submit
-            </button>
+            <span ng-if="$ctrl.showFileUpload">
+              <button
+                id="isa-import-button"
+                class="block refinery-base btn btn-primary float-left"
+                ng-disabled="(!$ctrl.file && !$ctrl.urlToFile) ||
+                $ctrl.isSuccessfullyImported || !$ctrl.checkImportOption
+                 || $ctrl.fileStatus !== 'none' || $ctrl.isImporting"
+                popover-placement="right"
+                uib-popover-template="'dataimportconfirmationpopover.html'"
+                popover-title="If you have remote files, have they finished uploading? If not, please wait until they have before submitting."
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true"
+                tabindex="0">
+                Submit
+              </button>
+            </span>
+            <span ng-if="!$ctrl.showFileUpload">
+              <button
+                id="isa-import-button"
+                class="block refinery-base btn btn-primary float-left"
+                ng-disabled="(!$ctrl.file && !$ctrl.urlToFile) ||
+                $ctrl.isSuccessfullyImported || !$ctrl.checkImportOption
+                 || $ctrl.fileStatus !== 'none' || $ctrl.isImporting"
+                ng-click="$ctrl.confirmImport()"
+                tabindex="0">
+                Submit
+              </button>
+            </span>
             <span class="m-l-1 float-left p-t-1-2" ng-if="$ctrl.showFileUpload">
               <span class="text-warning"
                 ng-if="$ctrl.fileStatus==='queuing'">

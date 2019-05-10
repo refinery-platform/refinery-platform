@@ -8,7 +8,8 @@
     <p>
       If your files are on a remote server, copy and paste the provided command
       into your terminal window to directly upload them. This script requires the
-      <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html">
+      <a target="_blank"
+        href="https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html">
         AWS CLI tool
       </a> to be installed and the aws command be available on your $PATH.
       <br>
@@ -21,7 +22,7 @@
         rows="8" onclick="this.focus(); this.select();"
         readonly="readonly">
 export AWS_ACCESS_KEY_ID="{{ $ctrl.accessKeyId }}"
-export AWS_SECRET_ACCESS_KEY="{{ $ctrl.secretAccessKey }}
+export AWS_SECRET_ACCESS_KEY="{{ $ctrl.secretAccessKey }}"
 export AWS_SESSION_TOKEN="{{ $ctrl.sessionToken }}"
 aws s3 sync . s3://{{ $ctrl.bucketName }}/{{ $ctrl.identityId }}
     </textarea>
