@@ -51,7 +51,7 @@
       members.$promise.then(function (response) {
         vm.groups = response;
         vm.groups.forEach(function (group) {
-          if (group.name !== 'Public') {
+          if (group.name !== 'Public' && group.can_edit) {
             addInviteList(group.uuid);
           }
         });

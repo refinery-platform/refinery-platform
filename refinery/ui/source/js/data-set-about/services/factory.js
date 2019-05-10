@@ -4,7 +4,6 @@ function dataSetAboutFactory (
   assayService,
   dataSetV2Service,
   fileStoreItemService,
-  groupMemberService,
   studyService
 ) {
   var assays = [];
@@ -87,7 +86,6 @@ angular
     'assayService',
     'dataSetV2Service',
     'fileStoreItemService',
-    'groupMemberService',
     'studyService',
     dataSetAboutFactory
   ]
