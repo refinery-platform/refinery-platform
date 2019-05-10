@@ -6,12 +6,17 @@
   </div>
   <div class="modal-body">
     <p>
-      If your files are on a remote server, copy and paste the provided command
-      into your terminal window to directly upload them. This script requires the
+      If your files are on a remote server:
+      <ol>
+        <li>SSH into the server and change to the directory containing those files</li>
+        <li>copy and paste the provided commands into the remote terminal window</li>
+        <li>press Enter to upload the files directly</li>
+      </ol>
+      This script requires the
       <a target="_blank"
         href="https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html">
         AWS CLI tool
-      </a> to be installed and the aws command be available on your $PATH.
+      </a> to be installed and the <code>aws</code> command be available on your <code>$PATH</code>.
       <br>
       <strong>
         Note: Upload all remote files before completing submission of the data set on the website.
