@@ -18,33 +18,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
-    v.cpus = 1
+    v.cpus = 2
     # To increase guest network performance (https://superuser.com/a/850389)
     v.customize ["modifyvm", :id, "--nictype1", "virtio"]
   end
 
   config.ssh.forward_agent = true  # to enable cloning from Github over SSH
 
-  # If you'd like to be able to copy data from an instance of Galaxy
-  # that's installed on the host, set $GALAXY_DATABSE_DIR environment
-  # variable to the absolute path of the $GALAXY_ROOT/database folder
-  if ENV['GALAXY_DATABASE_DIR']
-#    puts("INFO: Using host directory #{ENV['GALAXY_DATABASE_DIR']} to exchange data with Galaxy.")
-    config.vm.synced_folder ENV['GALAXY_DATABASE_DIR'], ENV['GALAXY_DATABASE_DIR']
-  else
-    config.vm.provision :shell, :inline =>
-<<GALAXY_WARNING_SCRIPT
-    echo 1>&2 'WARNING: $GALAXY_DATABASE_DIR is not set: copying files from local Galaxy instance will not work.'
-GALAXY_WARNING_SCRIPT
-  end
-
   # If you'd like to be able to copy data from your host into the VM, set
-  # REFINERY_VM_TRANSFER_DIR on the host to a directory of your choice.
+  # REFINERY_VM_TRANSFER_DIR on the host to a directory of your choice
   if ENV['REFINERY_VM_TRANSFER_DIR']
     config.vm.synced_folder ENV['REFINERY_VM_TRANSFER_DIR'], "/vagrant/transfer"
-#    puts("INFO: Using host directory #{ENV['REFINERY_VM_TRANSFER_DIR']} to import datasets.")
-  else
-#   puts("WARNING: $REFINERY_VM_TRANSFER_DIR is not set: importing datasets from the command line will not work.")
   end
 
   # Install Librarian-puppet and modules before puppet provisioning
@@ -52,9 +36,8 @@ GALAXY_WARNING_SCRIPT
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "deployment/puppet/manifests"
-    puppet.manifest_file  = "vagrant.pp"
-    puppet.module_path = "deployment/puppet/modules"  # requires modules dir to exist when this file is parsed
-    puppet.options = "--hiera_config /vagrant/deployment/puppet/hiera.yaml"  # to avoid missing file warning
+    puppet.manifest_file  = "site.pp"
+    puppet.hiera_config_path = "deployment/puppet/hiera.yaml"  # to avoid missing file warning
   end
 
   # workaround for services that start on boot before /vagrant is available

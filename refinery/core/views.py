@@ -1,18 +1,17 @@
 import csv
+from datetime import timedelta
 import json
 import logging
 import urllib
-from urlparse import urljoin
+import uuid
 from xml.parsers.expat import ExpatError
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -20,10 +19,9 @@ from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
-from django.shortcuts import (get_object_or_404, redirect, render,
-                              render_to_response)
+from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext, loader
-from django.views.decorators.gzip import gzip_page
+from django.utils import timezone
 
 import boto3
 import botocore
@@ -31,7 +29,6 @@ from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
                                 get_perms)
 
 from guardian.core import ObjectPermissionChecker
-from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
 import requests
@@ -51,34 +48,24 @@ import xmltodict
 
 from data_set_manager.models import Attribute
 
-from .forms import UserForm, UserProfileForm, WorkflowForm
+from .forms import UserForm, UserProfileForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, SiteProfile,
-                     SiteStatistics, SiteVideo, UserProfile, Workflow,
-                     WorkflowEngine)
-from .serializers import (DataSetSerializer, EventSerializer,
-                          SiteProfileSerializer, SiteVideoSerializer,
-                          UserProfileSerializer, WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations,
-                    get_non_manager_groups_for_user)
+                     ExtendedGroup, Invitation, SiteProfile, SiteStatistics,
+                     SiteVideo, UserProfile, Workflow)
+
+from .serializers import (AnalysisSerializer, DataSetSerializer,
+                          EventSerializer, ExtendedGroupSerializer,
+                          InvitationSerializer, SiteProfileSerializer,
+                          SiteVideoSerializer, UserProfileSerializer,
+                          WorkflowSerializer)
+from .utils import (api_error_response, get_data_set_for_view_set,
+                    get_group_for_view_set, get_non_manager_groups_for_user)
 
 logger = logging.getLogger(__name__)
 
 
 def home(request):
     return render(request, 'core/home.html')
-
-
-def explore(request):
-    return render_to_response(
-        'core/explore.html',
-        {
-            'public_group_id': settings.REFINERY_PUBLIC_GROUP_ID,
-            'main_container_no_padding': True,
-            'num_ontologies_imported': Ontology.objects.count()
-        },
-        context_instance=RequestContext(request)
-    )
 
 
 def about(request):
@@ -90,33 +77,6 @@ def about(request):
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
-
-
-def auto_login(request):
-    try:
-        user = int(request.GET.get('user', -1))
-    except ValueError:
-        user = -1
-
-    exploration = request.GET.get('exploration', False)
-
-    if user >= 0 and user in settings.AUTO_LOGIN:
-        if request.user.is_authenticated():
-            logout(request)
-
-        try:
-            user = User.objects.get(id=user)
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-        except Exception:
-            logger.error('Auto login for user ID {} failed.'.format(user))
-            return redirect('{}'.format(reverse('home')))
-
-        login(request, user)
-
-        if exploration:
-            return redirect('{}#/exploration'.format(reverse('home')))
-
-    return redirect('{}'.format(reverse('home')))
 
 
 @login_required
@@ -318,61 +278,6 @@ def workflow(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def graph_node_shape(node_type):
-    if node_type == "input":
-        return ">"
-
-    if node_type == "tool":
-        return "<"
-
-    return "o"
-
-
-@login_required()
-def workflow_edit(request, uuid):
-    workflow = get_object_or_404(Workflow, uuid=uuid)
-    if not request.user.has_perm('core.change_workflow', workflow):
-        return HttpResponseForbidden(
-            custom_error_page(request, '403.html',
-                              {user: request.user,
-                               'msg': "edit this workflow"}))
-    if request.method == "POST":  # If the form has been submitted...
-        # A form bound to the POST data
-        form = WorkflowForm(data=request.POST, instance=workflow)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('core.views.workflow', args=(uuid,)))
-    else:
-        form = WorkflowForm(instance=workflow)  # An unbound form
-    return render_to_response('core/workflow_edit.html',
-                              {'workflow': workflow, 'form': form},
-                              context_instance=RequestContext(request))
-
-
-def workflow_engine(request, uuid):
-    workflow_engine = get_object_or_404(WorkflowEngine, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_workflowengine', workflow_engine):
-        if 'read_workflowengine' not in get_perms(public_group,
-                                                  workflow_engine):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(request, '403.html',
-                                      {user: request.user,
-                                       'msg': "view this workflow engine"}))
-            else:
-                return HttpResponse(
-                    custom_error_page(request, '401.html',
-                                      {'msg': "view this workflow engine"}),
-                    status='401')
-    return render_to_response('core/workflow_engine.html',
-                              {'workflow_engine': workflow_engine},
-                              context_instance=RequestContext(request))
-
-
 def solr_core_search(request):
     """Query Solr's core index for search.
 
@@ -403,62 +308,10 @@ def solr_core_search(request):
             ' OR '.join(access))
 
     try:
-        allIds = params['allIds'] in ['1', 'true', 'True']
-    except KeyError:
-        allIds = False
-
-    try:
-        annotations = params['annotations'] in ['1', 'true', 'True']
-    except KeyError:
-        annotations = False
-    try:
         response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
-
-    if allIds or annotations:
-        # Query for all uuids given the same query. Solr shold be very fast
-        # because we just queried for almost the same information, only limited
-        # in size.
-        all_ids_params = {
-            'defType': params['defType'],
-            'fl': 'dbid',
-            'fq': params['fq'],
-            'q': params['q'],
-            'qf': params['qf'],
-            'rows': 2147483647,
-            'start': 0,
-            'wt': 'json'
-        }
-        try:
-            response_ids = requests.get(
-                url,
-                params=all_ids_params,
-                headers=headers
-            )
-            response_ids.raise_for_status()
-        except HTTPError as e:
-            logger.error(e)
-
-        if response_ids.status_code == 200:
-            response_ids = response_ids.json()
-            ids = []
-
-            for ds in response_ids['response']['docs']:
-                ids.append(ds['dbid'])
-
-            annotation_data = get_data_sets_annotations(ids)
-
-            response = response.json()
-
-            if allIds:
-                response['response']['allIds'] = ids
-
-            if annotations:
-                response['response']['annotations'] = annotation_data
-
-            return JsonResponse(response)
 
     return HttpResponse(response, content_type='application/json')
 
@@ -573,56 +426,20 @@ def pubmed_summary(request, id):
     return HttpResponse(response, content_type='application/json')
 
 
-@gzip_page
-def neo4j_dataset_annotations(request):
-    """Query Neo4J for dataset annotations per user"""
-
-    if request.user.username:
-        user_name = request.user.username
-    else:
-        try:
-            user_name = get_anonymous_user().username
-        except(User.DoesNotExist, User.MultipleObjectsReturned,
-               ImproperlyConfigured) as e:
-            error_message = \
-                "Could not properly fetch the AnonymousUser: {}".format(e)
-            logger.error(error_message)
-            return HttpResponseServerError(error_message)
-
-    url = urljoin(
-        settings.NEO4J_BASE_URL,
-        'ontology/unmanaged/annotations/{}'.format(user_name)
-    )
-
-    headers = {
-        'Accept': 'application/json; charset=UTF-8',
-        'Accept-Encoding': 'gzip,deflate',
-        'Content-type': 'application/json'
-    }
-
-    params = {
-        'objectification': 2
-    }
-
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-    except requests.exceptions.ConnectionError as e:
-        logger.error('Neo4J seems to be offline.')
-        logger.error(e)
-        return HttpResponse(
-            'Neo4J seems to be offline.',
-            content_type='text/plain',
-            status=503
-        )
-
-    return HttpResponse(response, content_type='application/json')
-
-
 class WorkflowViewSet(viewsets.ModelViewSet):
-    """API endpoint that allows Workflows to be viewed"""
+    """
+        API endpoint that allows a workflow graph to be viewed.
+        ---
+        graph:
+            description: Returns workflow json
+            parameters:
+                - name: uuid
+                  description: workflow uuid
+                  paramType: query
+                  type: string
+                  required: true
+    ...
+    """
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
     lookup_field = 'uuid'
@@ -636,7 +453,14 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
 
 class EventViewSet(APIView):
-    """API endpoint that allows Events to be viewed"""
+    """
+        API endpoint that allows Events to be viewed
+        ---
+        get:
+            description: End point which returns events associated with data
+            sets the request user has access to
+    ...
+    """
     def get(self, request):
         """Queryset based on DataSets that the requesting User has permission
          to access"""
@@ -654,11 +478,98 @@ class EventViewSet(APIView):
         return Response(serializer.data)
 
 
-class DataSetsViewSet(APIView):
-    """API endpoint that allows for DataSets to be deleted"""
+class DataSetViewSet(viewsets.ViewSet):
+    """
+        API endpoint for viewing, editing, and deleting datasets.
+        ---
+        destroy:
+            description: Owners can delete the dataset and associated objects
+            parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+        list:
+            description: Returns data_sets for user and filter params
+            (defaults to read_meta perms)
+            parameters:
+                - name: is_owner
+                  description: Returns the users' owned data set
+                  paramType: query
+                  type: boolean
+                  required: false
+                - name: is_public
+                  description: Returns public data sets
+                  paramType: query
+                  type: boolean
+                  required: false
+                - name: group
+                  description: Requires group id to return data sets visible
+                  to a group with read_meta
+                  paramType: query
+                  type: string
+                  required: false
+        partial_update:
+             parameters_strategy:
+                form: replace
+                query: merge
+            description: Update a data set's owner and or update meta fields
+            parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+                - name: transfer_data_set
+                  description: Flag to transfer a data set, requires
+                  new_owner_email field
+                  paramType: form
+                  type: boolean
+                  required: false
+                - name: new_owner_email
+                  description: Requires a valid user email to transfer data
+                  set ownership
+                  paramType: form
+                  type: string
+                  required: false
+                - name: description
+                  description: Update data set's description
+                  paramType: form
+                  type: string
+                  required: false
+                - name: slug
+                  description: Update data set url
+                  paramType: form
+                  type: string
+                  required: false
+                - name: summary
+                  description: Update data set's summary
+                  paramType: form
+                  type: string
+                  required: false
+                - name: title
+                  description: Update data set's title
+                  paramType: form
+                  type: string
+                  required: false
+        retrieve:
+            description: Returns data set
+            parameters:
+                - name: uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+    ...
+    """
     http_method_names = ['get', 'delete', 'patch']
+    lookup_field = 'uuid'
 
-    def get(self, request):
+    def get_object(self, uuid):
+        return get_data_set_for_view_set(uuid)
+
+    def list(self, request):
         params = request.query_params
         paginator = LimitOffsetPagination()
         paginator.default_limit = 100
@@ -744,15 +655,30 @@ class DataSetsViewSet(APIView):
         return Response({'data_sets': serializer.data,
                         'total_data_sets': total_data_sets})
 
-    def get_object(self, uuid):
-        try:
-            return DataSet.objects.get(uuid=uuid)
-        except DataSet.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except DataSet.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple objects returned.")
+    def retrieve(self, request, uuid):
+        data_set = self.get_object(uuid)
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(
+                uuid, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        serializer = DataSetSerializer(data_set, context={'request': request})
+        serialized_data = serializer.data
+        # isa_archive_uuid only needed for data set details
+        investigation_link = data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+
+        if investigation.is_isa_tab_based():
+            serialized_data['isa_archive_uuid'] = file_store_item.uuid
+            serialized_data['isa_archive_url'] = \
+                file_store_item.get_datafile_url()
+        else:
+            serialized_data['pre_isa_archive_uuid'] = file_store_item.uuid
+
+        return Response(serialized_data)
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or
@@ -761,7 +687,7 @@ class DataSetsViewSet(APIView):
         else:
             return True
 
-    def delete(self, request, uuid):
+    def destroy(self, request, uuid):
         if not request.user.is_authenticated():
             return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
@@ -790,7 +716,7 @@ class DataSetsViewSet(APIView):
         return Response('Unauthorized to delete data set with uuid: {'
                         '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
-    def patch(self, request, uuid, format=None):
+    def partial_update(self, request, uuid, format=None):
         self.data_set = self.get_object(uuid)
         self.current_site = get_current_site(request)
 
@@ -825,7 +751,10 @@ class DataSetsViewSet(APIView):
 
             # update data set's fields
             serializer = DataSetSerializer(
-                self.data_set, data=request.data, partial=True
+                self.data_set,
+                data=request.data,
+                partial=True,
+                context={'request': request}
             )
             if serializer.is_valid():
                 serializer.save()
@@ -910,9 +839,59 @@ class DataSetsViewSet(APIView):
                 "groups_without_access": groups_without_access}
 
 
-class AnalysesViewSet(APIView):
-    """API endpoint that allows for Analyses to be deleted"""
-    http_method_names = ['delete']
+class AnalysisViewSet(APIView):
+    """
+        API endpoint that allows for Analyses to be retrieved or deleted.
+        ---
+        delete:
+            description: Owners can delete an analyses
+            parameters:
+                - name: uuid
+                  description: used to indentify analysis
+                  paramType: param
+                  type: string
+                  required: true
+        get:
+            description: Returns analyses filtered by either data set or user
+            parameters:
+                - name: data_set_uuid
+                  description: param to have analyses filtered by a data set
+                  paramType: param
+                  type: string
+                  required: false
+    ...
+    """
+    http_method_names = ['get', 'delete']
+
+    def get(self, request):
+        data_set_uuid = request.query_params.get('data_set_uuid')
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 100
+
+        # return cross-dataset analyses per user
+        if data_set_uuid is None:
+            data_sets = get_objects_for_user(request.user,
+                                             'core.read_meta_dataset')
+            filtered_analyses = Analysis.objects.filter(
+                data_set__in=data_sets.values_list("id", flat=True)
+            ).order_by('-time_start')
+            paged_analyses = paginator.paginate_queryset(filtered_analyses,
+                                                         request)
+            serializer = AnalysisSerializer(paged_analyses, many=True)
+            return Response(serializer.data)
+
+        data_set = get_data_set_for_view_set(data_set_uuid)
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        analyses = Analysis.objects.filter(
+            data_set=data_set
+        ).order_by('-time_start')
+        paged_analyses = paginator.paginate_queryset(analyses, request)
+        serializer = AnalysisSerializer(paged_analyses, many=True)
+        return Response(serializer.data)
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
@@ -937,6 +916,373 @@ class AnalysesViewSet(APIView):
                     return Response({"data": analysis_deleted[1]})
                 else:
                     return HttpResponseBadRequest(content=analysis_deleted[1])
+
+
+class GroupViewSet(viewsets.ViewSet):
+    """
+        API endpoint for creating, deleting, and getting groups. Also, data set
+        owners can update a group's data set permissions.
+        ---
+        create:
+            description: Users can create groups
+            parameters:
+                - name: name
+                  description: Group name needs to be unique
+                  paramType: form
+                  type: string
+                  required: true
+        destroy:
+            description: Managers can delete groups
+            parameters:
+                - name: uuid
+                  description: group uuid
+                  paramType: path
+                  type: string
+                  required: true
+        list:
+            description: Returns groups filtered on data set or user
+            (defaults to read_meta perms)
+            parameters:
+                - name: data_set_uuid
+                  description: Returns groups based on data set
+                  paramType: query
+                  type: string
+                  required: false
+                - name: all_perms
+                  description: Limits query set to groups the user is member of
+                  paramType: query
+                  type: boolean
+                  required: false
+        partial_update:
+            description: Data set owners can update group's perms for data sets
+            parameters:
+                - name: data_set_uuid
+                  description: data set uuid
+                  paramType: path
+                  type: string
+                  required: true
+                - name: perm_list
+                  description: object containing change, read, and read_meta
+                  field perms.
+                  paramType: form
+                  type: string
+                  required: false
+    ...
+    """
+    http_method_names = ['get', 'delete', 'patch', 'post']
+    lookup_field = 'uuid'
+
+    def get_object(self, uuid):
+        return get_group_for_view_set(uuid)
+
+    def get_user(self, id):
+        try:
+            return User.objects.get(id=id)
+        except User.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except User.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple users returned for this request.")
+
+    def create(self, request):
+        group_name = request.data.get('name')
+        if request.user.is_anonymous():
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+        serializer = ExtendedGroupSerializer(data={'name': group_name})
+
+        if serializer.is_valid():
+            group = serializer.save()
+            group.user_set.add(request.user)
+            group.manager_group.user_set.add(request.user)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def destroy(self, request, uuid):
+        user = request.user
+        group = self.get_object(uuid)
+        if group.is_user_a_group_manager(user):
+            group.delete()
+            return Response(uuid)
+
+        return Response('Only managers may delete groups',
+                        status=status.HTTP_403_FORBIDDEN)
+
+    def list(self, request):
+        data_set_uuid = request.query_params.get('data_set_uuid')
+        all_perms_flag = request.query_params.get('all_perms', False)
+
+        if data_set_uuid is None:
+            # returns member list, so must be logged in
+            if request.user.is_anonymous():
+                return Response(
+                    self.request.user, status=status.HTTP_401_UNAUTHORIZED
+                )
+            query_set = ExtendedGroup.objects.all()
+            context = {'data_set': None, 'user': request.user}
+        else:
+            data_set = get_data_set_for_view_set(data_set_uuid)
+            context = {'data_set': data_set, 'user': request.user}
+
+            public_group = ExtendedGroup.objects.public_group()
+            if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                    request.user.has_perm('core.read_meta_dataset', data_set)):
+                return Response(data_set_uuid,
+                                status=status.HTTP_403_FORBIDDEN)
+
+            if all_perms_flag:
+                # all groups user is member of
+                query_set = ExtendedGroup.objects.all()
+
+            else:
+                # all groups associated with data set and user is a member of
+                query_set = ExtendedGroup.objects.filter(
+                    group_ptr__in=get_groups_with_perms(data_set)
+                )
+
+        member_groups = [group for group in query_set
+                         if request.user in group.user_set.all() and
+                         not group.is_manager_group()]
+
+        serializer = ExtendedGroupSerializer(member_groups,
+                                             many=True,
+                                             context=context)
+        return Response(serializer.data)
+
+    def partial_update(self, request, uuid, format=None):
+        data_set_uuid = request.data.get('data_set_uuid')
+        group = self.get_object(uuid)
+
+        if data_set_uuid is not None:
+            # update group perms for a data set
+            data_set = get_data_set_for_view_set(data_set_uuid)
+            if data_set.get_owner() != request.user:
+                return Response(data_set_uuid,
+                                status=status.HTTP_403_FORBIDDEN)
+
+            group_perm_update = request.data.get('perm_list')
+            # remove all perms
+            data_set.unshare(group)
+            if group_perm_update.get('change'):
+                # fields for share method: read_only, read_meta only
+                data_set.share(group, False, False)
+            elif group_perm_update.get('read'):
+                data_set.share(group, True, False)
+            elif group_perm_update.get('read_meta'):
+                data_set.share(group, False, True)
+
+            serializer = ExtendedGroupSerializer(
+                group,
+                context={'data_set': data_set, 'user': request.user}
+            )
+            return Response(serializer.data)
+
+        user_id = request.data.get('user_id')
+        if user_id is not None:
+            # Handles promoting, demoting, and removing users.
+            edit_user = self.get_user(user_id)
+            # check if edit_user is a group member, yes -> demote/remove member
+            if edit_user in group.user_set.all():
+                if self.is_user_unauthorized_to_edit(group, request.user,
+                                                     edit_user):
+                    return Response(uuid, status=status.HTTP_403_FORBIDDEN)
+
+                if group.id == settings.REFINERY_PUBLIC_GROUP_ID:
+                    return HttpResponseBadRequest(
+                        content="Users can not leave public group."
+                    )
+                # Demote
+                if group.is_manager_group():
+                    if len(group.user_set.all()) > 1:
+                        group.user_set.remove(edit_user)
+                        return Response(uuid)
+                    else:
+                        return HttpResponseBadRequest(
+                            content="Last manager must delete group to leave."
+                        )
+                # Leave
+                if group.is_user_a_group_manager(edit_user):
+                    return HttpResponseBadRequest(
+                        content="Managers can not leave group. "
+                                "Demote user first."
+                    )
+                if len(group.user_set.all()) > 0:
+                    group.user_set.remove(edit_user)
+                    return Response(uuid)
+                return HttpResponseBadRequest(
+                    content="No users left in group."
+                )
+            else:
+                # no -> add member to manager group to promote
+                if not group.is_user_a_group_manager(request.user):
+                    return Response(uuid, status=status.HTTP_403_FORBIDDEN)
+                if group.is_manager_group():
+                    group.user_set.add(edit_user)
+                    serializer = ExtendedGroupSerializer(
+                        group, context={user: edit_user}
+                    )
+                    return Response(serializer.data)
+                return HttpResponseBadRequest(
+                    content="Manager groups are required to upgrade."
+                )
+
+        return HttpResponseBadRequest(
+            content="API supports editing user memberships and perms."
+        )
+
+    def is_user_unauthorized_to_edit(self, group, request_user, edit_user):
+        return not group.is_user_a_group_manager(request_user) \
+               and request_user != edit_user
+
+
+class InvitationViewSet(viewsets.ViewSet):
+    """
+    API endpoint for creating, getting, resending, & removing invitations
+    ---
+    create:
+        description: Managers can send invites to user
+        parameters:
+            - name: group_uuid
+              description: (extended) group's uuid
+              paramType: form
+              type: string
+              required: true
+            - name: recipient_email
+              description: existing or non-users can be invited
+              paramType: form
+              type: string
+              required: true
+    destroy:
+        description: Revoke a user's invitation
+        parameters:
+            - name: id
+              description: invitation id
+              paramType: path
+              type: string
+              required: true
+    list:
+        description: Returns invitations filtered by groups
+        parameters:
+            - name: group_uuid
+              description: group's uuid
+              paramType: query
+              type: string
+              required: false
+    partial_update:
+        description: Resend an invitation which restart the expiration time
+        parameters:
+            - name: id
+              description: invitation id
+              paramType: path
+              type: string
+              required: true
+    ...
+    """
+    http_method_names = ['delete', 'get', 'post', 'patch']
+    lookup_field = 'id'
+
+    def get_object(self, id):
+        try:
+            return Invitation.objects.get(id=id)
+        except Invitation.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Invitation.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple invitations returned for this "
+                               "request.")
+
+    def create(self, request):
+        group_uuid = request.data.get('group_uuid')
+        group = get_group_for_view_set(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = InvitationSerializer(data=request.data)
+        if serializer.is_valid():
+            invite = serializer.save()
+            invite.group_id = group.id
+            invite.sender = request.user
+            invite.token_uuid = uuid.uuid1()
+            invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
+            invite.expires = timezone.now() + invite.token_duration
+            invite.save()
+            self.send_email(request, invite, group)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, id):
+        invitation = self.get_object(id=id)
+        try:
+            group = ExtendedGroup.objects.get(id=invitation.group_id)
+        except ExtendedGroup.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except ExtendedGroup.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple groups returned for this request.")
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        invitation.delete()
+        return Response(id)
+
+    def list(self, request):
+        group_uuid = request.query_params.get('group_uuid')
+        group = get_group_for_view_set(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(group_uuid, status=status.HTTP_403_FORBIDDEN)
+
+        invites = Invitation.objects.all().filter(group_id=group.id)\
+            .order_by('-recipient_email')
+        # Remove expired invites
+        for invite in invites:
+            if self.has_invite_expired(invite):
+                invite.delete()
+
+        serializer = InvitationSerializer(invites.all(), many=True)
+        return Response(serializer.data)
+
+    def partial_update(self, request, id):
+        group_uuid = request.data.get('group_uuid')
+        group = get_group_for_view_set(group_uuid)
+        if not group.is_user_a_group_manager(request.user):
+            return Response(id, status=status.HTTP_403_FORBIDDEN)
+
+        invite = self.get_object(id)
+        invite.token_duration = timedelta(days=settings.TOKEN_DURATION)
+        invite.expires = timezone.now() + invite.token_duration
+        invite.save()
+        self.send_email(request, invite, group)
+        serializer = InvitationSerializer(invite)
+        return Response(serializer.data)
+
+    def has_invite_expired(self, invite):
+        return (
+            timezone.now() - invite.expires
+        ).total_seconds() >= 0
+
+    def send_email(self, request, invitation, group):
+        subject = "Invitation to join group {}".format(group.name)
+        temp_loader = loader.get_template(
+            'group_invitation/group_invite_email.txt')
+        context_dict = {
+            'group_name': group.name,
+            'site': get_current_site(request),
+            'token': invitation.token_uuid
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[invitation.recipient_email]
+        )
+        email.send()
 
 
 class CustomRegistrationView(RegistrationView):

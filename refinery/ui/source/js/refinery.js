@@ -23,24 +23,19 @@ angular
      */
     'ui.bootstrap',
     'ui.router',
-    'ngWebworker',
     'file-model',
     'angular-intro',
-    'LocalStorageModule',
 
     /*
      * Angular App globals
      */
     'errors',
-    'pubSub',
     'getCookie',
-    'closeOnOuterClick',
     'colors',
-    'focusOn',
     'clearFileInput',
     'mockParams',
     'replaceWhiteSpaceWithHyphen',
-    'triggerSvgEvent',
+    'lodashLatest',
 
     /*
      * Refinery modules
@@ -56,5 +51,6 @@ angular
     'refineryDataSetAbout',
     'refineryToolLaunch',
     'refineryUserFileBrowser',
-    'refineryDataSetVisualization'
+    'refineryDataSetVisualization',
+    'refineryWorkflow'
   ]);

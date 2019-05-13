@@ -13,40 +13,35 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
-    'authService',
+    '$scope',
     '$timeout',
     'dataSetPropsService',
+    'settings',
     'toolLaunchService',
     'toolLaunchStatusService',
     'toolSelectService',
     '$uibModal',
     'visualizationService',
-    '$rootScope',
     '$window'
   ];
 
   function ToolLaunchButtonCtrl (
     $log,
-    authService,
+    $scope,
     $timeout,
     dataSetPropsService,
+    settings,
     toolLaunchService,
     toolLaunchStatusService,
     toolSelectService,
     $uibModal,
     visualizationService,
-    $rootScope,
     $window
   ) {
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
-
-    authService.isAuthenticated().then(
-      function (isAuthenticated) {
-        vm.userIsAnonymous = !isAuthenticated;
-      }
-    );
+    vm.userIsAnonymous = settings.djangoApp.userId === undefined;
 
     /*
    * -----------------------------------------------------------------------------
@@ -64,8 +59,6 @@
         dataSetPropsService.refreshDataSet();
         if (response.tool_definition.tool_type === 'VISUALIZATION') {
           visualizationService.getVisualizations($window.dataSetUuid);
-        } else {
-          $rootScope.$broadcast('rf/launchAnalysis');
         }
         toolLaunchStatusService.addToolLaunchStatus(response, 'success');
       }, function (error) {
@@ -82,5 +75,20 @@
     function needMoreNodes () {
       return toolLaunchService.checkNeedMoreNodes();
     }
+    /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return settings.djangoApp;
+        },
+        function (djangoApp) {
+          vm.userIsAnonymous = djangoApp.userId === undefined;
+        }
+      );
+    };
   }
 })();

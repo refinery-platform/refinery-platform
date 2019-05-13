@@ -1,0 +1,47 @@
+<div ng-if="GPCtrl.groupList.length > 0">
+  <div class="refinery-subheader">
+    <h4>Groups</h4>
+  </div>
+  <p>
+    <div ng-repeat="group in GPCtrl.groupList track by $index">
+      <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
+      <span
+        ng-if="group.perm_list.read_meta && !group.perm_list.read && !group.perm_list.change"
+        class="perm-details-icon">
+         <span
+           class="fa-stack"
+           refinery-tooltip
+           refinery-tooltip-container="body"
+           refinery-tooltip-placement="right"
+           title="Read-meta-only: group members can only view
+           the data set's meta data.">
+          <i class="fa fa-eye fa-stack-1x fa-stack-right-corner"></i>
+          <i class="fa fa-file-o"></i>
+         </span>
+      </span>
+      <span ng-if="group.perm_list.read && !group.perm_list.change" class="perm-details-icon">
+         <span
+           class="fa-stack"
+           refinery-tooltip
+           refinery-tooltip-container="body"
+           refinery-tooltip-placement="right"
+           title="Read: group members can view the data set.">
+          <i class="fa fa-eye fa-stack-1x fa-stack-right-corner"></i>
+          <i class="fa fa-file-text-o"></i>
+         </span>
+      </span>
+      <span ng-if="group.perm_list.change" class="perm-details-icon">
+         <span
+           class="fa-stack"
+           refinery-tooltip
+           refinery-tooltip-container="body"
+           refinery-tooltip-placement="right"
+           title="Modify: group members can view and edit the data set.">
+          <i class="fa fa-pencil fa-stack-1x fa-stack-right-corner"></i>
+          <i class="fa fa-file-text-o"></i>
+         </span>
+      </span>
+    </div>
+  </p>
+</div>
+

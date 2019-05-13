@@ -8,17 +8,11 @@
       "compile": "production",
       "src": "source",
       "tmp": ".tmp"
-    },
-    "static": {
-      "build": "../static/development",
-      "compile": "../static/production",
-      "src": "../static/source"
     }
   },
   "files": {
     "features": [
       "analysis-monitor",
-      "chart",
       "commons",
       "dashboard",
       "data-set-import",
@@ -31,30 +25,25 @@
       "metadata-table-import",
       "provvis",
       "tool-launch",
-      "user-file-browser"
+      "user-file-browser",
+      "workflow"
     ],
     "vendor": {
       "css": [
         "angular-ui-grid/ui-grid.min.css",
-        "c3/c3.css",
         "fontawesome/css/font-awesome.min.css",
         "intro-js/minified/introjs.min.css",
         "jquery-file-upload/css/jquery.fileupload-ui.css",
         "jquery-file-upload/css/jquery.fileupload.css",
         "select2/select2.css",
         "spectrum/spectrum.css",
-        "tipsy/src/stylesheets/tipsy.css",
-        "d3-list-graph/dist/listGraph.min.css",
         "ui-select/dist/select.min.css"
       ],
       "images": [
         "jquery-file-upload/img/loading.gif",
         "select2/select2-spinner.gif",
         "select2/select2.png",
-        "select2/select2x2.png",
-        "tipsy/src/images/tipsy.gif",
-        "tipsy/src/images/tipsy.gif",
-        "d3-list-graph/dist/icons.svg"
+        "select2/select2x2.png"
       ],
       "js": [
         "jquery/dist/jquery.min.js",
@@ -67,25 +56,15 @@
         "angular-bootstrap/ui-bootstrap.min.js",
         "bootbox/bootbox.js",
         "angular-intro-js/build/angular-intro.min.js",
-        "angular-local-storage/dist/angular-local-storage.min.js",
         "angular-file-model/angular-file-model.js",
         "angular-resource/angular-resource.min.js",
         "angular-sanitize/angular-sanitize.min.js",
         "angular-ui-router/release/angular-ui-router.min.js",
-        "angular-ui-scroll/dist/ui-scroll.min.js",
         "angular-messages/angular-messages.min.js",
         "angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js",
         "chart.js/dist/Chart.min.js",
-        "ng-webworker/src/ng-webworker.min.js",
-        "ng-webworker/src/worker_wrapper.min.js",
         "d3/d3.min.js",
-        "d3-v4/d3.min.js",
-        "d3-list-graph/dist/d3.listGraph.js",
-        "d3-list-graph/dist/d3.listGraph.min.js",
-        "d3-list-graph/dist/listGraph.js",
-        "d3-list-graph/dist/listGraph.min.js",
         "d3-tip/index.js",
-        "c3/c3.min.js",
         "graphlib/dist/graphlib.core.min.js",
         "intro-js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
@@ -114,12 +93,12 @@
         "angular-sanitize/angular-sanitize.min.js.map",
         "angular-messages/angular-messages.min.js.map",
         "angular-intro-js/build/angular-intro.min.js.map",
-        "angular-local-storage/dist/angular-local-storage.min.js.map",
+        "filesize/lib/filesize.min.js.map",
         "fontawesome/css/font-awesome.css.map",
         "jquery/dist/jquery.min.map",
-        "d3-list-graph/dist/d3.layout.listGraph.min.js.map",
-        "d3-list-graph/dist/listGraph.min.js.map",
-        "d3-list-graph/dist/listGraph.min.css.map"
+        "ui-select/dist/select.min.css.map",
+        "ui-select/dist/select.min.js.map"
+
       ],
       "font": [
         "angular-ui-grid/ui-grid.eot",

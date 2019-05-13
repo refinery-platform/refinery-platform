@@ -35,24 +35,8 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('file-model')).toEqual(true);
     });
 
-    it('should have "ngWebworker" as a dependency', function () {
-      expect(hasModule('ngWebworker')).toEqual(true);
-    });
-
-    it('should have "pubSub" as a dependency', function () {
-      expect(hasModule('pubSub')).toEqual(true);
-    });
-
-    it('should have "closeOnOuterClick" as a dependency', function () {
-      expect(hasModule('closeOnOuterClick')).toEqual(true);
-    });
-
     it('should have "colors" as a dependency', function () {
       expect(hasModule('colors')).toEqual(true);
-    });
-
-    it('should have "focusOn" as a dependency', function () {
-      expect(hasModule('focusOn')).toEqual(true);
     });
 
     it('should have "mockParams" as a dependency', function () {
@@ -105,6 +89,10 @@ describe('RefineryApp.module: unit tests', function () {
 
     it('should have "refineryUserFileBrowser" as a dependency', function () {
       expect(hasModule('refineryUserFileBrowser')).toEqual(true);
+    });
+
+    it('should have "refineryWorkflow" as a dependency', function () {
+      expect(hasModule('refineryWorkflow')).toEqual(true);
     });
 
     // Just a negative control to make sure that the test actually works.

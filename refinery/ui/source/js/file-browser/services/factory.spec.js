@@ -35,8 +35,7 @@
         _,
         $q,
         $rootScope,
-        assayFileService,
-        nodeService
+        assayFileService
       ) {
         underScore = _;
         assayFiles = {
@@ -92,14 +91,6 @@
           }
         };
         spyOn(assayFileService, 'query').and.callFake(function () {
-          var deferred = $q.defer();
-          deferred.resolve(assayFiles);
-          return {
-            $promise: deferred.promise
-          };
-        });
-
-        spyOn(nodeService, 'query').and.callFake(function () {
           var deferred = $q.defer();
           deferred.resolve(assayFiles);
           return {

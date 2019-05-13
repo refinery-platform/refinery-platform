@@ -27,13 +27,13 @@ import boto3
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from guardian.shortcuts import get_perms
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
-from core.utils import get_absolute_url
+from core.utils import get_absolute_url, get_data_set_for_view_set
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
@@ -42,7 +42,7 @@ from file_store.utils import parse_s3_url
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
                      Study)
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
-                          NodeSerializer)
+                          NodeSerializer, StudySerializer)
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (
@@ -732,7 +732,7 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
         return {"message": message}
 
 
-class Assays(APIView):
+class AssayAPIView(APIView):
     """
     Return assay object
 
@@ -787,7 +787,7 @@ class Assays(APIView):
             raise Http404
 
 
-class AssaysFiles(APIView):
+class AssayFileAPIView(APIView):
 
     """
     Return solr response. Query requires assay_uuid.
@@ -855,7 +855,7 @@ class AssaysFiles(APIView):
         data_set_uuid = params.get('data_set_uuid', None)
         # requires data_set_uuid to check perms
         if data_set_uuid:
-            data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+            data_set = get_data_set_for_view_set(data_set_uuid)
             public_group = ExtendedGroup.objects.public_group()
 
             if request.user.has_perm('core.read_dataset', data_set) or \
@@ -883,7 +883,7 @@ class AssaysFiles(APIView):
             )
 
 
-class AssaysAttributes(APIView):
+class AssayAttributeAPIView(APIView):
     """
     AttributeOrder Resource.
     Returns/Updates AttributeOrder model queries. Requires assay_uuid.
@@ -1103,12 +1103,20 @@ class AddFileToNodeView(APIView):
         return HttpResponse(status=202)  # Accepted
 
 
-class NodeViewSet(APIView):
-    """API endpoint that allows Nodes to be viewed".
+class NodeViewSet(viewsets.ViewSet):
+    """API endpoint for viewing and editing nodes. Note currently, the api
+    supports viewing nodes filtered by studyUuid and viewing a node's
+    attribute related siblings. "
      ---
-    #YAML
-
-    PATCH:
+    list:
+        description: Returns nodes filtered by study and user's read_meta perms
+        parameters:
+            - name: study_uuid
+              description: study's uuid
+              paramType: query
+              type: string
+              required: true
+    partial_update:
         parameters_strategy:
         form: replace
         query: merge
@@ -1134,9 +1142,23 @@ class NodeViewSet(APIView):
               type: string
               paramType: form
               required: false
+    retrieve:
+        description: Returns a node and it's related nodes info
+        parameters:
+            - name: node's uuid
+              description: node's uuid
+              paramType: path
+              type: string
+              required: true
+            - name: related_attribute_nodes
+              description: data set uuid
+              paramType: query
+              type: boolean
+              required: true
     ...
     """
     http_method_names = ['get', 'patch']
+    lookup_field = 'uuid'
 
     def get_object(self, uuid):
         try:
@@ -1148,7 +1170,37 @@ class NodeViewSet(APIView):
             logger.error(e)
             raise APIException("Multiple objects returned.")
 
-    def get(self, request, uuid):
+    def list(self, request):
+        study_uuid = request.query_params.get('study_uuid')
+
+        if study_uuid is None:
+            return Response(
+                'Currently, the API only supports a study-related node lists.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            study = Study.objects.get(uuid=study_uuid)
+        except Study.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(
+                 content="Study with UUID: {} not found.".format(study_uuid)
+             )
+        except Study.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple studies returned for this request"
+            )
+        # check perms via data set
+        data_set = study.get_dataset()
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set.uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(NodeSerializer(study.node_set.all(), many=True).data)
+
+    def retrieve(self, request, uuid):
         # filter nodes by attributes' info
         attribute_solr_name = request.query_params.get(
             'related_attribute_nodes'
@@ -1183,7 +1235,7 @@ class NodeViewSet(APIView):
                 related_node_uuids, status=status.HTTP_200_OK
             )
 
-    def patch(self, request, uuid):
+    def partial_update(self, request, uuid):
         node = self.get_object(uuid)
         new_file_uuid = request.data.get('file_uuid')
         solr_name = request.data.get('attribute_solr_name')
@@ -1256,6 +1308,43 @@ class NodeViewSet(APIView):
         return Response('Currently, you can only remove node files or '
                         'edit non-derived files',
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class StudyViewSet(APIView):
+    """
+    API end point for retrieving studies based on a data set uuid
+
+    ---
+    #YAML
+
+    GET:
+        serializer: StudySerializer
+        omit_serializer: false
+
+        parameters:
+            - name: data_set_uuid
+              description: data set uuid containing the studies
+              paramType: query
+              type: string
+              required: true
+    ...
+    """
+    def get(self, request):
+        data_set_uuid = request.query_params.get('data_set_uuid')
+        if data_set_uuid is None:
+            return HttpResponseBadRequest(
+                "Currently, a Data Set UUID is required for "
+                "retrieving related studies."
+            )
+
+        data_set = get_data_set_for_view_set(data_set_uuid)
+        public_group = ExtendedGroup.objects.public_group()
+        if not ('read_meta_dataset' in get_perms(public_group, data_set) or
+                request.user.has_perm('core.read_meta_dataset', data_set)):
+            return Response(data_set_uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = StudySerializer(data_set.get_studies(), many=True)
+        return Response(serializer.data)
 
 
 def _check_data_set_ownership(user, data_set_uuid):

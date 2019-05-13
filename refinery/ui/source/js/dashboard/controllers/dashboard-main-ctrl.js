@@ -15,7 +15,7 @@
     'humanize',
     '_',
     'groupInviteService',
-    'groupMemberService',
+    'groupService',
     'settings'
   ];
 
@@ -23,7 +23,7 @@
     humanize,
     _,
     groupInviteService,
-    groupMemberService,
+    groupService,
     settings
   ) {
     var vm = this;
@@ -35,7 +35,10 @@
     activate();
 
     function activate () {
-      getGroups();
+      // avoid unneccessary api when user is not logged in
+      if (vm.isLoggedIn) {
+        getGroups();
+      }
     }
 
     /**
@@ -44,11 +47,13 @@
      * @memberOf refineryDashboard.DashboardMainCtrl
     **/
     function getGroups () {
-      var members = groupMemberService.query();
+      var members = groupService.query();
       members.$promise.then(function (response) {
-        vm.groups = response.objects;
+        vm.groups = response;
         vm.groups.forEach(function (group) {
-          addInviteList(group.id);
+          if (group.name !== 'Public' && group.can_edit) {
+            addInviteList(group.uuid);
+          }
         });
       });
       return members.$promise;
@@ -59,14 +64,14 @@
      * @memberOf refineryDashboard.DashboardMainCtrl
      * @param {int} groupID - group ID number
     **/
-    function addInviteList (groupID) {
+    function addInviteList (groupUuid) {
       groupInviteService.query({
-        group_id: groupID
+        group_uuid: groupUuid
       }).$promise.then(function (data) {
-        if (!_.has(vm.groupInvites, 'groupID')) {
-          vm.groupInvites[groupID] = [];
+        if (!_.has(vm.groupInvites, 'groupUuid')) {
+          vm.groupInvites[groupUuid] = [];
         }
-        angular.copy(data.objects, vm.groupInvites[groupID]);
+        angular.copy(data, vm.groupInvites[groupUuid]);
       });
     }
   }

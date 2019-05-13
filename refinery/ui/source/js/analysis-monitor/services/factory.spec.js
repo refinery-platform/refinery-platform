@@ -18,9 +18,7 @@ describe('Analysis Monitor Factory', function () {
   it('factory and tools variables should exist', function () {
     expect(factory).toBeDefined();
     expect(factory.analysesList).toEqual([]);
-    expect(factory.analysesRunningList).toEqual([]);
     expect(factory.analysesGlobalList).toEqual([]);
-    expect(factory.analysesRunningGlobalList).toEqual([]);
     expect(factory.analysesDetail).toEqual({});
   });
 

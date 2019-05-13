@@ -1,10 +1,14 @@
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.http import Http404
 from django.test import TestCase, override_settings
 
+from factory_boy.utils import create_dataset_with_necessary_models
+
 from .models import ExtendedGroup
-from .utils import get_absolute_url, is_absolute_url, \
-    get_non_manager_groups_for_user
+from .utils import (get_absolute_url, is_absolute_url,
+                    get_non_manager_groups_for_user, get_data_set_for_view_set,
+                    get_group_for_view_set)
 
 
 class TestIsAbsoluteURL(TestCase):
@@ -69,3 +73,41 @@ class SimpleUtilitiesTest(TestCase):
     def test_only_non_manager_groups_returned(self):
         for group in get_non_manager_groups_for_user(self.user):
             self.assertFalse(group.extendedgroup.is_manager_group())
+
+
+class GetDataSetForViewSetTest(TestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username,
+                                             'user@example.com',
+                                             self.password)
+        self.data_set = create_dataset_with_necessary_models(user=self.user)
+
+    def test_get_data_set_for_view_set_returns_data_set(self):
+        data_set = get_data_set_for_view_set(self.data_set.uuid)
+        self.assertEqual(data_set, self.data_set)
+
+    def test_get_data_set_for_view_set_raises_404(self):
+        with self.assertRaises(Http404):
+            get_data_set_for_view_set('xxxxx7')
+
+
+class GetGroupForViewSetTest(TestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username,
+                                             'user@example.com',
+                                             self.password)
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.group.manager_group.user_set.add(self.user)
+        self.group.user_set.add(self.user)
+
+    def test_get_group_for_view_set_returns_data_set(self):
+        group = get_group_for_view_set(self.group.uuid)
+        self.assertEqual(group, self.group)
+
+    def test_get_group_for_view_set_raises_404(self):
+        with self.assertRaises(Http404):
+            get_group_for_view_set('xxxxx7')

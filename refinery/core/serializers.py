@@ -1,13 +1,40 @@
 import logging
 
 from django.conf import settings
+from django.utils import timezone
+from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (DataSet, Event, SiteProfile, SiteVideo, User,
-                     UserProfile, Workflow)
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
+                     SiteProfile, SiteVideo, User, UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
+
+
+class DateTimeWithTimeZone(serializers.DateTimeField):
+    '''Helper to override default UTC date time for local time.'''
+    def to_representation(self, utc_time):
+        local_time = timezone.localtime(utc_time)
+        return super(DateTimeWithTimeZone, self).to_representation(local_time)
+
+
+class AnalysisSerializer(serializers.ModelSerializer):
+    owner = serializers.SerializerMethodField()
+    data_set_uuid = serializers.SerializerMethodField()
+    time_end = DateTimeWithTimeZone()
+    time_start = DateTimeWithTimeZone()
+
+    class Meta:
+        model = Analysis
+        fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
+                  'summary', 'time_start', 'time_end', 'uuid', 'workflow')
+
+    def get_owner(self, analysis):
+        return UserSerializer(analysis.get_owner()).data
+
+    def get_data_set_uuid(self, analysis):
+        return analysis.data_set.uuid
 
 
 class DataSetSerializer(serializers.ModelSerializer):
@@ -21,10 +48,13 @@ class DataSetSerializer(serializers.ModelSerializer):
     )
     description = serializers.CharField(max_length=5000)
     is_owner = serializers.SerializerMethodField()
+    owner = serializers.SerializerMethodField()
     public = serializers.SerializerMethodField()
     is_clean = serializers.SerializerMethodField()
     file_count = serializers.SerializerMethodField()
     analyses = serializers.SerializerMethodField()
+    user_perms = serializers.SerializerMethodField()
+    version = serializers.SerializerMethodField()
 
     def get_analyses(self, data_set):
         return [dict(uuid=analysis.uuid,
@@ -45,6 +75,9 @@ class DataSetSerializer(serializers.ModelSerializer):
                 return False
             return user_request == owner
 
+    def get_owner(self, data_set):
+        return UserSerializer(data_set.get_owner()).data
+
     def get_public(self, data_set):
         try:
             return data_set.public
@@ -58,11 +91,28 @@ class DataSetSerializer(serializers.ModelSerializer):
     def get_file_count(self, data_set):
         return data_set.get_file_count()
 
+    def get_user_perms(self, data_set):
+        try:
+            request_user = self.context.get('request').user
+        except AttributeError as e:
+            logger.error("Request is missing a user: %s", e)
+            return {'change': False,
+                    'read': False,
+                    'read_meta': False}
+        user_perms = get_perms(request_user, data_set)
+        return {'change': 'change_dataset' in user_perms,
+                'read': 'read_dataset' in user_perms,
+                'read_meta': 'read_meta_dataset' in user_perms}
+
+    def get_version(self, data_set):
+        return data_set.get_version()
+
     class Meta:
         model = DataSet
-        fields = ('title', 'accession', 'analyses', 'summary', 'description',
-                  'slug', 'uuid', 'modification_date', 'id', 'is_owner',
-                  'public', 'is_clean', 'file_count')
+        fields = ('accession', 'analyses', 'creation_date', 'description',
+                  'file_count', 'id', 'is_clean', 'is_owner',
+                  'modification_date', 'owner', 'public', 'slug', 'summary',
+                  'title', 'uuid', 'user_perms', 'version')
 
     def partial_update(self, instance, validated_data):
         """
@@ -81,6 +131,77 @@ class DataSetSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class ExtendedGroupSerializer(serializers.ModelSerializer):
+    manager_group_uuid = serializers.SerializerMethodField()
+    member_list = serializers.SerializerMethodField()
+    perm_list = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
+    uuid = serializers.SerializerMethodField()
+    name = serializers.CharField(
+        min_length=3,
+        validators=[UniqueValidator(queryset=ExtendedGroup.objects.all())]
+    )
+
+    def get_manager_group_uuid(self, group):
+        if group.is_manager_group():
+            return ''
+        return group.manager_group.uuid
+
+    def get_can_edit(self, group):
+        user = self.context.get('user')
+        if user is None:
+            return False
+
+        if group.is_manager_group():
+            return user in group.user_set.all()
+        else:
+            return user in group.manager_group.user_set.all()
+
+    def get_member_list(self, group):
+        # only needed to support dashboard client request
+        data_set = self.context.get('data_set')
+        if data_set is None:
+            users = group.user_set.all().filter(is_active=True).exclude(
+                username=settings.ANONYMOUS_USER_NAME
+            )
+            user_data = UserSerializer(users, many=True).data
+            for user in user_data:
+                if group.is_manager_group():
+                    user['is_manager'] = user.get('id') in \
+                                         group.user_set.all().values_list(
+                                             'id', flat=True
+                                         )
+                else:
+                    user['is_manager'] = user.get('id') in \
+                                         group.manager_group.user_set.all()\
+                                             .values_list('id', flat=True)
+            return user_data
+        return []
+
+    def get_perm_list(self, group):
+        data_set = self.context.get('data_set')
+        if data_set is None:
+            return {}
+        data_set_perms = get_perms(group, data_set)
+        return {'change': 'change_dataset' in data_set_perms,
+                'read': 'read_dataset' in data_set_perms,
+                'read_meta': 'read_meta_dataset' in data_set_perms}
+
+    def get_uuid(self, group):
+        return group.extendedgroup.uuid
+
+    class Meta:
+        model = ExtendedGroup
+        fields = ('can_edit', 'name', 'id', 'uuid', 'manager_group_uuid',
+                  'member_list', 'perm_list')
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('created', 'expires', 'group_id', 'id', 'recipient_email')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):
@@ -166,7 +287,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'profile', 'username')
+        fields = ('first_name', 'id', 'last_name', 'profile', 'username')
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):

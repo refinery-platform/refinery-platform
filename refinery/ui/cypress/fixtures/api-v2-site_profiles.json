@@ -1,0 +1,36 @@
+{
+    "about_markdown": "The Refinery Platform is a project of the [Park Lab] (https://compbio.hms.harvard.edu/index) and [Gehlenborg Lab] (http://gehlenborglab.org/) at Harvard Medical School in collaboration with the [Hide Lab] (https://hidelab.wordpress.com/) at Harvard School of Public Health.",
+    "site": 1,
+    "intro_markdown": "The Refinery Platform is a web-based data visualization and analysis system powered by an ISA-Tab-compatible data repository for public and private data sets. Analyses are implemented as Galaxy workflows and executed through the Galaxy API.",
+    "twitter_username": "stemcellcommons",
+    "site_videos": [
+        {
+            "caption": "Trace a data set's analysis history",
+            "site_profile": 1,
+            "source": "youtube",
+            "source_id": "AxY2IZeqYG8",
+            "id": 4
+        },
+        {
+            "caption": "Visualize analysis results in interactive environments",
+            "site_profile": 1,
+            "source": "youtube",
+            "source_id": "2P4qbLkEy6o",
+            "id": 3
+        },
+        {
+            "caption": "Analyze data via pre-built bioinformatic workflows",
+            "site_profile": 1,
+            "source": "youtube",
+            "source_id": "PfSWHun6wP4",
+            "id": 2
+        },
+        {
+            "caption": "Manage and share data sets in your personal workspace",
+            "site_profile": 1,
+            "source": "youtube",
+            "source_id": "jlecZeQFAR0",
+            "id": 1
+        }
+    ]
+}

@@ -47,24 +47,28 @@
                 <input
                   type="radio"
                   value="none"
+                  ng-change="modal.updatePerms(group)"
                   ng-model="group.permission">
               </td>
               <td>
                 <input
                   type="radio"
                   value="read_meta"
+                  ng-change="modal.updatePerms(group)"
                   ng-model="group.permission">
               </td>
               <td>
                 <input
                   type="radio"
                   value="read"
+                  ng-change="modal.updatePerms(group)"
                   ng-model="group.permission">
               </td>
               <td ng-if="group.id !== 100">
                 <input
                   type="radio"
                   value="edit"
+                  ng-change="modal.updatePerms(group)"
                   ng-model="group.permission">
               </td>
               <td ng-if="group.id === 100">
@@ -75,16 +79,9 @@
     </div>
 </div>
 <div class="modal-footer">
-  <div class="float-left">
-    <div class="refinery-spinner" ng-if="modal.isSaving"></div>
-  </div>
   <div class="float-right">
-    <button class="refinery-base btn btn-default" ng-click="modal.cancel()">
-        Cancel
-    </button>
-    <button class="btn btn-primary" ng-click="modal.save()"
-            ng-if="modal.permissions.groups.length > 0" ng-cloak>
-        Save
+    <button class="refinery-base btn btn-default" ng-click="modal.close()">
+        Close
     </button>
   </div>
 </div>

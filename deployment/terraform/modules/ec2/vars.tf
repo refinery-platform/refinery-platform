@@ -40,3 +40,7 @@ variable "refinery_user_files_columns" {}
 variable "data_volume_size" {}
 variable "data_volume_type" {}
 variable "data_volume_snapshot_id" {}
+variable "data_volume_device_name" {
+  description = "Device name for the EBS data volume"
+  default     = "/dev/xvdr"
+}

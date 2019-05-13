@@ -687,13 +687,6 @@ class DataSetTests(TestCase):
         dataset.save()
         self.assertFalse(dataset.is_valid)
 
-    def test_neo4j_called_on_post_save(self):
-        with mock.patch(
-            "core.models.async_update_annotation_sets_neo4j"
-        ) as neo4j_mock:
-            self.isa_tab_dataset.save()
-            self.assertTrue(neo4j_mock.called)
-
     def test_solr_called_on_post_save(self):
         with mock.patch(
             "core.models.update_data_set_index"
@@ -794,6 +787,31 @@ class DataSetTests(TestCase):
         data_set = create_dataset_with_necessary_models()
         data_set.share(ExtendedGroup.objects.public_group())
         self.assertTrue(data_set.is_clean())
+
+
+class ExtendedGroupModelTests(TestCase):
+    def setUp(self):
+        self.group = ExtendedGroup.objects.create(name="Test Group")
+        self.user = User.objects.create_user('managerUser')
+        self.non_manager = User.objects.create_user('regularUser')
+        self.group.user_set.add(self.user)
+        self.group.manager_group.user_set.add(self.user)
+
+    def test_is_user_a_group_manager_returns_true_for_group(self):
+        self.assertTrue(self.group.is_user_a_group_manager(self.user))
+
+    def test_is_user_a_group_manager_returns_true_for_manager_group(self):
+        self.assertTrue(
+            self.group.manager_group.is_user_a_group_manager(self.user)
+        )
+
+    def test_is_user_a_group_manager_returns_false_for_group(self):
+        self.assertFalse(self.group.is_user_a_group_manager(self.non_manager))
+
+    def test_is_user_a_group_manager_returns_false_for_manager_group(self):
+        self.assertFalse(
+            self.group.manager_group.is_user_a_group_manager(self.non_manager)
+        )
 
 
 class EventTests(TestCase):

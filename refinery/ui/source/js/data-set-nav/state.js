@@ -23,9 +23,7 @@ function refineryDataSetNavConfig (
         templateUrl: function () {
           // unit tests redefine $window and thus make it unusable here
           return window.getStaticUrl('partials/analysis-monitor/views/analyses-tab.html');
-        },
-        controller: 'AnalysisMonitorCtrl',
-        controllerAs: 'AMCtrl'
+        }
       },
       '^\/data_sets\/.*\/$',
       true

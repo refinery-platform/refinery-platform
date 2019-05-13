@@ -31,7 +31,7 @@
     });
 
     it('Data & UI displays variables should exist for views', function () {
-      expect(ctrl.analysesRunningGlobalList).toEqual([]);
+      expect(ctrl.analysesGlobalList).toEqual([]);
       expect(ctrl.analysesGlobalLoadingFlag).toEqual('LOADING');
       expect(ctrl.analysesGlobalDetail).toEqual({});
       expect(ctrl.analysesRunningGlobalList).toEqual([]);
@@ -56,14 +56,12 @@
       });
 
       it('refreshAnalysesGlobalDetail method calls update Analyses Detail', function () {
-        angular.copy({ uuid: 'xxx0' }, factory.analysesRunningGlobalList[0]);
-        angular.copy({ uuid: 'xxx1' }, factory.analysesRunningGlobalList[1]);
-
+        ctrl.analysesGlobalList = [{ uuid: 'xxx0', status: 'RUNNING' }];
         spyOn(ctrl, 'updateAnalysesGlobalDetail').and.returnValue(true);
         ctrl.refreshAnalysesGlobalDetail();
-        expect(ctrl.analysesRunningGlobalList).toEqual(factory.analysesRunningGlobalList);
+        expect(ctrl.analysesRunningGlobalList).toEqual(factory.analysesGlobalList);
         expect(ctrl.updateAnalysesGlobalDetail.calls.count())
-          .toEqual(factory.analysesRunningGlobalList.length);
+          .toEqual(factory.analysesGlobalList.length);
       });
 
       it('updateAnalysesGlobalDetail method is function', function () {

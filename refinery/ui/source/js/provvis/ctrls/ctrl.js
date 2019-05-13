@@ -23,6 +23,7 @@
     '$',
     '$q',
     '$scope',
+    'settings',
     '$window'
   ];
 
@@ -39,6 +40,7 @@
     $,
     $q,
     $scope,
+    settings,
     $window
   ) {
     var vm = this;
@@ -73,9 +75,7 @@
     // Ajax calls, grabs the analysis & files promises for a particular data set
     function getData () {
       var analysisParams = {
-        format: 'json',
-        limit: 0,
-        data_set__uuid: _dataSetUuid
+        data_set_uuid: _dataSetUuid
       };
 
       var filesParams = {
@@ -90,7 +90,7 @@
 
     function launchProvvis () {
       getData().then(function (response) {
-        analysesList = response[0].objects;
+        analysesList = response[0];
         var _solrResponse = response[1];
         runProvVisPrivate(_studyUuid, analysesList, _solrResponse);
       });
@@ -107,8 +107,7 @@
 
       /* Only allow one instance of ProvVis. */
       if (vis instanceof provvisDecl.ProvVis === false) {
-        var url = '/api/v1/node/?study__uuid=' + studyUuid +
-          '&format=json&limit=0';
+        var url = settings.appRoot + settings.refineryApiV2 + '/nodes/?study_uuid=' + studyUuid;
         var analysesData = studyAnalyses.filter(function (a) {
           return a.status === 'SUCCESS';
         });

@@ -6,7 +6,6 @@
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"
     <%= @site_url ? ', "' + @site_url +  '"' : "" %>
     ],
-  "AUTO_LOGIN": [],
   "BROKER_URL": "amqp://guest:guest@localhost:5672//",
   "CELERYD_MAX_TASKS_PER_CHILD": 100,
   "COGNITO_IDENTITY_POOL_ID": "<%= @cognito_identity_pool_id %>",
@@ -22,66 +21,15 @@
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
   "DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB": <%= @django_docker_engine_mem_limit_mb || 20 %>,
-  "EMAIL_HOST": "<%= @email_host || "localhost" %>",
+  "EMAIL_HOST": "<%= @email_host %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",
   "EMAIL_HOST_PASSWORD": "<%= @email_host_password %>",
   "EMAIL_USE_TLS": <%= @email_use_tls || false %>,
   "EMAIL_SUBJECT_PREFIX": "<%= @email_subject_prefix || "[Refinery] " %>",
-  "JAVA_ENTITY_EXPANSION_LIMIT": 1000000,
   "LANGUAGE_CODE": "en-us",
-  "LIBS_DIR": "/opt",
   "MEDIA_ROOT": "<%= @media_root %>",
   "MEDIA_URL": "/media/",
-  "NEO4J": {
-    "BASE_URL": "http://localhost:7474",
-    "CONSTRAINTS": [
-      {
-        "label": "Class",
-        "property": [
-          {
-            "name": "name",
-            "unique": true
-          },
-          {
-            "name": "uri",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "Ontology",
-        "property": [
-          {
-            "name": "acronym",
-            "unique": true
-          },
-          {
-            "name": "uri",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "User",
-        "property": [
-          {
-            "name": "id",
-            "unique": true
-          }
-        ]
-      },
-      {
-        "label": "DataSet",
-        "property": [
-          {
-            "name": "id",
-            "unique": true
-          }
-        ]
-      }
-    ]
-  },
   "REFINERY_AUXILIARY_FILE_GENERATION": "on_file_import",
   "REFINERY_AWS_REGION": "<%= @aws_region %>",
   "REFINERY_BANNER": "<%= @refinery_banner || "" %>",
@@ -90,6 +38,8 @@
   "REFINERY_DATA_IMPORT_DIR": "<%= @import_dir || "/import" %>",
   "REFINERY_DOCKER_HOST": "<%= @docker_host || "" %>",
   "REFINERY_FILE_SOURCE_MAP": {},
+  "REFINERY_FILE_STORE_ROOT": "<%= @file_store_root %>",
+  "REFINERY_FILE_STORE_URL": "/media/file_store/",
   "REFINERY_GALAXY_ANALYSIS_CLEANUP": "on_success",
   "REFINERY_GOOGLE_ANALYTICS_ID": "<%= @refinery_google_analytics_id || "" %>",
   "REFINERY_GOOGLE_RECAPTCHA_SITE_KEY": "<%= @refinery_google_recaptcha_site_key || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" %>",
@@ -111,9 +61,6 @@
   "REGISTRATION_OPEN": true,
   "SECRET_KEY": "SECRET",
   "SERVER_EMAIL": "<%= @server_email || "root@localhost" %>",
-  "SOLR_SYNONYMS": false,
-  "SOLR_CUSTOM_SYNONYMS_FILE": "<%= @solr_custom_synonyms_file %>",
-  "SOLR_LIB_DIR": "<%= @solr_lib_dir %>",
   "STATIC_ROOT": "",
   "STATIC_URL": "/static/",
   "TIME_ZONE": "America/New_York",

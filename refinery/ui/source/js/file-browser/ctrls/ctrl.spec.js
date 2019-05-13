@@ -15,7 +15,7 @@
       $controller,
       $rootScope,
       $window,
-      dataSetPermsService,
+      dataSetGroupPermsService,
       fileBrowserFactory,
       fileParamService,
       mockParamsFactory,
@@ -29,7 +29,7 @@
         $scope: scope,
         fileParamService: paramService
       });
-      permsService = dataSetPermsService;
+      permsService = dataSetGroupPermsService;
       resetService = resetGridService;
       toolService = toolSelectService;
       $window.externalAssayUuid = mockParamsFactory.generateUuid();

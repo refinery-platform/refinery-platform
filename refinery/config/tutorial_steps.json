@@ -1,19 +1,4 @@
 {
-  "LAUNCHPAD_TUTORIAL": {
-    "STEP0": "Here you can access features such as collaboration and an overview of the most recently launched analyses.",
-    "STEP1": "This panel shows information about data sets that you have access to. This includes data sets that you successfully uploaded and own, as well as data sets that have been shared with you.",
-    "STEP2": "Here you can launch a search across the meta data of all data sets that you have access to.",
-    "STEP3": "You can sort and filter your data sets using these controls.",
-    "STEP4": "Data sets are listed in this area.",
-    "STEP5": {
-      "a": "This panel shows information about analyses and the status of their execution.",
-      "b": "Analyses can have three states:",
-      "c": "<b>Failure</b>",
-      "d": "<b>Success</b>",
-      "e": "<b>Running</b>"
-    },
-    "STEP6": "This panel lists all workflows that are available to you."
-  },
   "DATA_UPLOAD_TUTORIAL": {
     "STEP0": "Click here to start uploading data sets.",
     "STEP1": "Use this tab to import a delimited metadata table.",

@@ -89,7 +89,7 @@ class FileImportTask(celery.Task):
 
     def import_path_to_path(self, source_path, symlink=True):
         """Import file from an absolute file system path into
-        FILE_STORE_BASE_DIR
+        REFINERY_FILE_STORE_ROOT
         """
         storage = SymlinkedFileSystemStorage()
         file_store_name = storage.get_name(os.path.basename(source_path))
@@ -148,7 +148,7 @@ class FileImportTask(celery.Task):
         return file_store_name
 
     def import_s3_to_path(self, source_url):
-        """Import S3 object from s3:// URL into FILE_STORE_BASE_DIR"""
+        """Import S3 object from s3:// URL into REFINERY_FILE_STORE_ROOT"""
         source_bucket, source_key = parse_s3_url(source_url)
         storage = SymlinkedFileSystemStorage()
         file_store_name = storage.get_name(os.path.basename(source_key))
@@ -210,7 +210,7 @@ class FileImportTask(celery.Task):
         return file_store_name
 
     def import_url_to_path(self, source_url):
-        """Import file from URL into FILE_STORE_BASE_DIR"""
+        """Import file from URL into REFINERY_FILE_STORE_ROOT"""
         # move the file from temp dir into file store dir
         storage = SymlinkedFileSystemStorage()
         # remove query string from URL before extracting file name

@@ -13,14 +13,12 @@
     .controller('GroupEditModalCtrl', GroupEditModalCtrl);
 
   GroupEditModalCtrl.$inject = [
-    'groupExtendedService',
-    'groupMemberService',
+    'groupService',
     'settings'
   ];
 
   function GroupEditModalCtrl (
-    groupExtendedService,
-    groupMemberService,
+    groupService,
     settings
   ) {
     var vm = this;
@@ -50,7 +48,7 @@
      * @memberOf refineryApp.GroupEditModalCtrl
     **/
     function deleteGroup () {
-      groupExtendedService.delete({
+      groupService.delete({
         uuid: vm.resolve.config.group.uuid
       }).$promise.then(function () {
         vm.alertType = 'success';
@@ -68,9 +66,9 @@
      * @param {int} depth - group nav index
     **/
     function leaveGroup () {
-      groupMemberService.remove({
+      groupService.partial_update({
         uuid: vm.resolve.config.group.uuid,
-        userId: settings.djangoApp.userId
+        user_id: settings.djangoApp.userId
       }).$promise.then(function () {
         vm.alertType = 'success';
         vm.modalInstance.close(vm.alertType);

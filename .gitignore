@@ -41,23 +41,15 @@ Thumbs.db
 .idea/
 .project
 .pydevproject
-/refinery/*.pid
-/refinery/solr/*/data
-/refinery/solr/lib/
-/refinery/solr/*/conf/custom-synonyms.txt
+*.pid
 /refinery/solr/**/conf/solrconfig.xml
 supervisord.conf
 codekit-config.json
 .vagrant/
 /deployment/puppet/.librarian/
-/deployment/puppet/.tmp/
 /deployment/puppet/Puppetfile.lock
-/deployment/aws-config/config.yaml
-/deployment/aws-config/tags.yaml
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
-/refinery/static/production/
-/refinery/static/development/
 /refinery/ui/production/
 /refinery/ui/development/
 /refinery/ui/bower_components/
@@ -68,6 +60,7 @@ codekit-config.json
 /refinery/ui/cypress/screenshots/
 /refinery/ui/cypress/videos/
 /import/
+/media/
 /static/
 /transfer/
 *.conflict
@@ -76,10 +69,6 @@ codekit-config.json
 /refinery/.coverage
 /refinery/coverage.xml
 .cache/
-
-# to be moved into refinery/ui
-refinery/static/styles/css/font-awesome*.css
-refinery/static/styles/css/refinery-style*.css
 
 ### Terraform template
 # Compiled files

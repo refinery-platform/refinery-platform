@@ -15,18 +15,18 @@
   PermissionEditorCtrl.$inject = [
     '$log',
     '_',
-    'sharingService',
+    'groupService',
     'permissionService'
   ];
 
   function PermissionEditorCtrl (
     $log,
     _,
-    sharingService,
+    groupService,
     permissionService
   ) {
     var vm = this;
-    vm.cancel = cancel;
+    vm.close = close;
     vm.permissions = permissionService.permissions;
     // Used as a shorthand to avoid complicated permission checking in `ngRepeat`
     vm.permissionLevel = {
@@ -51,48 +51,51 @@
         change: true
       }
     };
-    vm.save = save;
+    vm.updatePerms = updatePerms;
 
+   /*
+   * ---------------------------------------------------------
+   * Methods Definitions
+   * ---------------------------------------------------------
     /**
-     * Cancel permission editing.
-     * @type  {function}
-     */
-    function cancel () {
+     * @name close
+     * @desc  Closes modal
+     * @memberOf RefinaryApp.PermissionEditorCtrl
+     * @param {int} depth - group nav index
+    **/
+    function close () {
       permissionService.getPermissions(vm.resolve.config.uuid);
-      vm.modalInstance.dismiss('cancel');
+      vm.modalInstance.dismiss('close');
     }
 
     /**
-     * Save permissions
-     * @type   {function}
-     */
-    function save () {
-      var that = this;
-      var accessList = [];
-
-      this.isSaving = true;
-
-      _.forEach(vm.permissions.groups, function (group) {
-        accessList.push(_.assign({ id: group.id }, vm.permissionLevel[group.permission]));
-      });
-
-      sharingService
-        .update({
-          model: vm.resolve.config.model,
-          uuid: vm.resolve.config.uuid
-        }, {
-          share_list: accessList
+     * @name updatePerms
+     * @desc  Patches a group's permission for a particular data set
+     * @memberOf  RefinaryApp.PermissionEditorCtrl
+     * @param {obj} group - view's group object, expect permissionLevel to be a
+     * string (edit, read, read_meta)
+    **/
+    function updatePerms (group) {
+      groupService
+        .partial_update({
+          data_set_uuid: vm.resolve.config.uuid,
+          uuid: group.uuid,
+          perm_list: vm.permissionLevel[group.permission]
         })
         .$promise
-        .then(function () {
-          vm.modalInstance.close('saved');
+        .then(function (response) {
+          $log.info(response);
         }, function (error) {
           permissionService.getPermissions(vm.resolve.config.uuid);
           $log.error(error);
-        }, function () {
-          that.isSaving = false;
         });
     }
+
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
     vm.$onInit = function () {
       if (!_.isEmpty(vm.resolve) && vm.resolve.config.uuid) {
         permissionService.getPermissions(vm.resolve.config.uuid).then(function () {

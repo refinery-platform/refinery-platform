@@ -31,28 +31,8 @@ describe('Dashboard.module: unit tests', function () {
       expect(hasModule('ngSanitize')).toEqual(true);
     });
 
-    it('should have "ui".scroll as a dependency', function () {
-      expect(hasModule('ui.scroll')).toEqual(true);
-    });
-
-    it('should have "cut" as a dependency', function () {
-      expect(hasModule('cut')).toEqual(true);
-    });
-
     it('should have "tooltip" as a dependency', function () {
       expect(hasModule('tooltip')).toEqual(true);
-    });
-
-    it('should have "treemap" as a dependency', function () {
-      expect(hasModule('treemap')).toEqual(true);
-    });
-
-    it('should have "dataSet" as a dependency', function () {
-      expect(hasModule('dataSet')).toEqual(true);
-    });
-
-    it('should have "listGraph" as a dependency', function () {
-      expect(hasModule('listGraph')).toEqual(true);
     });
 
     it('should have "angular-intro" as a dependency', function () {

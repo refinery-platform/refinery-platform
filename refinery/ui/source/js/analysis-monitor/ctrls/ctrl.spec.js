@@ -5,12 +5,11 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   var factory;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var fakeInvalidUuid = 'xxxxx';
-  var timeout;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryAnalysisMonitor'));
   beforeEach(inject(function (
-    $controller, $rootScope, $timeout, $window, analysisMonitorFactory
+    $controller, $rootScope, $window, analysisMonitorFactory
   ) {
     ctrl = $controller('AnalysisMonitorCtrl', {
       $scope: $rootScope.$new()
@@ -30,6 +29,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     expect(ctrl.launchAnalysisFlag).toBeDefined();
     expect(ctrl.analysesLoadingFlag).toBeDefined();
     expect(ctrl.initializedFlag).toBeDefined();
+    expect(ctrl.loggedUserId).toEqual(undefined);
   });
 
   describe('Update Analyse Lists from Factory', function () {
@@ -51,26 +51,6 @@ describe('Controller: AnalysisMonitorCtrl', function () {
       ctrl.updateAnalysesList();
       expect(typeof ctrl.timerList).toBeDefined();
       expect(mockAnalysesFlag).toEqual(true);
-    });
-
-    it('updateAnalysesRunningList is method', function () {
-      expect(angular.isFunction(ctrl.updateAnalysesRunningList)).toBe(true);
-    });
-
-    it('updateAnalysesRunningList sets timer and returns promise', function () {
-      var mockAnalysesRunningFlag = false;
-      spyOn(factory, 'getAnalysesList').and.callFake(function () {
-        return {
-          then: function () {
-            mockAnalysesRunningFlag = true;
-          }
-        };
-      });
-
-      expect(typeof ctrl.timerRunList).toEqual('undefined');
-      ctrl.updateAnalysesRunningList();
-      expect(typeof ctrl.timerRunList).toBeDefined();
-      expect(mockAnalysesRunningFlag).toEqual(true);
     });
   });
 
@@ -131,9 +111,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
   });
 
   describe('Helper functions', function () {
-    beforeEach(inject(function ($timeout) {
-      timeout = $timeout;
-
+    beforeEach(inject(function () {
       ctrl.analysesDetail[fakeUuid] = {
         refineryImport: [{
           status: 'PROGRESS',
@@ -160,33 +138,25 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     });
 
     it('refreshAnalysesDetail method calls update Analyses Detail', function () {
-      factory.analysesRunningList = [
+      ctrl.analysesList = [
         {
-          uuid: 'xxx0'
+          uuid: 'xxx0',
+          status: 'RUNNING'
         },
         {
-          uuid: 'xxx1'
+          uuid: 'xxx1',
+          status: 'RUNNING'
         },
         {
-          uuid: 'xxx2'
+          uuid: 'xxx2',
+          status: 'RUNNING'
         }
       ];
       spyOn(ctrl, 'updateAnalysesDetail').and.returnValue(true);
       ctrl.refreshAnalysesDetail();
-      expect(ctrl.analysesRunningList).toEqual(factory.analysesRunningList);
+      expect(ctrl.analysesRunningList).toEqual(ctrl.analysesList);
       expect(ctrl.updateAnalysesDetail.calls.count())
-        .toEqual(factory.analysesRunningList.length);
-    });
-
-    it('cancelTimerRunningList method is function', function () {
-      expect(angular.isFunction(ctrl.cancelTimerRunningList)).toBe(true);
-    });
-
-    it('cancelTimerRunningList method cancel timerRunList', function () {
-      ctrl.timerRunList = timeout(10);
-      expect(typeof ctrl.timerRunList.$$state.value).toEqual('undefined');
-      ctrl.cancelTimerRunningList();
-      expect(ctrl.timerRunList.$$state.value).toEqual('canceled');
+        .toEqual(ctrl.analysesList.length);
     });
 
     it('setAnalysesLoadingFlag method is function', function () {

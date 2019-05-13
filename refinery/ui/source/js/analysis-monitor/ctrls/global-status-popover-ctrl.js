@@ -26,7 +26,6 @@
     vm.setAnalysesGlobalLoadingFlag = setAnalysesGlobalLoadingFlag;
     vm.updateAnalysesGlobalDetail = updateAnalysesGlobalDetail;
     vm.updateAnalysesGlobalList = updateAnalysesGlobalList;
-    vm.updateAnalysesRunningGlobalList = updateAnalysesRunningGlobalList;
 
   /*
    * ---------------------------------------------------------
@@ -64,7 +63,6 @@
      * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
     **/
     function refreshAnalysesGlobalDetail () {
-      updateAnalysesRunningGlobalList();
       for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
         vm.updateAnalysesGlobalDetail(i);
       }
@@ -92,13 +90,11 @@
     **/
     function updateAnalysesGlobalDetail (i) {
       (function (j) {
-        if (typeof vm.analysesRunningGlobalList[j] !== 'undefined') {
-          var runningUuid = vm.analysesRunningGlobalList[j].uuid;
-          factory.getAnalysesDetail(runningUuid).then(function () {
-            vm.analysesGlobalDetail[runningUuid] =
-              factory.analysesDetail[runningUuid];
-          });
-        }
+        var runningUuid = vm.analysesRunningGlobalList[j].uuid;
+        factory.getAnalysesDetail(runningUuid).then(function () {
+          vm.analysesGlobalDetail[runningUuid] =
+            factory.analysesDetail[runningUuid];
+        });
       }(i));
     }
 
@@ -110,13 +106,14 @@
     **/
     function updateAnalysesGlobalList () {
       var params = {
-        format: 'json',
-        limit: 10
+        limit: 10,
+        offset: 0
       };
 
       factory.getAnalysesList(params).then(function () {
         vm.analysesGlobalList = factory.analysesGlobalList;
         vm.setAnalysesGlobalLoadingFlag();
+        getRunningAnalyses();
         vm.refreshAnalysesGlobalDetail();
       });
       // refreshes every 30 seconds
@@ -124,20 +121,16 @@
     }
 
     /**
-     * @name updateAnalysesRunningGlobalList
-     * @desc  Updates the list showing all running analysis
+     * @name getRunningAnalyses
+     * @desc  Helper function to update running analyses with details
      * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
     **/
-    function updateAnalysesRunningGlobalList () {
-      var params = {
-        format: 'json',
-        limit: 0,
-        status__in: 'RUNNING,UNKNOWN'
-      };
-
-      factory.getAnalysesList(params).then(function () {
-        vm.analysesRunningGlobalList = factory.analysesRunningGlobalList;
-      });
+    function getRunningAnalyses () {
+      for (var i = 0; i < vm.analysesGlobalList.length; i++) {
+        if (vm.analysesGlobalList[i].status === 'RUNNING') {
+          vm.analysesRunningGlobalList.push(vm.analysesGlobalList[i]);
+        }
+      }
     }
   }
 })();

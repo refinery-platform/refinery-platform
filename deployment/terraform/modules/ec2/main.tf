@@ -35,7 +35,6 @@ resource "aws_iam_access_key" "ses_user" {
 resource "aws_iam_role" "app_server" {
   description        = "Permissions for the Refinery app server EC2 instance"
   name               = "${var.resource_name_prefix}-refinery-appserver"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -117,9 +116,16 @@ resource "aws_iam_instance_profile" "app_server" {
   role = "${aws_iam_role.app_server.name}"
 }
 
+locals {
+  app_server_tags = "${merge(
+    var.tags, map("Name", "${var.resource_name_prefix} app server")
+  )}"
+}
+
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
-  ami                    = "ami-d05e75b8"
+  # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
+  ami                    = "ami-03597b1b84c02cf7b"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
@@ -131,23 +137,13 @@ resource "aws_instance" "app_server" {
   }
   ebs_block_device {
     delete_on_termination = false
-    device_name           = "/dev/xvdr"
+    device_name           = "${var.data_volume_device_name}"
     snapshot_id           = "${var.data_volume_snapshot_id}"
     volume_size           = "${var.data_volume_size}"
     volume_type           = "${var.data_volume_type}"
   }
-  # scheduler:ebs-snapshot tag is used with the EBS Snapshot Scheduler:
-  # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
-  tags                   = "${merge(
-    var.tags,
-    map(
-      "Name", "${var.resource_name_prefix} app server",
-      "scheduler:ebs-snapshot", "default"
-    )
-  )}"
-  volume_tags            = "${merge(
-    var.tags, map("Name", "${var.resource_name_prefix} app server")
-  )}"
+  tags                   = "${local.app_server_tags}"
+  volume_tags            = "${local.app_server_tags}"
   user_data              = <<EOF
 #!/bin/sh
 
@@ -157,9 +153,13 @@ export DEBIAN_FRONTEND=noninteractive
 # print commands and their expanded arguments
 set -x
 
+export PROJECT_ROOT=/srv/refinery-platform
+
 # install dependencies
-/usr/bin/apt-get clean && /usr/bin/apt-get -qq update
-/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev
+/usr/bin/apt-get clean
+/usr/bin/apt-get -qq update
+/usr/bin/apt-get -y autoremove
+/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev tree
 
 # add extra SSH keys from Github
 for USERNAME in ${join(" ", var.ssh_users)}; do
@@ -167,13 +167,24 @@ for USERNAME in ${join(" ", var.ssh_users)}; do
 done >> /home/ubuntu/.ssh/authorized_keys
 
 # clone Refinery Platform repo
-mkdir /srv/refinery-platform && chown ubuntu:ubuntu /srv/refinery-platform
-su -c 'git clone https://github.com/refinery-platform/refinery-platform.git /srv/refinery-platform' ubuntu
-su -c 'cd /srv/refinery-platform && /usr/bin/git checkout -q ${var.git_commit}' ubuntu
+mkdir $PROJECT_ROOT
+chown ubuntu:ubuntu $PROJECT_ROOT
+su -c "git clone https://github.com/refinery-platform/refinery-platform.git $PROJECT_ROOT" ubuntu
+su -c "cd $PROJECT_ROOT && /usr/bin/git checkout -q ${var.git_commit}" ubuntu
+
+# configure librarian-puppet
+/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
+cd $PROJECT_ROOT/deployment/puppet
+# need to set $HOME: https://github.com/rodjek/librarian-puppet/issues/258
+export HOME=/root
+/usr/local/bin/librarian-puppet config path /usr/share/puppet/modules --local
+/usr/local/bin/librarian-puppet config tmp /tmp --local
+/usr/local/bin/librarian-puppet install
 
 # assign Puppet variables
 export FACTER_ADMIN_PASSWORD="${var.django_admin_password}"
 export FACTER_AWS_REGION="${data.aws_region.current.name}"
+export FACTER_DATA_VOLUME_DEVICE_NAME="${var.data_volume_device_name}"
 export FACTER_DEFAULT_FROM_EMAIL="${var.django_default_from_email}"
 export FACTER_SERVER_EMAIL="${var.django_server_email}"
 export FACTER_COGNITO_IDENTITY_POOL_ID="${var.identity_pool_id}"
@@ -201,12 +212,8 @@ export FACTER_REFINERY_WELCOME_EMAIL_SUBJECT="${var.refinery_welcome_email_subje
 export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE="${var.refinery_welcome_email_message}"
 export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 
-# configure librarian-puppet
-/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
-su -c 'cd /srv/refinery-platform/deployment/puppet && /usr/local/bin/librarian-puppet install' ubuntu
-
-# run puppet
-/usr/bin/puppet apply --modulepath=/srv/refinery-platform/deployment/puppet/modules /srv/refinery-platform/deployment/puppet/manifests/aws.pp
+# run Puppet
+/usr/bin/puppet apply $PROJECT_ROOT/deployment/puppet/manifests/site.pp
 EOF
 }
 

@@ -61,7 +61,7 @@ before_script:
   - cd ../
 
   # Required for cypress tests; TODO: Move to puppet.
-  # TODO: Start up solr (and neo4j?)
+  # TODO: Start up solr
   - python manage.py loaddata guest.json
   - python manage.py activate_user guest
   - python manage.py add_users_to_public_group
@@ -85,7 +85,7 @@ script:
   - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'
-  - pushd ui && node_modules/.bin/cypress run --record && popd
+  - pushd ui && node_modules/.bin/cypress run && popd
   - echo 'travis_fold:end:cypress'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.

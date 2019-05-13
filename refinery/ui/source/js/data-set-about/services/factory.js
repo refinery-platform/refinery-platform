@@ -2,10 +2,8 @@
 
 function dataSetAboutFactory (
   assayService,
-  dataSetService,
   dataSetV2Service,
   fileStoreItemService,
-  groupMemberService,
   studyService
 ) {
   var assays = [];
@@ -19,9 +17,9 @@ function dataSetAboutFactory (
     var params = {
       uuid: dataSetUuid
     };
-    var dataSetRequest = dataSetService.query(params);
+    var dataSetRequest = dataSetV2Service.query(params);
     dataSetRequest.$promise.then(function (response) {
-      angular.copy(response.objects[0], dataSet);
+      angular.copy(response.data, dataSet);
     });
     return dataSetRequest.$promise;
   };
@@ -46,11 +44,11 @@ function dataSetAboutFactory (
   // Get Studies associated with a data set
   var getStudies = function (dataSetUuid) {
     var params = {
-      uuid: dataSetUuid
+      data_set_uuid: dataSetUuid
     };
     var study = studyService.query(params);
     study.$promise.then(function (response) {
-      angular.copy(response.objects, studies);
+      angular.copy(response, studies);
     });
     return study.$promise;
   };
@@ -86,10 +84,8 @@ angular
   .module('refineryDataSetAbout')
   .factory('dataSetAboutFactory', [
     'assayService',
-    'dataSetService',
     'dataSetV2Service',
     'fileStoreItemService',
-    'groupMemberService',
     'studyService',
     dataSetAboutFactory
   ]

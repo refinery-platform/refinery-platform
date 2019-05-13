@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import subprocess
-import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
@@ -88,8 +87,6 @@ USE_TZ = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = get_setting("MEDIA_ROOT")
-if not os.path.isabs(MEDIA_ROOT):
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -111,8 +108,7 @@ if not os.path.isabs(STATIC_ROOT):
 STATIC_URL = get_setting("STATIC_URL")
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "refinery/static/production"),
-    os.path.join(BASE_DIR, "refinery/ui/production")
+    os.path.join(BASE_DIR, "refinery/ui/production"),
 )
 
 # List of finder classes that know how to find static files in
@@ -193,8 +189,6 @@ INSTALLED_APPS = (
     'haystack',
     # NG: added for celery (task queue)
     'djcelery',  # django-celery
-    # NG: added for API
-    "tastypie",
     'djangular',
     'galaxy_connector',
     'analysis_manager',
@@ -204,7 +198,6 @@ INSTALLED_APPS = (
     'flatblocks',
     'chunked_upload',
     'rest_framework',
-    'rest_framework_swagger',
     'django_docker_engine',
     'revproxy',
     'cuser',
@@ -272,9 +265,6 @@ LOGGING = {
         },
         'factory': {
             'level': 'ERROR',
-        },
-        'httpstream': {  # dependency of py2neo
-            'level': 'INFO',
         },
         'pysolr': {
             'level': 'INFO',
@@ -355,12 +345,11 @@ REFINERY_PUBLIC_GROUP_NAME = "Public"
 # DO NOT CHANGE THIS after initialization of your Refinery instance
 REFINERY_PUBLIC_GROUP_ID = 100
 
-# relative to MEDIA_ROOT
-FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
 # absolute path to the file store root dir
-FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
+REFINERY_FILE_STORE_ROOT = get_setting('REFINERY_FILE_STORE_ROOT')
 # for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
-FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
+REFINERY_FILE_STORE_URL = get_setting('REFINERY_FILE_STORE_URL')
+
 # always keep uploaded files on disk
 FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
                                           default=0)
@@ -370,8 +359,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
 # format: {'pattern': 'replacement'} - may contain more than one key-value pair
 REFINERY_FILE_SOURCE_MAP = get_setting("REFINERY_FILE_SOURCE_MAP")
 
-# data file import directory; it should be located on the same partition as
-# FILE_STORE_DIR and MEDIA_ROOT to make import operations fast
+# data file import directory
 REFINERY_DATA_IMPORT_DIR = get_setting("REFINERY_DATA_IMPORT_DIR")
 
 # location of the Solr server (must be accessible from the web browser)
@@ -449,12 +437,6 @@ REFINERY_GALAXY_ANALYSIS_CLEANUP = get_setting(
 REFINERY_WELCOME_EMAIL_SUBJECT = get_setting("REFINERY_WELCOME_EMAIL_SUBJECT")
 REFINERY_WELCOME_EMAIL_MESSAGE = get_setting("REFINERY_WELCOME_EMAIL_MESSAGE")
 
-# Directory for custom libraries
-LIBS_DIR = get_setting("LIBS_DIR")
-
-# Java settings
-JAVA_ENTITY_EXPANSION_LIMIT = get_setting("JAVA_ENTITY_EXPANSION_LIMIT")
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -481,59 +463,6 @@ except (ValueError, subprocess.CalledProcessError) as exc:
                  exc)
     CURRENT_COMMIT = ""
 
-# Neo4J Settings
-NEO4J_BASE_URL = "http://localhost:7474"
-NEO4J_CONSTRAINTS = [
-    {
-        "label": "Class",
-        "properties": [
-            {
-                "name": "name",
-                "unique": False
-            },
-            {
-                "name": "uri",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "Ontology",
-        "properties": [
-            {
-                "name": "acronym",
-                "unique": True
-            },
-            {
-                "name": "uri",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "User",
-        "properties": [
-            {
-                "name": "id",
-                "unique": True
-            }
-        ]
-    },
-    {
-        "label": "DataSet",
-        "properties": [
-            {
-                "name": "id",
-                "unique": True
-            }
-        ]
-    }
-]
-
-SOLR_SYNONYMS = get_setting("SOLR_SYNONYMS")
-SOLR_LIB_DIR = get_setting("SOLR_LIB_DIR")
-SOLR_CUSTOM_SYNONYMS_FILE = get_setting("SOLR_CUSTOM_SYNONYMS_FILE")
-
 REFINERY_URL_SCHEME = get_setting("REFINERY_URL_SCHEME")
 
 
@@ -546,10 +475,6 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_NAME = "AnonymousUser"
-
-SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
-
-AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
