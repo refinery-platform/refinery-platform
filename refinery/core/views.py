@@ -1348,7 +1348,7 @@ class CustomRegistrationView(RegistrationView):
         return super(CustomRegistrationView, self).form_valid(form)
 
 
-class OpenIDToken(APIView):
+class OpenIDTokenAPIView(APIView):
     """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
     token for a user authenticated by Django authentication process
 
