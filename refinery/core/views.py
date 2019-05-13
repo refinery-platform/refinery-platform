@@ -839,7 +839,7 @@ class DataSetViewSet(viewsets.ViewSet):
                 "groups_without_access": groups_without_access}
 
 
-class AnalysisViewSet(APIView):
+class AnalysisAPIView(APIView):
     """
         API endpoint that allows for Analyses to be retrieved or deleted.
         ---

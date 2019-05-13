@@ -51,12 +51,12 @@ router.register(r'invitations', views.InvitationViewSet, 'invitations')
 router.register(r'workflows', views.WorkflowViewSet)
 
 core_api_urls = router.urls + [
-    url(r'^analyses/$', views.AnalysisViewSet.as_view()),
+    url(r'^analyses/$', views.AnalysisAPIView.as_view()),
     url(r'^events/$', views.EventAPIView.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         views.UserProfileViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
-        views.AnalysisViewSet.as_view()),
+        views.AnalysisAPIView.as_view()),
     url(r'^openid_token/$', views.OpenIDToken.as_view(), name='openid-token'),
     url(r'^obtain-auth-token/', views.ObtainAuthTokenValidSession.as_view()),
     url(r'^site_profiles/$', views.SiteProfileViewSet.as_view()),

@@ -39,7 +39,7 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
 
 from .serializers import DataSetSerializer, UserSerializer
 
-from .views import (AnalysisViewSet, DataSetViewSet, EventAPIView,
+from .views import (AnalysisAPIView, DataSetViewSet, EventAPIView,
                     GroupViewSet, InvitationViewSet,
                     ObtainAuthTokenValidSession, SiteProfileViewSet,
                     UserProfileViewSet, WorkflowViewSet, user)
@@ -1568,7 +1568,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(AnalysisApiV2Tests, self).setUp(
             api_base_name="analyses/",
-            view=AnalysisViewSet.as_view()
+            view=AnalysisAPIView.as_view()
         )
         self.project = Project.objects.create()
 
