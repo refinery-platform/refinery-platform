@@ -1506,7 +1506,7 @@ class SiteProfileAPIView(APIView):
         )
 
 
-class UserProfileViewSet(APIView):
+class UserProfileAPIView(APIView):
     """API endpoint that allows for UserProfiles to be edited.
      ---
     #YAML

@@ -42,7 +42,7 @@ from .serializers import DataSetSerializer, UserSerializer
 from .views import (AnalysisAPIView, DataSetViewSet, EventAPIView,
                     GroupViewSet, InvitationViewSet,
                     ObtainAuthTokenValidSession, SiteProfileAPIView,
-                    UserProfileViewSet, WorkflowViewSet, user)
+                    UserProfileAPIView, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -2148,7 +2148,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(UserProfileApiV2Tests, self).setUp(
             api_base_name="user_profiles/",
-            view=UserProfileViewSet.as_view()
+            view=UserProfileAPIView.as_view()
         )
         self.user_lm = User.objects.create_user('lab_member',
                                                 'member@example.com',

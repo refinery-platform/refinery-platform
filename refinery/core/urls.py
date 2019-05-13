@@ -54,7 +54,7 @@ core_api_urls = router.urls + [
     url(r'^analyses/$', views.AnalysisAPIView.as_view()),
     url(r'^events/$', views.EventAPIView.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
-        views.UserProfileViewSet.as_view()),
+        views.UserProfileAPIView.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
         views.AnalysisAPIView.as_view()),
     url(r'^openid_token/$', views.OpenIDToken.as_view(), name='openid-token'),
