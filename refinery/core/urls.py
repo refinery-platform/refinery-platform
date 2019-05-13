@@ -52,7 +52,7 @@ router.register(r'workflows', views.WorkflowViewSet)
 
 core_api_urls = router.urls + [
     url(r'^analyses/$', views.AnalysisViewSet.as_view()),
-    url(r'^events/$', views.EventViewSet.as_view()),
+    url(r'^events/$', views.EventAPIView.as_view()),
     url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
         views.UserProfileViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',

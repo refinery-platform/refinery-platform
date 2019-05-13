@@ -452,7 +452,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class EventViewSet(APIView):
+class EventAPIView(APIView):
     """
         API endpoint that allows Events to be viewed
         ---

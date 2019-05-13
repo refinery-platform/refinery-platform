@@ -39,7 +39,7 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
 
 from .serializers import DataSetSerializer, UserSerializer
 
-from .views import (AnalysisViewSet, DataSetViewSet, EventViewSet,
+from .views import (AnalysisViewSet, DataSetViewSet, EventAPIView,
                     GroupViewSet, InvitationViewSet,
                     ObtainAuthTokenValidSession, SiteProfileViewSet,
                     UserProfileViewSet, WorkflowViewSet, user)
@@ -2225,7 +2225,7 @@ class EventApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(EventApiV2Tests, self).setUp(
             api_base_name="events/",
-            view=EventViewSet.as_view()
+            view=EventAPIView.as_view()
         )
 
     def test_get_event_list_provides_access_control_between_users(self):
