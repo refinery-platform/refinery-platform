@@ -1394,8 +1394,8 @@ class OpenIDToken(APIView):
         return Response(token)
 
 
-class SiteProfileViewSet(APIView):
-    """API endpoint that allows for SiteProfileViewSet to be edited.
+class SiteProfileAPIView(APIView):
+    """API endpoint that allows for site profiles to be edited.
      ---
     #YAML
 

@@ -59,5 +59,5 @@ core_api_urls = router.urls + [
         views.AnalysisAPIView.as_view()),
     url(r'^openid_token/$', views.OpenIDToken.as_view(), name='openid-token'),
     url(r'^obtain-auth-token/', views.ObtainAuthTokenValidSession.as_view()),
-    url(r'^site_profiles/$', views.SiteProfileViewSet.as_view()),
+    url(r'^site_profiles/$', views.SiteProfileAPIView.as_view()),
 ]

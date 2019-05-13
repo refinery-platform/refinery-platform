@@ -41,7 +41,7 @@ from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysisAPIView, DataSetViewSet, EventAPIView,
                     GroupViewSet, InvitationViewSet,
-                    ObtainAuthTokenValidSession, SiteProfileViewSet,
+                    ObtainAuthTokenValidSession, SiteProfileAPIView,
                     UserProfileViewSet, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -1938,7 +1938,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(SiteProfileApiV2Tests, self).setUp(
             api_base_name="site_profiles",
-            view=SiteProfileViewSet.as_view()
+            view=SiteProfileAPIView.as_view()
         )
         self.current_site = Site.objects.get_current()
         self.site_profile = SiteProfile.objects.create(
