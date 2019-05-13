@@ -861,20 +861,18 @@ class AnnotatedNode(models.Model):
 
 
 def _is_internal_attribute(attribute):
-    return attribute in [
-        "uuid",
-        "study_uuid",
-        "assay_uuid",
-        "file_uuid",
-        "type",
-        "is_annotation",
-        "species",
-        "genome_build",
-        "name",
-        "analysis_uuid",
-        "subanalysis",
-        "output_type"
-    ]
+    return attribute in ["uuid",
+                         "study_uuid",
+                         "assay_uuid",
+                         "file_uuid",
+                         "type",
+                         "is_annotation",
+                         "species",
+                         "genome_build",
+                         "name",
+                         "analysis_uuid",
+                         "subanalysis",
+                         "output_type"]
 
 
 def _is_active_attribute(attribute):
