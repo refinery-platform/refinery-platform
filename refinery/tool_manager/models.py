@@ -354,7 +354,7 @@ class Tool(OwnableResource):
         return {
             "username": user.username,
             "full_name": "{} {}".format(user.first_name, user.last_name),
-            "user_profile_uuid": user.profile.uuid
+            "user_profile_uuid": str(user.profile.uuid)
         }
 
     def get_input_file_uuid_list(self):

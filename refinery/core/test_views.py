@@ -358,7 +358,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(
             get_ds_response.data.get('owner').get('profile').get('uuid'),
-            self.user.profile.uuid
+            str(self.user.profile.uuid)
         )
 
     def test_get_data_set_returns_user_perms_for_owner(self):
@@ -1810,7 +1810,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request_with_ds)
         self.assertEqual(
             get_response.data[0].get('owner').get('profile').get('uuid'),
-            self.analysis.get_owner().profile.uuid
+            str(self.analysis.get_owner().profile.uuid)
         )
 
     def test_get_analysis_with_data_set_uuid_returns_sorted_analyses(self):

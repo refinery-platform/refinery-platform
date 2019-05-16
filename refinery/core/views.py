@@ -787,23 +787,21 @@ class DataSetViewSet(viewsets.ViewSet):
             new_owner.username
 
         temp_loader = loader.get_template(
-            'core/owner_transfer_notification.txt')
+            'core/owner_transfer_notification.txt'
+        )
         context_dict = {
             'site': self.current_site,
             'old_owner_name': old_owner_name,
-            'old_owner_uuid': old_owner.profile.uuid,
+            'old_owner_uuid': str(old_owner.profile.uuid),
             'new_owner_name': new_owner_name,
-            'new_owner_uuid': new_owner.profile.uuid,
+            'new_owner_uuid': str(new_owner.profile.uuid),
             'data_set_name': self.data_set.name,
             'data_set_uuid': self.data_set.uuid,
             'groups_with_access': perm_groups.get('groups_with_access'),
             'groups_without_access': perm_groups.get('groups_without_access')
         }
-        email = EmailMessage(
-            subject,
-            temp_loader.render(context_dict),
-            to=[new_owner.email, old_owner.email]
-        )
+        email = EmailMessage(subject, temp_loader.render(context_dict),
+                             to=[new_owner.email, old_owner.email])
         email.send()
         return email
 
