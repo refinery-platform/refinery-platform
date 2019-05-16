@@ -2160,7 +2160,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_success_status(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2170,7 +2170,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_success_group_id(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2181,7 +2181,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_success_updates_profile(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2192,7 +2192,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_unauthorized_for_anon_user(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_response = self.view(patch_request, self.user_lm.profile.uuid)
@@ -2200,7 +2200,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_bad_request_for_invalid_group(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": 0}
         )
         patch_request.user = self.user_lm
@@ -2210,7 +2210,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_bad_request_for_non_member(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.non_lab_group.id}
         )
         patch_request.user = self.user_lm
