@@ -39,10 +39,10 @@ from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
 
 from .serializers import DataSetSerializer, UserSerializer
 
-from .views import (AnalysisViewSet, DataSetViewSet, EventViewSet,
+from .views import (AnalysisAPIView, DataSetViewSet, EventAPIView,
                     GroupViewSet, InvitationViewSet,
-                    ObtainAuthTokenValidSession, SiteProfileViewSet,
-                    UserProfileViewSet, WorkflowViewSet, user)
+                    ObtainAuthTokenValidSession, SiteProfileAPIView,
+                    UserProfileAPIView, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -1568,7 +1568,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(AnalysisApiV2Tests, self).setUp(
             api_base_name="analyses/",
-            view=AnalysisViewSet.as_view()
+            view=AnalysisAPIView.as_view()
         )
         self.project = Project.objects.create()
 
@@ -1938,7 +1938,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(SiteProfileApiV2Tests, self).setUp(
             api_base_name="site_profiles",
-            view=SiteProfileViewSet.as_view()
+            view=SiteProfileAPIView.as_view()
         )
         self.current_site = Site.objects.get_current()
         self.site_profile = SiteProfile.objects.create(
@@ -2148,7 +2148,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(UserProfileApiV2Tests, self).setUp(
             api_base_name="user_profiles/",
-            view=UserProfileViewSet.as_view()
+            view=UserProfileAPIView.as_view()
         )
         self.user_lm = User.objects.create_user('lab_member',
                                                 'member@example.com',
@@ -2225,7 +2225,7 @@ class EventApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(EventApiV2Tests, self).setUp(
             api_base_name="events/",
-            view=EventViewSet.as_view()
+            view=EventAPIView.as_view()
         )
 
     def test_get_event_list_provides_access_control_between_users(self):

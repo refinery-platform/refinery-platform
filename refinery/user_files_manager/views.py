@@ -69,7 +69,7 @@ def user_files_csv(request):
     return response
 
 
-class UserFiles(APIView):
+class UserFileAPIView(APIView):
     def get(self, request):
         solr_response = _get_solr(request.query_params, request.user.id)
         solr_response_json = format_solr_response(solr_response)

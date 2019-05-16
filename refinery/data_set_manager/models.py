@@ -880,7 +880,7 @@ def _is_active_attribute(attribute):
 
 
 def _is_exposed_attribute(attribute):
-    return True  # TODO: Could we get rid of this?
+    return True
 
 
 def _is_ignored_attribute(attribute):
@@ -952,13 +952,16 @@ def _is_facet_attribute(attribute, study, assay):
     facet attribute values is smaller than
     settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
     """
+    # download_url custom attribute which should not be treated as a facet
+    if data_set_manager.search_indexes.NodeIndex.DOWNLOAD_URL == attribute:
+        return False
+
     ratio = 0.5
     results = _query_solr(attribute=attribute, study=study, assay=assay)
     items = results['response']['numFound']
     attribute_values = len(
         results['facet_counts']['facet_fields'][attribute]
     ) / 2
-
     return (attribute_values / items) < ratio
 
 
