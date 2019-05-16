@@ -452,7 +452,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class EventViewSet(APIView):
+class EventAPIView(APIView):
     """
         API endpoint that allows Events to be viewed
         ---
@@ -839,7 +839,7 @@ class DataSetViewSet(viewsets.ViewSet):
                 "groups_without_access": groups_without_access}
 
 
-class AnalysisViewSet(APIView):
+class AnalysisAPIView(APIView):
     """
         API endpoint that allows for Analyses to be retrieved or deleted.
         ---
@@ -1348,7 +1348,7 @@ class CustomRegistrationView(RegistrationView):
         return super(CustomRegistrationView, self).form_valid(form)
 
 
-class OpenIDToken(APIView):
+class OpenIDTokenAPIView(APIView):
     """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
     token for a user authenticated by Django authentication process
 
@@ -1394,8 +1394,8 @@ class OpenIDToken(APIView):
         return Response(token)
 
 
-class SiteProfileViewSet(APIView):
-    """API endpoint that allows for SiteProfileViewSet to be edited.
+class SiteProfileAPIView(APIView):
+    """API endpoint that allows for site profiles to be edited.
      ---
     #YAML
 
@@ -1506,7 +1506,7 @@ class SiteProfileViewSet(APIView):
         )
 
 
-class UserProfileViewSet(APIView):
+class UserProfileAPIView(APIView):
     """API endpoint that allows for UserProfiles to be edited.
      ---
     #YAML
