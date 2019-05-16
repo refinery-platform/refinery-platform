@@ -1310,7 +1310,7 @@ class NodeViewSet(viewsets.ViewSet):
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class StudyViewSet(APIView):
+class StudyAPIView(APIView):
     """
     API end point for retrieving studies based on a data set uuid
 
