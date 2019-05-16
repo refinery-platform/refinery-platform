@@ -41,6 +41,7 @@ from file_store.utils import parse_s3_url
 
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder, Node,
                      Study)
+from .search_indexes import NodeIndex
 from .serializers import (AssaySerializer, AttributeOrderSerializer,
                           NodeSerializer, StudySerializer)
 from .single_file_column_parser import process_metadata_table
@@ -954,7 +955,9 @@ class AssayAttributeAPIView(APIView):
             raise Http404
 
     def get(self, request, uuid, format=None):
-        attribute_order = self.get_objects(uuid)
+        attribute_order = self.get_objects(uuid).exclude(
+            solr_field__in=[NodeIndex.DOWNLOAD_URL, NodeIndex.DATAFILE]
+        )
         serializer = AttributeOrderSerializer(attribute_order, many=True)
         owner = get_owner_from_assay(uuid)
         request_user = request.user
