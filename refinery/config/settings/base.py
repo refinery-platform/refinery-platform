@@ -266,6 +266,9 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
+        'faker': {
+            'level': 'INFO',
+        },
         'pysolr': {
             'level': 'INFO',
         },
