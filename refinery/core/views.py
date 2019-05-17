@@ -137,12 +137,13 @@ def user(request, query):
     try:
         user = User.objects.get(username=query)
     except User.DoesNotExist:
-        user = get_object_or_404(UserProfile, uuid=query).user
-
+        try:
+            user = get_object_or_404(UserProfile, uuid=query).user
+        except ValueError:
+            raise Http404()
     # return all non-manager groups in profile
     groups = get_non_manager_groups_for_user(user)
-    return render(request,
-                  'core/user.html',
+    return render(request, 'core/user.html',
                   {'profile_user': user, 'user_groups': groups})
 
 
@@ -153,7 +154,10 @@ def user_profile(request):
 
 @login_required()
 def user_edit(request, uuid):
-    profile_object = get_object_or_404(UserProfile, uuid=uuid)
+    try:
+        profile_object = get_object_or_404(UserProfile, uuid=uuid)
+    except ValueError:
+        raise Http404()
     user_object = profile_object.user
     if request.method == "POST":
         uform = UserForm(data=request.POST, instance=user_object)
