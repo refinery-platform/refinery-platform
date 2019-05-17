@@ -962,9 +962,9 @@ class GroupApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
-        user_ids = [self.user.profile.uuid,
-                    new_user.profile.uuid,
-                    self.non_manager.profile.uuid]
+        user_ids = [str(self.user.profile.uuid),
+                    str(new_user.profile.uuid),
+                    str(self.non_manager.profile.uuid)]
         self.assertEqual(len(get_response.data[0].get('member_list')), 3)
         member_list = get_response.data[0].get('member_list')
         self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
