@@ -57,11 +57,12 @@ class DataSetSerializer(serializers.ModelSerializer):
     version = serializers.SerializerMethodField()
 
     def get_analyses(self, data_set):
-        return [dict(uuid=analysis.uuid,
-                     name=analysis.name,
-                     status=analysis.status,
-                     owner=analysis.get_owner().profile.uuid)
-                for analysis in data_set.get_analyses()]
+        return [
+            dict(uuid=analysis.uuid, name=analysis.name,
+                 status=analysis.status,
+                 owner=str(analysis.get_owner().profile.uuid))
+            for analysis in data_set.get_analyses()
+        ]
 
     def get_is_owner(self, data_set):
         try:

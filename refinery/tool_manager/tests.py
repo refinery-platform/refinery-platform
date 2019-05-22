@@ -1575,29 +1575,23 @@ class ToolTests(ToolManagerTestBase):
             self.get_response.data[0]["owner"],
             {
                 "username": self.user.username,
-                "full_name": "{} {}".format(
-                    self.user.first_name,
-                    self.user.last_name
-                ),
-                "user_profile_uuid": self.user.profile.uuid
+                "full_name": "{} {}".format(self.user.first_name,
+                                            self.user.last_name),
+                "user_profile_uuid": str(self.user.profile.uuid)
             }
         )
 
     def test_relaunch_url(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
-        self.assertEqual(
-            self.tool.relaunch_url,
-            "/api/v2/tools/{}/relaunch/".format(self.tool.uuid)
-        )
+        self.assertEqual(self.tool.relaunch_url,
+                         "/api/v2/tools/{}/relaunch/".format(self.tool.uuid))
 
     def test_get_relative_container_url(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
         self.assertEqual(
             self.tool.get_relative_container_url(),
-            "/{}/{}".format(
-                settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-                self.tool.container_name
-            )
+            "/{}/{}".format(settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+                            self.tool.container_name)
         )
 
     def test_is_workflow(self):
