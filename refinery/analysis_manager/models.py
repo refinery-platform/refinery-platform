@@ -44,6 +44,9 @@ class AnalysisStatus(models.Model):
     # default value of 0, and
     galaxy_history_progress = PositiveSmallIntegerField(blank=True, null=True)
 
+    class Meta:
+        verbose_name_plural = 'analysis statuses'
+
     def __unicode__(self):
         return self.analysis.name
 
