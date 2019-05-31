@@ -1,13 +1,13 @@
 sudo: required
 
 language: python
+python:
+  - "2.7"
+
 cache:
   directories:
     - /home/travis/.cache/pip
     - /home/travis/.cypress/Cypress
-
-python:
-  - 2.7
 
 addons:
   postgresql: "10"
@@ -15,6 +15,7 @@ addons:
     packages:
       - postgresql-10
       - postgresql-client-10
+      - libgconf-2-4  # for Cypress
 
 install:
   - node --version
