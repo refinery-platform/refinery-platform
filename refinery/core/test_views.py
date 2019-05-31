@@ -358,7 +358,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(
             get_ds_response.data.get('owner').get('profile').get('uuid'),
-            self.user.profile.uuid
+            str(self.user.profile.uuid)
         )
 
     def test_get_data_set_returns_user_perms_for_owner(self):
@@ -962,9 +962,9 @@ class GroupApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
-        user_ids = [self.user.profile.uuid,
-                    new_user.profile.uuid,
-                    self.non_manager.profile.uuid]
+        user_ids = [str(self.user.profile.uuid),
+                    str(new_user.profile.uuid),
+                    str(self.non_manager.profile.uuid)]
         self.assertEqual(len(get_response.data[0].get('member_list')), 3)
         member_list = get_response.data[0].get('member_list')
         self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
@@ -1810,7 +1810,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request_with_ds)
         self.assertEqual(
             get_response.data[0].get('owner').get('profile').get('uuid'),
-            self.analysis.get_owner().profile.uuid
+            str(self.analysis.get_owner().profile.uuid)
         )
 
     def test_get_analysis_with_data_set_uuid_returns_sorted_analyses(self):
@@ -2160,7 +2160,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_success_status(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2170,7 +2170,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_success_group_id(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2181,7 +2181,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_success_updates_profile(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2192,7 +2192,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_unauthorized_for_anon_user(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_response = self.view(patch_request, self.user_lm.profile.uuid)
@@ -2200,7 +2200,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_bad_request_for_invalid_group(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": 0}
         )
         patch_request.user = self.user_lm
@@ -2210,7 +2210,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_bad_request_for_non_member(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.non_lab_group.id}
         )
         patch_request.user = self.user_lm
