@@ -22,8 +22,8 @@ class AnalysisStatus(models.Model):
         (UNKNOWN, 'Unknown')
     )
     analysis = models.ForeignKey("core.Analysis")  # prevents circular import
-    refinery_import_task_group_id = UUIDField(blank=True, null=True,
-                                              auto=False)
+    refinery_import_task_group_id = models.UUIDField(null=True,
+                                                     editable=False)
     galaxy_import_task_group_id = UUIDField(blank=True, null=True, auto=False)
     galaxy_export_task_group_id = UUIDField(blank=True, null=True, auto=False)
     galaxy_workflow_task_group_id = UUIDField(blank=True,
@@ -43,6 +43,9 @@ class AnalysisStatus(models.Model):
     # TODO: refactor `galaxy_history_progress` to take advantage of a
     # default value of 0, and
     galaxy_history_progress = PositiveSmallIntegerField(blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = 'analysis statuses'
 
     def __unicode__(self):
         return self.analysis.name
