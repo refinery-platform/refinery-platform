@@ -38,7 +38,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     puppet.manifests_path = "deployment/puppet/manifests"
     puppet.manifest_file  = "site.pp"
     puppet.hiera_config_path = "deployment/puppet/hiera.yaml"  # to avoid missing file warning
-    puppet.options = "--verbose --debug"
   end
 
   # workaround for services that start on boot before /vagrant is available
