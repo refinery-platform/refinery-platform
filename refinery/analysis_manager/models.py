@@ -22,9 +22,8 @@ class AnalysisStatus(models.Model):
         (UNKNOWN, 'Unknown')
     )
     analysis = models.ForeignKey("core.Analysis")  # prevents circular import
-    refinery_import_task_group_id = models.UUIDField(null=True,
-                                                     editable=False)
-    galaxy_import_task_group_id = UUIDField(blank=True, null=True, auto=False)
+    refinery_import_task_group_id = models.UUIDField(null=True, editable=False)
+    galaxy_import_task_group_id = models.UUIDField(null=True, editable=False)
     galaxy_export_task_group_id = UUIDField(blank=True, null=True, auto=False)
     galaxy_workflow_task_group_id = UUIDField(blank=True,
                                               null=True,
