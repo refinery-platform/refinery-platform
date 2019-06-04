@@ -124,8 +124,8 @@ locals {
 
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
-  # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
-  ami                    = "ami-03597b1b84c02cf7b"
+  # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20190514
+  ami                    = "ami-07b4156579ea1d7ba"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
