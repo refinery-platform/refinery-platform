@@ -14,7 +14,7 @@ class refinery::solr (
   $solr_data_set_manager_data = "${solr_data_dir}/data_set_manager"
 
   package { 'java':
-    name => 'openjdk-7-jdk',
+    name => 'openjdk-8-jdk',
   }
 
   file { '/opt':
