@@ -19,7 +19,7 @@ resource "aws_security_group" "db" {
 }
 
 resource "aws_db_instance" "default" {
-  allocated_storage          = 5
+  allocated_storage          = 20
   auto_minor_version_upgrade = true
   availability_zone          = "${var.availability_zone}"
   backup_window              = "07:45-08:15"  # UTC
