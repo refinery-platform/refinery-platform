@@ -1,1 +1,7 @@
-# placeholder to avoid a missing file warning in Puppet
+version: 5
+hierarchy:
+  - name: Common
+    path: common.yaml
+defaults:
+  data_hash: yaml_data
+  datadir: data
