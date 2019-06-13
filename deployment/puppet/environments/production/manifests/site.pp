@@ -9,7 +9,14 @@ node default {
       deployment_platform => 'vagrant',
     }
   }
+  include rabbitmq
   include stdlib
   include refinery
+  include refinery::apache2
   include refinery::django
+  include refinery::docker
+  include refinery::postgresql
+  include refinery::python
+  include refinery::solr
+  include refinery::ui
 }
