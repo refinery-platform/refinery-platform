@@ -7,6 +7,11 @@ class refinery (
   $virtualenv             = $refinery::params::virtualenv,
   $docker_host            = $refinery::params::docker_host,
 ) inherits refinery::params {
+  sysctl { 'vm.swappiness': value => '10' }  # for better performance
+
+  class { 'timezone':  # to make logs easier to read
+    timezone => 'America/New_York',
+  }
 
   user { $app_user: ensure => present, }
 
