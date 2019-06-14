@@ -22,6 +22,11 @@ class refinery (
     group  => $app_group,
   }
 
+  # workaround for CloudFront error 523 Origin Unreachable for https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
+  class { '::rabbitmq':
+    package_gpg_key  => 'https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc',
+  }
+
   package { 'memcached': }
   ->
   service { 'memcached':
