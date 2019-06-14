@@ -75,6 +75,7 @@ class refinery::postgresql (
 
     postgresql::server::role { $db_user:
       createdb => true,  # to allow automated testing
+      require  => Class['Postgresql::Server'] # apply after server creation
     }
     ->
     postgresql::server::db { $db_name:

@@ -7,15 +7,11 @@ mod 'puppet/python',
 mod 'puppet/rabbitmq', '6.0.0'
 mod 'puppetlabs-apache', '5.0.0'
 mod 'puppetlabs/apt', '2.3.0'
-mod 'puppetlabs/concat', '2.2.1'
 mod 'puppetlabs/docker_platform', '2.2.1'
-mod 'puppetlabs/limits', '0.1.0'
-mod 'puppetlabs/lvm', '0.7.0'
-mod 'puppetlabs/postgresql', '4.9.0'
+mod 'puppetlabs/lvm', '1.3.0'
+mod 'puppetlabs/postgresql', '5.12.1'
 mod 'puppetlabs/stdlib', '4.25.1'
-mod 'puppet-archive', '1.3.0'
 mod 'saz/timezone', '5.1.1'
-mod 'stahnma/epel', '1.3.1'
 mod 'thias/sysctl', '1.0.2'
 
 mod 'refinery/refinery', :path => "environments/production/modules/refinery"
