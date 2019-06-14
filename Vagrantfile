@@ -37,7 +37,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :puppet do |puppet|
     puppet.environment_path = "deployment/puppet/environments"
     puppet.environment = "production"
-    puppet.options = ['--verbose']
   end
 
   # workaround for services that start on boot before /vagrant is available

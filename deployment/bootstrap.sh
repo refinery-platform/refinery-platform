@@ -26,4 +26,4 @@ export PATH=/opt/puppetlabs/bin:$PATH
 cd /vagrant/deployment/puppet
 librarian-puppet config path /opt/puppetlabs/puppet/modules --local
 librarian-puppet config tmp /tmp --local
-librarian-puppet install --verbose
+librarian-puppet install
