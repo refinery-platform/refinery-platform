@@ -12,7 +12,7 @@ set -x
 /usr/bin/apt-get -qq update
 /usr/bin/apt-get -y autoremove
 
-/usr/bin/apt-get -q -y install git htop nmon ruby-dev tree
+/usr/bin/apt-get -q -y install git htop nmon puppet ruby-dev tree
 
 /usr/bin/wget https://apt.puppetlabs.com/puppet5-release-xenial.deb
 /usr/bin/dpkg -i puppet5-release-xenial.deb
