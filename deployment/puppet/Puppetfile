@@ -1,12 +1,11 @@
 forge "https://forgeapi.puppetlabs.com"
 
 mod 'puppet/nodejs', '2.1.0'
-mod 'puppet/python',
+mod 'puppet/python', # https://github.com/voxpupuli/puppet-python/issues/470
     :git => "git://github.com/voxpupuli/puppet-python.git",
     :commit => '38de172e327bd56ccd0847560ab91c446d83fd34'
 mod 'puppet/rabbitmq', '6.0.0'
 mod 'puppetlabs-apache', '5.0.0'
-mod 'puppetlabs/apt', '2.3.0'
 mod 'puppetlabs/docker_platform', '2.2.1'
 mod 'puppetlabs/lvm', '1.3.0'
 mod 'puppetlabs/postgresql', '5.12.1'
