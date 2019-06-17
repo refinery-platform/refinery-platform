@@ -5,7 +5,6 @@ class refinery::docker (
 ) inherits refinery::params {
   if $deployment_platform != 'aws' {
     class { '::docker':
-      # avoid messing about with kernel. Only enabled by default on Ubuntu
       docker_users => [$app_user],
       tcp_bind     => [$docker_host],
     }
