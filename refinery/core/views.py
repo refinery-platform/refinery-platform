@@ -430,7 +430,7 @@ def pubmed_summary(request, id):
     return HttpResponse(response, content_type='application/json')
 
 
-class WorkflowViewSet(viewsets.ModelViewSet):
+class WorkflowViewSet(viewsets.ViewSet):
     """
         API endpoint that allows a workflow graph to be viewed.
         ---
