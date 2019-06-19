@@ -20,7 +20,7 @@
       </div>
 
       <div class="col-md-5 analysis-name">
-        <a class="analysis-header" ng-click="order('name')">
+        <a class="analysis-header" ng-click="order('tool_display_name')">
           <strong>Name</strong>
           <span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}">
             <i ng-class="analysisIcon"></i>
@@ -106,11 +106,11 @@
                 <a
                   ng-href='/data_sets/{{analysis.data_set_uuid}}/#/files/?{"{{analysis.facet_name}}":"{{analysis.name}}"}'
                   target='_blank'>
-                  {{ analysis.name }}
+                  {{ analysis.tool_display_name }}
                 </a>
               </span>
               <span ng-switch-default>
-                  {{ analysis.name }}
+                  {{ analysis.tool_display_name }}
               </span>
             </span>
             <span

@@ -6,6 +6,8 @@ from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+from tool_manager.models import Tool
+
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
                      SiteProfile, SiteVideo, User, UserProfile, Workflow)
 
@@ -22,13 +24,22 @@ class DateTimeWithTimeZone(serializers.DateTimeField):
 class AnalysisSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField()
     data_set_uuid = serializers.SerializerMethodField()
+    tool_display_name = serializers.SerializerMethodField()
     time_end = DateTimeWithTimeZone()
     time_start = DateTimeWithTimeZone()
 
     class Meta:
         model = Analysis
         fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
-                  'summary', 'time_start', 'time_end', 'uuid', 'workflow')
+                  'summary', 'time_start', 'time_end', 'tool_display_name',
+                  'uuid', 'workflow')
+
+    def get_tool_display_name(self, analysis):
+        try:
+            tool = Tool.objects.get(analysis_id=analysis.id)
+        except:
+            return ''
+        return tool.display_name
 
     def get_owner(self, analysis):
         return UserSerializer(analysis.get_owner()).data
