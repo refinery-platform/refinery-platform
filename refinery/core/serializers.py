@@ -38,7 +38,7 @@ class AnalysisSerializer(serializers.ModelSerializer):
         try:
             tool = Tool.objects.get(analysis_id=analysis.id)
         except:
-            return ''
+            return analysis.name  # tool_display_name defaults to analysis name
         return tool.display_name
 
     def get_owner(self, analysis):
