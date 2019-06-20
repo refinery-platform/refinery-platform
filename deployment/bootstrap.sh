@@ -9,7 +9,7 @@ export DEBIAN_FRONTEND=noninteractive
 set -x
 
 /usr/bin/apt clean
-/usr/bin/wget https://apt.puppetlabs.com/puppet5-release-xenial.deb
+/usr/bin/wget -q https://apt.puppetlabs.com/puppet5-release-xenial.deb
 /usr/bin/dpkg -i puppet5-release-xenial.deb
 /usr/bin/apt -qq update
 /usr/bin/apt -y autoremove
