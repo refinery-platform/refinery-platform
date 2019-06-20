@@ -8,16 +8,13 @@ export DEBIAN_FRONTEND=noninteractive
 # print commands and their expanded arguments
 set -x
 
-/usr/bin/apt-get clean
-/usr/bin/apt-get -qq update
-/usr/bin/apt-get -y autoremove
-
-/usr/bin/apt-get -q -y install git htop nmon ruby-dev tree
-
+/usr/bin/apt clean
 /usr/bin/wget https://apt.puppetlabs.com/puppet5-release-xenial.deb
 /usr/bin/dpkg -i puppet5-release-xenial.deb
-/usr/bin/apt-get update
-/usr/bin/apt-get install puppet-agent
+/usr/bin/apt -qq update
+/usr/bin/apt -y autoremove
+
+/usr/bin/apt-get -q -y install git htop nmon puppet-agent ruby-dev tree
 
 export PATH=/opt/puppetlabs/bin:$PATH
 
