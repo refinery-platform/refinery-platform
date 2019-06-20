@@ -9,7 +9,6 @@ mod 'puppetlabs-apache', '5.0.0'
 mod 'puppetlabs/docker', '3.5.0'
 mod 'puppetlabs/lvm', '1.3.0'
 mod 'puppetlabs/postgresql', '5.12.1'
-mod 'puppetlabs/stdlib', '4.25.1'
 mod 'saz/timezone', '5.1.1'
 mod 'tpdownes/sysctl', '2.1.0'
 

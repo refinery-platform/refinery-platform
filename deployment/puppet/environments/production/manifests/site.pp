@@ -9,7 +9,6 @@ node default {
       deployment_platform => 'vagrant',
     }
   }
-  include stdlib
   include refinery
   include refinery::apache2
   include refinery::django
