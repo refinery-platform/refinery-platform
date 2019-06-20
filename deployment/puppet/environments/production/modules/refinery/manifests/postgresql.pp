@@ -72,10 +72,9 @@ class refinery::postgresql (
       # to make remote connections via SSH tunnel easier
       ipv4acls => ["host all ${db_user} 127.0.0.1/32 trust"],
     }
-
+    ->
     postgresql::server::role { $db_user:
       createdb => true,  # to allow automated testing
-      require  => Class['Postgresql::Server'] # apply after server creation
     }
     ->
     postgresql::server::db { $db_name:

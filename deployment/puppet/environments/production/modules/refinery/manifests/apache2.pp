@@ -56,8 +56,6 @@ class refinery::apache2 (
     content => 'ErrorLogFormat "%M"',
   }
 
-  $rewrites = []
-
   if $refinery_url_scheme == 'https' {
     $rewrites = [
       {
@@ -69,6 +67,8 @@ class refinery::apache2 (
         rewrite_rule => ['^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]'],
       },
     ]
+  } else {
+    $rewrites = []
   }
 
   $common_aliases = [
@@ -128,11 +128,13 @@ class refinery::apache2 (
     manage_docroot              => false,
     rewrites                    => $rewrites,
     wsgi_script_aliases         => { '/' => "${django_root}/config/wsgi_${conf_mode}.py" },
-    wsgi_daemon_process         => { 'refinery' => {
-      'user'        => $app_user,
-      'group'       => $app_group,
-      'python-path' => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
-    } },
+    wsgi_daemon_process         => {
+      'refinery' => {
+        'user'        => $app_user,
+        'group'       => $app_group,
+        'python-path' => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
+      }
+    },
     wsgi_process_group          => 'refinery',
     wsgi_pass_authorization     => 'On',
     access_log_file             => 'refinery_access.log',
