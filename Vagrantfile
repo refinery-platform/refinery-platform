@@ -35,8 +35,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :shell, path: "deployment/bootstrap.sh"
 
   config.vm.provision :puppet do |puppet|
-    puppet.environment_path = "deployment/puppet/environments"
-    puppet.environment = "production"
+    puppet.manifests_path = "deployment/puppet/manifests"
+    puppet.manifest_file  = "site.pp"
   end
 
   # workaround for services that start on boot before /vagrant is available

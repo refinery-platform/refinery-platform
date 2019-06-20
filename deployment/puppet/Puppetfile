@@ -10,4 +10,4 @@ mod 'puppetlabs/postgresql', '5.12.1'
 mod 'saz/timezone', '5.1.1'
 mod 'tpdownes/sysctl', '2.1.0'
 
-mod 'refinery/refinery', :path => "environments/production/modules/refinery"
+mod 'refinery/refinery', :path => "refinery"
