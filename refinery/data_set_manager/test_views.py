@@ -6,6 +6,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.forms.models import model_to_dict
 from django.http import QueryDict
 from django.test import LiveServerTestCase, override_settings
 
@@ -192,68 +193,59 @@ class AssayAPIViewTests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        self.assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
-        }
-        assay = Assay.objects.create(**self.assay)
-        self.assay['uuid'] = assay.uuid
-        self.assay['study'] = self.study.id
-        self.valid_uuid = assay.uuid
+        self.study = Study.objects.create(file_name='test_filename123.txt',
+                                          title='Study Title Test',
+                                          investigation=investigation)
+        self.assay = Assay.objects.create(
+            study=self.study, measurement='transcription factor binding site',
+            measurement_accession='http://www.example.org/test_id',
+            measurement_source='OBI', technology='nucleotide sequencing',
+            technology_accession='test info', technology_source='test source',
+            platform='Genome Analyzer II', file_name='test_assay_filename.txt'
+        )
+        # dictionary for checking response contents
+        self.assay_dict = model_to_dict(self.assay)
+        self.assay_dict['uuid'] = str(self.assay.uuid)
+        del self.assay_dict['id']
+
+        self.valid_uuid = str(self.assay.uuid)
         self.url_root = '/api/v2/assays/'
         self.view = AssayAPIView.as_view()
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.invalid_uuid = str(uuid.uuid4())
         self.invalid_format_uuid = "xxxxxxxx"
 
     def test_get_valid_uuid(self):
-        # valid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (
-            self.url_root, self.valid_uuid))
+        request = self.factory.get(self.url_root + '?uuid=' + self.valid_uuid)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data.keys(), self.assay.keys())
-        self.assertItemsEqual(response.data.values(), self.assay.values())
+        self.assertEqual(response.data, self.assay_dict)
 
     def test_get_valid_study(self):
-        # valid_study_uuid
-        request = self.factory.get('%s/?study=%s' % (
-            self.url_root, self.study.uuid))
+        request = self.factory.get(self.url_root + '?study=' + self.study.uuid)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
-        self.assertItemsEqual(response.data[0].values(), self.assay.values())
+        self.assertEqual(response.data[0], self.assay_dict)
 
     def test_get_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-                                                    self.invalid_uuid))
+        request = self.factory.get(
+            self.url_root + '?uuid=' + self.invalid_uuid
+        )
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
     def test_get_invalid_study_uuid(self):
-        # invalid_study_uuid
-        request = self.factory.get('%s/?study=%s' % (self.url_root,
-                                                     self.invalid_uuid))
+        request = self.factory.get(
+            self.url_root + '?study=' + self.invalid_uuid
+        )
         response = self.view(request, self.invalid_uuid)
         self.assertEqual(response.status_code, 404)
 
     def test_get_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/?uuid=%s'
-                                   % (self.url_root, self.invalid_format_uuid))
+        request = self.factory.get(
+            self.url_root + '?uuid=' + self.invalid_format_uuid
+        )
         response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
 
 class AssayAttributeAPITests(APITestCase):
