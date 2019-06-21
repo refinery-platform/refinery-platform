@@ -7,7 +7,7 @@ class refinery::postgresql (
   $rds_endpoint_address   = $refinery::params::rds_endpoint_address,
 ) inherits refinery::params {
   $server_version = '10'
-  $package_version = "${server_version}.8-1.pgdg16.04+1"
+  $package_version = "${server_version}.9-1.pgdg16.04+1"
 
   if $deployment_platform == 'aws' {
     $rds_settings = {
