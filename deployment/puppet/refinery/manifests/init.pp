@@ -7,7 +7,7 @@ class refinery (
   $virtualenv             = $refinery::params::virtualenv,
   $docker_host            = $refinery::params::docker_host,
 ) inherits refinery::params {
-  sysctl { 'vm.swappiness': value => '10' }  # for better performance
+  sysctl::configuration { 'vm.swappiness': value => '10' }  # for better performance
 
   class { 'timezone':  # to make logs easier to read
     timezone => 'America/New_York',
@@ -25,6 +25,7 @@ class refinery (
   # workaround for CloudFront error 523 Origin Unreachable for https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
   class { '::rabbitmq':
     package_gpg_key  => 'https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc',
+    manage_python    => false
   }
 
   package { 'memcached': }

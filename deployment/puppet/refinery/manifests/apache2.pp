@@ -16,7 +16,7 @@ class refinery::apache2 (
   # processing of metadata during data set import
   $timeout = 180  # seconds
 
-  class { '::apache':
+  class { 'apache':
     default_mods           => false,  # to allow declaration of ::apache::mod::reqtimeout below
     # recommended for use with AWS ELB
     mpm_module             => 'worker',
@@ -31,28 +31,28 @@ class refinery::apache2 (
     },
   }
 
-  class { '::apache::mod::wsgi':
+  class { 'apache::mod::wsgi':
     mod_path     => 'mod_wsgi.so',
     package_name => 'libapache2-mod-wsgi',
   }
 
   # recommended for use with AWS ELB to avoid HTTP 408 errors
-  class { '::apache::mod::reqtimeout':
+  class { 'apache::mod::reqtimeout':
     timeouts => [
       "header=${ $timeout + 5 }-${ $timeout + 25 },MinRate=500",
       "body=${ $timeout + 5 },MinRate=500",
     ],
   }
 
-  class { '::apache::mod::dir': }  # to allow ELB health checks using default vhost
+  class { 'apache::mod::dir': }  # to allow ELB health checks using default vhost
 
   # recommended for use with AWS ELB
-  ::apache::custom_config { 'no-acceptfilter':
+  apache::custom_config { 'no-acceptfilter':
     content => "AcceptFilter http none\nAcceptFilter https none",
   }
 
   # log Django messages only
-  ::apache::custom_config { 'error-log-format':
+  apache::custom_config { 'error-log-format':
     content => 'ErrorLogFormat "%M"',
   }
 
@@ -67,6 +67,8 @@ class refinery::apache2 (
         rewrite_rule => ['^.*$ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]'],
       },
     ]
+  } else {
+    $rewrites = []
   }
 
   $common_aliases = [
@@ -118,26 +120,27 @@ class refinery::apache2 (
     default => undef,
   }
 
-  ::apache::vhost { 'refinery':
-    servername                  => $site_url,
-    vhost_name                  => '*',
-    port                        => 80,
-    docroot                     => false,
-    manage_docroot              => false,
-    rewrites                    => $rewrites,
-    wsgi_script_aliases         => { '/' => "${django_root}/config/wsgi_${conf_mode}.py" },
-    wsgi_daemon_process         => 'refinery',
-    wsgi_daemon_process_options => {
-      user        => $app_user,
-      group       => $app_group,
-      python-path => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
+  apache::vhost { 'refinery':
+    servername              => $site_url,
+    vhost_name              => '*',
+    port                    => 80,
+    docroot                 => false,
+    manage_docroot          => false,
+    rewrites                => $rewrites,
+    wsgi_script_aliases     => { '/' => "${django_root}/config/wsgi_${conf_mode}.py" },
+    wsgi_daemon_process     => {
+      'refinery' => {
+        'user'        => $app_user,
+        'group'       => $app_group,
+        'python-path' => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
+      }
     },
-    wsgi_process_group          => 'refinery',
-    wsgi_pass_authorization     => 'On',
-    access_log_file             => 'refinery_access.log',
-    access_log_format           => $access_log_format,
-    error_log_file              => 'refinery_error.log',
-    aliases                     => $aliases,
-    directories                 => $directories,
+    wsgi_process_group      => 'refinery',
+    wsgi_pass_authorization => 'On',
+    access_log_file         => 'refinery_access.log',
+    access_log_format       => $access_log_format,
+    error_log_file          => 'refinery_error.log',
+    aliases                 => $aliases,
+    directories             => $directories,
   }
 }
