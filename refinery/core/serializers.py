@@ -37,7 +37,7 @@ class AnalysisSerializer(serializers.ModelSerializer):
     def get_tool_display_name(self, analysis):
         try:
             tool = Tool.objects.get(analysis_id=analysis.id)
-        except:
+        except (Tool.DoesNotExist, Tool.MultipleObjectsReturned):
             return analysis.name  # tool_display_name defaults to analysis name
         return tool.display_name
 
