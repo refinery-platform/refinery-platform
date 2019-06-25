@@ -20,7 +20,7 @@ class refinery::ui (
   apt::source { 'nodejs':
     ensure   => 'present',
     comment  => 'Nodesource NodeJS repo',
-    location => 'https://deb.nodesource.com/node_6.x',
+    location => 'https://deb.nodesource.com/node_8.x',
     release  => 'trusty',
     repos    => 'main',
     key      => {
