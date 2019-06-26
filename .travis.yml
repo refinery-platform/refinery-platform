@@ -95,6 +95,7 @@ after_success:
   - echo 'travis_fold:start:codecov'
   - npm install -g codecov@3.5.0
   - codecov
+  - npm run codecov
   - echo 'travis_fold:end:codecov'
 notifications:
   slack:
