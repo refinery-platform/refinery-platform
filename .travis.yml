@@ -84,7 +84,7 @@ script:
 #  - echo 'travis_fold:start:django-tests'
 #  - coverage run manage.py test
 #  - echo 'travis_fold:end:django-tests'
-
+#
 #  - echo 'travis_fold:start:cypress'
 #  - pushd ui && node_modules/.bin/cypress run && popd
 #  - echo 'travis_fold:end:cypress'
@@ -93,8 +93,8 @@ script:
 
 after_success:
   - echo 'travis_fold:start:codecov'
-  - npm install -g codecov
   - codecov
+  - npm run codecov
   - echo 'travis_fold:end:codecov'
 notifications:
   slack:
