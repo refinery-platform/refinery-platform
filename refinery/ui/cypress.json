@@ -1,4 +1,5 @@
 {
   "baseUrl": "http://127.0.0.1:8000",
-  "projectId": "odo3mu"
+  "projectId": "odo3mu",
+  "videoUploadOnPasses": "false"
 }
