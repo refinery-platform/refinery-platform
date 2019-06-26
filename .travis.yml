@@ -93,10 +93,7 @@ script:
 
 after_success:
   - echo 'travis_fold:start:codecov'
-  - language:
-        node_js
   - npm install -g codecov
-  - istanbul cover jasmine-node --captureExceptions spec/ ./node_modules/.bin/codecov
   - codecov
   - echo 'travis_fold:end:codecov'
 notifications:
