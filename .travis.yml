@@ -93,7 +93,7 @@ script:
 
 after_success:
   - echo 'travis_fold:start:codecov'
-  - codecov &lt; coverage/cobertura.xml
+  - codecov
   - npm install -g codecov@3.5.0
   - cd ui
   - npm run codecov

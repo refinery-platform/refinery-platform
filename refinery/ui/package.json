@@ -5,7 +5,8 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "codecov": "codecov &lt; coverage/cobertura.xml"
   },
   "repository": {
     "type": "git",
