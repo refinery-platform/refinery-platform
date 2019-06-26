@@ -81,18 +81,20 @@ script:
   - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
 
-  - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
-  - echo 'travis_fold:end:django-tests'
+#  - echo 'travis_fold:start:django-tests'
+#  - coverage run manage.py test
+#  - echo 'travis_fold:end:django-tests'
 
-  - echo 'travis_fold:start:cypress'
-  - pushd ui && node_modules/.bin/cypress run && popd
-  - echo 'travis_fold:end:cypress'
+#  - echo 'travis_fold:start:cypress'
+#  - pushd ui && node_modules/.bin/cypress run && popd
+#  - echo 'travis_fold:end:cypress'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:
   - echo 'travis_fold:start:codecov'
+  - language:
+        node_js
   - npm install -g codecov
   - istanbul cover jasmine-node --captureExceptions spec/ ./node_modules/.bin/codecov
   - codecov
