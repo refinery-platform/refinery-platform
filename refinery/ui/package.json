@@ -17,7 +17,6 @@
     "url": "https://github.com/refinery-platform/refinery-platform/issues"
   },
   "devDependencies": {
-    "codecov": "3.5.0",
     "cypress": "^3.3.1",
     "eslint": "2.4.0",
     "eslint-config-airbnb": "6.1.0",
