@@ -94,6 +94,8 @@ script:
 after_success:
   - echo 'travis_fold:start:codecov'
   - codecov
+  - cd ui
+  - run codecov
   - echo 'travis_fold:end:codecov'
 notifications:
   slack:
