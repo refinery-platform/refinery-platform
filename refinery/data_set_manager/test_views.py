@@ -471,11 +471,9 @@ class AssayFileAPITests(APITestCase):
         self.user_guest = 'guest'
         self.fake_password = 'test1234'
         self.data_set = create_dataset_with_necessary_models()
-        self.user1 = User.objects.create_user(self.user_owner,
-                                              '',
+        self.user1 = User.objects.create_user(self.user_owner, '',
                                               self.fake_password)
-        self.user2 = User.objects.create_user(self.user_guest,
-                                              '',
+        self.user2 = User.objects.create_user(self.user_guest, '',
                                               self.fake_password)
         self.data_set.set_owner(self.user1)
         investigation = Investigation.objects.create()
@@ -483,25 +481,23 @@ class AssayFileAPITests(APITestCase):
             InvestigationLink.objects.create(investigation=investigation,
                                              data_set=self.data_set,
                                              version=1)
-
         study = Study.objects.create(file_name='test_filename123.txt',
                                      title='Study Title Test',
                                      investigation=investigation)
-
         assay = Assay.objects.create(
-                study=study,
-                measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
-                measurement_source='OBI',
-                technology='nucleotide sequencing',
-                technology_accession='test info',
-                technology_source='test source',
-                platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt',
-                )
-        self.valid_uuid = assay.uuid
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.url = "/api/v2/assays/%s/files/"
+            study=study,
+            measurement='transcription factor binding site',
+            measurement_accession='http://www.example.org/testID',
+            measurement_source='OBI',
+            technology='nucleotide sequencing',
+            technology_accession='test info',
+            technology_source='test source',
+            platform='Genome Analyzer II',
+            file_name='test_assay_filename.txt',
+        )
+        self.valid_uuid = str(assay.uuid)
+        self.unknown_uuid = str(uuid.uuid4())
+        self.url = "/api/v2/assays/{}/files/"
         self.non_meta_attributes = ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
         self.client = APIClient()
 
@@ -512,52 +508,39 @@ class AssayFileAPITests(APITestCase):
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_owner_with_valid_params(self,
-                                              mock_format,
-                                              mock_search,
+    def test_get_from_owner_with_valid_params(self, mock_format, mock_search,
                                               mock_generate):
         self.client.login(username=self.user_owner,
                           password=self.fake_password)
         mock_format.return_value = {'status': 200}
-        uuid = self.valid_uuid
-        params = {
-            'limit': '0',
-            'data_set_uuid': self.data_set.uuid
-        }
-        response = self.client.get(self.url % uuid, params)
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
         qdict = QueryDict('', mutable=True)
         qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
+        mock_generate.assert_called_once_with(qdict, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
 
-    def test_get_from_owner_invalid_params(self):
+    def test_get_from_owner_unknown_uuid(self):
         self.client.login(username=self.user_owner,
                           password=self.fake_password)
-
-        uuid = self.valid_uuid
         params = {'limit': 0,
-                  'data_set_uuid': self.invalid_uuid}
-        response = self.client.get(self.url % uuid, params)
+                  'data_set_uuid': self.unknown_uuid}
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertEqual(response.status_code, 404)
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_no_perms(self,
-                                    mock_format,
-                                    mock_search,
+    def test_get_from_user_no_perms(self, mock_format, mock_search,
                                     mock_generate):
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-
-        uuid = self.valid_uuid
-        params = {
-            'limit': 0,
-            'data_set_uuid': self.data_set.uuid
-        }
-        response = self.client.get(self.url % uuid, params)
+        params = {'limit': 0,
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertFalse(mock_format.called)
         self.assertFalse(mock_search.called)
         self.assertFalse(mock_generate.called)
@@ -566,51 +549,41 @@ class AssayFileAPITests(APITestCase):
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_with_read_perms(self,
-                                           mock_format,
-                                           mock_search,
+    def test_get_from_user_with_read_perms(self, mock_format, mock_search,
                                            mock_generate):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_%s' % DataSet._meta.model_name,
-                    self.user2,
+        assign_perm('read_%s' % DataSet._meta.model_name, self.user2,
                     self.data_set)
-        uuid = self.valid_uuid
         params = {'limit': '0',
                   'data_set_uuid': self.data_set.uuid}
-        response = self.client.get(self.url % uuid, params)
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
         qdict = QueryDict('', mutable=True)
         qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
+        mock_generate.assert_called_once_with(qdict, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_with_read_meta_perms(self,
-                                                mock_format,
-                                                mock_search,
+    def test_get_from_user_with_read_meta_perms(self, mock_format, mock_search,
                                                 mock_generate):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_meta_%s' % DataSet._meta.model_name,
-                    self.user2,
+        assign_perm('read_meta_%s' % DataSet._meta.model_name, self.user2,
                     self.data_set)
-
-        uuid = self.valid_uuid
         params = {'limit': '0',
                   'data_set_uuid': self.data_set.uuid}
-        response = self.client.get(self.url % uuid, params)
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
         qdict = QueryDict('', mutable=True)
         qdict.update(params)
-        mock_generate.assert_called_once_with(qdict,
-                                              uuid,
+        mock_generate.assert_called_once_with(qdict, self.valid_uuid,
                                               self.non_meta_attributes)
         self.assertEqual(response.status_code, 200)
 
