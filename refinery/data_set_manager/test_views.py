@@ -206,13 +206,13 @@ class AssayAPIViewTests(APITestCase):
         # dictionary for checking response contents
         self.assay_dict = model_to_dict(self.assay)
         self.assay_dict['uuid'] = str(self.assay.uuid)
-        del self.assay_dict['id']
+        del self.assay_dict['id']  # id is not present in the API response
 
         self.valid_uuid = str(self.assay.uuid)
         self.url_root = '/api/v2/assays/'
         self.view = AssayAPIView.as_view()
-        self.invalid_uuid = str(uuid.uuid4())
-        self.invalid_format_uuid = "xxxxxxxx"
+        self.unknown_uuid = str(uuid.uuid4())
+        self.invalid_uuid = "xxxxxxxx"
 
     def test_get_valid_uuid(self):
         request = self.factory.get(self.url_root + '?uuid=' + self.valid_uuid)
@@ -226,55 +226,53 @@ class AssayAPIViewTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data[0], self.assay_dict)
 
+    def test_get_unknown_uuid(self):
+        request = self.factory.get(
+            self.url_root + '?uuid=' + self.unknown_uuid
+        )
+        response = self.view(request, self.unknown_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_unknown_study_uuid(self):
+        request = self.factory.get(
+            self.url_root + '?study=' + self.unknown_uuid
+        )
+        response = self.view(request, self.unknown_uuid)
+        self.assertEqual(response.status_code, 404)
+
     def test_get_invalid_uuid(self):
         request = self.factory.get(
             self.url_root + '?uuid=' + self.invalid_uuid
         )
         response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_study_uuid(self):
-        request = self.factory.get(
-            self.url_root + '?study=' + self.invalid_uuid
-        )
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_format_uuid(self):
-        request = self.factory.get(
-            self.url_root + '?uuid=' + self.invalid_format_uuid
-        )
-        response = self.view(request, self.invalid_format_uuid)
         self.assertEqual(response.status_code, 400)
 
 
 class AssayAttributeAPITests(APITestCase):
 
     def setUp(self):
-        self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
-        self.user2 = User.objects.create_user("guestName", '', 'test1234')
+        self.user1 = User.objects.create_user('ownerJane', '', 'test1234')
+        self.user2 = User.objects.create_user('guestName', '', 'test1234')
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
-        self.data_set = DataSet.objects.create(
-                title="Test DataSet")
+        self.data_set = DataSet.objects.create(title="Test DataSet")
         InvestigationLink.objects.create(data_set=self.data_set,
                                          investigation=investigation)
         self.data_set.set_owner(self.user1)
         study = Study.objects.create(file_name='test_filename123.txt',
                                      title='Study Title Test',
                                      investigation=investigation)
-
         assay = Assay.objects.create(
                 study=study,
                 measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
+                measurement_accession='http://www.example.org/testID',
                 measurement_source='OBI',
                 technology='nucleotide sequencing',
                 technology_accession='test info',
                 technology_source='test source',
                 platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt')
-
+                file_name='test_assay_filename.txt'
+        )
         self.attribute_order_array = [
             {
                 'study': study,
@@ -312,8 +310,8 @@ class AssayAttributeAPITests(APITestCase):
                 'is_facet': True,
                 'is_active': True,
                 'is_internal': False
-            }]
-
+            }
+        ]
         self.attribute_order_response = [
             {
                 'study': study,
@@ -355,127 +353,100 @@ class AssayAttributeAPITests(APITestCase):
                 'is_active': True,
                 'is_internal': False,
                 'display_name': 'Analysis'
-            }]
-
-        index = 0
-        for attribute in self.attribute_order_array:
-            response = AttributeOrder.objects.create(**attribute)
-            attribute['id'] = response.id
-            attribute['assay'] = response.assay.id
-            attribute['study'] = response.study.id
+            }
+        ]
+        for index in range(len(self.attribute_order_array)):
+            response = AttributeOrder.objects.create(
+                **self.attribute_order_array[index]
+            )
+            self.attribute_order_array[index]['id'] = response.id
+            self.attribute_order_array[index]['assay'] = response.assay.id
+            self.attribute_order_array[index]['study'] = response.study.id
             self.attribute_order_response[index]['id'] = response.id
             self.attribute_order_response[index]['assay'] = response.assay.id
             self.attribute_order_response[index]['study'] = response.study.id
-            index = index + 1
 
-        list.sort(self.attribute_order_response)
-        self.valid_uuid = assay.uuid
-        self.url_root = '/api/v2/assays'
+        self.valid_uuid = str(assay.uuid)
+        self.url_root = '/api/v2/assays/'
         self.view = AssayAttributeAPIView.as_view()
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
+        self.unknown_uuid = str(uuid.uuid4())
+        self.invalid_uuid = 'xxxxxxxx'
 
     def test_get_valid_uuid(self):
-        # valid_uuid
-        uuid = self.valid_uuid
-        request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
-        response = self.view(request, uuid)
+        request = self.factory.get(
+            self.url_root + self.valid_uuid + '/attributes/'
+        )
+        response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
+        self.assertItemsEqual(self.attribute_order_response, response.data)
 
-        list.sort(response.data)
-
-        ind = 0
-        for attributes in response.data:
-            self.assertItemsEqual(
-                    self.attribute_order_response[ind].keys(),
-                    attributes.keys())
-            self.assertItemsEqual(
-                    self.attribute_order_response[ind].values(),
-                    attributes.values())
-            ind = ind + 1
+    def test_get_unknown_uuid(self):
+        request = self.factory.get(
+            self.url_root + self.unknown_uuid + '/attributes/'
+        )
+        response = self.view(request, self.unknown_uuid)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_invalid_uuid(self):
-        # invalid uuid
-        request = self.factory.get('%s/%s/attributes/' % (
-            self.url_root, self.invalid_uuid))
+        request = self.factory.get(
+            self.url_root + self.invalid_uuid + '/attributes/'
+        )
         response = self.view(request, self.invalid_uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
-
-    def test_get_invalid_form_uuid(self):
-        # invalid form uuid
-        request = self.factory.get('%s/%s/attributes/' % (
-            self.url_root, self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
+        self.assertEqual(response.status_code, 400)
 
     def test_put_valid_uuid(self):
-        # valid_uuid
-        self.client.login(username='ownerJane', password='test1234')
         updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
                                'rank': 3,
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        id = self.attribute_order_array[2].get('id')
-        updated_attribute_2 = {'id': id,
+        updated_attribute_2 = {'id': self.attribute_order_array[2].get('id'),
                                'rank': 1,
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        # Api client needs url to end / or it will redirect
-        # update with solr_title
+        self.client.login(username='ownerJane', password='test1234')
         response = self.client.put(
-                '{0}/{1}/attributes/'.format(
-                        self.url_root, self.valid_uuid), updated_attribute_1)
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_1
+        )
         self.assertEqual(response.status_code, 202)
-        self.assertEqual(response.data.get('rank'), updated_attribute_1.get(
-                'rank'))
-        self.assertEqual(
-                response.data.get('is_exposed'),
-                updated_attribute_1.get('is_exposed'))
-        self.assertEqual(
-                response.data.get('is_facet'),
-                updated_attribute_1.get('is_facet'))
-
+        self.assertEqual(response.data.get('rank'),
+                         updated_attribute_1.get('rank'))
+        self.assertEqual(response.data.get('is_exposed'),
+                         updated_attribute_1.get('is_exposed'))
+        self.assertEqual(response.data.get('is_facet'),
+                         updated_attribute_1.get('is_facet'))
         # Update with attribute_order id
         response = self.client.put(
-                '{0}/{1}/attributes/'.format(
-                        self.url_root, self.valid_uuid), updated_attribute_2)
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_2
+        )
         self.assertEqual(response.status_code, 202)
         self.assertEqual(response.data.get('rank'),
                          updated_attribute_2.get('rank'))
-        self.assertEqual(
-                response.data.get('is_exposed'),
-                updated_attribute_2.get('is_exposed'))
-        self.assertEqual(
-                response.data.get('is_facet'),
-                updated_attribute_2.get('is_facet'))
+        self.assertEqual(response.data.get('is_exposed'),
+                         updated_attribute_2.get('is_exposed'))
+        self.assertEqual(response.data.get('is_facet'),
+                         updated_attribute_2.get('is_facet'))
         self.client.logout()
 
     def test_put_invalid_object(self):
-        # Invalid objects
         updated_attribute_3 = {'rank': '4',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False'}
-
         self.client.login(username='ownerJane', password='test1234')
-        response = self.client.put('{0}/{1}/attributes/'
-                                   .format(self.url_root, self.valid_uuid),
-                                   updated_attribute_3)
-        response.render()
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_3
+        )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-                response.content, '"Requires attribute id or solr_field name."'
-                )
+        self.assertEqual(response.content,
+                         '"Requires attribute id or solr_field name."')
         self.client.logout()
 
     def test_put_invalid_login(self):
-        # Invalid Login
         updated_attribute_4 = {'solr_field': 'Cell Type',
                                'rank': '4',
                                'is_exposed': 'False',
@@ -483,13 +454,13 @@ class AssayAttributeAPITests(APITestCase):
                                'is_active': 'False'}
 
         self.client.login(username='guestName', password='test1234')
-        response = self.client.put('{0}/{1}/attributes/'
-                                   .format(self.url_root, self.valid_uuid),
-                                   updated_attribute_4)
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_4
+        )
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
-                response.content, '"Only owner may edit attribute order."'
-                )
+        self.assertEqual(response.content,
+                         '"Only owner may edit attribute order."')
         self.client.logout()
 
 

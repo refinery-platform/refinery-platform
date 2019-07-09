@@ -944,7 +944,6 @@ class AssayAttributeAPIView(APIView):
               paramType: form
     ...
     """
-
     def get_objects(self, uuid):
         attributes = AttributeOrder.objects.filter(assay__uuid=uuid)
         if len(attributes):
@@ -953,19 +952,22 @@ class AssayAttributeAPIView(APIView):
             raise Http404
 
     def get(self, request, uuid, format=None):
-        attribute_order = self.get_objects(uuid).exclude(
-            solr_field__in=[NodeIndex.DOWNLOAD_URL, NodeIndex.DATAFILE]
-        )
+        try:
+            attribute_order = self.get_objects(uuid).exclude(
+                solr_field__in=[NodeIndex.DOWNLOAD_URL, NodeIndex.DATAFILE]
+            )
+        except ValueError:
+            return HttpResponseBadRequest()
+
         serializer = AttributeOrderSerializer(attribute_order, many=True)
         owner = get_owner_from_assay(uuid)
-        request_user = request.user
+        attributes = []
 
         # add a display name to the attribute object
-        if owner == request_user:
+        if owner == request.user:
             attributes = serializer.data
         # for non-owners, hide non-exposed attributes
         else:
-            attributes = []
             for attribute in serializer.data:
                 if attribute.get('is_exposed'):
                     attributes.append(attribute)
@@ -976,11 +978,11 @@ class AssayAttributeAPIView(APIView):
                 del attributes[ind]
             else:
                 attributes[ind]['display_name'] = customize_attribute_response(
-                    [attributes[ind].get('solr_field')])[0].get(
-                    'display_name')
+                    [attributes[ind].get('solr_field')]
+                )[0].get('display_name')
 
         # for non-owners need to reorder the ranks
-        if owner != request_user:
+        if owner != request.user:
             for ind in range(0, len(attributes)):
                 attributes[ind]['rank'] = ind + 1
 

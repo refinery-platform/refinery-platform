@@ -726,15 +726,15 @@ def get_owner_from_assay(uuid):
     # Returns the owner from an assay_uuid. Ownership is passed from dataset
     try:
         study = Study.objects.get(assay__uuid=uuid)
-    except (Study.DoesNotExist,
-            Study.MultipleObjectsReturned) as e:
-        logger.error(e)
+    except (Study.DoesNotExist, Study.MultipleObjectsReturned,
+            ValueError) as exc:
+        logger.error(exc)
         return None
 
     try:
         data_set = study.get_dataset()
-    except RuntimeError as e:
-        logger.error(e)
+    except RuntimeError as exc:
+        logger.error(exc)
         return None
 
     return data_set.get_owner()
