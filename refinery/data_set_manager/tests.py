@@ -340,10 +340,11 @@ class UtilitiesTests(TestCase):
             )
         )
         self.node_a = Node.objects.create(name="n0", assay=self.assay,
-            study=self.study, file_uuid=file_store_item_a.uuid)
+                                          study=self.study,
+                                          file_uuid=file_store_item_a.uuid)
 
         self.node_b = Node.objects.create(name="n1", assay=self.assay,
-            study=self.study)
+                                          study=self.study)
 
         self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user1)
         self.isatab_9909_data_set = create_mock_isatab_9909_data_set(
@@ -486,15 +487,15 @@ class UtilitiesTests(TestCase):
     def test_generate_solr_params_no_params_returns_json_facet(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertItemsEqual(query['json']['facet'].keys(),
-                             ['Analysis', 'Cell Line', 'Cell Type',
-                              'Group Name', 'Organism', 'Type'])
+                              ['Analysis', 'Cell Line', 'Cell Type',
+                               'Group Name', 'Organism', 'Type'])
 
     def test_generate_solr_params_no_params_returns_json_fields(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertItemsEqual(query['json']['fields'],
-                             ['Analysis', 'Cell Line', 'Cell Type',
-                              'Character_Title', 'Group Name', 'Organism',
-                              'REFINERY_DATAFILE_s', 'Specimen', 'Type'])
+                              ['Analysis', 'Cell Line', 'Cell Type',
+                               'Character_Title', 'Group Name', 'Organism',
+                               'REFINERY_DATAFILE_s', 'Specimen', 'Type'])
 
     def test_generate_solr_params_no_params_returns_json_filter(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -542,7 +543,7 @@ class UtilitiesTests(TestCase):
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
         self.assertItemsEqual(query['json']['facet'].keys(),
-                             ['cats', 'dog', 'horse', 'mouse'])
+                              ['cats', 'dog', 'horse', 'mouse'])
 
     def test_generate_solr_params_params_returns_json_fields(self):
         parameter_dict = {'limit': 7, 'offset': 2,
@@ -700,41 +701,56 @@ class UtilitiesTests(TestCase):
         self.assertDictEqual(
             formatted_response,
             {
-                'facet_field_counts':
-                    {u'REFINERY_SUBANALYSIS_16_82_s':
-                         [{'name': u'-1', 'count': 16}],
-                     u'REFINERY_TYPE_16_82_s':
-                         [{'name': u'Array Data File', 'count': 14},
-                          {'name': u'Derived Array Data File', 'count': 2}],
-                     u'REFINERY_WORKFLOW_OUTPUT_16_82_s':
-                         [{'name': u'N/A', 'count': 16}],
-                     u'organism_Characteristics_16_82_s':
-                         [{'name': u'Danio', 'count': 16}]
-                     },
+                'facet_field_counts': {
+                    u'REFINERY_SUBANALYSIS_16_82_s': [
+                        {'name': u'-1', 'count': 16}
+                    ],
+                    u'REFINERY_TYPE_16_82_s': [
+                        {'name': u'Array Data File', 'count': 14},
+                        {'name': u'Derived Array Data File', 'count': 2}
+                    ],
+                    u'REFINERY_WORKFLOW_OUTPUT_16_82_s': [
+                        {'name': u'N/A', 'count': 16}
+                    ],
+                    u'organism_Characteristics_16_82_s': [
+                        {'name': u'Danio', 'count': 16}
+                    ]
+                },
                 'attributes': [
-                    {'attribute_type': 'Internal',
-                     'display_name': 'Analysis Group',
-                     'file_ext': u's',
-                     'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'},
-                    {'attribute_type': 'Internal',
-                     'display_name': 'Output Type',
-                     'file_ext': u's',
-                     'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'},
-                    {'attribute_type': 'Characteristics',
-                     'display_name': u'Organism',
-                     'file_ext': u's',
-                     'internal_name': u'organism_Characteristics_16_82_s'},
-                    {'attribute_type': 'Internal',
-                     'display_name': u'Type',
-                     'file_ext': u's',
-                     'internal_name': u'REFINERY_TYPE_16_82_s'}
+                    {
+                        'attribute_type': 'Internal',
+                        'display_name': 'Analysis Group',
+                        'file_ext': u's',
+                        'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'
+                    },
+                    {
+                        'attribute_type': 'Internal',
+                        'display_name': 'Output Type',
+                        'file_ext': u's',
+                        'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'
+                    },
+                    {
+                        'attribute_type': 'Characteristics',
+                        'display_name': u'Organism',
+                        'file_ext': u's',
+                        'internal_name': u'organism_Characteristics_16_82_s'
+                    },
+                    {
+                        'attribute_type': 'Internal',
+                        'display_name': u'Type',
+                        'file_ext': u's',
+                        'internal_name': u'REFINERY_TYPE_16_82_s'
+                    }
                 ],
                 'nodes_count': 1,
-                'nodes': [{
-                    u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
-                    u'organism_Characteristics_16_82_s': u'Danio',
-                    u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
-                    u'REFINERY_TYPE_16_82_s': u'Array Data File'}]
+                'nodes': [
+                    {
+                        u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
+                        u'organism_Characteristics_16_82_s': u'Danio',
+                        u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
+                        u'REFINERY_TYPE_16_82_s': u'Array Data File'
+                    }
+                ]
             }
         )
 
@@ -1192,7 +1208,7 @@ class UtilitiesTests(TestCase):
 
         nodes_after = AnnotatedNode.objects.filter(
             Q(study__uuid=self.study.uuid, assay__uuid=self.assay.uuid,
-            node_type=type)
+              node_type=type)
         )
         self.assertEqual(len(nodes_after), 0)
         # TODO: Is this the behavior we expect?
@@ -1456,30 +1472,22 @@ class NodeIndexTests(APITestCase):
         InvestigationLink.objects.create(investigation=investigation,
                                          data_set=data_set)
         study = Study.objects.create(investigation=investigation)
-        assay = Assay.objects.create(study=study, technology='whizbang')
+        self.assay = Assay.objects.create(study=study, technology='whizbang')
 
-        self.file_store_item = FileStoreItem()
-        self.file_store_item.import_task_id = str(uuid.uuid4())
-        self.file_store_item.save()
-
+        self.file_store_item = FileStoreItem.objects.create(
+            import_task_id=str(uuid.uuid4())
+        )
         self.import_task = TaskMeta.objects.create(
             task_id=self.file_store_item.import_task_id
         )
-
-        self.node = Node.objects.create(
-            assay=assay,
-            study=study,
-            file_uuid=self.file_store_item.uuid,
-            name='http://example.com/fake.txt',
-            type='Raw Data File'
-        )
-
+        self.node = Node.objects.create(assay=self.assay, study=study,
+                                        file_uuid=self.file_store_item.uuid,
+                                        name='http://example.com/fake.txt',
+                                        type='Raw Data File')
         self.data_set_uuid = data_set.uuid
-        self.assay_uuid = assay.uuid
         self.study_uuid = study.uuid
         self.file_uuid = self.file_store_item.uuid
         self.node_uuid = self.node.uuid
-
         self.maxDiff = None
 
     def test_skip_types(self):
@@ -1502,8 +1510,7 @@ class NodeIndexTests(APITestCase):
         )
         return data
 
-    def _assert_node_index_prepared_correctly(self,
-                                              data_to_be_indexed,
+    def _assert_node_index_prepared_correctly(self, data_to_be_indexed,
                                               expected_download_url=None,
                                               expected_filetype=None,
                                               expected_datafile=''):
@@ -1519,7 +1526,7 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
-                'assay_uuid': self.assay_uuid,
+                'assay_uuid': str(self.assay.uuid),
                 'data_set_uuid': self.data_set_uuid,
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
