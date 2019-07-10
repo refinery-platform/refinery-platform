@@ -41,7 +41,7 @@ class refinery::ui (
   }
   ->
   package {
-    'bower': ensure => '1.8.2', provider => 'npm';
+    'bower': ensure => '1.8.8', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
