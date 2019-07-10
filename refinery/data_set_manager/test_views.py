@@ -205,8 +205,8 @@ class AssayAPIViewTests(APITestCase):
         )
         # dictionary for checking response contents
         self.assay_dict = model_to_dict(self.assay)
+        # model_to_dict() does not return fields that are not editable
         self.assay_dict['uuid'] = str(self.assay.uuid)
-        del self.assay_dict['id']  # id is not present in the API response
 
         self.valid_uuid = str(self.assay.uuid)
         self.url_root = '/api/v2/assays/'
@@ -218,13 +218,13 @@ class AssayAPIViewTests(APITestCase):
         request = self.factory.get(self.url_root + '?uuid=' + self.valid_uuid)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, self.assay_dict)
+        self.assertDictContainsSubset(response.data, self.assay_dict)
 
     def test_get_valid_study(self):
         request = self.factory.get(self.url_root + '?study=' + self.study.uuid)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data[0], self.assay_dict)
+        self.assertDictContainsSubset(response.data[0], self.assay_dict)
 
     def test_get_unknown_uuid(self):
         request = self.factory.get(
