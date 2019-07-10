@@ -339,18 +339,11 @@ class UtilitiesTests(TestCase):
                 charset='utf-8'
             )
         )
-        self.node_a = Node.objects.create(
-            name="n0",
-            assay=self.assay,
-            study=self.study,
-            file_uuid=file_store_item_a.uuid
-        )
+        self.node_a = Node.objects.create(name="n0", assay=self.assay,
+            study=self.study, file_uuid=file_store_item_a.uuid)
 
-        self.node_b = Node.objects.create(
-            name="n1",
-            assay=self.assay,
-            study=self.study
-        )
+        self.node_b = Node.objects.create(name="n1", assay=self.assay,
+            study=self.study)
 
         self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user1)
         self.isatab_9909_data_set = create_mock_isatab_9909_data_set(
@@ -396,26 +389,33 @@ class UtilitiesTests(TestCase):
         facet_field_obj = create_facet_field_counts(facet_field_array)
         self.assertDictEqual(facet_field_obj,
                              {'WORKFLOW': [
-                                      {'name': 'output_file', 'count': 60},
-                                      {'name': '1_test_04', 'count': 1},
-                                      {'name': '1_test_02', 'count': 1}],
-                              'ANALYSIS': [{'name': '5dd6d3c3', 'count': 5},
-                                           {'name': '276adefd', 'count': 3},
-                                           {'name': '08fc3964', 'count': 2},
-                                           {'name': '0907a312', 'count': 1}],
+                                 {'name': 'output_file', 'count': 60},
+                                 {'name': '1_test_04', 'count': 1},
+                                 {'name': '1_test_02', 'count': 1}
+                             ],
+                              'ANALYSIS': [
+                                  {'name': '5dd6d3c3', 'count': 5},
+                                  {'name': '276adefd', 'count': 3},
+                                  {'name': '08fc3964', 'count': 2},
+                                  {'name': '0907a312', 'count': 1}
+                              ],
                               'Author': [
                                   {'name': 'Crocker', 'count': 28},
                                   {'name': 'Vezza', 'count': 10},
                                   {'name': 'McConnell', 'count': 5},
                                   {'name': 'Harslem/Heafner', 'count': 4},
-                                  {'name': 'Vezza + Crocker', 'count': 2}],
+                                  {'name': 'Vezza + Crocker', 'count': 2}
+                              ],
                               'Year': [{'name': '1971', 'count': 54}],
-                              'SUBANALYSIS': [{'name': '-1', 'count': 9},
-                                              {'name': '1', 'count': 8},
-                                              {'name': '2', 'count': 2}],
+                              'SUBANALYSIS': [
+                                  {'name': '-1', 'count': 9},
+                                  {'name': '1', 'count': 8},
+                                  {'name': '2', 'count': 2}
+                              ],
                               'TYPE': [
                                   {'name': 'Derived Data File', 'count': 105},
-                                  {'name': 'Raw Data File', 'count': 9}]})
+                                  {'name': 'Raw Data File', 'count': 9}
+                              ]})
 
     def test_escape_character_solr(self):
         field = "(mouse){index}[dog]^~*?:;/ +-&|"
@@ -450,9 +450,8 @@ class UtilitiesTests(TestCase):
                          {'solr_field': 'SubAnalysis'}]
 
         filtered_list = hide_fields_from_list(weighted_list)
-        self.assertListEqual(filtered_list, [
-            {'solr_field': 'uuid'},
-            {'solr_field': 'SubAnalysis'}])
+        self.assertListEqual(filtered_list, [{'solr_field': 'uuid'},
+                                             {'solr_field': 'SubAnalysis'}])
 
     def test_is_field_in_hidden_list(self):
         list_of_hidden_field = ['id', 'django_id', 'file_uuid',
@@ -486,32 +485,21 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_facet(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertListEqual(sorted(query['json']['facet'].keys()),
-                             ['Analysis',
-                              'Cell Line',
-                              'Cell Type',
-                              'Group Name',
-                              'Organism',
-                              'Type'])
+        self.assertItemsEqual(query['json']['facet'].keys(),
+                             ['Analysis', 'Cell Line', 'Cell Type',
+                              'Group Name', 'Organism', 'Type'])
 
     def test_generate_solr_params_no_params_returns_json_fields(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertListEqual(sorted(query['json']['fields']),
-                             ['Analysis',
-                              'Cell Line',
-                              'Cell Type',
-                              'Character_Title',
-                              'Group Name',
-                              'Organism',
-                              'REFINERY_DATAFILE_s',
-                              'Specimen',
-                              'Type'])
+        self.assertItemsEqual(query['json']['fields'],
+                             ['Analysis', 'Cell Line', 'Cell Type',
+                              'Character_Title', 'Group Name', 'Organism',
+                              'REFINERY_DATAFILE_s', 'Specimen', 'Type'])
 
     def test_generate_solr_params_no_params_returns_json_filter(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertListEqual(query['json']['filter'],
-                             ['assay_uuid:({})'.format(self.valid_uuid)]
-                             )
+                             ['assay_uuid:({})'.format(self.valid_uuid)])
 
     def test_generate_solr_params_no_params_returns_json_query(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -524,10 +512,9 @@ class UtilitiesTests(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params_for_assay(
-            parameter_qdict, self.valid_uuid
-        )
-        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
+        query = generate_solr_params_for_assay(parameter_qdict,
+                                               self.valid_uuid)
+        self.assertItemsEqual(query.keys(), ['json', 'params'])
 
     def test_generate_solr_params_for_assay_with_params_returns_params(self):
         parameter_dict = {'limit': 7, 'offset': 2,
@@ -535,9 +522,8 @@ class UtilitiesTests(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params_for_assay(
-            parameter_qdict, self.valid_uuid
-        )
+        query = generate_solr_params_for_assay(parameter_qdict,
+                                               self.valid_uuid)
         self.assertItemsEqual(query['params'],
                               {
                                   'facet.limit': '-1',
@@ -553,10 +539,9 @@ class UtilitiesTests(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params_for_assay(
-            parameter_qdict, self.valid_uuid
-        )
-        self.assertListEqual(sorted(query['json']['facet'].keys()),
+        query = generate_solr_params_for_assay(parameter_qdict,
+                                               self.valid_uuid)
+        self.assertItemsEqual(query['json']['facet'].keys(),
                              ['cats', 'dog', 'horse', 'mouse'])
 
     def test_generate_solr_params_params_returns_json_fields(self):
@@ -565,9 +550,8 @@ class UtilitiesTests(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params_for_assay(
-            parameter_qdict, self.valid_uuid
-        )
+        query = generate_solr_params_for_assay(parameter_qdict,
+                                               self.valid_uuid)
         self.assertListEqual(query['json']['fields'],
                              ['cats', 'mouse', 'dog', 'horse'])
 
@@ -577,9 +561,8 @@ class UtilitiesTests(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params_for_assay(
-            parameter_qdict, self.valid_uuid
-        )
+        query = generate_solr_params_for_assay(parameter_qdict,
+                                               self.valid_uuid)
         self.assertListEqual(query['json']['filter'],
                              ['assay_uuid:({})'.format(self.valid_uuid)])
 
@@ -589,9 +572,8 @@ class UtilitiesTests(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params_for_assay(
-            parameter_qdict, self.valid_uuid
-        )
+        query = generate_solr_params_for_assay(parameter_qdict,
+                                               self.valid_uuid)
         self.assertEqual(query['json']['query'],
                          'django_ct:data_set_manager.node')
 
@@ -607,8 +589,7 @@ class UtilitiesTests(TestCase):
 
     def test_cull_attributes_from_list_with_empty_list_returns_list(self):
         new_attribute_list = cull_attributes_from_list(
-            self.new_attribute_order_array,
-            []
+            self.new_attribute_order_array, []
         )
         self.assertDictEqual(new_attribute_list[0],
                              self.new_attribute_order_array[0])
@@ -717,44 +698,44 @@ class UtilitiesTests(TestCase):
 
         formatted_response = format_solr_response(solr_response)
         self.assertDictEqual(
-                formatted_response,
-                {
-                    'facet_field_counts':
-                        {u'REFINERY_SUBANALYSIS_16_82_s':
-                            [{'name': u'-1', 'count': 16}],
-                         u'REFINERY_TYPE_16_82_s':
-                            [{'name': u'Array Data File', 'count': 14},
-                             {'name': u'Derived Array Data File', 'count': 2}],
-                         u'REFINERY_WORKFLOW_OUTPUT_16_82_s':
-                            [{'name': u'N/A', 'count': 16}],
-                         u'organism_Characteristics_16_82_s':
-                            [{'name': u'Danio', 'count': 16}]
-                         },
-                    'attributes': [
-                        {'attribute_type': 'Internal',
-                         'display_name': 'Analysis Group',
-                         'file_ext': u's',
-                         'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'},
-                        {'attribute_type': 'Internal',
-                         'display_name': 'Output Type',
-                         'file_ext': u's',
-                         'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'},
-                        {'attribute_type': 'Characteristics',
-                         'display_name': u'Organism',
-                         'file_ext': u's',
-                         'internal_name': u'organism_Characteristics_16_82_s'},
-                        {'attribute_type': 'Internal',
-                         'display_name': u'Type',
-                         'file_ext': u's',
-                         'internal_name': u'REFINERY_TYPE_16_82_s'}
-                        ],
-                    'nodes_count': 1,
-                    'nodes': [{
-                         u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
-                         u'organism_Characteristics_16_82_s': u'Danio',
-                         u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
-                         u'REFINERY_TYPE_16_82_s': u'Array Data File'}]
-                }
+            formatted_response,
+            {
+                'facet_field_counts':
+                    {u'REFINERY_SUBANALYSIS_16_82_s':
+                         [{'name': u'-1', 'count': 16}],
+                     u'REFINERY_TYPE_16_82_s':
+                         [{'name': u'Array Data File', 'count': 14},
+                          {'name': u'Derived Array Data File', 'count': 2}],
+                     u'REFINERY_WORKFLOW_OUTPUT_16_82_s':
+                         [{'name': u'N/A', 'count': 16}],
+                     u'organism_Characteristics_16_82_s':
+                         [{'name': u'Danio', 'count': 16}]
+                     },
+                'attributes': [
+                    {'attribute_type': 'Internal',
+                     'display_name': 'Analysis Group',
+                     'file_ext': u's',
+                     'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'},
+                    {'attribute_type': 'Internal',
+                     'display_name': 'Output Type',
+                     'file_ext': u's',
+                     'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'},
+                    {'attribute_type': 'Characteristics',
+                     'display_name': u'Organism',
+                     'file_ext': u's',
+                     'internal_name': u'organism_Characteristics_16_82_s'},
+                    {'attribute_type': 'Internal',
+                     'display_name': u'Type',
+                     'file_ext': u's',
+                     'internal_name': u'REFINERY_TYPE_16_82_s'}
+                ],
+                'nodes_count': 1,
+                'nodes': [{
+                    u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
+                    u'organism_Characteristics_16_82_s': u'Danio',
+                    u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
+                    u'REFINERY_TYPE_16_82_s': u'Array Data File'}]
+            }
         )
 
     def test_format_solr_response_invalid(self):
@@ -926,14 +907,14 @@ class UtilitiesTests(TestCase):
             'Replicate Id': 9,
             'uuid': 0,
             'name': 0,
-            }
+        }
 
         selected_attribute = AttributeOrder.objects.get(assay=self.new_assay,
                                                         solr_field='Specimen')
         initialize_attribute_order_ranks(selected_attribute, 8)
         ranked_attribute_list = AttributeOrder.objects.filter(
-            assay=self.new_assay)
-
+            assay=self.new_assay
+        )
         for attribute in ranked_attribute_list:
             self.assertEqual(attribute.rank,
                              expect_attribute_order[attribute.solr_field])
@@ -959,8 +940,8 @@ class UtilitiesTests(TestCase):
                                                         solr_field='Gene')
         initialize_attribute_order_ranks(selected_attribute, 2)
         ranked_attribute_list = AttributeOrder.objects.filter(
-            assay=self.new_assay)
-
+            assay=self.new_assay
+        )
         for attribute in ranked_attribute_list:
             self.assertEqual(attribute.rank,
                              expect_attribute_order[attribute.solr_field])
@@ -986,8 +967,8 @@ class UtilitiesTests(TestCase):
                                                         solr_field='Gene')
         initialize_attribute_order_ranks(selected_attribute, 0)
         ranked_attribute_list = AttributeOrder.objects.filter(
-            assay=self.new_assay)
-
+            assay=self.new_assay
+        )
         for attribute in ranked_attribute_list:
             self.assertEqual(attribute.rank,
                              expect_attribute_order[attribute.solr_field])
@@ -1008,16 +989,14 @@ class UtilitiesTests(TestCase):
                           'Name': 0}
 
         attribute_order = AttributeOrder.objects.get(
-                assay=self.assay,
-                solr_field='Character_Title')
+            assay=self.assay, solr_field='Character_Title'
+        )
         new_rank = 5
         update_attribute_order_ranks(attribute_order, new_rank)
-        attribute_list = AttributeOrder.objects.filter(
-                assay=self.assay)
+        attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         for attribute in attribute_list:
             self.assertEqual(attribute.rank,
                              expected_order[attribute.solr_field])
-
         # Test top edge case
         expected_order = {'Character_Title': 10,
                           'Specimen': 1,
@@ -1032,16 +1011,16 @@ class UtilitiesTests(TestCase):
                           'Organism Part': 0,
                           'Name': 0}
         attribute_order = AttributeOrder.objects.get(
-                assay=self.assay,
-                solr_field='Character_Title')
+            assay=self.assay, solr_field='Character_Title'
+        )
         new_rank = 10
         update_attribute_order_ranks(attribute_order, new_rank)
         attribute_list = AttributeOrder.objects.filter(
-                assay=self.assay)
+                assay=self.assay
+        )
         for attribute in attribute_list:
             self.assertEqual(attribute.rank,
                              expected_order[attribute.solr_field])
-
         # Test bottom edge case
         expected_order = {'Character_Title': 1,
                           'Specimen': 2,
@@ -1056,16 +1035,16 @@ class UtilitiesTests(TestCase):
                           'Organism Part': 0,
                           'Name': 0}
         attribute_order = AttributeOrder.objects.get(
-                assay=self.assay,
-                solr_field='Character_Title')
+            assay=self.assay, solr_field='Character_Title'
+        )
         new_rank = 1
         update_attribute_order_ranks(attribute_order, new_rank)
         attribute_list = AttributeOrder.objects.filter(
-                assay=self.assay)
+                assay=self.assay
+        )
         for attribute in attribute_list:
             self.assertEqual(attribute.rank,
                              expected_order[attribute.solr_field])
-
         # Test removing a rank to 0
         expected_order = {'Character_Title': 0,
                           'Specimen': 1,
@@ -1079,16 +1058,17 @@ class UtilitiesTests(TestCase):
                           'Replicate Id': 9,
                           'Organism Part': 0,
                           'Name': 0}
-        attribute_order = AttributeOrder.objects.\
-            get(assay=self.assay, solr_field='Character_Title')
+        attribute_order = AttributeOrder.objects.get(
+            assay=self.assay, solr_field='Character_Title'
+        )
         new_rank = 0
         update_attribute_order_ranks(attribute_order, new_rank)
         attribute_list = AttributeOrder.objects.filter(
-                assay=self.assay)
+                assay=self.assay
+        )
         for attribute in attribute_list:
             self.assertEqual(attribute.rank,
                              expected_order[attribute.solr_field])
-
         # Test multiple changes, including inserting field back in rank order
         expected_order = {'Character_Title': 7,
                           'Specimen': 1,
@@ -1102,28 +1082,25 @@ class UtilitiesTests(TestCase):
                           'Replicate Id': 11,
                           'Organism Part': 0,
                           'Name': 3}
-        attribute_order = AttributeOrder.objects.\
-            get(assay=self.assay, solr_field='Character_Title')
+        attribute_order = AttributeOrder.objects.get(
+            assay=self.assay, solr_field='Character_Title'
+        )
         new_rank = 7
         update_attribute_order_ranks(attribute_order, new_rank)
         AttributeOrder.objects.filter(assay=self.assay)
-        attribute_order = AttributeOrder.objects.get(
-                                                    assay=self.assay,
-                                                    solr_field='Type')
+        attribute_order = AttributeOrder.objects.get(assay=self.assay,
+                                                     solr_field='Type')
         new_rank = 9
         update_attribute_order_ranks(attribute_order, new_rank)
         AttributeOrder.objects.filter(assay=self.assay)
-        attribute_order = AttributeOrder.objects.get(
-                                                    assay=self.assay,
-                                                    solr_field='Name')
+        attribute_order = AttributeOrder.objects.get(assay=self.assay,
+                                                     solr_field='Name')
         new_rank = 3
         update_attribute_order_ranks(attribute_order, new_rank)
-        attribute_list = AttributeOrder.objects.filter(
-                assay=self.assay)
+        attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         for attribute in attribute_list:
             self.assertEqual(attribute.rank,
                              expected_order[attribute.solr_field])
-
         # Test small rank change
         expected_order = {'Character_Title': 7,
                           'Specimen': 1,
@@ -1137,13 +1114,11 @@ class UtilitiesTests(TestCase):
                           'Replicate Id': 11,
                           'Organism Part': 0,
                           'Name': 3}
-        attribute_order = AttributeOrder.objects.get(
-                                                    assay=self.assay,
-                                                    solr_field='Cell Line')
+        attribute_order = AttributeOrder.objects.get(assay=self.assay,
+                                                     solr_field='Cell Line')
         new_rank = 5
         update_attribute_order_ranks(attribute_order, new_rank)
-        attribute_list = AttributeOrder.objects.filter(
-                assay=self.assay)
+        attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         for attribute in attribute_list:
             self.assertEqual(attribute.rank,
                              expected_order[attribute.solr_field])
@@ -1151,9 +1126,8 @@ class UtilitiesTests(TestCase):
     def test_update_attribute_order_ranks_invalid(self):
         # Test invalid cases
         old_attribute_list = AttributeOrder.objects.filter(assay=self.assay)
-        attribute_order = AttributeOrder.objects.get(
-                                                    assay=self.assay,
-                                                    solr_field='Cell Line')
+        attribute_order = AttributeOrder.objects.get(assay=self.assay,
+                                                     solr_field='Cell Line')
         response = update_attribute_order_ranks(attribute_order, -4)
         self.assertEqual(response, 'Invalid: rank must be integer >= 0')
         response = update_attribute_order_ranks(attribute_order, None)
@@ -1161,26 +1135,23 @@ class UtilitiesTests(TestCase):
                          'Invalid: rank must be a string or a number.')
         response = update_attribute_order_ranks(attribute_order,
                                                 attribute_order.rank)
-        self.assertEqual(response,
-                         'Error: New rank == old rank')
+        self.assertEqual(response, 'Error: New rank == old rank')
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
     @mock.patch("data_set_manager.utils.core.utils.get_absolute_url")
     def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
         mock_get_url.return_value = "test_file_a.txt"
-        self.assertIn(
-            "test_file_a.txt",
-            get_file_url_from_node_uuid(self.node_a.uuid),
-        )
+        self.assertIn('test_file_a.txt',
+                      get_file_url_from_node_uuid(self.node_a.uuid)
+                      )
 
     def test_get_file_url_from_node_uuid_bad_uuid(self):
         with self.assertRaises(RuntimeError) as context:
             get_file_url_from_node_uuid("coffee")
-            self.assertEqual(
-                "Couldn't fetch Node by UUID from: coffee",
-                context.exception.message
-            )
+            self.assertEqual("Couldn't fetch Node by UUID from: coffee",
+                             context.exception.message
+                             )
 
     def test_get_file_url_from_node_uuid_with_no_file(self):
         self.assertIsNone(get_file_url_from_node_uuid(self.node_b.uuid))
@@ -1210,25 +1181,19 @@ class UtilitiesTests(TestCase):
 
     def test_update_annotated_nodes(self):
         type = 'Raw Data File'
-
-        nodes_before = AnnotatedNode.objects.filter(Q(
-            study__uuid=self.study.uuid,
-            assay__uuid=self.assay.uuid,
-            node_type=type
-        ))
+        nodes_before = AnnotatedNode.objects.filter(
+            Q(study__uuid=self.study.uuid, assay__uuid=self.assay.uuid,
+                node_type=type)
+        )
         self.assertEqual(len(nodes_before), 0)
 
-        update_annotated_nodes(
-            type,
-            study_uuid=self.study.uuid,
-            assay_uuid=self.assay.uuid,
-            update=True)
+        update_annotated_nodes(type, study_uuid=self.study.uuid,
+                               assay_uuid=self.assay.uuid, update=True)
 
-        nodes_after = AnnotatedNode.objects.filter(Q(
-            study__uuid=self.study.uuid,
-            assay__uuid=self.assay.uuid,
-            node_type=type
-        ))
+        nodes_after = AnnotatedNode.objects.filter(
+            Q(study__uuid=self.study.uuid, assay__uuid=self.assay.uuid,
+            node_type=type)
+        )
         self.assertEqual(len(nodes_after), 0)
         # TODO: Is this the behavior we expect?
 
@@ -1286,9 +1251,7 @@ class UtilitiesTests(TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=node,
-            attribute_subtype=None,
-            attribute_type='Label'
+            node=node, attribute_subtype=None, attribute_type='Label'
         )[0]
         solr_name = '{}_652_326_s'.format(annotated_node.attribute_type)
         first_node = get_first_annotated_node_from_solr_name(solr_name, node)
@@ -1302,9 +1265,7 @@ class UtilitiesTests(TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=node,
-            attribute_subtype=None,
-            attribute_type='Material Type'
+            node=node, attribute_subtype=None, attribute_type='Material Type'
         )[0]
         solr_name = '{}_652_326_s'.format('Material_Type')
         first_node = get_first_annotated_node_from_solr_name(solr_name, node)
@@ -1318,12 +1279,11 @@ class UtilitiesTests(TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=node,
-            attribute_subtype='culture medium',
+            node=node, attribute_subtype='culture medium',
             attribute_type='Factor Value'
         )[0]
-        solr_name = '{}_{}_652_326_s'.format(
-            annotated_node.attribute_subtype, 'Factor_Value'
+        solr_name = '{}_Factor_Value_652_326_s'.format(
+            annotated_node.attribute_subtype
         )
         first_node = get_first_annotated_node_from_solr_name(solr_name, node)
         self.assertEqual(annotated_node, first_node)
@@ -1336,8 +1296,7 @@ class UtilitiesTests(TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=node,
-            attribute_subtype='Data Record Accession',
+            node=node, attribute_subtype='Data Record Accession',
             attribute_type='Comment'
         )[0]
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
