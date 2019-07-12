@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='AnalysisStatus',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('refinery_import_task_group_id', django_extensions.db.fields.UUIDField(max_length=36, null=True, editable=False, blank=True)),
+                ('refinery_import_task_group_id', models.CharField(max_length=36, null=True, editable=False, blank=True)),
                 ('galaxy_import_task_group_id', django_extensions.db.fields.UUIDField(max_length=36, null=True, editable=False, blank=True)),
                 ('galaxy_export_task_group_id', django_extensions.db.fields.UUIDField(max_length=36, null=True, editable=False, blank=True)),
                 ('galaxy_history_state', models.CharField(blank=True, max_length=10, choices=[(b'SUCCESS', b'OK'), (b'FAILURE', b'Error'), (b'PROGRESS', b'Running'), (b'PENDING', b'Unknown')])),

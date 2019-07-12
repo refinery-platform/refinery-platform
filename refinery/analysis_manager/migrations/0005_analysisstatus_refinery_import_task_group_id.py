@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
-import django_extensions
-
 
 class Migration(migrations.Migration):
 
@@ -17,12 +15,6 @@ class Migration(migrations.Migration):
             model_name='analysisstatus',
             name='temp_uuid',
             field=models.UUIDField(null=True, editable=False),
-        ),
-        # to allow backward migrations after removing this field
-        migrations.AlterField(
-            model_name='analysisstatus',
-            name='refinery_import_task_group_id',
-            field=django_extensions.db.fields.UUIDField(null=True),
         ),
         # copy data to the new field
         migrations.RunSQL(
