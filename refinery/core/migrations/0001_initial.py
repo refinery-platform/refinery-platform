@@ -331,7 +331,7 @@ class Migration(migrations.Migration):
             name='UserProfile',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('uuid', models.CharField(unique=True, max_length=36, editable=False, blank=True)),
                 ('affiliation', models.CharField(max_length=100, blank=True)),
                 ('login_count', models.IntegerField(default=0)),
                 ('catch_all_project', models.ForeignKey(blank=True, to='core.Project', null=True)),
