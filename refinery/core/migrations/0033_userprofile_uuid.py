@@ -5,8 +5,6 @@ import uuid
 
 from django.db import migrations, models
 
-import django_extensions
-
 
 class Migration(migrations.Migration):
 
@@ -20,11 +18,11 @@ class Migration(migrations.Migration):
             name='temp_uuid',
             field=models.UUIDField(null=True),
         ),
-        # to allow backward migrations after removing this field
+        # allow backward migrations and remove dependency on django_extensions
         migrations.AlterField(
             model_name='userprofile',
             name='uuid',
-            field=django_extensions.db.fields.UUIDField(null=True),
+            field=models.CharField(max_length=36, null=True),
         ),
         # copy data to the new field
         migrations.RunSQL(
