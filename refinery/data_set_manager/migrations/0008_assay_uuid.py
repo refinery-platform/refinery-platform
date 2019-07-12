@@ -5,8 +5,6 @@ import uuid
 
 from django.db import migrations, models
 
-import django_extensions
-
 
 class Migration(migrations.Migration):
 
@@ -24,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assay',
             name='uuid',
-            field=django_extensions.db.fields.UUIDField(null=True),
+            field=models.CharField(max_length=36, null=True),
         ),
         # copy data to the new field
         migrations.RunSQL(
