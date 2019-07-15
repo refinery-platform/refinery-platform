@@ -1876,7 +1876,7 @@ class Invitation(models.Model):
     recipient_email = models.CharField(max_length=250, null=True)
 
     def __unicode__(self):
-        return self.token_uuid + ' | ' + str(self.group_id)
+        return str(self.token_uuid) + ' | ' + str(self.group_id)
 
     def save(self, *arg, **kwargs):
         if not self.id:
