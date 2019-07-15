@@ -18,13 +18,13 @@ class FileStoreItemAPITests(APITestCase):
         self.url_root = '/api/v2/file_store_items/'
 
     def test_get_ok_response_with_valid_uuid(self):
-        request = self.factory.get(self.url_root + self.item.uuid + '/')
+        request = self.factory.get(self.url_root + str(self.item.uuid) + '/')
         response = self.view(request, self.item.uuid)
         self.assertEqual(response.status_code, 200)
 
     def test_get_data_with_valid_uuid(self):
         expected_response = FileStoreItemSerializer(self.item)
-        request = self.factory.get(self.url_root + self.item.uuid + '/')
+        request = self.factory.get(self.url_root + str(self.item.uuid) + '/')
         response = self.view(request, self.item.uuid)
         response_keys = response.data.keys()
         for field in response_keys:
