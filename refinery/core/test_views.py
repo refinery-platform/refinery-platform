@@ -3,7 +3,7 @@ from datetime import timedelta
 import json
 import random
 import string
-import uuid
+import uuid as uuid_lib
 from urlparse import urljoin
 
 from cuser.middleware import CuserMiddleware
@@ -1453,7 +1453,7 @@ class InvitationApiV2Tests(APIV2TestCase):
         self.non_member = User.objects.create_user('Non-member',
                                                    'user2@example.com',
                                                    self.password)
-        self.invite = Invitation(token_uuid=uuid.uuid1(),
+        self.invite = Invitation(token_uuid=uuid_lib.uuid4(),
                                  group_id=self.group.id)
         self.time_duration = timedelta(days=settings.TOKEN_DURATION)
         self.invite.expires = timezone.now() + self.time_duration
@@ -1524,7 +1524,7 @@ class InvitationApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('id'), self.invite.id)
 
     def test_get_invites_deletes_expired_invites(self):
-        exp_invite = Invitation(token_uuid=uuid.uuid1(),
+        exp_invite = Invitation(token_uuid=uuid_lib.uuid4(),
                                 group_id=self.group.id)
         exp_invite.expires = timezone.now()
         exp_invite.sender = self.user
