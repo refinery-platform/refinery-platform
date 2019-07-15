@@ -1867,7 +1867,8 @@ post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
 class Invitation(models.Model):
-    token_uuid = UUIDField(unique=True, auto=True)
+    token_uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                                  unique=True)
     group_id = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(editable=False, null=True)
     expires = models.DateTimeField(editable=False, null=True)
