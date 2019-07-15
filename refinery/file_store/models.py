@@ -7,6 +7,7 @@
 import logging
 import os
 import re
+import uuid as uuid_lib
 
 from django.conf import settings
 from django.db import models
@@ -92,15 +93,14 @@ class FileExtension(models.Model):
 class FileStoreItem(models.Model):
     """Represents all data files"""
     datafile = models.FileField(blank=True, max_length=1024)
-    uuid = UUIDField()  # auto-generated unique ID
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     # URL, absolute file system path, or blank if source is a blob or similar
     source = models.CharField(blank=True, max_length=1024)
     filetype = models.ForeignKey(FileType, blank=True, null=True)
     # ID of Celery task used for importing the data file
     import_task_id = UUIDField(auto=False, blank=True)
-    # Date created
     created = models.DateTimeField(auto_now_add=True)
-    # Date updated
     updated = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):

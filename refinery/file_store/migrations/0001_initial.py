@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('datafile', models.FileField(storage=SymlinkedFileSystemStorage(), max_length=1024, blank=True)),
-                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('uuid', models.CharField(unique=True, max_length=36, editable=False, blank=True)),
                 ('source', models.CharField(max_length=1024)),
                 ('sharename', models.CharField(max_length=20, blank=True)),
                 ('import_task_id', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
