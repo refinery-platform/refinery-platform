@@ -4,6 +4,12 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
+def delete_attributedefinition_content_type(apps, schema_editor):
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+    ContentType.objects.filter(app_label='data_set_manager',
+                               model='attributedefinition').delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -22,4 +28,7 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='AttributeDefinition',
         ),
+        # to avoid a prompt about deleting stale content types
+        migrations.RunPython(delete_attributedefinition_content_type,
+                             migrations.RunPython.noop)
     ]
