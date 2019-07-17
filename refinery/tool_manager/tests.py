@@ -255,10 +255,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
         self.mock_parameter = ParameterFactory(
-            name="Test Param",
-            description="Test Param Description",
-            value_type=Parameter.STRING,
-            default_value="Coffee"
+            name="Test Param", description="Test Param Description",
+            value_type=Parameter.STRING, default_value="Coffee"
         )
         self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
         self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
@@ -330,7 +328,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
-                galaxy_param.uuid: galaxy_param.default_value
+                str(galaxy_param.uuid): galaxy_param.default_value
                 for galaxy_param in GalaxyParameter.objects.all()
             }
 
@@ -340,7 +338,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
-                self.mock_parameter.uuid: "Edited Value"
+                str(self.mock_parameter.uuid): "Edited Value"
             }
         else:
             raise RuntimeError("Please provide a valid tool_type")
@@ -361,11 +359,9 @@ class ToolManagerTestBase(ToolManagerMocks):
         else:
             self.post_data[Tool.FILE_RELATIONSHIPS] = file_relationships
 
-        self.post_request = self.factory.post(
-            self.tools_url_root,
-            data=self.post_data,
-            format="json"
-        )
+        self.post_request = self.factory.post(self.tools_url_root,
+                                              data=self.post_data,
+                                              format='json')
         force_authenticate(self.post_request, self.user)
 
         # Mock the spinning up of containers
@@ -406,21 +402,18 @@ class ToolManagerTestBase(ToolManagerMocks):
         self._make_tools_get_request()
         self.tool_json = self.get_response.data[0]
         self.delete_request = self.factory.delete(
-                urljoin(self.tools_url_root, self.tool_json['uuid']))
+                urljoin(self.tools_url_root, self.tool_json['uuid'])
+        )
         force_authenticate(self.delete_request, self.user)
         self.delete_response = self.tools_view(self.delete_request)
-        self.put_request = self.factory.put(
-                self.tools_url_root,
-                data=self.tool_json,
-                format="json"
-        )
+        self.put_request = self.factory.put(self.tools_url_root,
+                                            data=self.tool_json,
+                                            format='json')
         force_authenticate(self.put_request, self.user)
         self.put_response = self.tools_view(self.put_request)
-        self.options_request = self.factory.options(
-                self.tools_url_root,
-                data=self.tool_json,
-                format="json"
-        )
+        self.options_request = self.factory.options(self.tools_url_root,
+                                                    data=self.tool_json,
+                                                    format='json')
         force_authenticate(self.options_request, self.user)
         self.options_response = self.tools_view(self.options_request)
 
@@ -1727,7 +1720,7 @@ class VisualizationToolTests(ToolManagerTestBase):
                 {
                     "description": parameter.description,
                     "default_value": parameter.default_value,
-                    "uuid": parameter.uuid,
+                    "uuid": str(parameter.uuid),
                     "name": parameter.name,
                     "value": parameter.default_value,
                     "value_type": parameter.value_type
@@ -2196,7 +2189,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         for key in parameters_dict.keys():
             for k in parameters_dict[key].keys():
                 parameters_dict_with_uuids[
-                    GalaxyParameter.objects.get(name=k).uuid
+                    str(GalaxyParameter.objects.get(name=k).uuid)
                 ] = str(parameters_dict[key][k])
 
         self.assertEqual(
@@ -2205,12 +2198,9 @@ class WorkflowToolTests(ToolManagerTestBase):
                 self.tool.FILE_UUID_LIST: [self.node.file_uuid],
                 u"dataset_uuid": self.dataset.uuid,
                 u"tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: (
-                    u"[{}]".format(self.node.uuid)
-                ),
-                self.tool.FILE_RELATIONSHIPS_URLS: (
-                    u"['http://www.example.com/test_file.txt']"
-                ),
+                Tool.FILE_RELATIONSHIPS: u"[{}]".format(self.node.uuid),
+                self.tool.FILE_RELATIONSHIPS_URLS:
+                    u"['http://www.example.com/test_file.txt']",
                 ToolDefinition.PARAMETERS: parameters_dict_with_uuids,
                 WorkflowTool.GALAXY_DATA: {
                     WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
@@ -3036,13 +3026,10 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         get_request = self.factory.get(self.tool.container_input_json_url)
         with mock.patch("tool_manager.models.get_solr_response_json"):
             get_response = self.tool_container_input_data_view(
-                get_request,
-                uuid=self.tool.uuid
+                get_request, uuid=self.tool.uuid
             )
-            self.assertEqual(
-                json.loads(get_response.content),
-                self.tool.get_container_input_dict()
-            )
+            self.assertEqual(json.loads(get_response.content),
+                             self.tool.get_container_input_dict())
 
     def test_get_container_input_data_detail_route_bad_uuid(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -3638,10 +3625,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
                       self.post_response.content)
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def _start_visualization(
-            self, json_name, file_relationships,
-            assertions=None, count=1
-    ):
+    def _start_visualization(self, json_name, file_relationships,
+                             assertions=None, count=1):
         self.load_visualizations()
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -3655,13 +3640,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
                 self.make_node(source=self.sample_igv_file_url)
             ),
             ToolDefinition.PARAMETERS: {
-                self.mock_parameter.uuid: self.mock_parameter.default_value
+                str(self.mock_parameter.uuid): self.mock_parameter.default_value
             }
         }
-        visualization_tool = create_tool(
-            tool_launch_configuration,
-            self.user
-        )
+        visualization_tool = create_tool(tool_launch_configuration, self.user)
         with mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
@@ -3683,10 +3665,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             assertions(last_tool)
 
     def test_IGV(self):
-        self._start_visualization(
-            'igv.json',
-            self.sample_igv_file_url
-        )
+        self._start_visualization('igv.json', self.sample_igv_file_url)
 
     def test__get_launch_parameters(self):
         def assertions(tool):

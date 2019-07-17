@@ -508,8 +508,7 @@ class VisualizationTool(Tool):
         )
 
     def get_container_input_dict(self):
-        """
-        Create a dictionary containing information that Dockerized
+        """Create a dictionary containing information that Dockerized
         Visualizations will have access to
         """
         return {
@@ -576,16 +575,16 @@ class VisualizationTool(Tool):
         for parameter in self.tool_definition.get_parameters():
             tool_parameters.append(
                 {
-                    "uuid": parameter.uuid,
-                    "description": parameter.description,
-                    "default_value": parameter.cast_param_value_to_proper_type(
+                    'uuid': str(parameter.uuid),
+                    'description': parameter.description,
+                    'default_value': parameter.cast_param_value_to_proper_type(
                         parameter.default_value
                     ),
-                    "name": parameter.name,
-                    "value": parameter.cast_param_value_to_proper_type(
+                    'name': parameter.name,
+                    'value': parameter.cast_param_value_to_proper_type(
                         self._get_edited_parameter_value(parameter)
                     ),
-                    "value_type": parameter.value_type
+                    'value_type': parameter.value_type
                 }
             )
         return tool_parameters
@@ -596,7 +595,7 @@ class VisualizationTool(Tool):
         launched'''
         launch_parameters = self._get_launch_parameters()
         edited_parameter_value = launch_parameters.get(
-            parameter_instance.uuid
+            str(parameter_instance.uuid)
         )
 
         if edited_parameter_value is not None:
@@ -605,9 +604,7 @@ class VisualizationTool(Tool):
             return parameter_instance.default_value
 
     def launch(self):
-        """Launch a visualization-based Tool"""
         self._check_input_node_limit()
-
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
         start_container.delay(self)
