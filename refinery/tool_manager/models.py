@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from urlparse import urljoin
-import uuid
+import uuid as uuid_lib
 
 from django.conf import settings
 from django.db import models
@@ -45,12 +45,10 @@ logger = logging.getLogger(__name__)
 
 
 class Parameter(models.Model):
-    """
-    A Parameter is a representation of a tool parameter that will
+    """A Parameter is a representation of a tool parameter that will
     potentially be exposed and configurable upon a tool's
     configuration/launching step.
     """
-
     INTEGER = "INTEGER"
     STRING = "STRING"
     BOOLEAN = "BOOLEAN"
@@ -70,7 +68,8 @@ class Parameter(models.Model):
         (ATTRIBUTE, "attribute"),
         (FILE, "file")
     )
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
     is_user_adjustable = models.BooleanField(default=True)
@@ -879,7 +878,8 @@ class WorkflowTool(Tool):
                     analysis_group += 1
 
                 list_collection_element = CollectionElement(
-                    name="{} collection {}".format(self.LIST, uuid.uuid4()),
+                    name="{} collection {}".format(self.LIST,
+                                                   uuid_lib.uuid4()),
                     type=self.LIST
                 )
                 list_collection_element.elements = []
@@ -889,7 +889,8 @@ class WorkflowTool(Tool):
                 analysis_group += 1
 
                 paired_collection_element = CollectionElement(
-                    name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
+                    name="{} collection {}".format(self.PAIRED,
+                                                   uuid_lib.uuid4()),
                     type=self.PAIRED
                 )
                 paired_collection_element.elements = []
