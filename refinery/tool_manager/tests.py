@@ -3634,22 +3634,21 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
 
         # Create mock ToolLaunchConfiguration
         tool_launch_configuration = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": self.td.uuid,
+            'dataset_uuid': self.dataset.uuid,
+            'tool_definition_uuid': self.td.uuid,
             Tool.FILE_RELATIONSHIPS: "[{}]".format(
                 self.make_node(source=self.sample_igv_file_url)
             ),
             ToolDefinition.PARAMETERS: {
-                str(self.mock_parameter.uuid): self.mock_parameter.default_value
+                str(self.mock_parameter.uuid):
+                    self.mock_parameter.default_value
             }
         }
         visualization_tool = create_tool(tool_launch_configuration, self.user)
-        with mock.patch(
-            "data_set_manager.utils.search_solr",
-            return_value=self.create_solr_mock_response(
-                visualization_tool._get_input_nodes()
-            )
-        ):
+        with mock.patch('data_set_manager.utils.search_solr',
+                        return_value=self.create_solr_mock_response(
+                            visualization_tool._get_input_nodes()
+                        )):
             visualization_tool.launch()
 
         tools = VisualizationTool.objects.filter(
