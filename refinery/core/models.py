@@ -1867,7 +1867,8 @@ post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
 class Invitation(models.Model):
-    token_uuid = UUIDField(unique=True, auto=True)
+    token_uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                                  unique=True)
     group_id = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(editable=False, null=True)
     expires = models.DateTimeField(editable=False, null=True)
@@ -1875,7 +1876,7 @@ class Invitation(models.Model):
     recipient_email = models.CharField(max_length=250, null=True)
 
     def __unicode__(self):
-        return self.token_uuid + ' | ' + str(self.group_id)
+        return str(self.token_uuid) + ' | ' + str(self.group_id)
 
     def save(self, *arg, **kwargs):
         if not self.id:
