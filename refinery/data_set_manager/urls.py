@@ -52,5 +52,5 @@ data_set_manager_api_urls = router.urls + [
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/attributes/$',
         views.AssayAttributeAPIView.as_view()),
     url(r'^data_set_manager/add-file/$', views.AddFileToNodeView.as_view()),
-    url(r'^studies/$', views.StudyViewSet.as_view()),
+    url(r'^studies/$', views.StudyAPIView.as_view()),
 ]

@@ -53,8 +53,12 @@
     vm.userPerms = 'none';
 
     vm.cancel = function (fieldName) {
-      vm.editedDataSet[fieldName] = '';
-      vm.isCollapsed[fieldName] = true;
+      vm.editedDataSet[fieldName] = vm.dataSet[fieldName];
+      if (fieldName === 'accession') {
+        vm.isCollapsed.title = true;
+      } else {
+        vm.isCollapsed[fieldName] = true;
+      }
     };
 
     vm.importDataSet = function (dataSetUuid) {

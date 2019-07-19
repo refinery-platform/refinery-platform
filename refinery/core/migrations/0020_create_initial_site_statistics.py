@@ -36,12 +36,6 @@ def create_initial_site_statistics(apps, schema_editor):
     )
 
 
-def noop(apps, schema_editor):
-    return None  # Newer Django's >= 1.8 have a migrations.RunPython.noop to
-    # be able to move backwards in migrations yet have a data migration's
-    # results remain
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ('core', '0019_sitestatistics'),
@@ -49,5 +43,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_initial_site_statistics, noop),
+        migrations.RunPython(create_initial_site_statistics, migrations.RunPython.noop),
     ]

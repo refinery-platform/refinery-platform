@@ -137,12 +137,13 @@ def user(request, query):
     try:
         user = User.objects.get(username=query)
     except User.DoesNotExist:
-        user = get_object_or_404(UserProfile, uuid=query).user
-
+        try:
+            user = get_object_or_404(UserProfile, uuid=query).user
+        except ValueError:
+            raise Http404()
     # return all non-manager groups in profile
     groups = get_non_manager_groups_for_user(user)
-    return render(request,
-                  'core/user.html',
+    return render(request, 'core/user.html',
                   {'profile_user': user, 'user_groups': groups})
 
 
@@ -153,7 +154,10 @@ def user_profile(request):
 
 @login_required()
 def user_edit(request, uuid):
-    profile_object = get_object_or_404(UserProfile, uuid=uuid)
+    try:
+        profile_object = get_object_or_404(UserProfile, uuid=uuid)
+    except ValueError:
+        raise Http404()
     user_object = profile_object.user
     if request.method == "POST":
         uform = UserForm(data=request.POST, instance=user_object)
@@ -426,7 +430,7 @@ def pubmed_summary(request, id):
     return HttpResponse(response, content_type='application/json')
 
 
-class WorkflowViewSet(viewsets.ModelViewSet):
+class WorkflowViewSet(viewsets.ViewSet):
     """
         API endpoint that allows a workflow graph to be viewed.
         ---
@@ -452,7 +456,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class EventViewSet(APIView):
+class EventAPIView(APIView):
     """
         API endpoint that allows Events to be viewed
         ---
@@ -787,23 +791,21 @@ class DataSetViewSet(viewsets.ViewSet):
             new_owner.username
 
         temp_loader = loader.get_template(
-            'core/owner_transfer_notification.txt')
+            'core/owner_transfer_notification.txt'
+        )
         context_dict = {
             'site': self.current_site,
             'old_owner_name': old_owner_name,
-            'old_owner_uuid': old_owner.profile.uuid,
+            'old_owner_uuid': str(old_owner.profile.uuid),
             'new_owner_name': new_owner_name,
-            'new_owner_uuid': new_owner.profile.uuid,
+            'new_owner_uuid': str(new_owner.profile.uuid),
             'data_set_name': self.data_set.name,
             'data_set_uuid': self.data_set.uuid,
             'groups_with_access': perm_groups.get('groups_with_access'),
             'groups_without_access': perm_groups.get('groups_without_access')
         }
-        email = EmailMessage(
-            subject,
-            temp_loader.render(context_dict),
-            to=[new_owner.email, old_owner.email]
-        )
+        email = EmailMessage(subject, temp_loader.render(context_dict),
+                             to=[new_owner.email, old_owner.email])
         email.send()
         return email
 
@@ -839,7 +841,7 @@ class DataSetViewSet(viewsets.ViewSet):
                 "groups_without_access": groups_without_access}
 
 
-class AnalysisViewSet(APIView):
+class AnalysisAPIView(APIView):
     """
         API endpoint that allows for Analyses to be retrieved or deleted.
         ---
@@ -1348,7 +1350,7 @@ class CustomRegistrationView(RegistrationView):
         return super(CustomRegistrationView, self).form_valid(form)
 
 
-class OpenIDToken(APIView):
+class OpenIDTokenAPIView(APIView):
     """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
     token for a user authenticated by Django authentication process
 
@@ -1394,8 +1396,8 @@ class OpenIDToken(APIView):
         return Response(token)
 
 
-class SiteProfileViewSet(APIView):
-    """API endpoint that allows for SiteProfileViewSet to be edited.
+class SiteProfileAPIView(APIView):
+    """API endpoint that allows for site profiles to be edited.
      ---
     #YAML
 
@@ -1506,7 +1508,7 @@ class SiteProfileViewSet(APIView):
         )
 
 
-class UserProfileViewSet(APIView):
+class UserProfileAPIView(APIView):
     """API endpoint that allows for UserProfiles to be edited.
      ---
     #YAML

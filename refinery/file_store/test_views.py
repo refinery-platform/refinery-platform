@@ -4,17 +4,17 @@ from rest_framework.test import APIRequestFactory, APITestCase
 
 from .models import FileStoreItem
 from .serializers import FileStoreItemSerializer
-from .views import FileStoreItems
+from .views import FileStoreItemAPIView
 
 
-class FileStoreItemsAPITests(APITestCase):
+class FileStoreItemAPITests(APITestCase):
 
     def setUp(self):
         self.factory = APIRequestFactory()
         self.item = FileStoreItem.objects.create(
             source='http://example.org/test_file.dat'
         )
-        self.view = FileStoreItems.as_view()
+        self.view = FileStoreItemAPIView.as_view()
         self.url_root = '/api/v2/file_store_items/'
 
     def test_get_ok_response_with_valid_uuid(self):

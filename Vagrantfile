@@ -10,8 +10,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "ubuntu/trusty64"
-  config.vm.box_version = "20181203.0.1"
+  config.vm.box = "ubuntu/xenial64"
+  config.vm.box_version = "20190514.0.1"
   config.vm.hostname = "refinery"
   # nic_type set to virtio to increase guest network performance (https://superuser.com/a/850389)
   config.vm.network "private_network", ip: "192.168.50.50", nic_type: "virtio"
@@ -37,7 +37,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "deployment/puppet/manifests"
     puppet.manifest_file  = "site.pp"
-    puppet.hiera_config_path = "deployment/puppet/hiera.yaml"  # to avoid missing file warning
   end
 
   # workaround for services that start on boot before /vagrant is available

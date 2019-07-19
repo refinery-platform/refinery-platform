@@ -1,13 +1,13 @@
 sudo: required
 
 language: python
+python:
+  - "2.7"
+
 cache:
   directories:
     - /home/travis/.cache/pip
     - /home/travis/.cypress/Cypress
-
-python:
-  - 2.7
 
 addons:
   postgresql: "10"
@@ -15,6 +15,7 @@ addons:
     packages:
       - postgresql-10
       - postgresql-client-10
+      - libgconf-2-4  # for Cypress
 
 install:
   - node --version
@@ -54,7 +55,7 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput --fake-initial
-  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
+  - npm install -g grunt-cli@0.1.13 bower@1.8.8 --progress false --quiet || ( cat npm-debug.log && false )
   - cd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet

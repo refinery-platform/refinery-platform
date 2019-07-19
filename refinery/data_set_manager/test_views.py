@@ -27,7 +27,7 @@ from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .tests import MetadataImportTestBase
 from .views import (AddFileToNodeView, AssayAPIView, AssayAttributeAPIView,
-                    NodeViewSet, StudyViewSet)
+                    NodeViewSet, StudyAPIView)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -1810,7 +1810,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
 class StudyViewAPIV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(StudyViewAPIV2Tests, self).setUp(api_base_name="studies/",
-                                               view=StudyViewSet.as_view())
+                                               view=StudyAPIView.as_view())
         self.data_set = create_dataset_with_necessary_models(user=self.user)
 
     def test_get_missing_data_set_uuid_returns_400(self):

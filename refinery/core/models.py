@@ -14,6 +14,7 @@ import os
 import smtplib
 import socket
 from urlparse import urljoin
+import uuid as uuid_lib
 
 from django import forms
 from django.conf import settings
@@ -26,17 +27,16 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.db import models, transaction
 from django.db.models import Sum
-from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.functional import cached_property
 
 from bioblend import galaxy
 from cuser.middleware import CuserMiddleware
-from django.utils.functional import cached_property
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (assign_perm, get_groups_with_perms,
@@ -47,13 +47,11 @@ from registration.signals import user_activated, user_registered
 from rest_framework.authtoken.models import Token
 
 import data_set_manager
-from data_set_manager.models import (
-    Assay, Investigation, Node, NodeCollection, Study
-)
+from data_set_manager.models import (Assay, Investigation, Node,
+                                     NodeCollection, Study)
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.utils import (
-    add_annotated_nodes_selection, index_annotated_nodes_selection
-)
+from data_set_manager.utils import (add_annotated_nodes_selection,
+                                    index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType
 from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
@@ -83,7 +81,8 @@ class UserProfile(models.Model):
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/#extending-the-existing-user-model
 
     """
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
     primary_group = models.ForeignKey(Group, on_delete=models.SET_NULL,
@@ -1721,9 +1720,8 @@ class AnalysisNodeConnection(models.Model):
     # an identifier assigned to all connections to a specific instance of the
     # workflow template
     # (unique within the analysis)
-    subanalysis = IntegerField(null=True, blank=False)
-    node = models.ForeignKey(Node,
-                             related_name="workflow_node_connections",
+    subanalysis = models.IntegerField(null=True, blank=False)
+    node = models.ForeignKey(Node, related_name="workflow_node_connections",
                              null=True, blank=True, default=None)
     # step id in the expanded workflow template, e.g. 10
     step = models.IntegerField(null=False, blank=False)
@@ -1866,38 +1864,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 
 
 post_save.connect(create_manager_group, sender=ExtendedGroup)
-
-
-class GroupManagement(object):
-    def __init__(
-            self,
-            group_id=None,
-            group_name=None,
-            member_list=None,
-            perm_list=None,
-            can_edit=False,
-            is_manager_group=False,
-            manager_group_id=None):
-        self.group_id = group_id
-        self.group_name = group_name
-        self.member_list = member_list
-        self.perm_list = perm_list
-        self.can_edit = can_edit
-        self.is_manager_group = is_manager_group
-        self.manager_group_id = manager_group_id
-
-
-class UserAuthentication(object):
-    def __init__(
-            self,
-            is_logged_in=None,
-            is_admin=None,
-            id=None,
-            username=None):
-        self.is_logged_in = is_logged_in
-        self.is_admin = is_admin
-        self.id = id
-        self.username = username
 
 
 class Invitation(models.Model):

@@ -124,8 +124,8 @@ locals {
 
 resource "aws_instance" "app_server" {
   count                  = "${var.instance_count}"
-  # ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20181203
-  ami                    = "ami-03597b1b84c02cf7b"
+  # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20190514
+  ami                    = "ami-07b4156579ea1d7ba"
   instance_type          = "${var.instance_type}"
   key_name               = "${var.key_pair_name}"
   monitoring             = true
@@ -156,10 +156,14 @@ set -x
 export PROJECT_ROOT=/srv/refinery-platform
 
 # install dependencies
-/usr/bin/apt-get clean
+/usr/bin/wget -q -P /var/cache/apt/archives https://apt.puppetlabs.com/puppet5-release-xenial.deb
+/usr/bin/dpkg -i /var/cache/apt/archives/puppet5-release-xenial.deb
 /usr/bin/apt-get -qq update
+/usr/bin/apt-get -qq -y install git htop jq nmon puppet-agent ruby-dev tree
 /usr/bin/apt-get -y autoremove
-/usr/bin/apt-get -qq -y install git htop jq nmon puppet ruby-dev tree
+/usr/bin/apt-get clean
+
+PATH=/opt/puppetlabs/bin:$PATH
 
 # add extra SSH keys from Github
 for USERNAME in ${join(" ", var.ssh_users)}; do
@@ -173,11 +177,11 @@ su -c "git clone https://github.com/refinery-platform/refinery-platform.git $PRO
 su -c "cd $PROJECT_ROOT && /usr/bin/git checkout -q ${var.git_commit}" ubuntu
 
 # configure librarian-puppet
-/usr/bin/gem install librarian-puppet -v 2.2.3 --no-rdoc --no-ri
+/usr/bin/gem install librarian-puppet -v 3.0.0 --no-rdoc --no-ri
 cd $PROJECT_ROOT/deployment/puppet
 # need to set $HOME: https://github.com/rodjek/librarian-puppet/issues/258
 export HOME=/root
-/usr/local/bin/librarian-puppet config path /usr/share/puppet/modules --local
+/usr/local/bin/librarian-puppet config path /opt/puppetlabs/puppet/modules --local
 /usr/local/bin/librarian-puppet config tmp /tmp --local
 /usr/local/bin/librarian-puppet install
 
@@ -213,7 +217,7 @@ export FACTER_REFINERY_WELCOME_EMAIL_MESSAGE="${var.refinery_welcome_email_messa
 export FACTER_USER_FILES_COLUMNS="${var.refinery_user_files_columns}"
 
 # run Puppet
-/usr/bin/puppet apply $PROJECT_ROOT/deployment/puppet/manifests/site.pp
+/opt/puppetlabs/bin/puppet apply $PROJECT_ROOT/deployment/puppet/manifests/site.pp
 EOF
 }
 

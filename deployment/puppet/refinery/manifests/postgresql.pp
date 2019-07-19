@@ -7,7 +7,7 @@ class refinery::postgresql (
   $rds_endpoint_address   = $refinery::params::rds_endpoint_address,
 ) inherits refinery::params {
   $server_version = '10'
-  $package_version = "${server_version}.7-1.pgdg14.04+1"
+  $package_version = "${server_version}.9-1.pgdg16.04+1"
 
   if $deployment_platform == 'aws' {
     $rds_settings = {
@@ -72,7 +72,7 @@ class refinery::postgresql (
       # to make remote connections via SSH tunnel easier
       ipv4acls => ["host all ${db_user} 127.0.0.1/32 trust"],
     }
-
+    ->
     postgresql::server::role { $db_user:
       createdb => true,  # to allow automated testing
     }

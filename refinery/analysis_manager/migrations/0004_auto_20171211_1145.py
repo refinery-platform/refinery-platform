@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import django_extensions.db.fields
 
 
 class Migration(migrations.Migration):
@@ -15,25 +14,25 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='analysisstatus',
             name='galaxy_export_task_group_id',
-            field=django_extensions.db.fields.UUIDField(auto=False, null=True, blank=True),
+            field=models.CharField(max_length=36, null=True, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='analysisstatus',
             name='galaxy_import_task_group_id',
-            field=django_extensions.db.fields.UUIDField(auto=False, null=True, blank=True),
+            field=models.CharField(max_length=36, null=True, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='analysisstatus',
             name='galaxy_workflow_task_group_id',
-            field=django_extensions.db.fields.UUIDField(auto=False, null=True, blank=True),
+            field=models.CharField(max_length=36, null=True, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='analysisstatus',
             name='refinery_import_task_group_id',
-            field=django_extensions.db.fields.UUIDField(auto=False, null=True, blank=True),
+            field=models.CharField(max_length=36, null=True, blank=True),
             preserve_default=True,
         ),
     ]

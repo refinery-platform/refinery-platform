@@ -29,17 +29,11 @@ def update_read_meta_dataset_permissions(apps, schema_editor):
                     assign_perm("core.read_meta_dataset", obj, dataset)
 
 
-def noop(apps, schema_editor):
-    return None  # Newer Django's >= 1.8 have a migrations.RunPython.noop to
-    # be able to move backwards in migrations yet have a data migration's
-    # results remain
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ('core', '0015_auto_20171213_1429'),
     ]
 
     operations = [
-        migrations.RunPython(update_read_meta_dataset_permissions, noop),
+        migrations.RunPython(update_read_meta_dataset_permissions, migrations.RunPython.noop),
     ]
