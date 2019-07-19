@@ -6,6 +6,7 @@ Created on May 10, 2012
 import os
 from datetime import datetime
 import logging
+import uuid as uuid_lib
 
 from django.conf import settings
 from django.db import models
@@ -350,7 +351,8 @@ class Factor(models.Model):
 
 class Assay(models.Model):
     """Study Assay (ISA-Tab Spec 4.1.3.5)"""
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     study = models.ForeignKey(Study)
     measurement = models.TextField(blank=True, null=True)
     measurement_accession = models.TextField(blank=True, null=True)

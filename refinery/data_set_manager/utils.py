@@ -493,15 +493,13 @@ def generate_solr_params_for_assay(params, assay_uuid, exclude_facets=[]):
     return generate_solr_params(params, [assay_uuid], False, exclude_facets)
 
 
-def generate_solr_params(
-        params,
-        assay_uuids,
-        facets_from_config=False,
-        exclude_facets=[]):
+def generate_solr_params(params, assay_uuids, facets_from_config=False,
+                         exclude_facets=[]):
+    """Either returns a solr parameters obj, or None if assay_uuids is empty
     """
-    Either returns a solr parameters obj,
-    or None if assay_uuids is empty.
-    """
+    if len(assay_uuids) == 0:
+        return None
+
     facet_field = params.get('facets')
     facet_filter = params.get('filter_attribute')
     is_annotation = params.get('is_annotation', 'false')
@@ -509,7 +507,6 @@ def generate_solr_params(
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     start = params.get('offset', '0')
     sort = params.get('sort')
-
     fixed_solr_params = {
         "facet.limit": "-1",
         "fq": "is_annotation:{}".format(is_annotation),
@@ -518,10 +515,9 @@ def generate_solr_params(
         "wt": "json"
     }
 
-    if len(assay_uuids) == 0:
-        return None
-    filter_arr = ['assay_uuid:({})'.format(' OR '.join(assay_uuids))]
-
+    filter_arr = [
+        'assay_uuid:({})'.format(' OR '.join([str(u) for u in assay_uuids]))
+    ]
     field_limit = []  # limit attributes to return
     facet_fields_obj = {}  # requested facets formatted for solr
     if facets_from_config:
@@ -726,15 +722,15 @@ def get_owner_from_assay(uuid):
     # Returns the owner from an assay_uuid. Ownership is passed from dataset
     try:
         study = Study.objects.get(assay__uuid=uuid)
-    except (Study.DoesNotExist,
-            Study.MultipleObjectsReturned) as e:
-        logger.error(e)
+    except (Study.DoesNotExist, Study.MultipleObjectsReturned,
+            ValueError) as exc:
+        logger.error(exc)
         return None
 
     try:
         data_set = study.get_dataset()
-    except RuntimeError as e:
-        logger.error(e)
+    except RuntimeError as exc:
+        logger.error(exc)
         return None
 
     return data_set.get_owner()
