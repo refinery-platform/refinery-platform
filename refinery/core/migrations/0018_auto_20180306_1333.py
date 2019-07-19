@@ -4,6 +4,16 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 
 
+def delete_workflowinput_content_types(apps, schema_editor):
+    ContentType = apps.get_model('contenttypes', 'ContentType')
+    ContentType.objects.filter(app_label='core',
+                               model='workflowdatainput').delete()
+    ContentType.objects.filter(app_label='core',
+                               model='workflowdatainputmap').delete()
+    ContentType.objects.filter(app_label='core',
+                               model='workflowinputrelationships').delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -32,4 +42,7 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='WorkflowInputRelationships',
         ),
+        # to avoid a prompt about deleting stale content types
+        migrations.RunPython(delete_workflowinput_content_types,
+                             migrations.RunPython.noop)
     ]
