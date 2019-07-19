@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from urlparse import urljoin
-import uuid
+import uuid as uuid_lib
 
 from django.conf import settings
 from django.db import models
@@ -45,12 +45,10 @@ logger = logging.getLogger(__name__)
 
 
 class Parameter(models.Model):
-    """
-    A Parameter is a representation of a tool parameter that will
+    """A Parameter is a representation of a tool parameter that will
     potentially be exposed and configurable upon a tool's
     configuration/launching step.
     """
-
     INTEGER = "INTEGER"
     STRING = "STRING"
     BOOLEAN = "BOOLEAN"
@@ -70,7 +68,8 @@ class Parameter(models.Model):
         (ATTRIBUTE, "attribute"),
         (FILE, "file")
     )
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
     is_user_adjustable = models.BooleanField(default=True)
@@ -509,8 +508,7 @@ class VisualizationTool(Tool):
         )
 
     def get_container_input_dict(self):
-        """
-        Create a dictionary containing information that Dockerized
+        """Create a dictionary containing information that Dockerized
         Visualizations will have access to
         """
         return {
@@ -577,16 +575,16 @@ class VisualizationTool(Tool):
         for parameter in self.tool_definition.get_parameters():
             tool_parameters.append(
                 {
-                    "uuid": parameter.uuid,
-                    "description": parameter.description,
-                    "default_value": parameter.cast_param_value_to_proper_type(
+                    'uuid': str(parameter.uuid),
+                    'description': parameter.description,
+                    'default_value': parameter.cast_param_value_to_proper_type(
                         parameter.default_value
                     ),
-                    "name": parameter.name,
-                    "value": parameter.cast_param_value_to_proper_type(
+                    'name': parameter.name,
+                    'value': parameter.cast_param_value_to_proper_type(
                         self._get_edited_parameter_value(parameter)
                     ),
-                    "value_type": parameter.value_type
+                    'value_type': parameter.value_type
                 }
             )
         return tool_parameters
@@ -597,7 +595,7 @@ class VisualizationTool(Tool):
         launched'''
         launch_parameters = self._get_launch_parameters()
         edited_parameter_value = launch_parameters.get(
-            parameter_instance.uuid
+            str(parameter_instance.uuid)
         )
 
         if edited_parameter_value is not None:
@@ -606,9 +604,7 @@ class VisualizationTool(Tool):
             return parameter_instance.default_value
 
     def launch(self):
-        """Launch a visualization-based Tool"""
         self._check_input_node_limit()
-
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
         start_container.delay(self)
@@ -879,7 +875,8 @@ class WorkflowTool(Tool):
                     analysis_group += 1
 
                 list_collection_element = CollectionElement(
-                    name="{} collection {}".format(self.LIST, uuid.uuid4()),
+                    name="{} collection {}".format(self.LIST,
+                                                   uuid_lib.uuid4()),
                     type=self.LIST
                 )
                 list_collection_element.elements = []
@@ -889,7 +886,8 @@ class WorkflowTool(Tool):
                 analysis_group += 1
 
                 paired_collection_element = CollectionElement(
-                    name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
+                    name="{} collection {}".format(self.PAIRED,
+                                                   uuid_lib.uuid4()),
                     type=self.PAIRED
                 )
                 paired_collection_element.elements = []
