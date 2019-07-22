@@ -129,8 +129,6 @@ def update_refinery():
     with cd(env.refinery_ui_dir):
         run("npm prune --progress false")
         run("npm update --progress false")
-        run("rm -rf bower_components")
-        run("bower update --config.interactive=false")
         run("grunt make")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         run("pip install -r {refinery_project_dir}/requirements.txt"
@@ -150,13 +148,13 @@ def update_refinery():
 def relaunch_refinery(dependencies=False, migrations=False):
     """Perform a relaunch of a Refinery Platform instance, including processing
     of grunt tasks
-    dependencies: update bower and pip dependencies
+    dependencies: update npm and pip dependencies
     migrations: apply migrations
     """
     puts("Relaunching Refinery")
     with cd(os.path.join(env.refinery_app_dir, "ui")):
         if dependencies:
-            run("bower update --config.interactive=false")
+            run("npm update --config.interactive=false")
         run("grunt make")
     with prefix("workon {refinery_virtualenv_name}".format(**env)):
         if dependencies:

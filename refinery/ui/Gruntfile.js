@@ -398,7 +398,7 @@ module.exports = function (grunt) {
       compile: {
         PHANTOMJS_BIN: function () {
           var localPhantomJS =
-            'node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
+            'node_modules/.bin/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
 
           // Look for a phantomjs binary of the VM by default when no `--host`
           // flag is passed to grunt
@@ -462,7 +462,7 @@ module.exports = function (grunt) {
         browsers: browsers,
         configFile: 'karma.config.js',
         files: [].concat.apply(
-          [],
+          ['<%= cfg.basePath.ui.src %>/js/refinery.spec.js'],
           [
             config.files.vendor.js.map(function (script) {
               var include = true;
@@ -478,7 +478,7 @@ module.exports = function (grunt) {
               };
             }),
             [{
-              pattern: 'bower_components/angular-mocks/angular-mocks.js',
+              pattern: 'node_modules/angular-mocks/angular-mocks.js',
               watched: false
             }],
             [{
@@ -502,7 +502,7 @@ module.exports = function (grunt) {
         options: {
           paths: [
             '<%= cfg.basePath.ui.src %>/styles',
-            '<%= cfg.basePath.bower_components %>/bootstrap/less'
+            '<%= cfg.basePath.node_modules %>/bootstrap/less'
           ],
           plugins: lessPlugins
         },
@@ -641,6 +641,7 @@ module.exports = function (grunt) {
       var concat = grunt.config.get('concat') || {};
       var destination = mode === 'build' ?
             cfg.basePath.ui.build : cfg.basePath.ui.tmp;
+      console.log(cfg.files);
       var features = cfg.files.features;
       var files;
       var ngAnnotate = grunt.config.get('ngAnnotate') || {};
