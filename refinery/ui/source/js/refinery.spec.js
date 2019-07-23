@@ -23,7 +23,7 @@ describe('RefineryApp.module: unit tests', function () {
       deps = module.value('refineryApp').requires;
     });
 
-    it('should have "angular-resource" as a dependency', function () {
+    it('should have "ngResource" as a dependency', function () {
       expect(hasModule('ngResource')).toEqual(true);
     });
 
@@ -57,6 +57,10 @@ describe('RefineryApp.module: unit tests', function () {
 
     it('should have "refineryHome" as a dependency', function () {
       expect(hasModule('refineryHome')).toEqual(true);
+    });
+
+    it('should have "refineryDataSetImport" as a dependency', function () {
+      expect(hasModule('refineryDataSetImport')).toEqual(true);
     });
 
     it('should have "refineryDataSetNav" as a dependency', function () {

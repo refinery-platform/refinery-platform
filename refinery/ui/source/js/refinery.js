@@ -29,7 +29,7 @@ angular
 
     /*
      * Angular App globals
-    //  */
+     */
     'errors',
     'getCookie',
     'colors',
@@ -37,10 +37,10 @@ angular
     'mockParams',
     'replaceWhiteSpaceWithHyphen',
     'lodashLatest',
-    //
-    // /*
-    //  * Refinery modules
-    //  */
+
+    /*
+     * Refinery modules
+     */
     'refineryRouter',
     'refineryProvvis',
     'refineryHome',
