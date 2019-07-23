@@ -1004,21 +1004,10 @@ class Project(SharableResource):
 
 
 class AnalysisResult(models.Model):
-    analysis_uuid = UUIDField(auto=False)
+    _analysis = models.ForeignKey('Analysis')
     file_store_uuid = UUIDField(auto=False)
     file_name = models.TextField()
     file_type = models.TextField()
-
-    # many to many to nodes uuid
-
-    # associated tdf file
-    # ## TODO ### ?galaxy_id?
-    # add reference to file_store models
-    # foreign key into analysis
-    # analysis = models.ForeignKey('Analysis')
-
-    def __unicode__(self):
-        return str(self.file_name) + " <-> " + self.analysis_uuid
 
     class Meta:
         verbose_name = "analysis result"
@@ -1026,6 +1015,9 @@ class AnalysisResult(models.Model):
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
+
+    def __unicode__(self):
+        return str(self.file_name) + " <-> " + self._analysis.uuid
 
 
 class Analysis(OwnableResource):
@@ -1040,7 +1032,7 @@ class Analysis(OwnableResource):
         (RUNNING_STATUS, "Analysis is running"),
         (INITIALIZED_STATUS, "Analysis was initialized"),
     )
-    project = models.ForeignKey(Project, related_name="analyses")
+    project = models.ForeignKey(Project, related_name='analyses')
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
@@ -1048,7 +1040,6 @@ class Analysis(OwnableResource):
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    results = models.ManyToManyField(AnalysisResult, blank=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS,
@@ -1056,16 +1047,10 @@ class Analysis(OwnableResource):
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
     canceled = models.BooleanField(default=False)
-    # possibly replace results
-    # output_nodes = models.ManyToManyField(Nodes, blank=True)
-    # protocol = i.e. protocol node created when the analysis is created
 
     def __str__(self):
-        return "{} - {} - {}".format(
-            self.name,
-            self.get_owner_username(),
-            self.summary
-        )
+        return "{} - {} - {}".format(self.name, self.get_owner_username(),
+                                     self.summary)
 
     class Meta:
         verbose_name = "analysis"

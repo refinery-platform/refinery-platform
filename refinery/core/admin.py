@@ -27,7 +27,7 @@ class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
 
 
 class AnalysisResultAdmin(ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'analysis_uuid', 'file_store_uuid',
+    list_display = ['__unicode__', 'id', '_analysis', 'file_store_uuid',
                     'file_name', 'file_type']
 
 
