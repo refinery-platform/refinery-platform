@@ -273,12 +273,13 @@
   <script src="{% static "js/tool-launch.js" %}"></script>
   <script src="{% static "js/user-file-browser.js" %}"></script>
   <script src="{% static "js/workflow.js" %}"></script>
+
   <script src="{% static "vendor/ng-file-upload/dist/ng-file-upload.js" %}"></script>
   <script src="{% static "vendor/angular-ui-grid/ui-grid.min.js" %}"></script>
   <script src="{% static "js/metadata-table-import.js" %}"></script>
-  <!-- The File Upload Angular JS module -->
-  <script src="{% static "vendor/jquery-file-upload/js/jquery.uploadfile.js" %}"></script>
+  <!-- The File Upload module -->
   <script src="{% static "vendor/blueimp-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
+  <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
   <script src="{% static "vendor/blueimp-file-upload/js/jquery.iframe-transport.js" %}"></script>
   <script src="{% static "vendor/blueimp-file-upload/js/jquery.fileupload.js" %}"></script>
   <script src="{% static "vendor/blueimp-file-upload/js/jquery.fileupload-angular.js" %}"></script>

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static "vendor/spectrum-colorpicker/spectrum.css" %}" />
   <link rel="stylesheet" href="{% static "styles/provenance-visualization.css" %}" />
   <link rel="stylesheet" href="{% static "vendor/blueimp-file-upload/css/jquery.fileupload.css" %}">
+  <link rel="stylesheet" href="{% static "vendor/blueimp-file-upload/css/jquery.fileupload-ui.css" %}">
 
 {% endblock head_html %}
 
@@ -93,7 +94,6 @@
 
 {% block vendor_scripts %}
   <!-- provenance visualization -->
-  <script type="text/javascript" src="{% static "vendor/lodash/index.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/spectrum-colorpicker/spectrum.js" %}"></script>

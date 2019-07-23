@@ -462,7 +462,7 @@ module.exports = function (grunt) {
         browsers: browsers,
         configFile: 'karma.config.js',
         files: [].concat.apply(
-          ['<%= cfg.basePath.ui.src %>/js/refinery.spec.js'],
+          [],
           [
             config.files.vendor.js.map(function (script) {
               var include = true;
