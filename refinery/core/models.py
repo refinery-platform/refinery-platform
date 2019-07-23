@@ -1004,7 +1004,7 @@ class Project(SharableResource):
 
 
 class AnalysisResult(models.Model):
-    _analysis = models.ForeignKey('Analysis')
+    analysis = models.ForeignKey('Analysis', related_name='results')
     file_store_uuid = UUIDField(auto=False)
     file_name = models.TextField()
     file_type = models.TextField()
@@ -1017,7 +1017,7 @@ class AnalysisResult(models.Model):
         )
 
     def __unicode__(self):
-        return str(self.file_name) + " <-> " + self._analysis.uuid
+        return str(self.file_name) + " <-> " + self.analysis.uuid
 
 
 class Analysis(OwnableResource):

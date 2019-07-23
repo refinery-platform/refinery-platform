@@ -11,7 +11,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # setting name to 'analysis' here yields an empty result set
+        # use a temp name for the new foreign key to avoid error
+        # Reverse query name for 'Analysis.results' clashes with field name 'AnalysisResult.analysis'
         migrations.AddField(
             model_name='analysisresult',
             name='_analysis',

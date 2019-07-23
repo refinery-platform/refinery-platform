@@ -15,14 +15,18 @@ class Migration(migrations.Migration):
             model_name='analysisresult',
             name='analysis_uuid',
         ),
+        migrations.RemoveField(
+            model_name='analysis',
+            name='results',
+        ),
+        migrations.RenameField(
+            model_name='analysisresult',
+            old_name='_analysis',
+            new_name='analysis',
+        ),
         migrations.AlterField(
             model_name='analysisresult',
-            name='_analysis',
-            field=models.ForeignKey(to='core.Analysis'),
+            name='analysis',
+            field=models.ForeignKey(related_name='results', to='core.Analysis'),
         ),
-        # migrations.RenameField(
-        #     model_name='analysisresult',
-        #     old_name='_analysis',
-        #     new_name='analysis',
-        # ),
     ]
