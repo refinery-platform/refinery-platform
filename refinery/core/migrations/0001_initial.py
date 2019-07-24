@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
             name='AnalysisResult',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('analysis_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
+                ('analysis_uuid', models.CharField(max_length=36, editable=False, blank=True)),
                 ('file_store_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
                 ('file_name', models.TextField()),
                 ('file_type', models.TextField()),
