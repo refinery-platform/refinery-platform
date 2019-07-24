@@ -506,7 +506,7 @@ def _get_galaxy_download_task_ids(analysis):
             file_store_item.save()
 
             # adding history files to django model
-            temp_file = AnalysisResult(analysis_uuid=analysis.uuid,
+            temp_file = AnalysisResult(analysis=analysis,
                                        file_store_uuid=file_store_item.uuid,
                                        file_name=result_name,
                                        file_type=file_extension)

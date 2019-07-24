@@ -1566,10 +1566,8 @@ class InvitationApiV2Tests(APIV2TestCase):
 class AnalysisApiV2Tests(APIV2TestCase):
 
     def setUp(self):
-        super(AnalysisApiV2Tests, self).setUp(
-            api_base_name="analyses/",
-            view=AnalysisAPIView.as_view()
-        )
+        super(AnalysisApiV2Tests, self).setUp(api_base_name="analyses/",
+                                              view=AnalysisAPIView.as_view())
         self.project = Project.objects.create()
 
         self.galaxy_instance = GalaxyInstanceFactory()
@@ -1596,65 +1594,57 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assay = Assay.objects.create(study=self.study)
 
         # Create Analyses
-        self.analysis = Analysis.objects.create(
-            name='Coffee Analysis',
-            summary='coffee',
-            project=self.project,
-            data_set=self.data_set,
-            workflow=self.workflow,
-            time_start=timezone.now()
-        )
+        self.analysis = Analysis.objects.create(name='Coffee Analysis',
+                                                summary='coffee',
+                                                project=self.project,
+                                                data_set=self.data_set,
+                                                workflow=self.workflow,
+                                                time_start=timezone.now())
         self.analysis.set_owner(self.user)
 
-        self.analysis2 = Analysis.objects.create(
-            name='Coffee Analysis2',
-            summary='coffee2',
-            project=self.project,
-            data_set=self.data_set,
-            workflow=self.workflow,
-            time_start=timezone.now()
-        )
+        self.analysis2 = Analysis.objects.create(name='Coffee Analysis2',
+                                                 summary='coffee2',
+                                                 project=self.project,
+                                                 data_set=self.data_set,
+                                                 workflow=self.workflow,
+                                                 time_start=timezone.now())
         self.analysis2.set_owner(self.user)
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
 
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
+        self.node_json = json.dumps([
+            {
+                'uuid': 'cfb31cca-4f58-4ef0-b1e2-4469c804bf73',
+                'relative_file_store_item_url': None,
+                'parent_nodes': [],
+                'child_nodes': [
+                    '1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8'
+                ],
+                'auxiliary_nodes': [],
+                'is_auxiliary_node': False,
+                'file_extension': None,
+                'auxiliary_file_generation_task_state': None,
+                'ready_for_igv_detail_view': None
+            }
+        ])
 
         self.client.login(username=self.username, password=self.password)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.put_request = self.factory.put(self.url_root,
+                                            data=self.node_json,
+                                            format='json')
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.patch_request = self.factory.patch(self.url_root,
+                                                data=self.node_json,
+                                                format='json')
         self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.options_request = self.factory.options(self.url_root,
+                                                    data=self.node_json,
+                                                    format='json')
         self.options_response = self.view(self.options_request)
 
     def test_unallowed_http_verbs(self):
@@ -1662,9 +1652,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
         self.assertEqual(
             self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
+        self.assertEqual(self.options_response.data['detail'],
+                         'Method "OPTIONS" not allowed.')
 
     def test_get_analysis_returns_empty_list_for_no_public_data_sets(self):
         get_request = self.factory.get(self.url_root)
@@ -1886,25 +1875,17 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(Analysis.objects.all().count(), 2)
 
     def test_analysis_delete_not_found(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        uuid = self.analysis.uuid
-
         self.analysis.delete()
 
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
         self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
+           urljoin(self.url_root, self.analysis.uuid)
         )
         force_authenticate(self.delete_request, user=self.user)
 
         self.delete_response = self.view(self.delete_request,
-                                         uuid)
+                                         self.analysis.uuid)
 
         self.assertEqual(self.delete_response.status_code, 404)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
 
 
 class WorkflowApiV2Tests(APIV2TestCase):
