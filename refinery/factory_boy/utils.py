@@ -1,4 +1,4 @@
-import uuid as uuid_builtin
+import uuid as uuid_lib
 
 from core.models import INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis
 from data_set_manager.models import Node
@@ -15,7 +15,7 @@ from tool_manager.models import ToolDefinition
 
 
 def create_analysis(project, dataset, workflow, user_instance):
-    analysis_uuid = str(uuid_builtin.uuid4())
+    analysis_uuid = str(uuid_lib.uuid4())
     analysis = AnalysisFactory(
         uuid=analysis_uuid,
         name="Test Analysis - {}".format(analysis_uuid),
@@ -35,7 +35,7 @@ def create_analysis(project, dataset, workflow, user_instance):
     )
 
     # create Analysis Output
-    file_store_item_uuid = str(uuid_builtin.uuid4())
+    file_store_item_uuid = str(uuid_lib.uuid4())
     FileStoreItemFactory(
         uuid=file_store_item_uuid,
         source="http://www.example.com/analysis_output.txt"
@@ -74,7 +74,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
-    workflow = WorkflowFactory(uuid=str(uuid_builtin.uuid4()),
+    workflow = WorkflowFactory(uuid=str(uuid_lib.uuid4()),
                                workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
     dataset = create_dataset_with_necessary_models(user=user_instance)
@@ -92,7 +92,7 @@ def create_dataset_with_necessary_models(
 ):
     """Create Dataset with InvestigationLink, Investigation, Study,
     and Assay"""
-    dataset_uuid = str(uuid_builtin.uuid4())
+    dataset_uuid = str(uuid_lib.uuid4())
     dataset = DataSetFactory(
         uuid=dataset_uuid,
         title="Test DataSet - {}".format(dataset_uuid),
@@ -106,12 +106,12 @@ def create_dataset_with_necessary_models(
         latest_version
     )
 
-    assay_uuid = str(uuid_builtin.uuid4())
+    assay_uuid = str(uuid_lib.uuid4())
     assay = AssayFactory(uuid=assay_uuid, study=latest_study)
 
     if create_nodes:
         for i in xrange(2):
-            file_store_item_uuid = str(uuid_builtin.uuid4())
+            file_store_item_uuid = str(uuid_lib.uuid4())
             FileStoreItemFactory(
                 uuid=file_store_item_uuid,
                 source="http://www.example.com/test{}.txt".format(i)
@@ -146,14 +146,14 @@ def create_dataset_with_necessary_models(
 
 def _create_dataset_objects(dataset, is_isatab_based, latest_version):
     for i in xrange(1, latest_version+1):
-        file_store_item_uuid = str(uuid_builtin.uuid4())
+        file_store_item_uuid = str(uuid_lib.uuid4())
         file_store_item = FileStoreItemFactory(
             uuid=file_store_item_uuid,
             source="http://www.example.com/test.{}".format(
                 "zip" if is_isatab_based else "csv"
             )
         )
-        investigation_uuid = str(uuid_builtin.uuid4())
+        investigation_uuid = str(uuid_lib.uuid4())
         investigation = InvestigationFactory(
             uuid=investigation_uuid,
             isarchive_file=file_store_item.uuid if is_isatab_based else None,
@@ -165,7 +165,7 @@ def _create_dataset_objects(dataset, is_isatab_based, latest_version):
             title="{}: Investigation title".format(dataset)
         )
 
-        study_uuid = str(uuid_builtin.uuid4())
+        study_uuid = str(uuid_lib.uuid4())
         study = StudyFactory(
             uuid=study_uuid,
             investigation=investigation,
@@ -198,7 +198,7 @@ def create_tool_with_necessary_models(tool_type, user=None):
         ToolDefinition.VISUALIZATION: VisualizationToolFactory
     }
     tool_factory = tool_type_to_factory_mapping[tool_type]
-    name = "Test {} Tool: {}".format(tool_type, uuid_builtin.uuid4())
+    name = "Test {} Tool: {}".format(tool_type, uuid_lib.uuid4())
 
     tool = tool_factory(
         tool_definition=ToolDefinitionFactory(
@@ -218,13 +218,13 @@ def create_mock_hg_19_data_set(user=None):
     # Generally mocks the hg_19 local data set's study, assay, nodes,
     # annotated notes, and attributes.
     dataset = DataSetFactory(
-        uuid=str(uuid_builtin.uuid4()),
+        uuid=str(uuid_lib.uuid4()),
         title="Replica of hg-19 DataSet",
         name="Replica of hg-19 DataSet",
         slug=None
     )
     latest_study = _create_dataset_objects(dataset, False, 1)
-    assay = AssayFactory(uuid=str(uuid_builtin.uuid4()),
+    assay = AssayFactory(uuid=str(uuid_lib.uuid4()),
                          study=latest_study,
                          file_name='hg19-metadata-local.txt')
 
@@ -262,7 +262,7 @@ def create_mock_hg_19_data_set(user=None):
                                       type=Node.ASSAY,
                                       name=name + '.fastq.gz')
 
-        file_store_item_uuid = str(uuid_builtin.uuid4())
+        file_store_item_uuid = str(uuid_lib.uuid4())
         FileStoreItemFactory(
             uuid=file_store_item_uuid,
             source="/{}.fastq.gz".format(name)
@@ -295,13 +295,13 @@ def create_mock_isatab_9909_data_set(user=None):
     # annotated notes, and attributes.
     dataset = DataSetFactory(
         accession='9909',
-        uuid=str(uuid_builtin.uuid4()),
+        uuid=str(uuid_lib.uuid4()),
         title='Comparison of muscle stem cell preplates and myoblasts.',
         name='9909: Comparison of muscle stem cell preplates and myoblasts.',
         slug=None
     )
     latest_study = _create_dataset_objects(dataset, True, 1)
-    assay = AssayFactory(uuid=str(uuid_builtin.uuid4()), study=latest_study,
+    assay = AssayFactory(uuid=str(uuid_lib.uuid4()), study=latest_study,
                          file_name='isa_9909_558276.zip')
 
     qc_1_node = NodeFactory(study=latest_study,
@@ -398,7 +398,7 @@ def create_mock_isatab_9909_data_set(user=None):
                                              type=Node.HYBRIDIZATION_ASSAY,
                                              name=name['sample'])
 
-        file_store_item_uuid = str(uuid_builtin.uuid4())
+        file_store_item_uuid = str(uuid_lib.uuid4())
         FileStoreItemFactory(
             uuid=file_store_item_uuid,
             source='http://test.site/sites/bioassay_files/{}'.format(
@@ -437,7 +437,7 @@ def create_mock_isatab_9909_data_set(user=None):
         all_attributes.extend(loop_attributes)
         loop_attributes = []  # reset attributes for next path
 
-    file_store_uuid = str(uuid_builtin.uuid4())
+    file_store_uuid = str(uuid_lib.uuid4())
     FileStoreItemFactory(
         uuid=file_store_uuid,
         source='http://test.site/sites/9909/GPL96/raw_report_1/index.html'
@@ -451,7 +451,7 @@ def create_mock_isatab_9909_data_set(user=None):
     )
     qc_1_node.add_child(qc_1_derived_node)
 
-    file_store_uuid = str(uuid_builtin.uuid4())
+    file_store_uuid = str(uuid_lib.uuid4())
     FileStoreItemFactory(
         uuid=file_store_uuid,
         source='http://test.site/sites/gct/9909_GPL96.gct'
@@ -469,7 +469,7 @@ def create_mock_isatab_9909_data_set(user=None):
                             file_uuid=None,
                             type=Node.DATA_TRANSFORMATION,
                             name='QC_2')
-    file_store_uuid = str(uuid_builtin.uuid4())
+    file_store_uuid = str(uuid_lib.uuid4())
     FileStoreItemFactory(
         uuid=file_store_uuid,
         source='http://test.site/sites/9909/GPL96/report_rma/index.html'
@@ -490,7 +490,7 @@ def create_mock_isatab_9909_data_set(user=None):
                                  type=Node.DATA_TRANSFORMATION,
                                  name='pathprint')
     rma_derived_node.add_child(pathprint_node)
-    file_store_uuid = str(uuid_builtin.uuid4())
+    file_store_uuid = str(uuid_lib.uuid4())
     FileStoreItemFactory(
         uuid=file_store_uuid,
         source='http://test.site/sites/9909.GPL96_pathprint.txt'
@@ -529,7 +529,7 @@ def create_mock_isatab_9909_data_set(user=None):
                                                 type='Comment',
                                                 subtype='Data Repository',
                                                 value='')
-        file_store_uuid = str(uuid_builtin.uuid4())
+        file_store_uuid = str(uuid_lib.uuid4())
         FileStoreItemFactory(
             uuid=file_store_uuid,
             source='http://test.site/sites/9909.GPL96_{}.pdf'.format(name)
