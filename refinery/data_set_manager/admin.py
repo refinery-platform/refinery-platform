@@ -13,10 +13,10 @@ from data_set_manager import models
 
 class NodeAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("parents", "children")
-    list_display = ["__unicode__", "file_uuid", "study", "assay",
-                    "analysis_uuid", "name",
-                    "subanalysis", "workflow_output", "genome_build",
+    list_display = ["__unicode__", "file", "study", "assay", "analysis_uuid",
+                    "name", "subanalysis", "workflow_output", "genome_build",
                     "species", "is_auxiliary_node"]
+    readonly_fields = ["file"]
 
 
 class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):

@@ -500,14 +500,15 @@ class Node(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    children = models.ManyToManyField(
-        "self", symmetrical=False, related_name="parents_set")
-    parents = models.ManyToManyField(
-        "self", symmetrical=False, related_name="children_set")
+    children = models.ManyToManyField('self', symmetrical=False,
+                                      related_name='parents_set')
+    parents = models.ManyToManyField('self', symmetrical=False,
+                                     related_name='children_set')
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
     # only used for nodes representing files
-    file_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
+    file = models.ForeignKey(FileStoreItem, null=True, default=None,
+                             on_delete=models.PROTECT)
     # Refinery internal "attributes" (exported as comment attributes)
     genome_build = models.TextField(db_index=True, null=True)
     species = models.IntegerField(db_index=True, null=True)
