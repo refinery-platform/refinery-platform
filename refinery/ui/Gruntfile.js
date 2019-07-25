@@ -641,7 +641,6 @@ module.exports = function (grunt) {
       var concat = grunt.config.get('concat') || {};
       var destination = mode === 'build' ?
             cfg.basePath.ui.build : cfg.basePath.ui.tmp;
-      console.log(cfg.files);
       var features = cfg.files.features;
       var files;
       var ngAnnotate = grunt.config.get('ngAnnotate') || {};

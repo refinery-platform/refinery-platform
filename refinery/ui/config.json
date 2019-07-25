@@ -32,8 +32,8 @@
         "angular-ui-grid/ui-grid.min.css",
         "font-awesome/css/font-awesome.min.css",
         "intro.js/minified/introjs.min.css",
-        "blueimp-file-upload/css/jquery.fileupload.css",
         "blueimp-file-upload/css/jquery.fileupload-ui.css",
+        "blueimp-file-upload/css/jquery.fileupload.css",
         "select2/select2.css",
         "spectrum-colorpicker/spectrum.css",
         "ui-select/dist/select.min.css"
