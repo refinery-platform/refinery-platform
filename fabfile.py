@@ -141,31 +141,3 @@ def update_refinery():
         run("supervisorctl reload")
     with cd(env.refinery_project_dir):
         run("touch {refinery_app_dir}/config/wsgi_*.py".format(**env))
-
-
-@task(alias="relaunch")
-@with_settings(user=env.project_user)
-def relaunch_refinery(dependencies=False, migrations=False):
-    """Perform a relaunch of a Refinery Platform instance, including processing
-    of grunt tasks
-    dependencies: update npm and pip dependencies
-    migrations: apply migrations
-    """
-    puts("Relaunching Refinery")
-    with cd(os.path.join(env.refinery_app_dir, "ui")):
-        if dependencies:
-            run("npm update --config.interactive=false")
-        run("grunt make")
-    with prefix("workon {refinery_virtualenv_name}".format(**env)):
-        if dependencies:
-            run("pip install -r {refinery_project_dir}/requirements.txt"
-                .format(**env))
-        run("find . -name '*.pyc' -delete")
-        if migrations:
-            run("{refinery_app_dir}/manage.py migrate --noinput "
-                "--fake-initial".format(**env))
-        run("{refinery_app_dir}/manage.py collectstatic --noinput"
-            .format(**env))
-        run("supervisorctl restart all")
-    with cd(env.refinery_project_dir):
-        run("touch {refinery_app_dir}/config/wsgi_*.py".format(**env))
