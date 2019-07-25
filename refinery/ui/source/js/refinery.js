@@ -23,7 +23,6 @@ angular
      */
     'ui.bootstrap',
     'ui.router',
-    'ui.select',
     'file-model',
     'angular-intro',
 
