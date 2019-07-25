@@ -33,6 +33,7 @@ from django.forms import ValidationError
 from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
 from bioblend import galaxy
@@ -1643,6 +1644,7 @@ class Analysis(OwnableResource):
         ]
 
 
+@python_2_unicode_compatible
 class AnalysisResult(models.Model):
     analysis = models.ForeignKey(Analysis, related_name='results')
     file_store_uuid = UUIDField(auto=False)
@@ -1656,7 +1658,7 @@ class AnalysisResult(models.Model):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.file_name) + " <-> " + self.analysis.uuid
 
 
