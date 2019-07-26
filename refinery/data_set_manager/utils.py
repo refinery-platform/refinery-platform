@@ -949,7 +949,7 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
             "Couldn't fetch Node by UUID from: {}".format(node_uuid)
         )
     else:
-        url = node.get_relative_file_store_item_url()
+        url = node.file_item.get_datafile_url()
         if require_valid_url:
             if url is None:
                 raise RuntimeError(

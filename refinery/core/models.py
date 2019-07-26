@@ -1481,7 +1481,7 @@ class Analysis(OwnableResource):
                 )]
 
     def get_input_file_store_items(self):
-        return [node.file for node in self._get_input_nodes()]
+        return [node.file_item for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
         return self._get_input_nodes()[0].study
@@ -1530,41 +1530,29 @@ class Analysis(OwnableResource):
     def _create_derived_data_file_nodes(self, graph):
         """create derived data file nodes for all entries and connect to data
             transformation nodes"""
-        output_connection_to_analysis_result_mapping = (
-            self._get_output_connection_to_analysis_result_mapping()
-        )
         for output_connection, analysis_result in \
-                output_connection_to_analysis_result_mapping:
+                self._get_output_connection_to_analysis_result_mapping():
             derived_data_file_node = self._create_derived_data_file_node(
-                self.get_input_node_study(),
-                self.get_input_node_assay(),
+                self.get_input_node_study(), self.get_input_node_assay(),
                 output_connection
             )
             if output_connection.is_refinery_file:
                 # retrieve uuid of corresponding output file if exists
-                logger.info(
-                    "Results for '%s' and %s: %s",
-                    self.uuid,
-                    output_connection,
-                    analysis_result
-                )
-                derived_data_file_node.file_uuid = (
+                logger.info("Results for '%s' and %s: %s", self.uuid,
+                            output_connection, analysis_result)
+                derived_data_file_node.file_item = FileStoreItem.objects.get(
                     analysis_result.file_store_uuid
                 )
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
-                    output_connection,
-                    analysis_result.file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid
+                    output_connection, analysis_result.file_store_uuid,
+                    derived_data_file_node.name, derived_data_file_node.uuid
                 )
             output_connection.node = derived_data_file_node
             output_connection.save()
 
             self._link_derived_data_file_node_to_data_transformation_node(
-                graph,
-                output_connection,
-                derived_data_file_node
+                graph, output_connection, derived_data_file_node
             )
 
     def _link_derived_data_file_node_to_data_transformation_node(

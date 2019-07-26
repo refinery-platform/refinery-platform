@@ -219,26 +219,21 @@ class Investigation(NodeCollection):
 
     def get_file_store_items(self, exclude_metadata_file=False,
                              local_only=False):
-        """
-        Returns a list of all data files associated with an Investigation
+        """Returns a list of all data files associated with an Investigation
         :param exclude_metadata_file: <Boolean> Whether or not to exclude
         the metadata file used to create the Investigation from the resulting
         list
         :param local_only:  <Boolean> Whether or not to only include
         FileStoreItems that have been imported into Refinery
         """
-        file_store_item_uuids = [
-            node.file_uuid for node in Node.objects.filter(
+        file_store_items = [
+            node.file_item for node in Node.objects.filter(
                 study=self.get_study()
             )
-            if node.file_uuid
+            if node.file_item
         ]
-        file_store_items = list(
-            FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
-        )
         if not exclude_metadata_file:
             file_store_items.append(self.get_file_store_item())
-
         return (
             [f for f in file_store_items if f.datafile] if local_only
             else file_store_items
@@ -507,8 +502,8 @@ class Node(models.Model):
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
     # only used for nodes representing files
-    file = models.ForeignKey(FileStoreItem, null=True, default=None,
-                             on_delete=models.PROTECT)
+    file_item = models.ForeignKey(FileStoreItem, null=True, default=None,
+                                  on_delete=models.SET_NULL)
     # Refinery internal "attributes" (exported as comment attributes)
     genome_build = models.TextField(db_index=True, null=True)
     species = models.IntegerField(db_index=True, null=True)
@@ -627,22 +622,6 @@ class Node(models.Model):
                 logger.error(e)
 
         return aux_nodes
-
-    def get_relative_file_store_item_url(self):
-        """
-        Return relative path to a Node's FileStoreItem's
-        datafile if one exists, otherwise return None
-        """
-        try:
-            file_store_item = FileStoreItem.objects.get(
-                uuid=self.file_uuid
-            )
-            return file_store_item.get_datafile_url()
-
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return None
 
     def run_generate_auxiliary_node_task(self):
         """This method is initiated after a task_success signal is returned

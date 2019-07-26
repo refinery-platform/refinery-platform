@@ -140,10 +140,10 @@ class AddFileToNodeViewTests(APITestCase):
     @mock.patch("data_set_manager.models.Node.update_solr_index")
     def test_aws_post_file_store_item_source_translated(self,
                                                         update_solr_mock):
-        self.node.file.source = "{}/{}/test.txt".format(
+        self.node.file_item.source = "{}/{}/test.txt".format(
             settings.REFINERY_DATA_IMPORT_DIR, self.user.username
         )
-        self.node.file.save()
+        self.node.file_item.save()
         post_request = self.factory.post(self.url_root,
                                          data={
                                              'node_uuid': self.node.uuid,
@@ -153,7 +153,7 @@ class AddFileToNodeViewTests(APITestCase):
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.file.source,
+        self.assertEqual(self.node.file_item.source,
                          's3://test_bucket/test_identity_id/test.txt')
         self.assertTrue(update_solr_mock.called)
 
@@ -166,8 +166,8 @@ class AddFileToNodeViewTests(APITestCase):
         file_store_item_source = '{}/{}/test.txt'.format(
             settings.REFINERY_DATA_IMPORT_DIR, self.user.username
         )
-        self.node.file.source = file_store_item_source
-        self.node.file.save()
+        self.node.file_item.source = file_store_item_source
+        self.node.file_item.save()
 
         post_request = self.factory.post(self.url_root,
                                          data={'node_uuid': self.node.uuid},
@@ -175,7 +175,7 @@ class AddFileToNodeViewTests(APITestCase):
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.file.source, file_store_item_source)
+        self.assertEqual(self.node.file_item.source, file_store_item_source)
         self.assertTrue(update_solr_mock.called)
 
 
@@ -1000,20 +1000,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def test_patch_not_clean_400_status(self, mock_clean):
         mock_clean.return_value = False
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.patch_view(patch_request, self.node.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-
-    def test_patch_missing_file_store_item_400_status(self):
-        file_store_item = FileStoreItem.objects.get(uuid=self.node.file_uuid)
-        file_store_item.delete()
-
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
+            urljoin(self.url_root, self.node.uuid), {'file_uuid': ''}
         )
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1021,11 +1008,10 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_patch_non_owner_401_status(self):
         self.non_owner = User.objects.create_user('Random User',
-                                                  'rand_user@fake.com',
+                                                  'rand_user@example.com',
                                                   self.password)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
+            urljoin(self.url_root, self.node.uuid), {'file_uuid': ''}
         )
         force_authenticate(patch_request, user=self.non_owner)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1033,8 +1019,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_patch_edit_field_405_status(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"name": 'New Node Name'}
+            urljoin(self.url_root, self.node.uuid), {'name': 'New Node Name'}
         )
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, self.node.uuid)

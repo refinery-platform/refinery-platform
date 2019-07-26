@@ -1412,35 +1412,23 @@ class NodeClassMethodTests(TestCase):
 
         for i in xrange(2):
             self.node._create_and_associate_auxiliary_node(
-                self.filestore_item.uuid)
+                self.filestore_item.uuid
+            )
+            # Still just one child even on second time
             self.assertEqual(len(self.node.get_children()), 1)
-            # Still just one child even on second time.
-            self.assertEqual(Node.objects.get(
-                file_uuid=self.filestore_item.uuid
-            ).get_relative_file_store_item_url(),
-                 FileStoreItem.objects.get(
-                     uuid=Node.objects.get(
-                         file_uuid=self.filestore_item.uuid).file_uuid
-                 ).get_datafile_url())
 
     def test_get_auxiliary_file_generation_task_state(self):
         # Normal nodes will always return None
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
-
         # Auxiliary nodes will have a task state
         self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid)
+            self.filestore_item.uuid
+        )
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
-        self.assertIn(state, [PENDING, STARTED, SUCCESS])
         # Values from:
         # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
-
-    # File store:
-
-    def test_get_relative_file_store_item_url(self):
-        relative_url = self.file_node.get_relative_file_store_item_url()
-        self.assertEqual(relative_url, self.file_node.file.get_datafile_url())
+        self.assertIn(state, [PENDING, STARTED, SUCCESS])
 
     def test_get_analysis(self):
         make_analyses_with_single_dataset(1, self.user)

@@ -26,7 +26,7 @@ def create_analysis(project, dataset, workflow, user_instance):
                                   filename='Input filename',
                                   direction=INPUT_CONNECTION,
                                   is_refinery_file=bool(
-                                      input_node.file.datafile
+                                      input_node.file_item.datafile
                                   ))
     # create Analysis Output
     file_store_item_uuid = str(uuid_lib.uuid4())
@@ -516,14 +516,10 @@ def create_mock_isatab_9909_data_set(user=None):
 
 
 def _create_annotated_node(assay, attribute, node, study):
-    AnnotatedNodeFactory(assay=assay,
-                         attribute=attribute,
+    AnnotatedNodeFactory(assay=assay, attribute=attribute,
                          attribute_type=attribute.type,
                          attribute_subtype=attribute.subtype,
                          attribute_value=attribute.value,
-                         node=node,
-                         node_file_uuid=node.file_uuid,
-                         node_name=node.name,
-                         node_type=node.type,
-                         node_uuid=node.uuid,
-                         study=study)
+                         node=node, node_file_uuid=node.file_item.uuid,
+                         node_name=node.name, node_type=node.type,
+                         node_uuid=node.uuid, study=study)

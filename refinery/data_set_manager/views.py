@@ -35,7 +35,7 @@ from rest_framework.views import APIView
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
 from core.utils import get_absolute_url, get_data_set_for_view_set
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import FileStoreItem, generate_file_source_translator
+from file_store.models import generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
 from file_store.utils import parse_s3_url
 
@@ -1071,12 +1071,13 @@ class AddFileToNodeView(APIView):
         if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        if (node.file and not node.file.datafile and
-                node.file.source.startswith((settings.REFINERY_DATA_IMPORT_DIR,
-                                             's3://'))):
+        if (node.file_item and not node.file_item.datafile and
+                node.file_item.source.startswith(
+                    (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                )):
             logger.debug("Adding file to Node '%s'", node)
-            node.file.source = os.path.basename(node.file.source)
-            node.file.save()
+            node.file_item.source = os.path.basename(node.file_item.source)
+            node.file_item.save()
 
             if identity_id:
                 file_source_translator = generate_file_source_translator(
@@ -1086,16 +1087,17 @@ class AddFileToNodeView(APIView):
                 file_source_translator = generate_file_source_translator(
                     username=request.user.username
                 )
-            node.file.source = file_source_translator(node.file.source)
-
+            node.file_item.source = file_source_translator(
+                node.file_item.source
+            )
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new file import task when called below.
             # We then have to update its Node's Solr index entry, so the
             # updated file import status is available in the UI.
-            node.file.import_task_id = ""
-            node.file.save()
+            node.file_item.import_task_id = ""
+            node.file_item.save()
             node.update_solr_index()
-            FileImportTask().delay(node.file.uuid)
+            FileImportTask().delay(node.file_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 
@@ -1240,30 +1242,16 @@ class NodeViewSet(viewsets.ViewSet):
         data_set = node.study.get_dataset()
 
         if not data_set.is_clean():
-            return Response(
-                'Files cannot be removed once an analysis or visualization '
-                'has ran on a data set ',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response('Files cannot be removed once an analysis or '
+                            'visualization has ran on a data set ',
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if not data_set.get_owner() == request.user:
             return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
         # to remove the data file, we need to delete it and update index,
-        #  the file store item uuid should remain
         if new_file_uuid == '':
-            try:
-                file_store_item = FileStoreItem.objects.get(
-                    uuid=node.file_uuid
-                )
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(e)
-                return Response('Missing file store item.',
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                file_store_item.delete_datafile()
-
+            node.file_item.delete()
             node.update_solr_index()
             return Response(
                 NodeSerializer(node).data, status=status.HTTP_200_OK
@@ -1275,8 +1263,9 @@ class NodeViewSet(viewsets.ViewSet):
                 'attribute_type'
             )
             if attribute_type not in Attribute.editable_types:
-                return HttpResponseBadRequest('Attribute is not an '
-                                              'editable type')
+                return HttpResponseBadRequest(
+                    'Attribute is not an editable type'
+                )
             # from annotated node, we can grab source attribute
             annotated_node = get_first_annotated_node_from_solr_name(
                 solr_name, node

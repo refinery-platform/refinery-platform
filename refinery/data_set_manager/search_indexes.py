@@ -150,13 +150,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(i for i in sorted(value))
 
-        datafile = "" if node.file is None else node.file.datafile.name
-        filetype = "" if node.file is None else node.file.filetype
+        if node.file_item is None:
+            datafile = ""
+            filetype = ""
+        else:
+            datafile = node.file_item.datafile.name
+            filetype = node.file_item.filetype
 
         data.update({
             NodeIndex.DATAFILE: datafile,
             NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
-                node.file
+                node.file_item
             ),
             NodeIndex.TYPE_PREFIX + id_suffix: node.type,
             NodeIndex.NAME_PREFIX + id_suffix: node.name,

@@ -442,14 +442,10 @@ class Tool(OwnableResource):
         )
         for node_uuid in node_uuids:
             node = Node.objects.get(uuid=node_uuid)
-
             # Append file_uuid to list of FileStoreItem UUIDs
-            tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
-
-            file_url = get_file_url_from_node_uuid(
-                node_uuid,
-                require_valid_url=True
-            )
+            tool_launch_config[self.FILE_UUID_LIST].append(node.file_item.uuid)
+            file_url = get_file_url_from_node_uuid(node_uuid,
+                                                   require_valid_url=True)
             tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
                 tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
                     node_uuid, "'{}'".format(file_url)
@@ -794,9 +790,9 @@ class WorkflowTool(Tool):
         for node in self._get_input_nodes():
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis, node=node, direction=INPUT_CONNECTION,
-                name=node.file.datafile.name, step=self.INPUT_STEP_NUMBER,
+                name=node.file_item.datafile.name, step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
-                is_refinery_file=bool(node.file.datafile)
+                is_refinery_file=bool(node.file_item.datafile)
             )
 
     def create_analysis_output_node_connections(self):
