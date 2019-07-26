@@ -71,57 +71,32 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     return Analysis.objects.all(), dataset
 
 
-def create_dataset_with_necessary_models(
-        create_nodes=True, is_isatab_based=False, user=None, slug=None,
-        latest_version=1
-):
-    """Create Dataset with InvestigationLink, Investigation, Study,
-    and Assay"""
+def create_dataset_with_necessary_models(create_nodes=True,
+                                         is_isatab_based=False, user=None,
+                                         slug=None, latest_version=1):
+    """Create Dataset with InvestigationLink, Investigation, Study and Assay"""
     dataset_uuid = str(uuid_lib.uuid4())
-    dataset = DataSetFactory(
-        uuid=dataset_uuid,
-        title="Test DataSet - {}".format(dataset_uuid),
-        name="Test DataSet - {}".format(dataset_uuid),
-        slug=slug
-    )
-
-    latest_study = _create_dataset_objects(
-        dataset,
-        is_isatab_based,
-        latest_version
-    )
-
-    assay_uuid = str(uuid_lib.uuid4())
-    assay = AssayFactory(uuid=assay_uuid, study=latest_study)
+    dataset = DataSetFactory(uuid=dataset_uuid,
+                             title="Test DataSet - {}".format(dataset_uuid),
+                             name="Test DataSet - {}".format(dataset_uuid),
+                             slug=slug)
+    latest_study = _create_dataset_objects(dataset, is_isatab_based,
+                                           latest_version)
+    assay = AssayFactory(uuid=str(uuid_lib.uuid4()), study=latest_study)
 
     if create_nodes:
         for i in xrange(2):
-            file_store_item_uuid = str(uuid_lib.uuid4())
-            FileStoreItemFactory(
-                uuid=file_store_item_uuid,
-                source="http://www.example.com/test{}.txt".format(i)
+            file_store_item = FileStoreItemFactory(
+                uuid=str(uuid_lib.uuid4()),
+                source='http://www.example.com/test{}.txt'.format(i)
             )
-            node = NodeFactory(
-                study=latest_study,
-                assay=assay,
-                file_uuid=file_store_item_uuid,
-                type=Node.RAW_DATA_FILE
-            )
-            attribute = AttributeFactory(
-                node=node,
-                type="Characteristics",
-                subtype="organism",
-                value="Human"
-            )
-            AnnotatedNodeFactory(
-                study=latest_study,
-                assay=assay,
-                node=node,
-                node_name='AnnotatedNode-{}'.format(i),
-                node_type=node.type,
-                attribute=attribute
-            )
-
+            node = NodeFactory(study=latest_study, assay=assay,
+                               file=file_store_item, type=Node.RAW_DATA_FILE)
+            attribute = AttributeFactory(node=node, type='Characteristics',
+                                         subtype='organism', value='Human')
+            AnnotatedNodeFactory(study=latest_study, assay=assay, node=node,
+                                 node_name='AnnotatedNode-{}'.format(i),
+                                 node_type=node.type, attribute=attribute)
     if user is not None:
         dataset.set_owner(user)
         dataset.save()
