@@ -82,7 +82,7 @@ script:
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
+  - coverage run manage.py test --failfast
   - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'

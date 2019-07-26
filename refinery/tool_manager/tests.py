@@ -2531,11 +2531,9 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertGreater(output_connections.count(), 0)
         for output_connection in output_connections:
             output_connection_filename = "{}.{}".format(
-                output_connection.name,
-                output_connection.filetype
+                output_connection.name, output_connection.filetype
             )
-            analysis_results = AnalysisResult.objects.filter(
-                analysis_uuid=self.tool.analysis.uuid,
+            analysis_results = self.tool.analysis.results.filter(
                 file_name=output_connection_filename
             )
             self.assertGreater(analysis_results.count(), 1)

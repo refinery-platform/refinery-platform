@@ -43,11 +43,9 @@ class AnalysisDeletionTest(TestCase):
     def setUp(self):
         self.username = self.password = 'user'
         self.user = User.objects.create_user(self.username, '', self.password)
-        self.analyses, self.dataset = \
-            make_analyses_with_single_dataset(
-                1,
-                self.user
-            )
+        self.analyses, self.dataset = make_analyses_with_single_dataset(
+                1, self.user
+        )
         self.analysis = self.analyses[0]
 
     def test_transaction_rollback_on_analysis_delete_failure(self):
@@ -97,62 +95,39 @@ class AnalysisDeletionTest(TestCase):
 
 
 class AnalysisTests(TestCase):
-    def setUp(self):
-        # Create a user
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
 
-        # Create a Project
+    def setUp(self):
+
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(self.username, '', self.password)
         self.project = Project.objects.create()
         self.project1 = Project.objects.create()
-
-        # Create a galaxy Instance
         self.galaxy_instance = GalaxyInstanceFactory()
-
-        # Create a WorkflowEngine
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
-
-        # Create a Workflow
         self.workflow = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
+            name='Workflow1', workflow_engine=self.workflow_engine
+        )
         self.workflow1 = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
-
-        text_filetype = FileType.objects.get(name="TXT")
-
-        # Create FileStoreItems
+            name="Workflow1", workflow_engine=self.workflow_engine
+        )
         self.file_store_item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            ),
-            filetype=text_filetype
+            datafile=SimpleUploadedFile('test_file.txt',
+                                        'Coffee is delicious!'),
+            filetype=FileType.objects.get(name="TXT")
         )
         self.file_store_item1 = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
+            datafile=SimpleUploadedFile('test_file.txt',
+                                        'Coffee is delicious!')
         )
-
-        # Create some DataSets that will have an analysis run upon them
         self.dataset_with_analysis = DataSet.objects.create()
         self.dataset_with_analysis1 = DataSet.objects.create()
-
-        # Create a DataSet that won't have an analysis run upon it
         self.dataset_without_analysis = DataSet.objects.create()
-
-        # Create two Analyses using the two DataSets made earlier
         self.analysis = Analysis.objects.create(
             name='analysis_without_node_analyzed_further',
-            summary='This is a summary',
-            project=self.project,
-            data_set=self.dataset_with_analysis,
-            workflow=self.workflow,
+            summary='This is a summary', project=self.project,
+            data_set=self.dataset_with_analysis, workflow=self.workflow,
             status="SUCCESS"
         )
         self.analysis_status = AnalysisStatus.objects.create(
@@ -160,98 +135,68 @@ class AnalysisTests(TestCase):
         )
         self.analysis_with_node_analyzed_further = Analysis.objects.create(
             name='analysis_with_node_analyzed_further',
-            summary='This is a summary',
-            project=self.project1,
-            data_set=self.dataset_with_analysis1,
-            workflow=self.workflow1,
+            summary='This is a summary', project=self.project1,
+            data_set=self.dataset_with_analysis1, workflow=self.workflow1,
             status="SUCCESS"
         )
-        # Set Ownership
         self.analysis.set_owner(self.user)
         self.analysis_with_node_analyzed_further.set_owner(self.user)
-
-        # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
         self.investigation_link = InvestigationLink.objects.create(
             investigation=self.investigation,
-            data_set=self.dataset_with_analysis)
+            data_set=self.dataset_with_analysis
+        )
         self.investigation1 = Investigation.objects.create()
         self.investigation_link1 = InvestigationLink.objects.create(
             investigation=self.investigation1,
-            data_set=self.dataset_with_analysis1)
-
-        # Create Studys and Assays
+            data_set=self.dataset_with_analysis1
+        )
         self.study = Study.objects.create(investigation=self.investigation)
         self.assay = Assay.objects.create(study=self.study)
         self.study1 = Study.objects.create(investigation=self.investigation1)
         self.assay1 = Assay.objects.create(study=self.study1)
-
-        # Create Nodes
-        self.node = Node.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name="test_node",
-            analysis_uuid=self.analysis.uuid,
-            file_uuid=self.file_store_item.uuid
-        )
+        self.node = Node.objects.create(assay=self.assay, study=self.study,
+                                        name='test_node',
+                                        analysis_uuid=self.analysis.uuid,
+                                        file_uuid=self.file_store_item.uuid)
         self.node2 = Node.objects.create(
-            assay=self.assay1,
-            study=self.study,
+            assay=self.assay1, study=self.study,
             analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
             file_uuid=self.file_store_item1.uuid
         )
-
         self.node_filename = "{}.{}".format(
-            self.node.name,
-            self.node.get_file_store_item().get_extension()
+            self.node.name, self.node.get_file_store_item().get_extension()
         )
-
-        # Create AnalysisNodeConnections
-        self.analysis_node_connection_a = (
+        self.analysis_node_connection_a = \
             AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                node=self.node,
-                step=1,
-                filename=self.node_filename,
-                direction=OUTPUT_CONNECTION,
-                is_refinery_file=True,
-                galaxy_dataset_name="Galaxy File Name"
+                analysis=self.analysis, node=self.node, step=1,
+                filename=self.node_filename, direction=OUTPUT_CONNECTION,
+                is_refinery_file=True, galaxy_dataset_name='Galaxy File Name'
             )
-        )
-        self.analysis_node_connection_b = (
-            AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                node=self.node,
-                step=2,
-                filename=self.node_filename,
-                direction=OUTPUT_CONNECTION,
-                is_refinery_file=False
-            )
-        )
-        self.analysis_node_connection_c = (
-            AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                node=self.node,
-                step=3,
-                filename=self.node_filename,
-                direction=OUTPUT_CONNECTION,
-                is_refinery_file=True
-            )
-        )
-        self.analysis_node_connection_with_node_analyzed_further = (
+        self.analysis_node_connection_b = \
+            AnalysisNodeConnection.objects.create(analysis=self.analysis,
+                                                  node=self.node, step=2,
+                                                  filename=self.node_filename,
+                                                  direction=OUTPUT_CONNECTION,
+                                                  is_refinery_file=False)
+        self.analysis_node_connection_c = \
+            AnalysisNodeConnection.objects.create(analysis=self.analysis,
+                                                  node=self.node, step=3,
+                                                  filename=self.node_filename,
+                                                  direction=OUTPUT_CONNECTION,
+                                                  is_refinery_file=True)
+        self.analysis_node_connection_with_node_analyzed_further = \
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis_with_node_analyzed_further,
-                node=self.node2,
-                step=0,
-                direction=INPUT_CONNECTION
+                node=self.node2, step=0, direction=INPUT_CONNECTION
             )
-        )
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
         query = Analysis.objects.get(
-            name='analysis_without_node_analyzed_further')
+            name='analysis_without_node_analyzed_further'
+        )
         self.assertIsNotNone(query)
         self.analysis.delete()
         self.assertRaises(Analysis.DoesNotExist, Analysis.objects.get,
@@ -262,7 +207,8 @@ class AnalysisTests(TestCase):
         # AnalysisNodeConnection with direction == 'in'
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
-            name='analysis_with_node_analyzed_further'))
+            name='analysis_with_node_analyzed_further')
+        )
 
     def test_has_nodes_used_in_downstream_analyses(self):
         self.assertTrue(self.analysis_with_node_analyzed_further
@@ -286,20 +232,12 @@ class AnalysisTests(TestCase):
     def test_galaxy_tool_file_import_state_is_empty_without_an_import_state(
             self):
         self.analysis_status.galaxy_import_progress = 96
-
-        self.assertEqual(
-            self.analysis_status.galaxy_file_import_state(),
-            []
-        )
+        self.assertEqual(self.analysis_status.galaxy_file_import_state(), [])
 
     def test_galaxy_tool_file_import_state_is_empty_without_import_progress(
             self):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
-
-        self.assertEqual(
-            self.analysis_status.galaxy_file_import_state(),
-            []
-        )
+        self.assertEqual(self.analysis_status.galaxy_file_import_state(), [])
 
     def test_facet_name(self):
         self.assertRegexpMatches(
@@ -310,17 +248,13 @@ class AnalysisTests(TestCase):
     @mock.patch("core.models.index_annotated_nodes_selection")
     @mock.patch.object(Analysis, "rename_results")
     def test__prepare_annotated_nodes_calls_methods_in_proper_order(
-            self,
-            rename_results_mock,
-            index_annotated_nodes_selection_mock
+            self, rename_results_mock, index_annotated_nodes_selection_mock
     ):
         mock_manager = mock.Mock()
         mock_manager.attach_mock(rename_results_mock, "rename_results_mock")
         mock_manager.attach_mock(index_annotated_nodes_selection_mock,
                                  "index_annotated_nodes_selection_mock")
-
         self.analysis._prepare_annotated_nodes(node_uuids=None)
-
         # Assert that `rename_results` is called before
         # `index_annotated_nodes_selection`
         self.assertEqual(
@@ -333,10 +267,10 @@ class AnalysisTests(TestCase):
 
     def create_analysis_results(self, include_faulty_result=False):
         common_params = {
-            "analysis_uuid": self.analysis.uuid,
-            "file_store_uuid": self.node.file_uuid,
-            "file_name": self.node_filename,
-            "file_type": self.node.get_file_store_item().filetype
+            'analysis': self.analysis,
+            'file_store_uuid': self.node.file_uuid,
+            'file_name': self.node_filename,
+            'file_type': self.node.get_file_store_item().filetype
         }
         analysis_result_0 = AnalysisResult.objects.create(**common_params)
 
@@ -344,7 +278,7 @@ class AnalysisTests(TestCase):
             # This analysis result has a filename that doesn't correspond to
             #  any specified AnalysisNodeConnection Output filenames
             AnalysisResult.objects.create(
-                **dict(common_params, file_name="Bad Filename")
+                **dict(common_params, file_name='Bad Filename')
             )
         else:
             AnalysisResult.objects.create(**common_params)
@@ -355,11 +289,9 @@ class AnalysisTests(TestCase):
 
     def test___get_output_connection_to_analysis_result_mapping(self):
         analysis_result_0, analysis_result_1 = self.create_analysis_results()
-
         output_mapping = (
             self.analysis._get_output_connection_to_analysis_result_mapping()
         )
-
         self.assertEqual(
             output_mapping,
             [
@@ -373,31 +305,28 @@ class AnalysisTests(TestCase):
         self
     ):
         self.create_analysis_results(include_faulty_result=True)
-
         with self.assertRaises(IndexError):
             self.analysis._get_output_connection_to_analysis_result_mapping()
 
     def test_analysis_node_connection_input_id(self):
         self.assertEqual(
             self.analysis_node_connection_a.get_input_connection_id(),
-            "{}_{}".format(self.analysis_node_connection_a.step,
+            '{}_{}'.format(self.analysis_node_connection_a.step,
                            self.analysis_node_connection_a.filename)
         )
 
     def test_analysis_node_connection_output_id(self):
         self.assertEqual(
             self.analysis_node_connection_a.get_output_connection_id(),
-            "{}_{}".format(self.analysis_node_connection_a.step,
+            '{}_{}'.format(self.analysis_node_connection_a.step,
                            self.analysis_node_connection_a.name)
         )
 
     def test__create_derived_data_file_node(self):
         derived_data_file_node = self.analysis._create_derived_data_file_node(
-            self.study,
-            self.assay,
-            self.analysis_node_connection_a
+            self.study, self.assay, self.analysis_node_connection_a
         )
-        self.assertEqual(derived_data_file_node.name, "Galaxy File Name")
+        self.assertEqual(derived_data_file_node.name, 'Galaxy File Name')
         self.assertEqual(derived_data_file_node.study, self.study)
         self.assertEqual(derived_data_file_node.assay, self.assay)
         self.assertEqual(derived_data_file_node.type, Node.DERIVED_DATA_FILE)
@@ -414,10 +343,8 @@ class AnalysisTests(TestCase):
 
     def test__get_input_file_store_items(self):
         analysis = self.analysis_with_node_analyzed_further
-        self.assertEqual(
-            analysis.get_input_file_store_items(),
-            [self.node2.get_file_store_item()]
-        )
+        self.assertEqual(analysis.get_input_file_store_items(),
+                         [self.node2.get_file_store_item()])
 
     def test_has_all_local_input_files_non_local_inputs(self):
         analysis = self.analysis_with_node_analyzed_further
@@ -431,10 +358,10 @@ class AnalysisTests(TestCase):
     def test_get_refinery_import_task_signatures(self):
         # Create and associate an AnalysisNodeConnection with a remote file
         file_store_item = FileStoreItemFactory(
-            source="http://www.example.com/analysis_input.txt"
+            source='http://www.example.com/analysis_input.txt'
         )
         node = NodeFactory(assay=self.assay, study=self.study,
-                           name="Input Node", analysis_uuid=self.analysis.uuid,
+                           name='Input Node', analysis_uuid=self.analysis.uuid,
                            file_uuid=file_store_item.uuid)
         AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
                                       step=0, filename=self.node_filename,
@@ -453,20 +380,18 @@ class AnalysisTests(TestCase):
         file_store_item = FileStoreItem()
         file_store_item.datafile.save('test_file.txt', ContentFile(''))
         node = NodeFactory(assay=self.assay, study=self.study,
-                           name="Input Node", analysis_uuid=self.analysis.uuid,
+                           name='Input Node', analysis_uuid=self.analysis.uuid,
                            file_uuid=file_store_item.uuid)
         AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
                                       step=0, filename=self.node_filename,
                                       direction=INPUT_CONNECTION,
                                       is_refinery_file=False)
-        self.assertEqual(
-            self.analysis.get_refinery_import_task_signatures(), []
-        )
+        self.assertEqual(self.analysis.get_refinery_import_task_signatures(),
+                         [])
 
 
 class BaseResourceSlugTest(TestCase):
     """Tests for BaseResource Slugs"""
-
     def setUp(self):
         # make some data
         for index, item in enumerate(range(0, 10)):

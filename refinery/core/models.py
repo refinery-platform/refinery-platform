@@ -33,6 +33,7 @@ from django.forms import ValidationError
 from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
 from bioblend import galaxy
@@ -1003,31 +1004,6 @@ class Project(SharableResource):
         )
 
 
-class AnalysisResult(models.Model):
-    analysis_uuid = UUIDField(auto=False)
-    file_store_uuid = UUIDField(auto=False)
-    file_name = models.TextField()
-    file_type = models.TextField()
-
-    # many to many to nodes uuid
-
-    # associated tdf file
-    # ## TODO ### ?galaxy_id?
-    # add reference to file_store models
-    # foreign key into analysis
-    # analysis = models.ForeignKey('Analysis')
-
-    def __unicode__(self):
-        return str(self.file_name) + " <-> " + self.analysis_uuid
-
-    class Meta:
-        verbose_name = "analysis result"
-        verbose_name_plural = "analysis results"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-        )
-
-
 class Analysis(OwnableResource):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
@@ -1040,7 +1016,7 @@ class Analysis(OwnableResource):
         (RUNNING_STATUS, "Analysis is running"),
         (INITIALIZED_STATUS, "Analysis was initialized"),
     )
-    project = models.ForeignKey(Project, related_name="analyses")
+    project = models.ForeignKey(Project, related_name='analyses')
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
@@ -1048,7 +1024,6 @@ class Analysis(OwnableResource):
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    results = models.ManyToManyField(AnalysisResult, blank=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS,
@@ -1056,16 +1031,6 @@ class Analysis(OwnableResource):
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
     canceled = models.BooleanField(default=False)
-    # possibly replace results
-    # output_nodes = models.ManyToManyField(Nodes, blank=True)
-    # protocol = i.e. protocol node created when the analysis is created
-
-    def __str__(self):
-        return "{} - {} - {}".format(
-            self.name,
-            self.get_owner_username(),
-            self.summary
-        )
 
     class Meta:
         verbose_name = "analysis"
@@ -1074,6 +1039,10 @@ class Analysis(OwnableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
         ordering = ['-time_end', '-time_start']
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.name, self.get_owner_username(),
+                                     self.summary)
 
     def get_expanded_workflow_graph(self):
         return tool_manager.utils.create_expanded_workflow_graph(
@@ -1141,17 +1110,12 @@ class Analysis(OwnableResource):
     def get_nodes(self):
         return Node.objects.filter(analysis_uuid=self.uuid)
 
-    def get_analysis_results(self):
-        return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
-
     @skip_if_test_run
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
-
-        # solr.optimize() Tells Solr to streamline the number of segments
-        # used, essentially a defragmentation/ garbage collection
-        # operation.
+        # solr.optimize() tells Solr to streamline the number of segments
+        # used, essentially a defragmentation/ garbage collection operation
         try:
             solr.optimize()
         except Exception as e:
@@ -1354,7 +1318,7 @@ class Analysis(OwnableResource):
         """Rename files in file_store after download"""
         logger.debug("Renaming analysis results")
         # rename file_store items to new name updated from galaxy file_ids
-        for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
+        for result in self.results.all():
             try:
                 item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
             except (FileStoreItem.DoesNotExist,
@@ -1402,17 +1366,15 @@ class Analysis(OwnableResource):
         self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
-        analysis_results = AnalysisResult.objects.filter(
-            analysis_uuid=self.uuid)
-
-        if analysis_results.count() == 0:
+        if self.results.all().count() == 0:
             logger.error("No results for download '%s' ('%s')",
                          self.name, self.uuid)
             return
 
-        for analysis_result in analysis_results:
+        for analysis_result in self.results.all():
             item = FileStoreItem.objects.get(
-                uuid=analysis_result.file_store_uuid)
+                uuid=analysis_result.file_store_uuid
+            )
             if item:
                 download = Download.objects.create(name=self.name,
                                                    data_set=self.data_set,
@@ -1421,12 +1383,12 @@ class Analysis(OwnableResource):
             else:
                 logger.warning(
                     "No file found for '%s' in download '%s' ('%s')",
-                    analysis_result.file_store_uuid, self.name, self.uuid)
+                    analysis_result.file_store_uuid, self.name, self.uuid
+                )
 
     def terminate_file_import_tasks(self):
-        """
-        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
-        and trys to terminate their file import tasks if possible
+        """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
+        and requests termination of the corresponding file import tasks
         """
         workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
         if workflow_tool is not None:
@@ -1460,9 +1422,8 @@ class Analysis(OwnableResource):
         index_annotated_nodes_selection(node_uuids)
 
     def _get_output_connection_to_analysis_result_mapping(self):
-        """
-        Create and return a dict mapping each "output" type
-        AnalysisNodeConnection to it's respective analysis result.
+        """Create and return a dict mapping each "output" type
+        AnalysisNodeConnection to it's respective analysis result
 
         This is especially useful when we run into the edge-case described
         here: https://github.com/
@@ -1489,8 +1450,7 @@ class Analysis(OwnableResource):
             for index, output_connection in enumerate(output_connections):
                 analysis_result = None
                 if output_connection.is_refinery_file:
-                    analysis_result = AnalysisResult.objects.filter(
-                        analysis_uuid=self.uuid,
+                    analysis_result = self.results.filter(
                         file_name=output_connection.filename
                     )[index]
                 output_connections_to_analysis_results.append(
@@ -1498,8 +1458,8 @@ class Analysis(OwnableResource):
                 )
         return output_connections_to_analysis_results
 
-    def _create_derived_data_file_node(self, study,
-                                       assay, analysis_node_connection):
+    def _create_derived_data_file_node(self, study, assay,
+                                       analysis_node_connection):
         return Node.objects.create(
             study=study,
             assay=assay,
@@ -1684,20 +1644,33 @@ class Analysis(OwnableResource):
         ]
 
 
+@python_2_unicode_compatible
+class AnalysisResult(models.Model):
+    analysis = models.ForeignKey(Analysis, related_name='results')
+    file_store_uuid = UUIDField(auto=False)
+    file_name = models.TextField()
+    file_type = models.TextField()
+
+    class Meta:
+        verbose_name = "analysis result"
+        verbose_name_plural = "analysis results"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    def __str__(self):
+        return str(self.file_name) + " <-> " + self.analysis.uuid
+
+
 @receiver(pre_delete, sender=Analysis)
 def _analysis_delete(sender, instance, *args, **kwargs):
-    """
-    Removes an Analyses's related objects upon deletion being triggered.
+    """Removes an Analyses's related objects
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
     with transaction.atomic():
         instance.cancel()
-        # Delete associated AnalysisResults
-        instance.get_analysis_results().delete()
         # Delete Nodes Associated w/ the Analysis
         instance.get_nodes().delete()
 
