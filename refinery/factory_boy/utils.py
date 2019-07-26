@@ -16,51 +16,36 @@ from tool_manager.models import ToolDefinition
 
 def create_analysis(project, dataset, workflow, user_instance):
     analysis_uuid = str(uuid_builtin.uuid4())
-    analysis = AnalysisFactory(
-        uuid=analysis_uuid,
-        name="Test Analysis - {}".format(analysis_uuid),
-        project=project,
-        data_set=dataset,
-        workflow=workflow
-    )
+    analysis = AnalysisFactory(uuid=analysis_uuid,
+                               name='Test Analysis - {}'.format(analysis_uuid),
+                               project=project, data_set=dataset,
+                               workflow=workflow)
     input_node = dataset.get_nodes().first()
     AnalysisNodeConnectionFactory(
+        analysis=analysis, node=input_node, step=0,
+        name='Connection to {}'.format(input_node), filename='Input filename',
         direction=INPUT_CONNECTION,
-        node=input_node,
-        name="Connection to {}".format(input_node),
-        analysis=analysis,
-        step=0,
-        filename="Input filename",
         is_refinery_file=bool(input_node.get_file_store_item().datafile)
     )
 
     # create Analysis Output
     file_store_item_uuid = str(uuid_builtin.uuid4())
-    FileStoreItemFactory(
-        uuid=file_store_item_uuid,
-        source="http://www.example.com/analysis_output.txt"
-    )
-    output_node = NodeFactory(
-        analysis_uuid=analysis_uuid,
-        study=dataset.get_latest_study(),
-        assay=dataset.get_latest_assay(),
-        file_uuid=file_store_item_uuid,
-        type=Node.DERIVED_DATA_FILE
-    )
+    FileStoreItemFactory(uuid=file_store_item_uuid,
+                         source='http://www.example.com/analysis_output.txt')
+    output_node = NodeFactory(analysis_uuid=analysis_uuid,
+                              study=dataset.get_latest_study(),
+                              assay=dataset.get_latest_assay(),
+                              file_uuid=file_store_item_uuid,
+                              type=Node.DERIVED_DATA_FILE)
 
-    AnalysisNodeConnectionFactory(
-        direction=OUTPUT_CONNECTION,
-        node=output_node,
-        name="Connection to {}".format(output_node),
-        analysis=analysis,
-        step=1,
-        filename="Output filename",
-        is_refinery_file=True
-    )
-    AnalysisResultFactory(
-        analysis_uuid=analysis.uuid,
-        file_store_uuid=file_store_item_uuid
-    )
+    AnalysisNodeConnectionFactory(direction=OUTPUT_CONNECTION,
+                                  node=output_node,
+                                  name="Connection to {}".format(output_node),
+                                  analysis=analysis, step=1,
+                                  filename="Output filename",
+                                  is_refinery_file=True)
+    AnalysisResultFactory(analysis=analysis,
+                          file_store_uuid=file_store_item_uuid)
 
     # create AnalysisStatus
     AnalysisStatusFactory(analysis=analysis)
