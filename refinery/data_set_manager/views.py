@@ -1071,10 +1071,9 @@ class AddFileToNodeView(APIView):
         if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        if (node.file and not node.file.datafile
-                and node.file.source.startswith(
-                    (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
-                )):
+        if (node.file and not node.file.datafile and
+                node.file.source.startswith((settings.REFINERY_DATA_IMPORT_DIR,
+                                             's3://'))):
             logger.debug("Adding file to Node '%s'", node)
             node.file.source = os.path.basename(node.file.source)
             node.file.save()
