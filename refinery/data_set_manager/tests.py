@@ -1438,16 +1438,9 @@ class NodeClassMethodTests(TestCase):
 
     # File store:
 
-    def test_get_file_store_item(self):
-        self.assertEqual(self.file_node.get_file_store_item(),
-                         self.filestore_item_1)
-        self.assertEqual(self.node.get_file_store_item(),
-                         None)
-
     def test_get_relative_file_store_item_url(self):
         relative_url = self.file_node.get_relative_file_store_item_url()
-        self.assertEqual(relative_url, self.file_node.get_file_store_item(
-        ).get_datafile_url())
+        self.assertEqual(relative_url, self.file_node.file.get_datafile_url())
 
     def test_get_analysis(self):
         make_analyses_with_single_dataset(1, self.user)

@@ -247,7 +247,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "assay_uuid": assay_uuid,
             "assay_id": assay_id,
             "has_change_dataset_permission": 'change_dataset' in get_perms(
-                request.user, data_set),
+                request.user, data_set
+            ),
             "workflows": workflows,
             "isatab_archive": investigation.get_file_store_item(),
             "pre_isatab_archive": investigation.get_file_store_item(),

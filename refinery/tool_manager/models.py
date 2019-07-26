@@ -788,33 +788,25 @@ class WorkflowTool(Tool):
         return analysis
 
     def create_analysis_input_node_connections(self):
-        """
-        Create the AnalysisNodeConnection objects corresponding to the input
-        Nodes of a WorkflowTool launch.
+        """Create the AnalysisNodeConnection objects corresponding to the input
+        Nodes of a WorkflowTool launch
         """
         for node in self._get_input_nodes():
-            file_store_item = node.get_file_store_item()
-
             AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                node=node,
-                direction=INPUT_CONNECTION,
-                name=file_store_item.datafile.name,
-                step=self.INPUT_STEP_NUMBER,
+                analysis=self.analysis, node=node, direction=INPUT_CONNECTION,
+                name=node.file.datafile.name, step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
-                is_refinery_file=bool(file_store_item.datafile)
+                is_refinery_file=bool(node.file.datafile)
             )
 
     def create_analysis_output_node_connections(self):
-        """
-        Create the AnalysisNodeConnection objects corresponding to the output
-        Nodes (Derived Data) of a WorkflowTool launch.
+        """Create the AnalysisNodeConnection objects corresponding to the
+        output Nodes (Derived Data) of a WorkflowTool launch
         """
         exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
         for galaxy_dataset in self._get_galaxy_history_dataset_list():
             AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                direction=OUTPUT_CONNECTION,
+                analysis=self.analysis, direction=OUTPUT_CONNECTION,
                 name=self._get_creating_job_output_name(galaxy_dataset),
                 subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),

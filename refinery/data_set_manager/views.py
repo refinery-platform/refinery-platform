@@ -1071,15 +1071,13 @@ class AddFileToNodeView(APIView):
         if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        file_store_item = node.get_file_store_item()
-        if (file_store_item and not file_store_item.datafile and
-                file_store_item.source.startswith(
+        if (node.file and not node.file.datafile
+                and node.file.source.startswith(
                     (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
             logger.debug("Adding file to Node '%s'", node)
-
-            file_store_item.source = os.path.basename(file_store_item.source)
-            file_store_item.save()
+            node.file.source = os.path.basename(node.file.source)
+            node.file.save()
 
             if identity_id:
                 file_source_translator = generate_file_source_translator(
@@ -1089,19 +1087,16 @@ class AddFileToNodeView(APIView):
                 file_source_translator = generate_file_source_translator(
                     username=request.user.username
                 )
-            translated_datafile_source = file_source_translator(
-                file_store_item.source
-            )
-            file_store_item.source = translated_datafile_source
+            node.file.source = file_source_translator(node.file.source)
 
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new file import task when called below.
             # We then have to update its Node's Solr index entry, so the
             # updated file import status is available in the UI.
-            file_store_item.import_task_id = ""
-            file_store_item.save()
+            node.file.import_task_id = ""
+            node.file.save()
             node.update_solr_index()
-            FileImportTask().delay(file_store_item.uuid)
+            FileImportTask().delay(node.file.uuid)
 
         return HttpResponse(status=202)  # Accepted
 

@@ -21,13 +21,13 @@ def create_analysis(project, dataset, workflow, user_instance):
                                project=project, data_set=dataset,
                                workflow=workflow)
     input_node = dataset.get_nodes().first()
-    AnalysisNodeConnectionFactory(
-        analysis=analysis, node=input_node, step=0,
-        name='Connection to {}'.format(input_node), filename='Input filename',
-        direction=INPUT_CONNECTION,
-        is_refinery_file=bool(input_node.get_file_store_item().datafile)
-    )
-
+    AnalysisNodeConnectionFactory(analysis=analysis, node=input_node, step=0,
+                                  name='Connection to {}'.format(input_node),
+                                  filename='Input filename',
+                                  direction=INPUT_CONNECTION,
+                                  is_refinery_file=bool(
+                                      input_node.file.datafile
+                                  ))
     # create Analysis Output
     file_store_item_uuid = str(uuid_lib.uuid4())
     FileStoreItemFactory(uuid=file_store_item_uuid,
@@ -37,7 +37,6 @@ def create_analysis(project, dataset, workflow, user_instance):
                               assay=dataset.get_latest_assay(),
                               file_uuid=file_store_item_uuid,
                               type=Node.DERIVED_DATA_FILE)
-
     AnalysisNodeConnectionFactory(direction=OUTPUT_CONNECTION,
                                   node=output_node,
                                   name="Connection to {}".format(output_node),
@@ -46,10 +45,7 @@ def create_analysis(project, dataset, workflow, user_instance):
                                   is_refinery_file=True)
     AnalysisResultFactory(analysis=analysis,
                           file_store_uuid=file_store_item_uuid)
-
-    # create AnalysisStatus
     AnalysisStatusFactory(analysis=analysis)
-
     analysis.set_owner(user_instance)
     analysis.save()
 

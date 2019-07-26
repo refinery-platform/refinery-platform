@@ -140,51 +140,42 @@ class AddFileToNodeViewTests(APITestCase):
     @mock.patch("data_set_manager.models.Node.update_solr_index")
     def test_aws_post_file_store_item_source_translated(self,
                                                         update_solr_mock):
-        file_store_item = self.node.get_file_store_item()
-        file_store_item.source = "{}/{}/test.txt".format(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.user.username
+        self.node.file.source = "{}/{}/test.txt".format(
+            settings.REFINERY_DATA_IMPORT_DIR, self.user.username
         )
-        file_store_item.save()
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': "test_identity_id"
-            },
-            format="json"
-        )
+        self.node.file.save()
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': 'test_identity_id'
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.get_file_store_item().source,
+        self.assertEqual(self.node.file.source,
                          's3://test_bucket/test_identity_id/test.txt')
         self.assertTrue(update_solr_mock.called)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="not aws",
-                       REFINERY_DATA_IMPORT_DIR="/import/path",
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='not aws',
+                       REFINERY_DATA_IMPORT_DIR='/import/path',
                        CELERY_ALWAYS_EAGER=True)
-    @mock.patch("data_set_manager.models.Node.update_solr_index")
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_non_aws_post_file_store_item_source_translated(self,
                                                             update_solr_mock):
-        file_store_item_source = "{}/{}/test.txt".format(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.user.username
+        file_store_item_source = '{}/{}/test.txt'.format(
+            settings.REFINERY_DATA_IMPORT_DIR, self.user.username
         )
-        file_store_item = self.node.get_file_store_item()
-        file_store_item.source = file_store_item_source
-        file_store_item.save()
+        self.node.file.source = file_store_item_source
+        self.node.file.save()
 
-        post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': self.node.uuid},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={'node_uuid': self.node.uuid},
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.get_file_store_item().source,
-                         file_store_item_source)
+        self.assertEqual(self.node.file.source, file_store_item_source)
         self.assertTrue(update_solr_mock.called)
 
 

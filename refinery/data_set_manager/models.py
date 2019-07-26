@@ -572,19 +572,6 @@ class Node(models.Model):
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def get_file_store_item(self):
-        """
-        Returns the FileStoreItem associated with a given Node or None if
-        there isn't one
-        """
-        if self.file_uuid:
-            try:
-                return FileStoreItem.objects.get(uuid=self.file_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(e)
-        return None
-
     def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """
             Tries to create and associate an auxiliary Node with a parent
@@ -672,15 +659,12 @@ class Node(models.Model):
         # Check if the Django setting to generate auxiliary file has been
         # set to run when FileStoreItems are imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
-
-        file_store_item = self.get_file_store_item()
-
         # Check if we pass the logic to generate aux. Files/Nodes
-        if (file_store_item and file_store_item.filetype and
-                file_store_item.filetype.used_for_visualization and
-                file_store_item.datafile and
+        if (self.file and self.file.filetype and
+                self.file.filetype.used_for_visualization and
+                self.file.datafile and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
-                "on_file_import"):
+                'on_file_import'):
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
             auxiliary_file_store_item = FileStoreItem.objects.create()
@@ -689,20 +673,17 @@ class Node(models.Model):
                 auxiliary_file_store_item.uuid
             )
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                auxiliary_node, file_store_item
+                auxiliary_node, self.file
             )
             auxiliary_file_store_item.import_task_id = result.task_id
             auxiliary_file_store_item.save()
 
     def get_auxiliary_file_generation_task_state(self):
-        """
-        Return the generate_auxiliary_file task state for a given auxiliary
-        Node.
-
-        Return None if a regular Node
+        """Return the generate_auxiliary_file task state for a given auxiliary
+        Node or None if a regular Node
         """
         if self.is_auxiliary_node:
-            return AsyncResult(self.get_file_store_item().import_task_id).state
+            return AsyncResult(self.file.import_task_id).state
         else:
             return None
 
@@ -714,20 +695,13 @@ class Node(models.Model):
 
 @receiver(pre_delete, sender=Node)
 def _node_delete(sender, instance, *args, **kwargs):
-    """
-    Removes a Node's related objects upon deletion being triggered.
+    """Removes a Node's related objects upon deletion being triggered
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
-
-    # remove a Node's FileStoreItem upon deletion, if one exists
-    file_store_item = instance.get_file_store_item()
-    if file_store_item is not None:
-        file_store_item.delete()
-
+    if instance.file is not None:
+        instance.file.delete()
     delete_analysis_index(instance)
 
 

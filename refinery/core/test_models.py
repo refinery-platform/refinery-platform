@@ -164,9 +164,8 @@ class AnalysisTests(TestCase):
             analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
             file_uuid=self.file_store_item1.uuid
         )
-        self.node_filename = "{}.{}".format(
-            self.node.name, self.node.get_file_store_item().get_extension()
-        )
+        self.node_filename = "{}.{}".format(self.node.name,
+                                            self.node.file.get_extension())
         self.analysis_node_connection_a = \
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis, node=self.node, step=1,
@@ -270,7 +269,7 @@ class AnalysisTests(TestCase):
             'analysis': self.analysis,
             'file_store_uuid': self.node.file_uuid,
             'file_name': self.node_filename,
-            'file_type': self.node.get_file_store_item().filetype
+            'file_type': self.node.file.filetype
         }
         analysis_result_0 = AnalysisResult.objects.create(**common_params)
 
@@ -344,12 +343,12 @@ class AnalysisTests(TestCase):
     def test__get_input_file_store_items(self):
         analysis = self.analysis_with_node_analyzed_further
         self.assertEqual(analysis.get_input_file_store_items(),
-                         [self.node2.get_file_store_item()])
+                         [self.node2.file])
 
     def test_has_all_local_input_files_non_local_inputs(self):
         analysis = self.analysis_with_node_analyzed_further
         node = analysis._get_input_nodes()[0]
-        node.get_file_store_item().delete_datafile()
+        node.file.delete_datafile()
         self.assertFalse(analysis.has_all_local_input_files())
 
     def test_has_all_local_input_files(self):

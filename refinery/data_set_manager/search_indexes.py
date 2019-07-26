@@ -112,8 +112,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        file_store_item = node.get_file_store_item()
-
         data.update(self._assay_data(node))
 
         # create dynamic fields for each attribute
@@ -126,8 +124,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if annotation.attribute_value_unit is not None:
                 value += " " + annotation.attribute_value_unit
 
-            name = re.sub(r'\W',
-                          settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
+            name = re.sub(r'\W', settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
                           name)
 
             uniq_key = name + id_suffix
@@ -153,14 +150,13 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(i for i in sorted(value))
 
-        datafile = "" if file_store_item is None else \
-            file_store_item.datafile.name
-        filetype = "" if file_store_item is None else file_store_item.filetype
+        datafile = "" if node.file is None else node.file.datafile.name
+        filetype = "" if node.file is None else node.file.filetype
 
         data.update({
             NodeIndex.DATAFILE: datafile,
             NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
-                file_store_item
+                node.file
             ),
             NodeIndex.TYPE_PREFIX + id_suffix: node.type,
             NodeIndex.NAME_PREFIX + id_suffix: node.name,

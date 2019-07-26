@@ -1481,8 +1481,7 @@ class Analysis(OwnableResource):
                 )]
 
     def get_input_file_store_items(self):
-        return [node.get_file_store_item()
-                for node in self._get_input_nodes()]
+        return [node.file for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
         return self._get_input_nodes()[0].study
@@ -1492,7 +1491,6 @@ class Analysis(OwnableResource):
 
     def _create_data_transformation_nodes(self, graph):
         """create data transformation nodes for all Tool nodes"""
-
         data_transformation_nodes = [
             graph.node[node_id] for node_id in graph.nodes()
             if graph.node[node_id]['type'] == "tool"
