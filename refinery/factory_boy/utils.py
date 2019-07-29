@@ -30,18 +30,20 @@ def create_analysis(project, dataset, workflow, user_instance):
                                   ))
     # create Analysis Output
     file_store_item_uuid = str(uuid_lib.uuid4())
-    FileStoreItemFactory(uuid=file_store_item_uuid,
-                         source='http://www.example.com/analysis_output.txt')
+    file_store_item = FileStoreItemFactory(
+        uuid=file_store_item_uuid,
+        source='http://www.example.com/analysis_output.txt'
+    )
     output_node = NodeFactory(analysis_uuid=analysis_uuid,
                               study=dataset.get_latest_study(),
                               assay=dataset.get_latest_assay(),
-                              file_uuid=file_store_item_uuid,
+                              file_item=file_store_item,
                               type=Node.DERIVED_DATA_FILE)
     AnalysisNodeConnectionFactory(direction=OUTPUT_CONNECTION,
                                   node=output_node,
-                                  name="Connection to {}".format(output_node),
+                                  name='Connection to {}'.format(output_node),
                                   analysis=analysis, step=1,
-                                  filename="Output filename",
+                                  filename='Output filename',
                                   is_refinery_file=True)
     AnalysisResultFactory(analysis=analysis,
                           file_store_uuid=file_store_item_uuid)
