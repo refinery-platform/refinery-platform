@@ -158,11 +158,11 @@ class AnalysisTests(TestCase):
         self.node = Node.objects.create(assay=self.assay, study=self.study,
                                         name='test_node',
                                         analysis_uuid=self.analysis.uuid,
-                                        file_uuid=self.file_store_item.uuid)
+                                        file_item=self.file_store_item)
         self.node2 = Node.objects.create(
             assay=self.assay1, study=self.study,
             analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
-            file_uuid=self.file_store_item1.uuid
+            file_item=self.file_store_item1
         )
         self.node_filename = "{}.{}".format(
             self.node.name, self.node.file_item.get_extension()
