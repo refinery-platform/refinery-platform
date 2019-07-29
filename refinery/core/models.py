@@ -660,16 +660,10 @@ class DataSet(SharableResource):
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
-        investigation = self.get_investigation()
-        file_count = 0
-
-        for study in investigation.study_set.all():
-            file_count += (
-                Node.objects
-                .filter(study=study.id, file_uuid__isnull=False)
-                .count()
-            )
-        return file_count
+        return Node.objects.filter(
+            study__in=self.get_investigation().study_set.all(),
+            file_item__isnull=False
+        ).count()
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
@@ -830,13 +824,10 @@ class DataSet(SharableResource):
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
-    """
-    Removes a DataSet's related objects upon deletion being triggered.
+    """Removes a DataSet's related objects upon deletion being triggered
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
     with transaction.atomic():
         for investigation_link in instance.get_investigation_links():

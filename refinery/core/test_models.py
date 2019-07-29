@@ -344,7 +344,7 @@ class AnalysisTests(TestCase):
     def test__get_input_file_store_items(self):
         analysis = self.analysis_with_node_analyzed_further
         self.assertEqual(analysis.get_input_file_store_items(),
-                         [self.node2.file])
+                         [self.node2.file_item])
 
     def test_has_all_local_input_files_non_local_inputs(self):
         analysis = self.analysis_with_node_analyzed_further
