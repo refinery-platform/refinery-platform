@@ -679,8 +679,8 @@ def _node_delete(sender, instance, *args, **kwargs):
     is picked up on bulk deletes as well
     https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
-    if instance.file is not None:
-        instance.file.delete()
+    if instance.file_item:
+        instance.file_item.delete()
     delete_analysis_index(instance)
 
 
