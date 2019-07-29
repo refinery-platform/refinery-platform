@@ -72,10 +72,9 @@ def create_dataset_with_necessary_models(create_nodes=True,
                                          slug=None, latest_version=1):
     """Create Dataset with InvestigationLink, Investigation, Study and Assay"""
     dataset_uuid = str(uuid_lib.uuid4())
-    dataset = DataSetFactory(uuid=dataset_uuid,
+    dataset = DataSetFactory(uuid=dataset_uuid, slug=slug,
                              title="Test DataSet - {}".format(dataset_uuid),
-                             name="Test DataSet - {}".format(dataset_uuid),
-                             slug=slug)
+                             name="Test DataSet - {}".format(dataset_uuid))
     latest_study = _create_dataset_objects(dataset, is_isatab_based,
                                            latest_version)
     assay = AssayFactory(uuid=str(uuid_lib.uuid4()), study=latest_study)
@@ -87,7 +86,8 @@ def create_dataset_with_necessary_models(create_nodes=True,
                 source='http://www.example.com/test{}.txt'.format(i)
             )
             node = NodeFactory(study=latest_study, assay=assay,
-                               file=file_store_item, type=Node.RAW_DATA_FILE)
+                               file_item=file_store_item,
+                               type=Node.RAW_DATA_FILE)
             attribute = AttributeFactory(node=node, type='Characteristics',
                                          subtype='organism', value='Human')
             AnnotatedNodeFactory(study=latest_study, assay=assay, node=node,
