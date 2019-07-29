@@ -1965,8 +1965,10 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertEqual(analysis_node_connection.filename,
                              WorkflowTool.INPUT_DATASET_COLLECTION)
             self.assertEqual(analysis_node_connection.step, 0)
-            self.assertEqual(analysis_node_connection.name,
-                             analysis_node_connection.node.datafile.name)
+            self.assertEqual(
+                analysis_node_connection.name,
+                analysis_node_connection.node.file_item.datafile.name
+            )
 
     def test_galaxy_parameter_dict_creation(self):
         self.create_tool(ToolDefinition.WORKFLOW,
