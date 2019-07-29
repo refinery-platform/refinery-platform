@@ -362,7 +362,7 @@ class AnalysisTests(TestCase):
         )
         node = NodeFactory(assay=self.assay, study=self.study,
                            name='Input Node', analysis_uuid=self.analysis.uuid,
-                           file_uuid=file_store_item.uuid)
+                           file_item=file_store_item)
         AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
                                       step=0, filename=self.node_filename,
                                       direction=INPUT_CONNECTION,
@@ -381,7 +381,7 @@ class AnalysisTests(TestCase):
         file_store_item.datafile.save('test_file.txt', ContentFile(''))
         node = NodeFactory(assay=self.assay, study=self.study,
                            name='Input Node', analysis_uuid=self.analysis.uuid,
-                           file_uuid=file_store_item.uuid)
+                           file_item=file_store_item)
         AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
                                       step=0, filename=self.node_filename,
                                       direction=INPUT_CONNECTION,
