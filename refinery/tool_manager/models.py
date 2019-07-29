@@ -37,7 +37,7 @@ from data_set_manager.models import Node
 from data_set_manager.utils import (
     get_file_url_from_node_uuid, get_solr_response_json
 )
-from file_store.models import FileType
+from file_store.models import FileStoreItem, FileType
 
 from .tasks import start_container
 
@@ -1367,7 +1367,9 @@ class WorkflowTool(Tool):
         for galaxy_to_refinery_dict in galaxy_to_refinery_mapping_list:
             node = Node.objects.get(
                 uuid__in=self.get_input_node_uuids(),
-                file_uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
+                file_item=FileStoreItem.objects.get(
+                    uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
+                )
             )
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
                 # Note the `1` in the replace call below. We only want to

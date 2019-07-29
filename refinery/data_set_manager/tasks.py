@@ -319,7 +319,7 @@ def post_process_file_import(**kwargs):
     except KeyError:
         file_store_item_uuid = kwargs['args'][0]
     try:
-        node = Node.objects.get(file_uuid=file_store_item_uuid)
+        node = Node.objects.get(file_item__uuid=file_store_item_uuid)
     except Node.DoesNotExist as exc:
         logger.error("Could not retrieve Node with file UUID '%s': %s",
                      file_store_item_uuid, exc)

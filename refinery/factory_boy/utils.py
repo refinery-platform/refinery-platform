@@ -362,7 +362,7 @@ def create_mock_isatab_9909_data_set(user=None):
     qc_2_node = NodeFactory(study=latest_study, assay=assay, file_item=None,
                             type=Node.DATA_TRANSFORMATION, name='QC_2')
     qc_2_derived_matrix = NodeFactory(
-        study=latest_study, assay=assay, file_uuid=FileStoreItemFactory(
+        study=latest_study, assay=assay, file_item=FileStoreItemFactory(
             source='http://test.site/sites/9909/GPL96/report_rma/index.html'
         ),
         type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
@@ -377,7 +377,7 @@ def create_mock_isatab_9909_data_set(user=None):
     rma_derived_node.add_child(pathprint_node)
 
     pathprint_derived_matrix_node = NodeFactory(
-        study=latest_study, assay=assay, file_uuid=FileStoreItemFactory(
+        study=latest_study, assay=assay, file_item=FileStoreItemFactory(
             source='http://test.site/sites/9909.GPL96_pathprint.txt'
         ),
         type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,
@@ -410,7 +410,7 @@ def create_mock_isatab_9909_data_set(user=None):
                                                 subtype='Data Repository',
                                                 value='')
         final_node = NodeFactory(
-            study=latest_study, assay=assay, file_uuid=FileStoreItemFactory(
+            study=latest_study, assay=assay, file_item=FileStoreItemFactory(
                 source='http://test.site/sites/9909.GPL96_{}.pdf'.format(name)
             ),
             type=Node.DERIVED_ARRAY_DATA_MATRIX_FILE,

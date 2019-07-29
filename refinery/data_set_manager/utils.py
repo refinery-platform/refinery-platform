@@ -215,14 +215,9 @@ def _retrieve_nodes(
     return nodes
 
 
-def _create_annotated_node_objs(
-        bulk_list=[],
-        node=None,
-        study=None,
-        assay=None,
-        attrs=None):
-    """Helper method to bulk create annotated nodes.
-    """
+def _create_annotated_node_objs(bulk_list=[], node=None, study=None,
+                                assay=None, attrs=None):
+    """Helper method to bulk create annotated nodes"""
     counter = 0
     if (node is not None and
             study is not None and

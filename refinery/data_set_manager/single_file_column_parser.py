@@ -234,7 +234,7 @@ class SingleFileColumnParser:
             file_node = Node.objects.create(
                 study=study, assay=assay,
                 name=row[self.file_column_index].strip(),
-                file_uuid=data_file_item.uuid, type=Node.RAW_DATA_FILE,
+                file_item=data_file_item, type=Node.RAW_DATA_FILE,
                 species=self._get_species(row),
                 genome_build=self._get_genome_build(row),
                 is_annotation=self._is_annotation(row))

@@ -1334,7 +1334,7 @@ class Analysis(OwnableResource):
                 item.rename_datafile(result.file_name)
 
             try:
-                node = Node.objects.get(file_uuid=item.uuid)
+                node = Node.objects.get(file_item=item)
             except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
                 logger.error("Error retrieving Node with file UUID '%s': %s",
                              exc)

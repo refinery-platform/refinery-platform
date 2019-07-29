@@ -567,7 +567,7 @@ class Node(models.Model):
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
+    def _create_and_associate_auxiliary_node(self, filestore_item):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -576,13 +576,10 @@ class Node(models.Model):
             and do not re-add it as a child
             """
             node = Node.objects.get_or_create(
-                study=self.study,
-                assay=self.assay,
+                study=self.study, assay=self.assay,
                 name="auxiliary Node for: {}".format(self.name),
-                is_auxiliary_node=True,
-                file_uuid=filestore_item_uuid
+                is_auxiliary_node=True, file_item=filestore_item
             )
-
             # get_or_create() returns a tuple:
             # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
@@ -649,7 +646,7 @@ class Node(models.Model):
             auxiliary_file_store_item = FileStoreItem.objects.create()
 
             auxiliary_node = self._create_and_associate_auxiliary_node(
-                auxiliary_file_store_item.uuid
+                auxiliary_file_store_item
             )
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
                 auxiliary_node, self.file

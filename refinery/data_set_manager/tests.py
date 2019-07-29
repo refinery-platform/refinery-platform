@@ -339,11 +339,10 @@ class UtilitiesTests(TestCase):
                 charset='utf-8'
             )
         )
-        self.node_a = Node.objects.create(name="n0", assay=self.assay,
+        self.node_a = Node.objects.create(name='n0', assay=self.assay,
                                           study=self.study,
-                                          file_uuid=file_store_item_a.uuid)
-
-        self.node_b = Node.objects.create(name="n1", assay=self.assay,
+                                          file_item=file_store_item_a)
+        self.node_b = Node.objects.create(name='n1', assay=self.assay,
                                           study=self.study)
 
         self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user1)
@@ -1353,15 +1352,12 @@ class NodeClassMethodTests(TestCase):
         self.study = Study.objects.create(investigation=self.investigation)
         self.assay = Assay.objects.create(study=self.study)
 
-        # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
         self.another_node = Node.objects.create(assay=self.assay,
                                                 study=self.study)
-        self.file_node = Node.objects.create(
-            assay=self.assay,
-            study=self.study,
-            file_uuid=self.filestore_item_1.uuid
-        )
+        self.file_node = Node.objects.create(assay=self.assay,
+                                             study=self.study,
+                                             file_item=self.filestore_item_1)
 
     # Parents and Children:
 
@@ -1394,26 +1390,23 @@ class NodeClassMethodTests(TestCase):
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid)
+        self.node._create_and_associate_auxiliary_node(self.filestore_item)
         self.assertIsNotNone(self.node.get_children())
-        self.assertIsNotNone(Node.objects.get(
-            file_uuid=self.filestore_item.uuid))
-        self.assertEqual(self.node.get_children()[0], Node.objects.get(
-            file_uuid=self.filestore_item.uuid).uuid)
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid).get_parents()[0],
-                         self.node.uuid)
-        self.assertEqual(Node.objects.get(uuid=self.node.get_children()[
-            0]).is_auxiliary_node, True)
+        self.assertIsNotNone(Node.objects.get(file_item=self.filestore_item))
+        self.assertEqual(self.node.get_children()[0],
+                         Node.objects.get(file_item=self.filestore_item).uuid)
+        self.assertEqual(
+            Node.objects.get(file_item=self.filestore_item).get_parents()[0],
+            self.node.uuid
+        )
+        self.assertTrue(Node.objects.get(
+            uuid=self.node.get_children()[0]
+        ).is_auxiliary_node)
 
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
-
         for i in xrange(2):
-            self.node._create_and_associate_auxiliary_node(
-                self.filestore_item.uuid
-            )
+            self.node._create_and_associate_auxiliary_node(self.filestore_item)
             # Still just one child even on second time
             self.assertEqual(len(self.node.get_children()), 1)
 
@@ -1421,9 +1414,7 @@ class NodeClassMethodTests(TestCase):
         # Normal nodes will always return None
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
         # Auxiliary nodes will have a task state
-        self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid
-        )
+        self.node._create_and_associate_auxiliary_node(self.filestore_item)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
         # Values from:
@@ -1462,7 +1453,7 @@ class NodeIndexTests(APITestCase):
             task_id=self.file_store_item.import_task_id
         )
         self.node = Node.objects.create(assay=self.assay, study=study,
-                                        file_uuid=self.file_store_item.uuid,
+                                        file_item=self.file_store_item,
                                         name='http://example.com/fake.txt',
                                         type='Raw Data File')
         self.data_set_uuid = data_set.uuid
