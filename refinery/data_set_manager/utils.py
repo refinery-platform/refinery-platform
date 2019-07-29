@@ -113,27 +113,12 @@ def _get_unique_parent_attributes(nodes, node_id):
     return attributes
 
 
-def _retrieve_nodes(
-        study_uuid,
-        assay_uuid=None,
-        ontology_attribute_fields=False,
-        node_uuids=None):
+def _retrieve_nodes(study_uuid, assay_uuid=None,
+                    ontology_attribute_fields=False, node_uuids=None):
     """Retrieve all nodes associated to a study and optionally associated to an
     assay.
-
     If `node_uuids` is `None` query nodes (both from assay and from study only)
     """
-    node_fields = [
-        "id",
-        "uuid",
-        "file_uuid",
-        "type",
-        "name",
-        "parents",
-        "attribute"
-    ]
-
-    # Build filters
     filters = {}
     q_filters = []
 
@@ -148,25 +133,18 @@ def _retrieve_nodes(
         q_filters.append(q_filters_1)
 
     # Query for notes
-    node_list = (
-        Node.objects
-            .filter(*q_filters, **filters)
-            .prefetch_related("attribute_set")
-            .order_by("id", "attribute")
-            .values(*node_fields)
-    )
+    node_list = Node.objects.filter(*q_filters, **filters)\
+        .prefetch_related('attribute_set').order_by('id', 'attribute')\
+        .values('id', 'uuid', 'file_item', 'type', 'name', 'parents',
+                'attribute')
 
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
     else:
         attribute_fields = Attribute.NON_ONTOLOGY_FIELDS
 
-    attribute_list = (
-        Attribute.objects
-                 .filter()
-                 .order_by("id")
-                 .values_list(*attribute_fields)
-    )
+    attribute_list = Attribute.objects.filter().order_by('id').\
+        values_list(*attribute_fields)
 
     attributes = {}
     current_id = None
