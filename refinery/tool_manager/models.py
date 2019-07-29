@@ -277,8 +277,7 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
 
 
 class Tool(OwnableResource):
-    """
-    A Tool is a representation of the information it will take to launch
+    """A Tool is a representation of the information it will take to launch
     and monitor a ToolDefinition
     """
     FILE_UUID_LIST = "file_uuid_list"
@@ -291,18 +290,10 @@ class Tool(OwnableResource):
 
     dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
-    container_name = models.CharField(
-        max_length=250,
-        unique=True,
-        null=True
-    )
+    container_name = models.CharField(max_length=250, unique=True, null=True)
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
-    display_name = models.CharField(
-        max_length=250,
-        unique=True,
-        null=True
-    )
+    display_name = models.CharField(max_length=250, unique=True, null=True)
 
     class Meta:
         verbose_name = "tool"
@@ -332,8 +323,7 @@ class Tool(OwnableResource):
 
     @property
     def container_input_json_url(self):
-        """
-        Return the url that will expose a Tool's input data (as JSON) on
+        """Return the url that will expose a Tool's input data (as JSON) on
         GET requests
         """
         return self._create_detail_url("container_input_data")
@@ -375,8 +365,7 @@ class Tool(OwnableResource):
         return node_uuids
 
     def _get_input_nodes(self):
-        """
-        Return a list of Node objects corresponding to the Node UUIDs we
+        """Return a list of Node objects corresponding to the Node UUIDs we
         receive from the front-end when a WorkflowTool is launched.
 
         NOTE: There is no exception handling here since this method is
@@ -399,8 +388,7 @@ class Tool(OwnableResource):
         return self.tool_definition.tool_type
 
     def _get_analysis_config(self):
-        """
-        Construct  and return an Analysis Configuration dict to be validated.
+        """Construct and return an Analysis Configuration dict to be validated
 
         NOTE: there is no exception handling here since everything
         underneath Tool.launch() is inside of an atomic transaction.
@@ -422,14 +410,12 @@ class Tool(OwnableResource):
         self.save()
 
     def update_file_relationships_with_urls(self):
-        """
-        Replace a Tool's Node uuids in its `file_relationships` string with
+        """Replace a Tool's Node uuids in its `file_relationships` string with
         their respective FileStoreItem's urls and assign this data to a new
         key in the tool launch config: `file_relationships_urls`.
         No error handling here since this method is only called in an atomic
         transaction.
         """
-
         tool_launch_config = self.get_tool_launch_config()
         node_uuids = self.get_input_node_uuids()
 
@@ -473,13 +459,9 @@ class Tool(OwnableResource):
         return self.get_tool_type() == ToolDefinition.WORKFLOW
 
     def get_relative_container_url(self):
-        """
-        Construct & return the relative url of our Tool's container
-        """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
+        """Construct & return the relative url of our Tool's container"""
+        return "/{}/{}".format(settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+                               self.container_name)
 
 
 class VisualizationToolError(StandardError):

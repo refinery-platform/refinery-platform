@@ -202,33 +202,27 @@ class ToolManagerTestBase(ToolManagerMocks):
         test_file = StringIO.StringIO()
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(
-            source="http://www.example.com/test_file.txt"
+            source='http://www.example.com/test_file.txt'
         )
 
-        self.node = Node.objects.create(
-            name="Node {}".format(uuid.uuid4()),
-            assay=self.assay,
-            study=self.study,
-            file_uuid=self.file_store_item.uuid
-        )
+        self.node = Node.objects.create(name="Node {}".format(uuid.uuid4()),
+                                        assay=self.assay, study=self.study,
+                                        file_item=self.file_store_item)
 
         self.mock_get_workflows_reference = (
-            "tool_manager.management.commands.load_tools"
-            ".get_workflows"
+            'tool_manager.management.commands.load_tools.get_workflows'
         )
 
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username, '', self.password)
         self.user.save()
-        self.user2 = User.objects.create_user("coffee_enjoyer", '',
-                                              "coffeecoffee")
+        self.user2 = User.objects.create_user('coffee_enjoyer', '',
+                                              'coffeecoffee')
         self.user2.save()
 
-        self.project = Project.objects.create(
-            name="Catch-All Project",
-            is_catch_all=True
-        )
+        self.project = Project.objects.create(name='Catch-All Project',
+                                              is_catch_all=True)
         self.project.set_owner(self.user)
         self.user.profile.catch_all_project = self.project
         self.user.profile.save()
