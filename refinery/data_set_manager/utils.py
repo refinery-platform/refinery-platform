@@ -135,7 +135,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
     # Query for notes
     node_list = Node.objects.filter(*q_filters, **filters)\
         .prefetch_related('attribute_set').order_by('id', 'attribute')\
-        .values('id', 'uuid', 'file_item', 'type', 'name', 'parents',
+        .values('id', 'uuid', 'file_item_id', 'type', 'name', 'parents',
                 'attribute')
 
     if ontology_attribute_fields:
@@ -158,36 +158,36 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
         if current_id is None or current_id != node["id"]:
             # save current node
             if current_node is not None:
-                current_node["parents"] = uniquify(current_node["parents"])
+                current_node['parents'] = uniquify(current_node['parents'])
                 nodes[current_id] = current_node
 
             # new node, start merging
-            current_id = node["id"]
+            current_id = node['id']
             current_node = {
-                "id": node["id"],
-                "uuid": node["uuid"],
-                "attributes": [],
-                "parents": [],
-                "name": node["name"],
-                "type": node["type"],
-                "file_uuid": node["file_uuid"]
+                'id': node['id'],
+                'uuid': node['uuid'],
+                'attributes': [],
+                'parents': [],
+                'name': node['name'],
+                'type': node['type'],
+                'file_item_id': node['file_item_id']
             }
 
         # Fritz: Do the parents really differ or is this overhead?
-        if node["parents"] is not None:
-            current_node["parents"].append(node["parents"])
+        if node['parents'] is not None:
+            current_node['parents'].append(node['parents'])
 
-        if node["attribute"] is not None:
+        if node['attribute'] is not None:
             try:
-                current_node["attributes"].append(
-                    attributes[node["attribute"]]
+                current_node['attributes'].append(
+                    attributes[node['attribute']]
                 )
             except:
                 pass
 
     # save last node
     if current_node is not None:
-        current_node["parents"] = uniquify(current_node["parents"])
+        current_node['parents'] = uniquify(current_node['parents'])
         nodes[current_id] = current_node
 
     return nodes
