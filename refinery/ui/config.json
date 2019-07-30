@@ -64,7 +64,7 @@
         "chart.js/dist/Chart.min.js",
         "d3/d3.min.js",
         "d3-tip/index.js",
-        "graphlib/dist/graphlib.core.min.js",
+        "@dagrejs/graphlib/dist/graphlib.core.min.js",
         "intro.js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
         "filesize/lib/filesize.js",
