@@ -2,6 +2,10 @@
   env: {
     browser: true
   },
+  parserOptions: {
+    ecmaVersion: 6,
+    sourceType: "module",
+    },
   extends: "airbnb/legacy",
   globals: {
     angular: false,

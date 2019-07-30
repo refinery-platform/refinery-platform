@@ -6,9 +6,8 @@ FORGE
       puppetlabs-stdlib (< 7.0.0, >= 4.13.1)
     puppet-archive (3.2.1)
       puppetlabs-stdlib (< 6.0.0, >= 4.13.1)
-    puppet-nodejs (2.1.0)
-      puppetlabs-stdlib (< 5.0.0, >= 4.1.0)
-      treydock-gpg_key (< 1.0.0, >= 0.0.3)
+    puppet-nodejs (7.0.1)
+      puppetlabs-stdlib (< 7.0.0, >= 4.25.0)
     puppet-python (3.0.1)
       puppetlabs-stdlib (< 7.0.0, >= 4.19.0)
       stahnma-epel (< 2.0.0, >= 1.2.2)
@@ -43,7 +42,7 @@ FORGE
       puppetlabs-stdlib (< 6.0.0, >= 4.13.1)
     puppetlabs-powershell (2.3.0)
     puppetlabs-reboot (2.1.2)
-    puppetlabs-stdlib (4.25.1)
+    puppetlabs-stdlib (5.2.0)
     puppetlabs-translate (1.2.0)
     saz-timezone (5.1.1)
       puppetlabs-stdlib (< 6.0.0, >= 2.6.0)
@@ -52,7 +51,6 @@ FORGE
       puppetlabs-stdlib (>= 3.0.0)
     stm-debconf (2.3.0)
     tpdownes-sysctl (2.1.0)
-    treydock-gpg_key (0.1.0)
 
 PATH
   remote: refinery
@@ -60,7 +58,7 @@ PATH
     refinery-refinery (0.0.1)
 
 DEPENDENCIES
-  puppet-nodejs (= 2.1.0)
+  puppet-nodejs (= 7.0.1)
   puppet-python (= 3.0.1)
   puppet-rabbitmq (= 9.0.0)
   puppetlabs-apache (= 5.0.0)

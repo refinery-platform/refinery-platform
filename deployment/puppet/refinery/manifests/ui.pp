@@ -20,7 +20,7 @@ class refinery::ui (
   apt::source { 'nodejs':
     ensure   => 'present',
     comment  => 'Nodesource NodeJS repo',
-    location => 'https://deb.nodesource.com/node_6.x',
+    location => 'https://deb.nodesource.com/node_10.x',
     release  => 'trusty',
     repos    => 'main',
     key      => {
@@ -41,7 +41,6 @@ class refinery::ui (
   }
   ->
   package {
-    'bower': ensure => '1.8.8', provider => 'npm';
     'grunt-cli': ensure => '0.1.13', provider => 'npm';
   }
   ->
@@ -59,15 +58,6 @@ class refinery::ui (
     logoutput => on_failure,
     user      => $app_user,
     group     => $app_group,
-  }
-  ->
-  exec { "bower_modules":
-    command     => "/bin/rm -rf ${ui_app_root}/bower_components && /usr/bin/bower install --config.interactive=false",
-    cwd         => $ui_app_root,
-    logoutput   => on_failure,
-    user        => $app_user,
-    group       => $app_group,
-    environment => ["HOME=/home/${app_user}"],
   }
   ->
   exec { "grunt":

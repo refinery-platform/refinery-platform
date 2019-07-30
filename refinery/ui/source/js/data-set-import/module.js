@@ -7,5 +7,5 @@ angular
     'ui.grid',
     'ui.grid.edit',
     'ui.grid.resizeColumns',
-    'angular-intro'
+    'refineryRouter'
   ]);
