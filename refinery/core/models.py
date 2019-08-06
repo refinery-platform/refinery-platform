@@ -658,21 +658,22 @@ class DataSet(SharableResource):
     def get_assays(self, version=None):
         return Assay.objects.filter(study=self.get_studies(version))
 
-    def get_file_count(self):
-        """Returns the number of files in the data set"""
+    def get_file_nodes(self):
         return Node.objects.filter(
             study__in=self.get_investigation().study_set.all(),
             file_item__isnull=False
-        ).count()
+        )
+
+    def get_file_count(self):
+        """Returns the number of files in the data set"""
+        return self.get_file_nodes().count()
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
-        investigation = self.get_investigation()
-        file_uuids = Node.objects.filter(
-            study__in=investigation.study_set.all(), file_uuid__isnull=False
-        ).values_list('file_uuid', flat=True)
-        file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
-        return sum([item.get_file_size() for item in file_items])
+        file_item_ids = self.get_file_nodes().select_related('file_item')\
+            .values_list('file_item_id', flat=True)
+        file_items = FileStoreItem.objects.filter(pk__in=file_item_ids)
+        return sum([file_item.get_file_size() for file_item in file_items])
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
