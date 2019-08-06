@@ -228,9 +228,8 @@ class Investigation(NodeCollection):
         """
         file_store_items = [
             node.file_item for node in Node.objects.filter(
-                study=self.get_study()
-            )
-            if node.file_item
+                study=self.get_study(), file_item__isnull=False
+            ).select_related('file_item')
         ]
         if not exclude_metadata_file:
             file_store_items.append(self.get_file_store_item())
