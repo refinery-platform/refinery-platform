@@ -635,9 +635,9 @@ class Node(models.Model):
         # set to run when FileStoreItems are imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
         # Check if we pass the logic to generate aux. Files/Nodes
-        if (self.file and self.file.filetype and
-                self.file.filetype.used_for_visualization and
-                self.file.datafile and
+        if (self.file_item and self.file_item.filetype and
+                self.file_item.filetype.used_for_visualization and
+                self.file_item.datafile and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 'on_file_import'):
             # Create an empty FileStoreItem (we do the datafile association
@@ -648,7 +648,7 @@ class Node(models.Model):
                 auxiliary_file_store_item
             )
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                auxiliary_node, self.file
+                auxiliary_node, self.file_item
             )
             auxiliary_file_store_item.import_task_id = result.task_id
             auxiliary_file_store_item.save()
@@ -658,7 +658,7 @@ class Node(models.Model):
         Node or None if a regular Node
         """
         if self.is_auxiliary_node:
-            return AsyncResult(self.file.import_task_id).state
+            return AsyncResult(self.file_item.import_task_id).state
         else:
             return None
 
