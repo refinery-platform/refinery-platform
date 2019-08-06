@@ -134,10 +134,10 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
 
     # Query for notes
     node_list = Node.objects.filter(*q_filters, **filters)\
-        .prefetch_related('attribute_set').order_by('id', 'attribute')\
-        .values('id', 'uuid', 'file_item_id', 'type', 'name', 'parents',
-                'attribute')
-
+        .prefetch_related('attribute_set', 'file_item')\
+        .order_by('id', 'attribute').values('id', 'uuid', 'file_item__uuid',
+                                            'type', 'name', 'parents',
+                                            'attribute')
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
     else:
@@ -160,7 +160,6 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
             if current_node is not None:
                 current_node['parents'] = uniquify(current_node['parents'])
                 nodes[current_id] = current_node
-
             # new node, start merging
             current_id = node['id']
             current_node = {
@@ -170,7 +169,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
                 'parents': [],
                 'name': node['name'],
                 'type': node['type'],
-                'file_item_id': node['file_item_id']
+                'file_uuid': node['file_item__uuid']
             }
 
         # Fritz: Do the parents really differ or is this overhead?
@@ -197,34 +196,25 @@ def _create_annotated_node_objs(bulk_list=[], node=None, study=None,
                                 assay=None, attrs=None):
     """Helper method to bulk create annotated nodes"""
     counter = 0
-    if (node is not None and
-            study is not None and
-            assay is not None and
+    if (node is not None and study is not None and assay is not None and
             attrs is not None):
         for attr_key in attrs:
             counter += 1
             bulk_list.append(
-                AnnotatedNode(
-                    node_id=node["id"],
-                    attribute_id=attrs[attr_key][0],
-                    study=study,
-                    assay=assay,
-                    node_uuid=node["uuid"],
-                    node_file_uuid=node["file_uuid"],
-                    node_type=node["type"],
-                    node_name=node["name"],
-                    attribute_type=attrs[attr_key][1],
-                    attribute_subtype=attrs[attr_key][2],
-                    attribute_value=attrs[attr_key][3],
-                    attribute_value_unit=attrs[attr_key][4]
-                )
+                AnnotatedNode(node_id=node['id'],
+                              attribute_id=attrs[attr_key][0],
+                              study=study, assay=assay, node_uuid=node['uuid'],
+                              node_file_uuid=node['file_uuid'],
+                              node_type=node['type'], node_name=node['name'],
+                              attribute_type=attrs[attr_key][1],
+                              attribute_subtype=attrs[attr_key][2],
+                              attribute_value=attrs[attr_key][3],
+                              attribute_value_unit=attrs[attr_key][4])
             )
-
             if len(bulk_list) == MAX_BULK_LIST_SIZE:
                 AnnotatedNode.objects.bulk_create(bulk_list)
                 # Reset list
                 bulk_list = []
-
     elif len(bulk_list) > 0:
         # Create remaining annotated nodes
         AnnotatedNode.objects.bulk_create(bulk_list)
