@@ -670,9 +670,8 @@ class DataSet(SharableResource):
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
-        file_item_ids = self.get_file_nodes().select_related('file_item')\
-            .values_list('file_item_id', flat=True)
-        file_items = FileStoreItem.objects.filter(pk__in=file_item_ids)
+        file_items = [node.file_item for node
+                      in self.get_file_nodes().select_related('file_item')]
         return sum([file_item.get_file_size() for file_item in file_items])
 
     def share(self, group, readonly=True, readmetaonly=False):
