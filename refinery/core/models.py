@@ -1336,7 +1336,7 @@ class Analysis(OwnableResource):
                 node = Node.objects.get(file_item=item)
             except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
                 logger.error("Error retrieving Node with file UUID '%s': %s",
-                             exc)
+                             item.uuid, exc)
             else:
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
