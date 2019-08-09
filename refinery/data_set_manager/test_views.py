@@ -770,7 +770,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         first_node = get_response.data[0]
         self.assertEqual(
             first_node.get('file_uuid'),
-            Node.objects.get(uuid=first_node.get('uuid')).file_uuid
+            Node.objects.get(uuid=first_node.get('uuid')).file_item.uuid
         )
 
     def test_get_with_study_uuid_returns_name_field(self):
@@ -779,10 +779,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('name'),
-            Node.objects.get(uuid=first_node.get('uuid')).name
-        )
+        self.assertEqual(first_node.get('name'),
+                         Node.objects.get(uuid=first_node.get('uuid')).name)
 
     def test_get_with_study_uuid_returns_type_field(self):
         get_request = self.factory.get(self.url_root,
@@ -790,10 +788,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('type'),
-            Node.objects.get(uuid=first_node.get('uuid')).type
-        )
+        self.assertEqual(first_node.get('type'),
+                         Node.objects.get(uuid=first_node.get('uuid')).type)
 
     def test_get_with_study_uuid_returns_genome_build_field(self):
         get_request = self.factory.get(self.url_root,
@@ -812,10 +808,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('species'),
-            Node.objects.get(uuid=first_node.get('uuid')).species
-        )
+        self.assertEqual(first_node.get('species'),
+                         Node.objects.get(uuid=first_node.get('uuid')).species)
 
     def test_get_with_study_uuid_returns_is_annotation_field(self):
         get_request = self.factory.get(self.url_root,
