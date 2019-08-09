@@ -39,7 +39,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     data_set_uuid = indexes.CharField(null=True)
     type = indexes.CharField(model_attr='type')
     name = indexes.CharField(model_attr='name', null=True)
-    file_uuid = indexes.CharField(model_attr='file_uuid', null=True)
+    file_uuid = indexes.CharField(model_attr='file_item__uuid', null=True)
     species = indexes.IntegerField(model_attr='species', null=True)
     genome_build = indexes.CharField(model_attr='genome_build', null=True)
     is_annotation = indexes.BooleanField(model_attr='is_annotation')
@@ -159,9 +159,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         data.update({
             NodeIndex.DATAFILE: datafile,
-            NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
-                node.file_item
-            ),
+            NodeIndex.DOWNLOAD_URL:
+                _get_download_url_or_import_state(node.file_item),
             NodeIndex.TYPE_PREFIX + id_suffix: node.type,
             NodeIndex.NAME_PREFIX + id_suffix: node.name,
             'filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX: filetype,
