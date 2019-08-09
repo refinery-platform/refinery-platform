@@ -908,17 +908,18 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
     try:
         node = Node.objects.get(uuid=node_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned):
-        raise RuntimeError(
-            "Couldn't fetch Node by UUID from: {}".format(node_uuid)
-        )
+        raise RuntimeError("Couldn't fetch Node by UUID from: {}"
+                           .format(node_uuid))
     else:
-        url = node.file_item.get_datafile_url()
+        try:
+            url = node.file_item.get_datafile_url()
+        except AttributeError:
+            url = None
         if require_valid_url:
             if url is None:
                 raise RuntimeError(
-                    "Node with uuid: {} has no associated file url".format(
-                        node_uuid
-                    )
+                    "Node with uuid: {} has no associated file url"
+                    .format(node_uuid)
                 )
         return core.utils.get_absolute_url(url) if url else None
 
