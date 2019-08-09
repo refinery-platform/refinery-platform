@@ -82,7 +82,7 @@ def create_dataset_with_necessary_models(create_nodes=True,
     assay = AssayFactory(uuid=str(uuid_lib.uuid4()), study=latest_study)
 
     if create_nodes:
-        for i in xrange(2):
+        for i in range(2):
             file_store_item = FileStoreItemFactory(
                 uuid=str(uuid_lib.uuid4()),
                 source='http://www.example.com/test{}.txt'.format(i)

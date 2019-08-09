@@ -1102,16 +1102,15 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=file_node,
-            attribute_subtype='organism part'
+            node=file_node, attribute_subtype='organism part'
         )[0]
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(
             urljoin(self.url_root, file_node.uuid),
-            {"attribute_solr_name": solr_name,
-             "attribute_value": new_value}
+            {'attribute_solr_name': solr_name,
+             'attribute_value': new_value}
         )
         force_authenticate(patch_request, user=self.user)
         self.patch_view(patch_request, file_node.uuid)

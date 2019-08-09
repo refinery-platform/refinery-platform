@@ -1236,7 +1236,7 @@ class NodeViewSet(viewsets.ViewSet):
 
     def partial_update(self, request, uuid):
         node = self.get_object(uuid)
-        new_file_uuid = request.data.get('file_uuid')
+        file_uuid = request.data.get('file_uuid')
         solr_name = request.data.get('attribute_solr_name')
         attribute_value = request.data.get('attribute_value')
         data_set = node.study.get_dataset()
@@ -1249,13 +1249,12 @@ class NodeViewSet(viewsets.ViewSet):
         if not data_set.get_owner() == request.user:
             return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        # to remove the data file, we need to delete it and update index,
-        if new_file_uuid == '':
+        # to remove the data file, we need to delete it and update index
+        if file_uuid == '':
             node.file_item.delete()
             node.update_solr_index()
-            return Response(
-                NodeSerializer(node).data, status=status.HTTP_200_OK
-            )
+            return Response(NodeSerializer(node).data,
+                            status=status.HTTP_200_OK)
         # derived node can have multiple attribute sources
         elif solr_name and attribute_value and not node.is_derived():
             # splits solr name into type and subtype
