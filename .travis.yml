@@ -19,13 +19,13 @@ addons:
 
 install:
   - node --version
-  - NODE_VERSION=6.11.0
+  - NODE_VERSION=10.16.0
   - nvm install $NODE_VERSION
   - nvm use $NODE_VERSION
   - node --version
 
   - npm --version
-  - npm install -g npm@3.10.10
+  - npm install -g npm@6.9.0
   - npm --version
 
   - pip install -r requirements.txt --quiet
@@ -55,10 +55,9 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput --fake-initial
-  - npm install -g grunt-cli@0.1.13 bower@1.8.8 --progress false --quiet || ( cat npm-debug.log && false )
+  - npm install -g grunt-cli@0.1.13 --progress false --quiet || ( cat npm-debug.log && false )
   - cd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
-  - bower install --config.interactive=false --quiet
   - cd ../
 
   # Required for cypress tests; TODO: Move to puppet.
@@ -86,7 +85,7 @@ script:
   - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'
-  - pushd ui && node_modules/.bin/cypress run && popd
+  - pushd ui && node_modules/.bin/cypress run --record && popd
   - echo 'travis_fold:end:cypress'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
@@ -94,7 +93,6 @@ script:
 after_success:
   - echo 'travis_fold:start:codecov'
   - codecov
-  - npm run codecov
   - echo 'travis_fold:end:codecov'
 notifications:
   slack:
