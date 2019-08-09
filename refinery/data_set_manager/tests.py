@@ -1485,7 +1485,7 @@ class NodeIndexTests(APITestCase):
     def _assert_node_index_prepared_correctly(self, data_to_be_indexed,
                                               expected_download_url=None,
                                               expected_filetype=None,
-                                              expected_datafile=''):
+                                              expected_datafile=u''):
         self.assertEqual(
             data_to_be_indexed,
             {
@@ -1498,7 +1498,7 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
-                'assay_uuid': str(self.assay.uuid),
+                'assay_uuid': unicode(self.assay.uuid),
                 'data_set_uuid': self.data_set_uuid,
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
@@ -1580,7 +1580,7 @@ class NodeIndexTests(APITestCase):
             self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=constants.NOT_AVAILABLE, expected_filetype=''
+            expected_download_url=constants.NOT_AVAILABLE
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
