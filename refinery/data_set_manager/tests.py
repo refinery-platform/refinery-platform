@@ -32,7 +32,6 @@ from rest_framework.test import APITestCase
 import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, InvestigationLink)
-from core.tests import TestMigrations
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import FileImportTask
 
