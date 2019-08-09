@@ -39,19 +39,18 @@ class AttributeOrderSerializer(serializers.ModelSerializer):
 
 class NodeSerializer(serializers.ModelSerializer):
     children = serializers.SerializerMethodField()
-    file_uuid = serializers.CharField(max_length=36,
-                                      required=False,
-                                      allow_null=True)
+    file_uuid = serializers.UUIDField(source='file_item.uuid', required=False,
+                                      allow_null=True, read_only=True)
     parents = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Node
 
     def get_children(self, node):
         return node.get_children()
 
     def get_parents(self, node):
         return node.get_parents()
-
-    class Meta:
-        model = Node
 
 
 class StudySerializer(serializers.ModelSerializer):
