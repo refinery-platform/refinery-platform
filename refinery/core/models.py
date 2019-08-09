@@ -1531,7 +1531,7 @@ class Analysis(OwnableResource):
                 logger.info("Results for '%s' and %s: %s", self.uuid,
                             output_connection, analysis_result)
                 derived_data_file_node.file_item = FileStoreItem.objects.get(
-                    analysis_result.file_store_uuid
+                    uuid=analysis_result.file_store_uuid
                 )
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
