@@ -74,7 +74,7 @@ class refinery::solr (
       match => "^SOLR_HOME";
     'solr_config_heap':
       path    => '/var/solr/solr.in.sh',
-      line    => 'SOLR_HEAP="32m"',
+      line    => 'SOLR_HEAP="64m"',
       match   => 'SOLR_HEAP=',
       replace => $deployment_platform ? {
         'aws'   => false,
