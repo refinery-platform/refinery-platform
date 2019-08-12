@@ -163,7 +163,7 @@ class Migration(migrations.Migration):
                 ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
                 ('type', models.TextField(db_index=True)),
                 ('name', models.TextField(db_index=True)),
-                ('file_uuid', django_extensions.db.fields.UUIDField(default=None, max_length=36, null=True, editable=False, blank=True)),
+                ('file_uuid', models.CharField(default=None, max_length=36, null=True, editable=False, blank=True)),
                 ('genome_build', models.TextField(null=True, db_index=True)),
                 ('species', models.IntegerField(null=True, db_index=True)),
                 ('is_annotation', models.BooleanField(default=False)),

@@ -37,37 +37,28 @@ class AddFileToNodeViewTests(APITestCase):
     def setUp(self):
         self.username = 'guest_user'
         self.password = User.objects.make_random_password()
-        self.user = User.objects.create_user(self.username, 'user@fake.com',
+        self.user = User.objects.create_user(self.username, 'user@example.com',
                                              self.password)
-
         self.factory = APIRequestFactory()
         self.client = APIClient()
         self.url_root = '/api/v2/data_set_manager/add-file/'
         self.view = AddFileToNodeView.as_view()
         self.client.login(username=self.username, password=self.password)
-
-        # Create Datasets
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.node = self.data_set.get_nodes()[0]
-
         self.post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': self.node.uuid},
-            format="json"
+            self.url_root, data={'node_uuid': self.node.uuid}, format='json'
         )
 
     def test_post_returns_404_invalid_uuid(self):
         post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': uuid.uuid4()},
-            format="json"
+            self.url_root, data={'node_uuid': uuid.uuid4()}, format='json'
         )
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 404)
 
     def test_post_returns_403_for_non_owners(self):
-        user_lm = User.objects.create_user('lab_member',
-                                           'member@fake.com',
+        user_lm = User.objects.create_user('lab_member', 'member@example.com',
                                            self.password)
         self.post_request.user = user_lm
         force_authenticate(self.post_request, user=user_lm)
@@ -81,23 +72,17 @@ class AddFileToNodeViewTests(APITestCase):
         self.assertEqual(post_response.status_code, 202)
 
     def test_post_returns_400_node_uuid_not_present(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root, data={}, format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 400)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="aws")
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='aws')
     def test_aws_post_returns_400_no_identity_id(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': uuid.uuid4()},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={'node_uuid': uuid.uuid4()},
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
@@ -105,86 +90,71 @@ class AddFileToNodeViewTests(APITestCase):
 
     @override_settings(REFINERY_DEPLOYMENT_PLATFORM="aws")
     def test_aws_post_returns_202_with_identity_id(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': uuid.uuid4()
-            },
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': uuid.uuid4()
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 202)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="not aws")
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='not aws')
     def test_non_aws_post_returns_400_if_identity_id(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': uuid.uuid4()
-            },
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': uuid.uuid4()
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 400)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="aws",
-                       UPLOAD_BUCKET="test_bucket",
-                       REFINERY_DATA_IMPORT_DIR="/import/path",
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='aws',
+                       UPLOAD_BUCKET='test_bucket',
                        CELERY_ALWAYS_EAGER=True)
-    @mock.patch("data_set_manager.models.Node.update_solr_index")
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_aws_post_file_store_item_source_translated(self,
                                                         update_solr_mock):
-        file_store_item = self.node.get_file_store_item()
-        file_store_item.source = "{}/{}/test.txt".format(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.user.username
-        )
-        file_store_item.save()
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': "test_identity_id"
-            },
-            format="json"
-        )
+        self.node.file_item.source = \
+            's3://test_bucket/test_identity_id/test.txt'
+        self.node.file_item.save()
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': 'test_identity_id'
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.get_file_store_item().source,
+        self.assertEqual(self.node.file_item.source,
                          's3://test_bucket/test_identity_id/test.txt')
         self.assertTrue(update_solr_mock.called)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="not aws",
-                       REFINERY_DATA_IMPORT_DIR="/import/path",
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='not aws',
+                       REFINERY_DATA_IMPORT_DIR='/import/path',
                        CELERY_ALWAYS_EAGER=True)
-    @mock.patch("data_set_manager.models.Node.update_solr_index")
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_non_aws_post_file_store_item_source_translated(self,
                                                             update_solr_mock):
-        file_store_item_source = "{}/{}/test.txt".format(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.user.username
+        file_store_item_source = '{}/{}/test.txt'.format(
+            settings.REFINERY_DATA_IMPORT_DIR, self.user.username
         )
-        file_store_item = self.node.get_file_store_item()
-        file_store_item.source = file_store_item_source
-        file_store_item.save()
+        self.node.file_item.source = file_store_item_source
+        self.node.file_item.save()
 
-        post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': self.node.uuid},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={'node_uuid': self.node.uuid},
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.get_file_store_item().source,
-                         file_store_item_source)
+        self.assertEqual(self.node.file_item.source, file_store_item_source)
         self.assertTrue(update_solr_mock.called)
 
 
@@ -800,7 +770,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         first_node = get_response.data[0]
         self.assertEqual(
             first_node.get('file_uuid'),
-            Node.objects.get(uuid=first_node.get('uuid')).file_uuid
+            Node.objects.get(uuid=first_node.get('uuid')).file_item.uuid
         )
 
     def test_get_with_study_uuid_returns_name_field(self):
@@ -809,10 +779,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('name'),
-            Node.objects.get(uuid=first_node.get('uuid')).name
-        )
+        self.assertEqual(first_node.get('name'),
+                         Node.objects.get(uuid=first_node.get('uuid')).name)
 
     def test_get_with_study_uuid_returns_type_field(self):
         get_request = self.factory.get(self.url_root,
@@ -820,10 +788,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('type'),
-            Node.objects.get(uuid=first_node.get('uuid')).type
-        )
+        self.assertEqual(first_node.get('type'),
+                         Node.objects.get(uuid=first_node.get('uuid')).type)
 
     def test_get_with_study_uuid_returns_genome_build_field(self):
         get_request = self.factory.get(self.url_root,
@@ -842,10 +808,8 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('species'),
-            Node.objects.get(uuid=first_node.get('uuid')).species
-        )
+        self.assertEqual(first_node.get('species'),
+                         Node.objects.get(uuid=first_node.get('uuid')).species)
 
     def test_get_with_study_uuid_returns_is_annotation_field(self):
         get_request = self.factory.get(self.url_root,
@@ -1009,20 +973,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def test_patch_not_clean_400_status(self, mock_clean):
         mock_clean.return_value = False
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.patch_view(patch_request, self.node.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-
-    def test_patch_missing_file_store_item_400_status(self):
-        file_store_item = FileStoreItem.objects.get(uuid=self.node.file_uuid)
-        file_store_item.delete()
-
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
+            urljoin(self.url_root, self.node.uuid), {'file_uuid': ''}
         )
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1030,11 +981,10 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_patch_non_owner_401_status(self):
         self.non_owner = User.objects.create_user('Random User',
-                                                  'rand_user@fake.com',
+                                                  'rand_user@example.com',
                                                   self.password)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
+            urljoin(self.url_root, self.node.uuid), {'file_uuid': ''}
         )
         force_authenticate(patch_request, user=self.non_owner)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1042,8 +992,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_patch_edit_field_405_status(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"name": 'New Node Name'}
+            urljoin(self.url_root, self.node.uuid), {'name': 'New Node Name'}
         )
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1153,16 +1102,15 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=file_node,
-            attribute_subtype='organism part'
+            node=file_node, attribute_subtype='organism part'
         )[0]
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(
             urljoin(self.url_root, file_node.uuid),
-            {"attribute_solr_name": solr_name,
-             "attribute_value": new_value}
+            {'attribute_solr_name': solr_name,
+             'attribute_value': new_value}
         )
         force_authenticate(patch_request, user=self.user)
         self.patch_view(patch_request, file_node.uuid)

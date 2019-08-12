@@ -158,14 +158,14 @@ class AnalysisTests(TestCase):
         self.node = Node.objects.create(assay=self.assay, study=self.study,
                                         name='test_node',
                                         analysis_uuid=self.analysis.uuid,
-                                        file_uuid=self.file_store_item.uuid)
+                                        file_item=self.file_store_item)
         self.node2 = Node.objects.create(
             assay=self.assay1, study=self.study,
             analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
-            file_uuid=self.file_store_item1.uuid
+            file_item=self.file_store_item1
         )
         self.node_filename = "{}.{}".format(
-            self.node.name, self.node.get_file_store_item().get_extension()
+            self.node.name, self.node.file_item.get_extension()
         )
         self.analysis_node_connection_a = \
             AnalysisNodeConnection.objects.create(
@@ -268,9 +268,9 @@ class AnalysisTests(TestCase):
     def create_analysis_results(self, include_faulty_result=False):
         common_params = {
             'analysis': self.analysis,
-            'file_store_uuid': self.node.file_uuid,
+            'file_store_uuid': self.node.file_item.uuid,
             'file_name': self.node_filename,
-            'file_type': self.node.get_file_store_item().filetype
+            'file_type': self.node.file_item.filetype
         }
         analysis_result_0 = AnalysisResult.objects.create(**common_params)
 
@@ -344,12 +344,12 @@ class AnalysisTests(TestCase):
     def test__get_input_file_store_items(self):
         analysis = self.analysis_with_node_analyzed_further
         self.assertEqual(analysis.get_input_file_store_items(),
-                         [self.node2.get_file_store_item()])
+                         [self.node2.file_item])
 
     def test_has_all_local_input_files_non_local_inputs(self):
         analysis = self.analysis_with_node_analyzed_further
         node = analysis._get_input_nodes()[0]
-        node.get_file_store_item().delete_datafile()
+        node.file_item.delete_datafile()
         self.assertFalse(analysis.has_all_local_input_files())
 
     def test_has_all_local_input_files(self):
@@ -362,7 +362,7 @@ class AnalysisTests(TestCase):
         )
         node = NodeFactory(assay=self.assay, study=self.study,
                            name='Input Node', analysis_uuid=self.analysis.uuid,
-                           file_uuid=file_store_item.uuid)
+                           file_item=file_store_item)
         AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
                                       step=0, filename=self.node_filename,
                                       direction=INPUT_CONNECTION,
@@ -381,7 +381,7 @@ class AnalysisTests(TestCase):
         file_store_item.datafile.save('test_file.txt', ContentFile(''))
         node = NodeFactory(assay=self.assay, study=self.study,
                            name='Input Node', analysis_uuid=self.analysis.uuid,
-                           file_uuid=file_store_item.uuid)
+                           file_item=file_store_item)
         AnalysisNodeConnectionFactory(analysis=self.analysis, node=node,
                                       step=0, filename=self.node_filename,
                                       direction=INPUT_CONNECTION,

@@ -113,27 +113,12 @@ def _get_unique_parent_attributes(nodes, node_id):
     return attributes
 
 
-def _retrieve_nodes(
-        study_uuid,
-        assay_uuid=None,
-        ontology_attribute_fields=False,
-        node_uuids=None):
+def _retrieve_nodes(study_uuid, assay_uuid=None,
+                    ontology_attribute_fields=False, node_uuids=None):
     """Retrieve all nodes associated to a study and optionally associated to an
     assay.
-
     If `node_uuids` is `None` query nodes (both from assay and from study only)
     """
-    node_fields = [
-        "id",
-        "uuid",
-        "file_uuid",
-        "type",
-        "name",
-        "parents",
-        "attribute"
-    ]
-
-    # Build filters
     filters = {}
     q_filters = []
 
@@ -148,25 +133,18 @@ def _retrieve_nodes(
         q_filters.append(q_filters_1)
 
     # Query for notes
-    node_list = (
-        Node.objects
-            .filter(*q_filters, **filters)
-            .prefetch_related("attribute_set")
-            .order_by("id", "attribute")
-            .values(*node_fields)
-    )
-
+    node_list = Node.objects.filter(*q_filters, **filters)\
+        .prefetch_related('attribute_set', 'file_item')\
+        .order_by('id', 'attribute').values('id', 'uuid', 'file_item__uuid',
+                                            'type', 'name', 'parents',
+                                            'attribute')
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
     else:
         attribute_fields = Attribute.NON_ONTOLOGY_FIELDS
 
-    attribute_list = (
-        Attribute.objects
-                 .filter()
-                 .order_by("id")
-                 .values_list(*attribute_fields)
-    )
+    attribute_list = Attribute.objects.filter().order_by('id').\
+        values_list(*attribute_fields)
 
     attributes = {}
     current_id = None
@@ -180,78 +158,63 @@ def _retrieve_nodes(
         if current_id is None or current_id != node["id"]:
             # save current node
             if current_node is not None:
-                current_node["parents"] = uniquify(current_node["parents"])
+                current_node['parents'] = uniquify(current_node['parents'])
                 nodes[current_id] = current_node
-
             # new node, start merging
-            current_id = node["id"]
+            current_id = node['id']
             current_node = {
-                "id": node["id"],
-                "uuid": node["uuid"],
-                "attributes": [],
-                "parents": [],
-                "name": node["name"],
-                "type": node["type"],
-                "file_uuid": node["file_uuid"]
+                'id': node['id'],
+                'uuid': node['uuid'],
+                'attributes': [],
+                'parents': [],
+                'name': node['name'],
+                'type': node['type'],
+                'file_uuid': node['file_item__uuid']
             }
 
         # Fritz: Do the parents really differ or is this overhead?
-        if node["parents"] is not None:
-            current_node["parents"].append(node["parents"])
+        if node['parents'] is not None:
+            current_node['parents'].append(node['parents'])
 
-        if node["attribute"] is not None:
+        if node['attribute'] is not None:
             try:
-                current_node["attributes"].append(
-                    attributes[node["attribute"]]
+                current_node['attributes'].append(
+                    attributes[node['attribute']]
                 )
             except:
                 pass
 
     # save last node
     if current_node is not None:
-        current_node["parents"] = uniquify(current_node["parents"])
+        current_node['parents'] = uniquify(current_node['parents'])
         nodes[current_id] = current_node
 
     return nodes
 
 
-def _create_annotated_node_objs(
-        bulk_list=[],
-        node=None,
-        study=None,
-        assay=None,
-        attrs=None):
-    """Helper method to bulk create annotated nodes.
-    """
+def _create_annotated_node_objs(bulk_list=[], node=None, study=None,
+                                assay=None, attrs=None):
+    """Helper method to bulk create annotated nodes"""
     counter = 0
-    if (node is not None and
-            study is not None and
-            assay is not None and
+    if (node is not None and study is not None and assay is not None and
             attrs is not None):
         for attr_key in attrs:
             counter += 1
             bulk_list.append(
-                AnnotatedNode(
-                    node_id=node["id"],
-                    attribute_id=attrs[attr_key][0],
-                    study=study,
-                    assay=assay,
-                    node_uuid=node["uuid"],
-                    node_file_uuid=node["file_uuid"],
-                    node_type=node["type"],
-                    node_name=node["name"],
-                    attribute_type=attrs[attr_key][1],
-                    attribute_subtype=attrs[attr_key][2],
-                    attribute_value=attrs[attr_key][3],
-                    attribute_value_unit=attrs[attr_key][4]
-                )
+                AnnotatedNode(node_id=node['id'],
+                              attribute_id=attrs[attr_key][0],
+                              study=study, assay=assay, node_uuid=node['uuid'],
+                              node_file_uuid=node['file_uuid'],
+                              node_type=node['type'], node_name=node['name'],
+                              attribute_type=attrs[attr_key][1],
+                              attribute_subtype=attrs[attr_key][2],
+                              attribute_value=attrs[attr_key][3],
+                              attribute_value_unit=attrs[attr_key][4])
             )
-
             if len(bulk_list) == MAX_BULK_LIST_SIZE:
                 AnnotatedNode.objects.bulk_create(bulk_list)
                 # Reset list
                 bulk_list = []
-
     elif len(bulk_list) > 0:
         # Create remaining annotated nodes
         AnnotatedNode.objects.bulk_create(bulk_list)
@@ -945,17 +908,18 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
     try:
         node = Node.objects.get(uuid=node_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned):
-        raise RuntimeError(
-            "Couldn't fetch Node by UUID from: {}".format(node_uuid)
-        )
+        raise RuntimeError("Couldn't fetch Node by UUID from: {}"
+                           .format(node_uuid))
     else:
-        url = node.get_relative_file_store_item_url()
+        try:
+            url = node.file_item.get_datafile_url()
+        except AttributeError:
+            url = None
         if require_valid_url:
             if url is None:
                 raise RuntimeError(
-                    "Node with uuid: {} has no associated file url".format(
-                        node_uuid
-                    )
+                    "Node with uuid: {} has no associated file url"
+                    .format(node_uuid)
                 )
         return core.utils.get_absolute_url(url) if url else None
 

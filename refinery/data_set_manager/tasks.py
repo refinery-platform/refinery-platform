@@ -250,7 +250,6 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
     :type parent_node_file_store_item: FileStoreItem
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
-    auxiliary_file_store_item = auxiliary_node.get_file_store_item()
     try:
         datafile_path = parent_node_file_store_item.datafile.path
     except (NotImplementedError, ValueError):
@@ -262,19 +261,17 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
         # Here we are checking for the FileExtension of the ParentNode's
         # FileStoreItem because we will create auxiliary files based on what
         # said value is
-        if parent_node_file_store_item.get_extension().lower() == "bam":
-            generate_bam_index(auxiliary_file_store_item.uuid, datafile_path)
+        if parent_node_file_store_item.get_extension().lower() == 'bam':
+            generate_bam_index(auxiliary_node.file_item.uuid, datafile_path)
 
         generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
 
         logger.debug("Auxiliary file for %s generated in %s "
                      "seconds." % (datafile_path, time.time() - start_time))
-
     except Exception as e:
         logger.error(
             "Something went wrong while trying to generate the auxiliary file "
             "for %s. %s" % (datafile_path, e))
-
         generate_auxiliary_file.update_state(state=celery.states.FAILURE)
 
         raise celery.exceptions.Ignore()
@@ -322,7 +319,7 @@ def post_process_file_import(**kwargs):
     except KeyError:
         file_store_item_uuid = kwargs['args'][0]
     try:
-        node = Node.objects.get(file_uuid=file_store_item_uuid)
+        node = Node.objects.get(file_item__uuid=file_store_item_uuid)
     except Node.DoesNotExist as exc:
         logger.error("Could not retrieve Node with file UUID '%s': %s",
                      file_store_item_uuid, exc)

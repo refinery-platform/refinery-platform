@@ -39,7 +39,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     data_set_uuid = indexes.CharField(null=True)
     type = indexes.CharField(model_attr='type')
     name = indexes.CharField(model_attr='name', null=True)
-    file_uuid = indexes.CharField(model_attr='file_uuid', null=True)
+    file_uuid = indexes.CharField(model_attr='file_item__uuid', null=True)
     species = indexes.IntegerField(model_attr='species', null=True)
     genome_build = indexes.CharField(model_attr='genome_build', null=True)
     is_annotation = indexes.BooleanField(model_attr='is_annotation')
@@ -112,8 +112,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        file_store_item = node.get_file_store_item()
-
         data.update(self._assay_data(node))
 
         # create dynamic fields for each attribute
@@ -126,8 +124,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if annotation.attribute_value_unit is not None:
                 value += " " + annotation.attribute_value_unit
 
-            name = re.sub(r'\W',
-                          settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
+            name = re.sub(r'\W', settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
                           name)
 
             uniq_key = name + id_suffix
@@ -153,15 +150,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(i for i in sorted(value))
 
-        datafile = "" if file_store_item is None else \
-            file_store_item.datafile.name
-        filetype = "" if file_store_item is None else file_store_item.filetype
+        if node.file_item is None:
+            datafile = ""
+            filetype = ""
+        else:
+            datafile = node.file_item.datafile.name
+            filetype = node.file_item.filetype
 
         data.update({
             NodeIndex.DATAFILE: datafile,
-            NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
-                file_store_item
-            ),
+            NodeIndex.DOWNLOAD_URL:
+                _get_download_url_or_import_state(node.file_item),
             NodeIndex.TYPE_PREFIX + id_suffix: node.type,
             NodeIndex.NAME_PREFIX + id_suffix: node.name,
             'filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX: filetype,

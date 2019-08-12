@@ -658,27 +658,20 @@ class DataSet(SharableResource):
     def get_assays(self, version=None):
         return Assay.objects.filter(study=self.get_studies(version))
 
+    def get_file_nodes(self):
+        return Node.objects.filter(
+            study__in=self.get_investigation().study_set.all(),
+            file_item__isnull=False
+        )
+
     def get_file_count(self):
         """Returns the number of files in the data set"""
-        investigation = self.get_investigation()
-        file_count = 0
-
-        for study in investigation.study_set.all():
-            file_count += (
-                Node.objects
-                .filter(study=study.id, file_uuid__isnull=False)
-                .count()
-            )
-        return file_count
+        return self.get_file_nodes().count()
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
-        investigation = self.get_investigation()
-        file_uuids = Node.objects.filter(
-            study__in=investigation.study_set.all(), file_uuid__isnull=False
-        ).values_list('file_uuid', flat=True)
-        file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
-        return sum([item.get_file_size() for item in file_items])
+        return sum([node.file_item.get_file_size() for node
+                    in self.get_file_nodes().select_related('file_item')])
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -830,13 +823,10 @@ class DataSet(SharableResource):
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
-    """
-    Removes a DataSet's related objects upon deletion being triggered.
+    """Removes a DataSet's related objects upon deletion being triggered
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
     with transaction.atomic():
         for investigation_link in instance.get_investigation_links():
@@ -1343,10 +1333,10 @@ class Analysis(OwnableResource):
                 item.rename_datafile(result.file_name)
 
             try:
-                node = Node.objects.get(file_uuid=item.uuid)
+                node = Node.objects.get(file_item=item)
             except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
                 logger.error("Error retrieving Node with file UUID '%s': %s",
-                             exc)
+                             item.uuid, exc)
             else:
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
@@ -1481,8 +1471,7 @@ class Analysis(OwnableResource):
                 )]
 
     def get_input_file_store_items(self):
-        return [node.get_file_store_item()
-                for node in self._get_input_nodes()]
+        return [node.file_item for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
         return self._get_input_nodes()[0].study
@@ -1492,7 +1481,6 @@ class Analysis(OwnableResource):
 
     def _create_data_transformation_nodes(self, graph):
         """create data transformation nodes for all Tool nodes"""
-
         data_transformation_nodes = [
             graph.node[node_id] for node_id in graph.nodes()
             if graph.node[node_id]['type'] == "tool"
@@ -1532,41 +1520,29 @@ class Analysis(OwnableResource):
     def _create_derived_data_file_nodes(self, graph):
         """create derived data file nodes for all entries and connect to data
             transformation nodes"""
-        output_connection_to_analysis_result_mapping = (
-            self._get_output_connection_to_analysis_result_mapping()
-        )
         for output_connection, analysis_result in \
-                output_connection_to_analysis_result_mapping:
+                self._get_output_connection_to_analysis_result_mapping():
             derived_data_file_node = self._create_derived_data_file_node(
-                self.get_input_node_study(),
-                self.get_input_node_assay(),
+                self.get_input_node_study(), self.get_input_node_assay(),
                 output_connection
             )
             if output_connection.is_refinery_file:
                 # retrieve uuid of corresponding output file if exists
-                logger.info(
-                    "Results for '%s' and %s: %s",
-                    self.uuid,
-                    output_connection,
-                    analysis_result
-                )
-                derived_data_file_node.file_uuid = (
-                    analysis_result.file_store_uuid
+                logger.info("Results for '%s' and %s: %s", self.uuid,
+                            output_connection, analysis_result)
+                derived_data_file_node.file_item = FileStoreItem.objects.get(
+                    uuid=analysis_result.file_store_uuid
                 )
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
-                    output_connection,
-                    analysis_result.file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid
+                    output_connection, analysis_result.file_store_uuid,
+                    derived_data_file_node.name, derived_data_file_node.uuid
                 )
             output_connection.node = derived_data_file_node
             output_connection.save()
 
             self._link_derived_data_file_node_to_data_transformation_node(
-                graph,
-                output_connection,
-                derived_data_file_node
+                graph, output_connection, derived_data_file_node
             )
 
     def _link_derived_data_file_node_to_data_transformation_node(

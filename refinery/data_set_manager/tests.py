@@ -32,7 +32,6 @@ from rest_framework.test import APITestCase
 import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, InvestigationLink)
-from core.tests import TestMigrations
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import FileImportTask
 
@@ -339,11 +338,10 @@ class UtilitiesTests(TestCase):
                 charset='utf-8'
             )
         )
-        self.node_a = Node.objects.create(name="n0", assay=self.assay,
+        self.node_a = Node.objects.create(name='n0', assay=self.assay,
                                           study=self.study,
-                                          file_uuid=file_store_item_a.uuid)
-
-        self.node_b = Node.objects.create(name="n1", assay=self.assay,
+                                          file_item=file_store_item_a)
+        self.node_b = Node.objects.create(name='n1', assay=self.assay,
                                           study=self.study)
 
         self.hg_19_data_set = create_mock_hg_19_data_set(user=self.user1)
@@ -1353,15 +1351,12 @@ class NodeClassMethodTests(TestCase):
         self.study = Study.objects.create(investigation=self.investigation)
         self.assay = Assay.objects.create(study=self.study)
 
-        # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
         self.another_node = Node.objects.create(assay=self.assay,
                                                 study=self.study)
-        self.file_node = Node.objects.create(
-            assay=self.assay,
-            study=self.study,
-            file_uuid=self.filestore_item_1.uuid
-        )
+        self.file_node = Node.objects.create(assay=self.assay,
+                                             study=self.study,
+                                             file_item=self.filestore_item_1)
 
     # Parents and Children:
 
@@ -1394,60 +1389,36 @@ class NodeClassMethodTests(TestCase):
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid)
+        self.node._create_and_associate_auxiliary_node(self.filestore_item)
         self.assertIsNotNone(self.node.get_children())
-        self.assertIsNotNone(Node.objects.get(
-            file_uuid=self.filestore_item.uuid))
-        self.assertEqual(self.node.get_children()[0], Node.objects.get(
-            file_uuid=self.filestore_item.uuid).uuid)
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid).get_parents()[0],
-                         self.node.uuid)
-        self.assertEqual(Node.objects.get(uuid=self.node.get_children()[
-            0]).is_auxiliary_node, True)
+        self.assertIsNotNone(Node.objects.get(file_item=self.filestore_item))
+        self.assertEqual(self.node.get_children()[0],
+                         Node.objects.get(file_item=self.filestore_item).uuid)
+        self.assertEqual(
+            Node.objects.get(file_item=self.filestore_item).get_parents()[0],
+            self.node.uuid
+        )
+        self.assertTrue(Node.objects.get(
+            uuid=self.node.get_children()[0]
+        ).is_auxiliary_node)
 
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
-
         for i in xrange(2):
-            self.node._create_and_associate_auxiliary_node(
-                self.filestore_item.uuid)
+            self.node._create_and_associate_auxiliary_node(self.filestore_item)
+            # Still just one child even on second time
             self.assertEqual(len(self.node.get_children()), 1)
-            # Still just one child even on second time.
-            self.assertEqual(Node.objects.get(
-                file_uuid=self.filestore_item.uuid
-            ).get_relative_file_store_item_url(),
-                 FileStoreItem.objects.get(
-                     uuid=Node.objects.get(
-                         file_uuid=self.filestore_item.uuid).file_uuid
-                 ).get_datafile_url())
 
     def test_get_auxiliary_file_generation_task_state(self):
         # Normal nodes will always return None
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
-
         # Auxiliary nodes will have a task state
-        self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid)
+        self.node._create_and_associate_auxiliary_node(self.filestore_item)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
-        self.assertIn(state, [PENDING, STARTED, SUCCESS])
         # Values from:
         # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
-
-    # File store:
-
-    def test_get_file_store_item(self):
-        self.assertEqual(self.file_node.get_file_store_item(),
-                         self.filestore_item_1)
-        self.assertEqual(self.node.get_file_store_item(),
-                         None)
-
-    def test_get_relative_file_store_item_url(self):
-        relative_url = self.file_node.get_relative_file_store_item_url()
-        self.assertEqual(relative_url, self.file_node.get_file_store_item(
-        ).get_datafile_url())
+        self.assertIn(state, [PENDING, STARTED, SUCCESS])
 
     def test_get_analysis(self):
         make_analyses_with_single_dataset(1, self.user)
@@ -1481,7 +1452,7 @@ class NodeIndexTests(APITestCase):
             task_id=self.file_store_item.import_task_id
         )
         self.node = Node.objects.create(assay=self.assay, study=study,
-                                        file_uuid=self.file_store_item.uuid,
+                                        file_item=self.file_store_item,
                                         name='http://example.com/fake.txt',
                                         type='Raw Data File')
         self.data_set_uuid = data_set.uuid
@@ -1513,7 +1484,7 @@ class NodeIndexTests(APITestCase):
     def _assert_node_index_prepared_correctly(self, data_to_be_indexed,
                                               expected_download_url=None,
                                               expected_filetype=None,
-                                              expected_datafile=''):
+                                              expected_datafile=u''):
         self.assertEqual(
             data_to_be_indexed,
             {
@@ -1526,7 +1497,7 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
-                'assay_uuid': str(self.assay.uuid),
+                'assay_uuid': unicode(self.assay.uuid),
                 'data_set_uuid': self.data_set_uuid,
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
@@ -1608,7 +1579,7 @@ class NodeIndexTests(APITestCase):
             self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=constants.NOT_AVAILABLE, expected_filetype=''
+            expected_download_url=constants.NOT_AVAILABLE
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
@@ -1953,39 +1924,6 @@ class SingleFileColumnParserTests(TestCase):
 
         self.assert_expected_nodes(dataset, 2)
         self.assertEqual(2, update_object_mock.call_count)
-
-
-class UpdateMissingAttributeOrderTests(TestMigrations):
-    migrate_from = '0004_auto_20171211_1145'
-    migrate_to = '0005_update_attribute_orders'
-
-    def setUpBeforeMigration(self, apps):
-        self.datasets_to_create = 3
-        for i in xrange(self.datasets_to_create):
-            create_dataset_with_necessary_models()
-
-        self.assertEqual(
-            0,
-            AttributeOrder.objects.filter(
-                solr_field=NodeIndex.DOWNLOAD_URL
-            ).count()
-        )
-
-    def test_attribute_orders_created(self):
-        self.assertEqual(
-            self.datasets_to_create,
-            AttributeOrder.objects.filter(
-                solr_field=NodeIndex.DOWNLOAD_URL
-            ).count()
-        )
-        for attribute_order in AttributeOrder.objects.all():
-            self.assertTrue(attribute_order.is_exposed)
-            self.assertTrue(attribute_order.is_active)
-            self.assertFalse(attribute_order.is_facet)
-            self.assertFalse(attribute_order.is_internal)
-            self.assertEqual(0, attribute_order.rank)
-            self.assertEqual(NodeIndex.DOWNLOAD_URL,
-                             attribute_order.solr_field)
 
 
 class InvestigationTests(IsaTabTestBase):

@@ -37,7 +37,7 @@ from data_set_manager.models import Node
 from data_set_manager.utils import (
     get_file_url_from_node_uuid, get_solr_response_json
 )
-from file_store.models import FileType
+from file_store.models import FileStoreItem, FileType
 
 from .tasks import start_container
 
@@ -277,8 +277,7 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
 
 
 class Tool(OwnableResource):
-    """
-    A Tool is a representation of the information it will take to launch
+    """A Tool is a representation of the information it will take to launch
     and monitor a ToolDefinition
     """
     FILE_UUID_LIST = "file_uuid_list"
@@ -291,18 +290,10 @@ class Tool(OwnableResource):
 
     dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
-    container_name = models.CharField(
-        max_length=250,
-        unique=True,
-        null=True
-    )
+    container_name = models.CharField(max_length=250, unique=True, null=True)
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
-    display_name = models.CharField(
-        max_length=250,
-        unique=True,
-        null=True
-    )
+    display_name = models.CharField(max_length=250, unique=True, null=True)
 
     class Meta:
         verbose_name = "tool"
@@ -332,8 +323,7 @@ class Tool(OwnableResource):
 
     @property
     def container_input_json_url(self):
-        """
-        Return the url that will expose a Tool's input data (as JSON) on
+        """Return the url that will expose a Tool's input data (as JSON) on
         GET requests
         """
         return self._create_detail_url("container_input_data")
@@ -375,8 +365,7 @@ class Tool(OwnableResource):
         return node_uuids
 
     def _get_input_nodes(self):
-        """
-        Return a list of Node objects corresponding to the Node UUIDs we
+        """Return a list of Node objects corresponding to the Node UUIDs we
         receive from the front-end when a WorkflowTool is launched.
 
         NOTE: There is no exception handling here since this method is
@@ -399,8 +388,7 @@ class Tool(OwnableResource):
         return self.tool_definition.tool_type
 
     def _get_analysis_config(self):
-        """
-        Construct  and return an Analysis Configuration dict to be validated.
+        """Construct and return an Analysis Configuration dict to be validated
 
         NOTE: there is no exception handling here since everything
         underneath Tool.launch() is inside of an atomic transaction.
@@ -422,14 +410,12 @@ class Tool(OwnableResource):
         self.save()
 
     def update_file_relationships_with_urls(self):
-        """
-        Replace a Tool's Node uuids in its `file_relationships` string with
+        """Replace a Tool's Node uuids in its `file_relationships` string with
         their respective FileStoreItem's urls and assign this data to a new
         key in the tool launch config: `file_relationships_urls`.
         No error handling here since this method is only called in an atomic
         transaction.
         """
-
         tool_launch_config = self.get_tool_launch_config()
         node_uuids = self.get_input_node_uuids()
 
@@ -442,14 +428,10 @@ class Tool(OwnableResource):
         )
         for node_uuid in node_uuids:
             node = Node.objects.get(uuid=node_uuid)
-
             # Append file_uuid to list of FileStoreItem UUIDs
-            tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
-
-            file_url = get_file_url_from_node_uuid(
-                node_uuid,
-                require_valid_url=True
-            )
+            tool_launch_config[self.FILE_UUID_LIST].append(node.file_item.uuid)
+            file_url = get_file_url_from_node_uuid(node_uuid,
+                                                   require_valid_url=True)
             tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
                 tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
                     node_uuid, "'{}'".format(file_url)
@@ -477,13 +459,9 @@ class Tool(OwnableResource):
         return self.get_tool_type() == ToolDefinition.WORKFLOW
 
     def get_relative_container_url(self):
-        """
-        Construct & return the relative url of our Tool's container
-        """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
+        """Construct & return the relative url of our Tool's container"""
+        return "/{}/{}".format(settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+                               self.container_name)
 
 
 class VisualizationToolError(StandardError):
@@ -788,33 +766,25 @@ class WorkflowTool(Tool):
         return analysis
 
     def create_analysis_input_node_connections(self):
-        """
-        Create the AnalysisNodeConnection objects corresponding to the input
-        Nodes of a WorkflowTool launch.
+        """Create the AnalysisNodeConnection objects corresponding to the input
+        Nodes of a WorkflowTool launch
         """
         for node in self._get_input_nodes():
-            file_store_item = node.get_file_store_item()
-
             AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                node=node,
-                direction=INPUT_CONNECTION,
-                name=file_store_item.datafile.name,
-                step=self.INPUT_STEP_NUMBER,
+                analysis=self.analysis, node=node, direction=INPUT_CONNECTION,
+                name=node.file_item.datafile.name, step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
-                is_refinery_file=bool(file_store_item.datafile)
+                is_refinery_file=bool(node.file_item.datafile)
             )
 
     def create_analysis_output_node_connections(self):
-        """
-        Create the AnalysisNodeConnection objects corresponding to the output
-        Nodes (Derived Data) of a WorkflowTool launch.
+        """Create the AnalysisNodeConnection objects corresponding to the
+        output Nodes (Derived Data) of a WorkflowTool launch
         """
         exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
         for galaxy_dataset in self._get_galaxy_history_dataset_list():
             AnalysisNodeConnection.objects.create(
-                analysis=self.analysis,
-                direction=OUTPUT_CONNECTION,
+                analysis=self.analysis, direction=OUTPUT_CONNECTION,
                 name=self._get_creating_job_output_name(galaxy_dataset),
                 subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),
@@ -1397,7 +1367,9 @@ class WorkflowTool(Tool):
         for galaxy_to_refinery_dict in galaxy_to_refinery_mapping_list:
             node = Node.objects.get(
                 uuid__in=self.get_input_node_uuids(),
-                file_uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
+                file_item=FileStoreItem.objects.get(
+                    uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
+                )
             )
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
                 # Note the `1` in the replace call below. We only want to

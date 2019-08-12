@@ -202,33 +202,27 @@ class ToolManagerTestBase(ToolManagerMocks):
         test_file = StringIO.StringIO()
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(
-            source="http://www.example.com/test_file.txt"
+            source='http://www.example.com/test_file.txt'
         )
 
-        self.node = Node.objects.create(
-            name="Node {}".format(uuid.uuid4()),
-            assay=self.assay,
-            study=self.study,
-            file_uuid=self.file_store_item.uuid
-        )
+        self.node = Node.objects.create(name="Node {}".format(uuid.uuid4()),
+                                        assay=self.assay, study=self.study,
+                                        file_item=self.file_store_item)
 
         self.mock_get_workflows_reference = (
-            "tool_manager.management.commands.load_tools"
-            ".get_workflows"
+            'tool_manager.management.commands.load_tools.get_workflows'
         )
 
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username, '', self.password)
         self.user.save()
-        self.user2 = User.objects.create_user("coffee_enjoyer", '',
-                                              "coffeecoffee")
+        self.user2 = User.objects.create_user('coffee_enjoyer', '',
+                                              'coffeecoffee')
         self.user2.save()
 
-        self.project = Project.objects.create(
-            name="Catch-All Project",
-            is_catch_all=True
-        )
+        self.project = Project.objects.create(name='Catch-All Project',
+                                              is_catch_all=True)
         self.project.set_owner(self.user)
         self.user.profile.catch_all_project = self.project
         self.user.profile.save()
@@ -298,11 +292,11 @@ class ToolManagerTestBase(ToolManagerMocks):
                             "uuid": node.uuid,
                             "name": node.name,
                             "type": node.type,
-                            "file_uuid": node.file_uuid,
+                            "file_uuid": node.file_item.uuid,
                             "organism_Characteristics_generic_s":
                                 "Mus musculus",
                             "filename_Characteristics_generic_s":
-                                node.get_file_store_item().source
+                                node.file_item.source
                         } for node in nodes
                     ]
                 }
@@ -490,36 +484,23 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
-
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(source=source)
 
-        node = NodeFactory(
-            name="Node {}".format(uuid.uuid4()),
-            assay=self.assay,
-            study=self.study,
-            type=Node.RAW_DATA_FILE,
-            file_uuid=self.file_store_item.uuid
-        )
-        attribute = AttributeFactory(
-            node=node,
-            type=Attribute.CHARACTERISTICS,
-            subtype='coffee',
-            value='coffee'
-        )
-        AnnotatedNodeFactory(
-            node_id=node.id,
-            attribute_id=attribute.id,
-            study=self.study,
-            assay=self.assay,
-            node_uuid=node.uuid,
-            node_file_uuid=node.file_uuid,
-            node_type=node.type,
-            node_name=node.name,
-            attribute_type=attribute.type,
-            attribute_subtype=attribute.subtype,
-            attribute_value=attribute.value,
-        )
+        node = NodeFactory(name="Node {}".format(uuid.uuid4()),
+                           assay=self.assay, study=self.study,
+                           type=Node.RAW_DATA_FILE,
+                           file_item=self.file_store_item)
+        attribute = AttributeFactory(node=node, type=Attribute.CHARACTERISTICS,
+                                     subtype='coffee', value='coffee')
+        AnnotatedNodeFactory(node_id=node.id, attribute_id=attribute.id,
+                             study=self.study, assay=self.assay,
+                             node_uuid=node.uuid,
+                             node_file_uuid=node.file_item.uuid,
+                             node_type=node.type, node_name=node.name,
+                             attribute_type=attribute.type,
+                             attribute_subtype=attribute.subtype,
+                             attribute_value=attribute.value)
         return node.uuid
 
     def _update_galaxy_file_mapping(self):
@@ -534,13 +515,12 @@ class ToolManagerTestBase(ToolManagerMocks):
                 {
                     WorkflowTool.GALAXY_DATASET_HISTORY_ID:
                         self.FAKE_DATASET_HISTORY_ID,
-                    Tool.REFINERY_FILE_UUID: node.file_uuid,
+                    Tool.REFINERY_FILE_UUID: node.file_item.uuid,
                 }
             )
 
         with mock.patch.object(
-                celery.result.TaskSetResult,
-                "join",
+                celery.result.TaskSetResult, 'join',
                 return_value=galaxy_to_refinery_mapping_list
         ) as join_mock:
             self.tool.update_file_relationships_with_galaxy_history_data()
@@ -1527,7 +1507,7 @@ class ToolTests(ToolManagerTestBase):
                     {
                         self.tool.GALAXY_DATASET_HISTORY_ID:
                             self.FAKE_DATASET_HISTORY_ID,
-                        self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
+                        self.tool.REFINERY_FILE_UUID: self.node.file_item.uuid,
                         WorkflowTool.ANALYSIS_GROUP: 0
                     }
                 ],
@@ -1648,17 +1628,14 @@ class VisualizationToolTests(ToolManagerTestBase):
     def _create_detailed_nodes_dict(self, nodes):
         return {
             node.uuid: {
-                'file_url': (
-                    self.node.get_file_store_item().get_datafile_url()
-                ),
+                'file_url': self.node.file_item.get_datafile_url(),
                 VisualizationTool.NODE_SOLR_INFO: {
-                    "uuid": node.uuid,
-                    "name": node.name,
-                    "type": node.type,
-                    "file_uuid": node.file_uuid,
-                    "organism_Characteristics_generic_s": "Mus musculus",
-                    "filename_Characteristics_generic_s":
-                        node.get_file_store_item().source
+                    'uuid': node.uuid,
+                    'name': node.name,
+                    'type': node.type,
+                    'file_uuid': node.file_item.uuid,
+                    'organism_Characteristics_generic_s': 'Mus musculus',
+                    'filename_Characteristics_generic_s': node.file_item.source
                 }
             } for node in nodes
         }
@@ -1967,51 +1944,35 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_galaxy_history_id(self):
         self.create_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            WorkflowTool.GALAXY_IMPORT_HISTORY_DICT,
-            {"id": "COFFEE"}
-        )
-
-        self.assertEqual(self.tool.galaxy_import_history_id, "COFFEE")
+        self.tool.update_galaxy_data(WorkflowTool.GALAXY_IMPORT_HISTORY_DICT,
+                                     {'id': 'COFFEE'})
+        self.assertEqual(self.tool.galaxy_import_history_id, 'COFFEE')
 
     def test_analysis_node_connections_are_created_for_all_input_nodes(self):
         self.has_dataset_collection_input_mock_true.start()
-        self.create_tool(
-            ToolDefinition.WORKFLOW,
-            file_relationships=self.LIST_LIST_PAIR
-        )
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         file_relationships=self.LIST_LIST_PAIR)
         tool_nodes = self.tool._get_input_nodes()
         analysis_node_connections = [
-            AnalysisNodeConnection.objects.get(
-                node=node,
-                analysis=self.tool.analysis
-            )
+            AnalysisNodeConnection.objects.get(node=node,
+                                               analysis=self.tool.analysis)
             for node in tool_nodes
         ]
         self.assertEqual(len(analysis_node_connections), len(tool_nodes))
         for analysis_node_connection in analysis_node_connections:
-            file_store_item = (
-                analysis_node_connection.node.get_file_store_item()
-            )
-            self.assertEqual(
-                analysis_node_connection.direction,
-                INPUT_CONNECTION
-            )
-            self.assertEqual(
-                analysis_node_connection.filename,
-                WorkflowTool.INPUT_DATASET_COLLECTION
-            )
+            self.assertEqual(analysis_node_connection.direction,
+                             INPUT_CONNECTION)
+            self.assertEqual(analysis_node_connection.filename,
+                             WorkflowTool.INPUT_DATASET_COLLECTION)
             self.assertEqual(analysis_node_connection.step, 0)
             self.assertEqual(
                 analysis_node_connection.name,
-                file_store_item.datafile.name
+                analysis_node_connection.node.file_item.datafile.name
             )
 
     def test_galaxy_parameter_dict_creation(self):
-        self.create_tool(
-            ToolDefinition.WORKFLOW,
-            annotation_file_name="LIST:PAIR.json"
-        )
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         annotation_file_name='LIST:PAIR.json')
         parameters_dict = self.tool._create_workflow_parameters_dict()
 
         self.assertEqual(parameters_dict[1]["Integer Param"], 1337)
@@ -2175,7 +2136,7 @@ class WorkflowToolTests(ToolManagerTestBase):
                 {
                     self.tool.GALAXY_DATASET_HISTORY_ID:
                         self.FAKE_DATASET_HISTORY_ID,
-                    self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
+                    self.tool.REFINERY_FILE_UUID: self.node.file_item.uuid,
                     WorkflowTool.ANALYSIS_GROUP: 0
                 }
             ]
@@ -2195,7 +2156,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
-                self.tool.FILE_UUID_LIST: [self.node.file_uuid],
+                self.tool.FILE_UUID_LIST: [self.node.file_item.uuid],
                 u"dataset_uuid": self.dataset.uuid,
                 u"tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: u"[{}]".format(self.node.uuid),
@@ -2212,7 +2173,8 @@ class WorkflowToolTests(ToolManagerTestBase):
                         {
                             self.tool.GALAXY_DATASET_HISTORY_ID:
                                 self.FAKE_DATASET_HISTORY_ID,
-                            self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
+                            self.tool.REFINERY_FILE_UUID:
+                                self.node.file_item.uuid,
                             WorkflowTool.ANALYSIS_GROUP: 0
                         }
                     ],
@@ -2367,14 +2329,12 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_job_mock.side_effect = self.show_job_side_effect
         self.galaxy_datasets_list_mock.start()
         self.create_tool(ToolDefinition.WORKFLOW)
-        self.node.file_uuid = self.FAKE_DATASET_HISTORY_ID
         self.node.save()
 
         self.assertEqual(
             self.tool._get_analysis_group_number(
                 self.tool._get_galaxy_history_dataset_list()[0]
-            ),
-            0
+            ), 0
         )
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 4)
 
@@ -2389,24 +2349,16 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(len(analysis_node_connections), len(tool_nodes))
 
         for index, node in enumerate(tool_nodes):
-            self.assertEqual(
-                analysis_node_connections[index].analysis,
-                self.tool.analysis
-            )
+            self.assertEqual(analysis_node_connections[index].analysis,
+                             self.tool.analysis)
             self.assertEqual(analysis_node_connections[index].node, node)
-            self.assertEqual(
-                analysis_node_connections[index].direction,
-                INPUT_CONNECTION
-            )
-            self.assertEqual(
-                analysis_node_connections[index].name,
-                node.get_file_store_item().datafile.name
-            )
+            self.assertEqual(analysis_node_connections[index].direction,
+                             INPUT_CONNECTION)
+            self.assertEqual(analysis_node_connections[index].name,
+                             node.file_item.datafile.name)
             self.assertEqual(analysis_node_connections[index].step, 0)
-            self.assertEqual(
-                analysis_node_connections[index].filename,
-                WorkflowTool.INPUT_DATASET_COLLECTION
-            )
+            self.assertEqual(analysis_node_connections[index].filename,
+                             WorkflowTool.INPUT_DATASET_COLLECTION)
             self.assertFalse(analysis_node_connections[index].is_refinery_file)
 
     def test_create_analysis_input_node_connections_non_dsc_input(self):
@@ -2420,24 +2372,16 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(len(analysis_node_connections), len(tool_nodes))
 
         for index, node in enumerate(tool_nodes):
-            self.assertEqual(
-                analysis_node_connections[index].analysis,
-                self.tool.analysis
-            )
+            self.assertEqual(analysis_node_connections[index].analysis,
+                             self.tool.analysis)
             self.assertEqual(analysis_node_connections[index].node, node)
-            self.assertEqual(
-                analysis_node_connections[index].direction,
-                INPUT_CONNECTION
-            )
-            self.assertEqual(
-                analysis_node_connections[index].name,
-                node.get_file_store_item().datafile.name
-            )
+            self.assertEqual(analysis_node_connections[index].direction,
+                             INPUT_CONNECTION)
+            self.assertEqual(analysis_node_connections[index].name,
+                             node.file_item.datafile.name)
             self.assertEqual(analysis_node_connections[index].step, 0)
-            self.assertEqual(
-                analysis_node_connections[index].filename,
-                WorkflowTool.INPUT_DATASET
-            )
+            self.assertEqual(analysis_node_connections[index].filename,
+                             WorkflowTool.INPUT_DATASET)
             self.assertFalse(analysis_node_connections[index].is_refinery_file)
 
     def _create_analysis_node_connections_wrapper(self):
