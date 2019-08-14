@@ -451,6 +451,7 @@ def generate_solr_params_for_assay(params, assay_uuid, exclude_facets=[]):
         limit/row - maximum number of documents
         facet_field - specify a field which should be treated as a facet
         facet_filter - adds params to facet fields&fqs for filtering on fields
+        include_facet_count - hides facet counts being returned
         sort - Ordering include field name, whitespace, & asc or desc.
      """
     return generate_solr_params(params, [assay_uuid], False, exclude_facets)
@@ -466,6 +467,7 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
     facet_field = params.get('facets')
     facet_filter = params.get('filter_attribute')
     is_annotation = params.get('is_annotation', 'false')
+    include_facet_count = params.get('include_facet_count', 'true')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     start = params.get('offset', '0')
@@ -517,12 +519,13 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
         facet_field_arr = facet_field_obj.get('facet_field')
         field_limit.extend(facet_field_obj.get('field_limit'))
 
-    for facet in facet_field_arr:
-        facet_fields_obj[facet] = {
-            "type": "terms",
-            "field": facet,
-            "mincount": 1 if facets_from_config else 0
-        }
+    if include_facet_count == 'true':
+        for facet in facet_field_arr:
+            facet_fields_obj[facet] = {
+                "type": "terms",
+                "field": facet,
+                "mincount": 1 if facets_from_config else 0
+            }
 
     if facet_filter:
         if isinstance(facet_filter, unicode):
@@ -544,12 +547,14 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
     solr_params = {
         "json": {
             "query": 'django_ct:data_set_manager.node',
-            "facet": facet_fields_obj,
             "filter": filter_arr,
             "fields": field_limit
         },
         "params": fixed_solr_params
     }
+
+    if include_facet_count == 'true':
+        solr_params['json']['facet'] = facet_fields_obj
 
     return solr_params
 
