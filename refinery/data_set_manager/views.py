@@ -814,7 +814,7 @@ class AssayFileAPIView(APIView):
               type: string
               paramType: query
             - name: include_facet_count
-              description: Enables facet counts in query response
+              description: Return facet counts
               type: boolean
               paramType: query
             - name: offset
@@ -872,7 +872,9 @@ class AssayFileAPIView(APIView):
                 return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
             solr_response = search_solr(solr_params, 'data_set_manager')
-            solr_response_json = format_solr_response(solr_response)
+            solr_response_json = format_solr_response(
+                solr_response, params.get('include_facet_count', True)
+            )
 
             return Response(solr_response_json)
         else:

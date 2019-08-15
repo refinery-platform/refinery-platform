@@ -18,7 +18,6 @@
   function rpSelectAllCheckboxCtrl (
   ) {
     var vm = this;
-    vm.selectAllStatus = false;
    /*
    * ---------------------------------------------------------
    * Watchers
