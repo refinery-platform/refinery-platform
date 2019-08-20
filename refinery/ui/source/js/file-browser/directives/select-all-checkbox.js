@@ -14,15 +14,21 @@
   rpSelectAllCheckbox.$inject = [
     '$',
     '$window',
+    'activeNodeService',
     'assayFileService',
-    'fileParamService'
+    'fileParamService',
+    'fileRelationshipService',
+    'toolSelectService'
   ];
 
   function rpSelectAllCheckbox (
     $,
     $window,
+    activeNodeService,
     assayFileService,
-    fileParamService
+    fileParamService,
+    fileRelationshipService,
+    toolSelectService
   ) {
     return {
       restrict: 'E',
@@ -31,14 +37,11 @@
       },
       controller: 'rpSelectAllCheckboxCtrl',
       controllerAs: '$ctrl',
-      link: function (scope, element, attrs, ctrl) {
+      link: function (scope) {
         var selectAllStatus = false; // establish perm.
-        console.log(ctrl);
 
         // toggles checkbox
         scope.updateSelection = function () {
-          console.log(selectAllStatus);
-          console.log('in the update selectAllStatus');
           if (!selectAllStatus) {
             selectAllStatus = true;
             $('#file-selection-box').prop('checked', true);
@@ -49,7 +52,7 @@
               include_facet_count: false
             };
             // encodes all field names to avoid issues with escape characters.
-            console.log(fileParamService.fileParam.filter_attribute);
+       //     console.log(fileParamService.fileParam.filter_attribute);
 
             params.filter_attribute = fileParamService.fileParam.filter_attribute;
             var attributeNames = Object.keys(params.filter_attribute).concat(['uuid']);
@@ -57,7 +60,23 @@
 
             var assayFiles = assayFileService.query(params);
             assayFiles.$promise.then(function (response) {
-              console.log(response.nodes);
+              var inputTypeUuid = toolSelectService.selectedTool.
+                file_relationship.input_files[0].uuid;
+              activeNodeService.selectionObj = angular.copy({ 0: { } });
+              activeNodeService.selectionObj[0][inputTypeUuid] = { };
+              for (var i = 0; i < response.nodes.length; i++) {
+                // simplied version
+                activeNodeService.activeNodeRow.uuid = response.nodes[i].uuid;
+                activeNodeService.selectionObj[0][inputTypeUuid][response.nodes[i].uuid] = true;
+                fileRelationshipService.setNodeSelectCollection(
+                  inputTypeUuid, activeNodeService.selectionObj
+                );
+                fileRelationshipService.setGroupCollection(
+                  inputTypeUuid, activeNodeService.selectionObj
+                );
+              }
+              // reset selected node in UI
+              angular.copy({}, activeNodeService.activeNodeRow);
             });
             // select all the nodes
           } else {

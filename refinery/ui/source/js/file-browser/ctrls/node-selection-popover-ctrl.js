@@ -105,5 +105,13 @@
         vm.depthNames = fileService.depthNames;
       }
     );
+
+    // watches for toggling select all feature
+    $scope.$watchCollection(
+      function () { return nodeService.selectionObj; },
+      function () {
+        vm.selectionObj = nodeService.selectionObj;
+      }
+    );
   }
 })();
