@@ -16,6 +16,7 @@
     '$window',
     'activeNodeService',
     'assayFileService',
+    'fileBrowserFactory',
     'fileParamService',
     'fileRelationshipService',
     'toolSelectService'
@@ -26,6 +27,7 @@
     $window,
     activeNodeService,
     assayFileService,
+    fileBrowserFactory,
     fileParamService,
     fileRelationshipService,
     toolSelectService
@@ -53,9 +55,14 @@
             };
             // encodes all field names to avoid issues with escape characters.
        //     console.log(fileParamService.fileParam.filter_attribute);
+            var internalName = fileBrowserFactory.attributesNameKey.Name;
+            console.log(internalName);
 
             params.filter_attribute = fileParamService.fileParam.filter_attribute;
-            var attributeNames = Object.keys(params.filter_attribute).concat(['uuid']);
+            // grabbing a subset of attributes
+            var attributeNames = Object.keys(params.filter_attribute).concat([
+              'uuid', internalName
+            ]);
             params.facets = attributeNames.join(',');
 
             var assayFiles = assayFileService.query(params);
@@ -65,8 +72,7 @@
               activeNodeService.selectionObj = angular.copy({ 0: { } });
               activeNodeService.selectionObj[0][inputTypeUuid] = { };
               for (var i = 0; i < response.nodes.length; i++) {
-                // simplied version
-                activeNodeService.activeNodeRow.uuid = response.nodes[i].uuid;
+                angular.copy(response.nodes[i], activeNodeService.activeNodeRow);
                 activeNodeService.selectionObj[0][inputTypeUuid][response.nodes[i].uuid] = true;
                 fileRelationshipService.setNodeSelectCollection(
                   inputTypeUuid, activeNodeService.selectionObj
