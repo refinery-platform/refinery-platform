@@ -88,7 +88,7 @@
           } else {
             selectAllStatus = false;
             $('#file-selection-box').prop('checked', false);
-            // deselect all
+            fileRelationshipService.resetInputGroup();
           }
         };
       //  var setSelectionBox = function () {
