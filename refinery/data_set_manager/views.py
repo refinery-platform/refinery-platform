@@ -814,7 +814,7 @@ class AssayFileAPIView(APIView):
               type: string
               paramType: query
             - name: include_facet_count
-              description: Return facet counts
+              description: Enables facet counts in query response
               type: boolean
               paramType: query
             - name: offset

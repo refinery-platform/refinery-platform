@@ -546,7 +546,7 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
             "query": 'django_ct:data_set_manager.node',
             "facet": facet_fields_obj,
             "filter": filter_arr,
-            "fields": field_limit,
+            "fields": field_limit
         },
         "params": fixed_solr_params
     }
@@ -717,7 +717,8 @@ def format_solr_response(solr_response, include_facet_count=True):
     else:
         solr_response_json['facet_field_counts'] = {}
 
-    del solr_response_json['facets']
+    if solr_response_json.get('facets'):
+        del solr_response_json['facets']
 
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')
