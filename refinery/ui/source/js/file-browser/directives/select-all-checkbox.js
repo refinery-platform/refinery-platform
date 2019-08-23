@@ -39,7 +39,7 @@
       },
       link: function (scope) {
         var selectAllStatus = 'none'; // establish status, none, all, some.
-        scope.nodeSelectCount = 0;
+        scope.nodeSelectCount = 0; // view display number selected
 
         // toggles checkbox
         scope.updateSelection = function () {
@@ -90,8 +90,8 @@
           }
         };
 
+        // updates checkbox with user selects via grid
         var fileSelectionBox = $('#file-selection-box');
-
         var setSelectionBox = function () {
           if (fileRelationshipService.nodeSelectCount ===
             fileBrowserFactory.assayFilesTotalItems.count) {

@@ -317,13 +317,10 @@
           }
         }
       }
-
-      setNodeSelectCount(inputTypeUuid);
-    }
-
-    function setNodeSelectCount (inputFileTypeUuid) {
+       //  List tools display the number of nodes selected. Syncs up select
+       //  all feature with individual selecting in grid.
       if (vm.currentTypes.length === 1 && vm.currentTypes[0] === 'LIST') {
-        vm.nodeSelectCount = vm.groupCollection[0][inputFileTypeUuid].length;
+        vm.nodeSelectCount = vm.groupCollection[0][inputTypeUuid].length;
       }
     }
 
