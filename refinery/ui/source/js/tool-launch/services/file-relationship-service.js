@@ -42,7 +42,6 @@
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
     vm.inputFileTypeColor = {}; // inputFileTypeUuids: hex color
-    vm.listLength = 0; // only used for 1 level list length
     vm.nodeSelectCollection = {}; // contains rows and their group info, ex:
     // {nodeUuid: {'groupList': [[0,0], [1,0]], 'inputTypeList': [uuid1, uuid2]}
     vm.refreshFileMap = refreshFileMap;
