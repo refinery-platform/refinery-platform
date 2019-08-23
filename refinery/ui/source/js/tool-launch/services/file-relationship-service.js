@@ -274,7 +274,7 @@
       vm.inputFileTypes = [];
       vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
-      vm.nodeSelectCount.count = 0;
+      vm.nodeSelectCount = 0;
       angular.copy({}, nodeService.selectionObj);
     }
 
