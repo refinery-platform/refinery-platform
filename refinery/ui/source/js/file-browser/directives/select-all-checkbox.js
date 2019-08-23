@@ -40,12 +40,13 @@
       controller: 'rpSelectAllCheckboxCtrl',
       controllerAs: '$ctrl',
       link: function (scope) {
-        var selectAllStatus = false; // establish perm.
+        var selectAllStatus = 'none'; // establish status, none, all, some.
 
         // toggles checkbox
         scope.updateSelection = function () {
-          if (!selectAllStatus) {
-            selectAllStatus = true;
+          fileRelationshipService.resetInputGroup();
+          if (selectAllStatus === 'none') {
+            selectAllStatus = 'all';
             $('#file-selection-box').prop('checked', true);
             // add filters to facets
             var params = {
@@ -54,9 +55,7 @@
               include_facet_count: false
             };
             // encodes all field names to avoid issues with escape characters.
-       //     console.log(fileParamService.fileParam.filter_attribute);
             var internalName = fileBrowserFactory.attributesNameKey.Name;
-            console.log(internalName);
 
             params.filter_attribute = fileParamService.fileParam.filter_attribute;
             // grabbing a subset of attributes
@@ -86,25 +85,33 @@
             });
             // select all the nodes
           } else {
-            selectAllStatus = false;
+            selectAllStatus = 'none';
             $('#file-selection-box').prop('checked', false);
-            fileRelationshipService.resetInputGroup();
           }
         };
-      //  var setSelectionBox = function () {
-          // update active node service selectionObj
-          // only works for single lists!!
-          // update when user select/deselect rows
-          // if (activeNodeService.selectionObj) {
-          //   $('#file-selection-box').prop('checked', true);
-          // } else if () {
-          //   $('#file-selection-box').prop('indeterminate', true);
-          // } else {
-          //   $('#file-selection-box').prop('checked', false);
-          // }
 
-          // update when user toggles selection box
-    //    }
+        var fileSelectionBox = $('#file-selection-box');
+        var setSelectionBox = function () {
+          if (fileRelationshipService.nodeSelectCount ===
+            fileBrowserFactory.assayFilesTotalItems.count) {
+            fileSelectionBox.prop('checked', true);
+            fileSelectionBox.prop('indeterminate', false);
+            selectAllStatus = 'all';
+          } else if (fileRelationshipService.nodeSelectCount === 0) {
+            fileSelectionBox.prop('checked', false);
+            fileSelectionBox.prop('indeterminate', false);
+            selectAllStatus = 'none';
+          } else {
+            fileSelectionBox.prop('indeterminate', true);
+            selectAllStatus = 'some';
+          }
+        };
+
+        scope.$watch(function () {
+          return fileRelationshipService.nodeSelectCount;
+        }, function () {
+          setSelectionBox();
+        });
       }
     };
   }

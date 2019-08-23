@@ -42,6 +42,7 @@
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
     vm.inputFileTypeColor = {}; // inputFileTypeUuids: hex color
+    vm.listLength = 0; // only used for 1 level list length
     vm.nodeSelectCollection = {}; // contains rows and their group info, ex:
     // {nodeUuid: {'groupList': [[0,0], [1,0]], 'inputTypeList': [uuid1, uuid2]}
     vm.refreshFileMap = refreshFileMap;
@@ -49,6 +50,7 @@
     vm.removeGroupFromCollections = removeGroupFromCollections;
     vm.resetInputGroup = resetInputGroup;
     vm.resetToolRelated = resetToolRelated;
+    vm.nodeSelectCount = 0; // only used for single depth lists`
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
     /*
@@ -272,6 +274,7 @@
       vm.inputFileTypes = [];
       vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
+      vm.nodeSelectCount.count = 0;
       angular.copy({}, nodeService.selectionObj);
     }
 
@@ -313,6 +316,14 @@
             break;
           }
         }
+      }
+
+      setNodeSelectCount(inputTypeUuid);
+    }
+
+    function setNodeSelectCount (inputFileTypeUuid) {
+      if (vm.currentTypes.length === 1 && vm.currentTypes[0] === 'LIST') {
+        vm.nodeSelectCount = vm.groupCollection[0][inputFileTypeUuid].length;
       }
     }
 
