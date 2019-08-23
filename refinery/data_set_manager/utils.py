@@ -544,9 +544,9 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
     solr_params = {
         "json": {
             "query": 'django_ct:data_set_manager.node',
+            "facet": facet_fields_obj,
             "filter": filter_arr,
             "fields": field_limit,
-            'facet': facet_fields_obj
         },
         "params": fixed_solr_params
     }
