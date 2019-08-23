@@ -123,7 +123,6 @@
     vm.isFiltered = isFiltered;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
-    vm.nodeSelectCount = fileService.nodeSelectCount;
     vm.openPermissionEditor = openPermissionEditor;
     vm.openSelectionPopover = openSelectionPopover;
     vm.refreshAssayFiles = refreshAssayFiles;
@@ -582,15 +581,6 @@
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
         vm.inputFileTypeColor = fileService.inputFileTypeColor;
-      }
-    );
-
-    $scope.$watch(
-      function () {
-        return fileService.nodeSelectCount;
-      },
-      function (selectCount) {
-        vm.nodeSelectCount = selectCount;
       }
     );
 

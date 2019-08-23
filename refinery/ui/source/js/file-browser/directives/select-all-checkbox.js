@@ -37,10 +37,9 @@
       templateUrl: function () {
         return $window.getStaticUrl('partials/file-browser/partials/select-all-checkbox.html');
       },
-      controller: 'rpSelectAllCheckboxCtrl',
-      controllerAs: '$ctrl',
       link: function (scope) {
         var selectAllStatus = 'none'; // establish status, none, all, some.
+        scope.nodeSelectCount = 0;
 
         // toggles checkbox
         scope.updateSelection = function () {
@@ -87,10 +86,12 @@
           } else {
             selectAllStatus = 'none';
             $('#file-selection-box').prop('checked', false);
+            fileRelationshipService.resetInputGroup();
           }
         };
 
         var fileSelectionBox = $('#file-selection-box');
+
         var setSelectionBox = function () {
           if (fileRelationshipService.nodeSelectCount ===
             fileBrowserFactory.assayFilesTotalItems.count) {
@@ -109,8 +110,9 @@
 
         scope.$watch(function () {
           return fileRelationshipService.nodeSelectCount;
-        }, function () {
+        }, function (selectCount) {
           setSelectionBox();
+          scope.nodeSelectCount = selectCount;
         });
       }
     };

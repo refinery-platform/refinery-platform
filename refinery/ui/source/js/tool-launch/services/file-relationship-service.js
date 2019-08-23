@@ -256,6 +256,7 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      vm.nodeSelectCount = 0;
       angular.copy({}, nodeService.selectionObj);
     }
 

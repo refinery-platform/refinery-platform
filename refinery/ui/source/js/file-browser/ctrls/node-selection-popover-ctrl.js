@@ -81,9 +81,9 @@
       function () {
         vm.groupCollection = fileService.groupCollection;
         vm.nodeSelection = fileService.nodeSelectCollection;
+        vm.selectionObj = nodeService.selectionObj;
       }
     );
-
 
     // When user selects/deselects row
     $scope.$watch(
@@ -103,14 +103,6 @@
         vm.currentGroup = fileService.currentGroup;
         vm.currentTypes = fileService.currentTypes;
         vm.depthNames = fileService.depthNames;
-      }
-    );
-
-    // watches for toggling select all feature
-    $scope.$watchCollection(
-      function () { return nodeService.selectionObj; },
-      function () {
-        vm.selectionObj = nodeService.selectionObj;
       }
     );
   }
