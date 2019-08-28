@@ -1266,6 +1266,16 @@ class UserTutorialsTest(TestCase):
             Tutorials.objects.get(user_profile=self.userprofile)
         )
 
+    def test_has_viewed_data_upload_tut_tutorial_exists(self):
+        self.tutorial = Tutorials(user_profile=self.userprofile)
+        self.assertEqual(self.tutorial.data_upload_tutorial_viewed,
+                         self.userprofile.has_viewed_data_upload_tut())
+
+    def test_has_viewed_collaboration_tut_tutorial_exists(self):
+        self.tutorial = Tutorials(user_profile=self.userprofile)
+        self.assertEqual(self.tutorial.collaboration_tutorial_viewed,
+                         self.userprofile.has_viewed_collaboration_tut())
+
 
 class WorkflowDeletionTest(TestCase):
     """Testing for the deletion of Workflows"""
