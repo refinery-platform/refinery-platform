@@ -96,12 +96,22 @@ class UserProfile(models.Model):
                " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_data_upload_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).data_upload_tutorial_viewed
+        try:
+            return Tutorials.objects.get(
+                user_profile=self).data_upload_tutorial_viewed
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get Tutorial for UserProfile %s: %s',
+                         unicode(self), exc)
 
     def has_viewed_collaboration_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).collaboration_tutorial_viewed
+        try:
+            return Tutorials.objects.get(
+                user_profile=self).collaboration_tutorial_viewed
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get Tutorial for UserProfile %s: %s',
+                         unicode(self), exc)
 
 
 def get_user_import_dir(user):
@@ -1740,8 +1750,10 @@ class ExtendedGroupManager(models.Manager):
             return ExtendedGroup.objects.get(
                 id=settings.REFINERY_PUBLIC_GROUP_ID
             )
-        except:
-            return None
+        except (ExtendedGroup.DoesNotExist,
+                ExtendedGroup.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get ExtendedGroup for Refinery ID %s: %s',
+                         str(settings.REFINERY_PUBLIC_GROUP_ID), exc)
 
 
 class ExtendedGroup(Group):
@@ -1787,7 +1799,8 @@ class ExtendedGroup(Group):
     def get_managed_group(self):
         try:
             return (self.managed_group.all()[0])
-        except:
+        # out of bounds exception
+        except IndexError:
             return None
 
     def is_user_a_group_manager(self, user):
