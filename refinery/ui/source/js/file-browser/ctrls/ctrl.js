@@ -207,6 +207,7 @@
     // Gets the data set properties
     function refreshDataSetProps () {
       vm.dataSet = dataSetPropsService.dataSet;
+      console.log(vm.dataSet);
       vm.setCsvFileName(vm.dataSet.title);
       // initialize the dataset and updates ui-grid selection, filters, and url
       initializeDataOnPageLoad();
