@@ -128,6 +128,7 @@
     vm.refreshAssayFiles = refreshAssayFiles;
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
+    vm.tool = toolService.selectedTool;
     vm.sortChanged = sortChanged;
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
@@ -592,6 +593,8 @@
       },
       function () {
         vm.currentTypes = fileService.currentTypes;
+        vm.tool = toolService.selectedTool;
+        console.log(vm.tool);
         if (fileBrowserFactory.customColumnNames.length > 0) {
           toggleToolColumn();
         }
