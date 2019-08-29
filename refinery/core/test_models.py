@@ -20,6 +20,7 @@ from factory_boy.django_model_factories import (AnalysisNodeConnectionFactory,
                                                 FileStoreItemFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
+                                                InvestigationLinkFactory,
                                                 NodeFactory,
                                                 ToolDefinitionFactory,
                                                 ToolFactory)
@@ -1330,7 +1331,7 @@ class InvestigationLinkTest(TestCase):
     def setUp(self):
         self.investigation = InvestigationFactory()
         self.data_set = create_dataset_with_necessary_models()
-        self.investigation_link = InvestigationLink.objects.create(
+        self.investigation_link = InvestigationLinkFactory(
             data_set=self.data_set,
             investigation=self.investigation
         )
