@@ -228,10 +228,22 @@ def update_annotated_nodes(
         assay_uuid=None,
         update=False):
     # Retrieve first study and assay ids
-    study = Study.objects.get(uuid=study_uuid)
+    try:
+        study = Study.objects.get(uuid=study_uuid)
+    except (Study.DoesNotExist,
+            Study.MultipleObjectsReturned) as e:
+        logger.error(
+            "Couldn't fetch Study %s: %s", str(study_uuid), e
+        )
 
     if assay_uuid is not None:
-        assay = Assay.objects.get(uuid=assay_uuid)
+        try:
+            assay = Assay.objects.get(uuid=assay_uuid)
+        except (Assay.DoesNotExist,
+                Assay.MultipleObjectsReturned) as e:
+            logger.error(
+                "Couldn't fetch Assay %s: %s", str(assay_uuid), e
+            )
     else:
         assay = None
 
