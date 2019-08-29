@@ -11,7 +11,7 @@
 
 ### Overview
 To set up a development environment, we will create a clean VM using VirtualBox and Vagrant.
-This gives a clean environment in which we can test code and try things out.
+This gives a clean environment in which we can test code and try things out (both via PyCharm and via the command line using `vagrant up` to push changes to the VM).
 We will then need a local Python environment in order to use pre-commit hooks on your host computer.
 
 ### Prerequisites
