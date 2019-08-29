@@ -474,10 +474,11 @@ class EventAPIView(APIView):
             'core.read_meta_dataset',
             accept_global_perms=False
         )
-
         user_events = Event.objects.filter(
             data_set__in=data_sets_for_user
-        ).order_by('-date_time')[0:50]
+        ).order_by('-date_time')
+        if len(user_events > 50):
+            user_events = user_events[0:50]
         serializer = EventSerializer(user_events, many=True,
                                      context={'request': request})
         return Response(serializer.data)

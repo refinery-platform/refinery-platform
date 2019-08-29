@@ -375,9 +375,15 @@ class SharableResource(OwnableResource):
     def get_owner(self):
         owner = None
         content_type_id = ContentType.objects.get_for_model(self).id
-        permission_id = Permission.objects.filter(
-            codename='share_%s' % self._meta.verbose_name
-        )[0].id
+        try:
+            codename = 'share_%s' % self._meta.verbose_name
+            permission_id = Permission.objects.filter(
+                codename=codename
+            )[0].id
+        except IndexError:
+            logger.error('No Permission objects returned for codename %s',
+                         codename)
+            return owner
 
         perms = UserObjectPermission.objects.filter(
             content_type_id=content_type_id,
