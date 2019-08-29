@@ -374,7 +374,6 @@ class SharableResource(OwnableResource):
 
     def get_owner(self):
         owner = None
-
         content_type_id = ContentType.objects.get_for_model(self).id
         permission_id = Permission.objects.filter(
             codename='share_%s' % self._meta.verbose_name
@@ -389,8 +388,9 @@ class SharableResource(OwnableResource):
         if perms.count() > 0:
             try:
                 owner = User.objects.get(id=perms[0].user_id)
-            except User.DoesNotExist:
-                pass
+            except (User.DoesNotExist, User.MultipleObjectsReturned) as exc:
+                logger.error("Error finding owner for user %s: %s",
+                             unicode(perms[0]), exc)
 
         return owner
 
