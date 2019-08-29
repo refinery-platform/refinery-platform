@@ -376,10 +376,18 @@ def _add_annotated_nodes(
         return
 
     # Get the first study with study UUID
-    study = Study.objects.filter(uuid=study_uuid)[0]
+    try:
+        study = Study.objects.filter(uuid=study_uuid)[0]
+    except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+        logger.error('Study object does not exist for uuid %s: %s',
+                     study_uuid, e)
 
     if assay_uuid is not None:
-        assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        try:
+            assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        except (Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            logger.error('Assay object does not exist for uuid %s: %s',
+                         assay_uuid, e)
     else:
         assay = None
 
