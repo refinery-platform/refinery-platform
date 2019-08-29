@@ -884,7 +884,13 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        try:
+            return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        except (NodeCollection.DoesNotExist,
+                NodeCollection.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get NodeCollection for '
+                         'Investigation %s: %s',
+                         unicode(self.investigation), exc)
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):

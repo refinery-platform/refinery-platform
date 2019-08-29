@@ -19,6 +19,7 @@ from factory_boy.django_model_factories import (AnalysisNodeConnectionFactory,
                                                 FileRelationshipFactory,
                                                 FileStoreItemFactory,
                                                 GalaxyInstanceFactory,
+                                                InvestigationFactory,
                                                 NodeFactory,
                                                 ToolDefinitionFactory,
                                                 ToolFactory)
@@ -1323,3 +1324,19 @@ class WorkflowDeletionTest(TestCase):
         self.assertRaises(Workflow.DoesNotExist,
                           Workflow.objects.get,
                           name="workflow_not_used_by_analyses")
+
+
+class InvestigationLinkTest(TestCase):
+    def setUp(self):
+        self.investigation = InvestigationFactory()
+        self.data_set = create_dataset_with_necessary_models()
+        self.investigation_link = InvestigationLink.objects.create(
+            data_set=self.data_set,
+            investigation=self.investigation
+        )
+
+    def test_get_node_collection_success(self):
+        collection_uuid = self.investigation_link.get_node_collection().uuid
+        # the uuid's are of different types for now
+        self.assertEqual(str(self.investigation.uuid),
+                         str(collection_uuid))
