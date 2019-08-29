@@ -1,4 +1,5 @@
 from datetime import timedelta
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -16,8 +17,10 @@ from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import (AnnotatedNode, Assay, Investigation,
                                      Node, NodeCollection, Study)
 from factory_boy.django_model_factories import (AnalysisNodeConnectionFactory,
+                                                AnalysisResultFactory,
                                                 FileRelationshipFactory,
                                                 FileStoreItemFactory,
+                                                FileTypeFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
@@ -34,9 +37,10 @@ from tool_manager.models import ToolDefinition
 from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
-                     DataSet, Event, ExtendedGroup, InvestigationLink,
-                     Project, SiteProfile, SiteStatistics, SiteVideo,
-                     Tutorials, UserProfile, Workflow, WorkflowEngine)
+                     DataSet, Download, Event, ExtendedGroup,
+                     InvestigationLink, Project, SiteProfile, SiteStatistics,
+                     SiteVideo, Tutorials, UserProfile, Workflow,
+                     WorkflowEngine)
 from .tasks import collect_site_statistics
 
 
@@ -323,6 +327,30 @@ class AnalysisTests(TestCase):
             '{}_{}'.format(self.analysis_node_connection_a.step,
                            self.analysis_node_connection_a.name)
         )
+
+    def test_attach_outputs_downloads_no_file(self):
+        AnalysisResultFactory(
+            analysis=self.analysis,
+            file_store_uuid=uuid.uuid4()
+        )
+        self.analysis.attach_outputs_downloads()
+        downloads_list = Download.objects.all()
+        download_owners = [download.get_owner() for download in downloads_list]
+        self.assertNotIn(self.analysis.get_owner(), download_owners)
+
+    def test_attach_outputs_downloads_file(self):
+        analysis_result = AnalysisResultFactory(
+            analysis=self.analysis,
+            file_store_uuid=uuid.uuid4()
+        )
+        FileStoreItemFactory(
+            uuid=analysis_result.file_store_uuid,
+            filetype=FileTypeFactory()
+        )
+        self.analysis.attach_outputs_downloads()
+        downloads_list = Download.objects.all()
+        download_owners = [download.get_owner() for download in downloads_list]
+        self.assertIn(self.analysis.get_owner(), download_owners)
 
     def test__create_derived_data_file_node(self):
         derived_data_file_node = self.analysis._create_derived_data_file_node(

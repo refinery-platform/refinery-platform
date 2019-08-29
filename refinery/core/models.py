@@ -1384,19 +1384,19 @@ class Analysis(OwnableResource):
             return
 
         for analysis_result in self.results.all():
-            item = FileStoreItem.objects.get(
-                uuid=analysis_result.file_store_uuid
-            )
-            if item:
+            try:
+                item = FileStoreItem.objects.get(
+                    uuid=analysis_result.file_store_uuid
+                )
                 download = Download.objects.create(name=self.name,
                                                    data_set=self.data_set,
                                                    file_store_item=item)
                 download.set_owner(self.get_owner())
-            else:
-                logger.warning(
-                    "No file found for '%s' in download '%s' ('%s')",
-                    analysis_result.file_store_uuid, self.name, self.uuid
-                )
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error('Failed to get FileStoreItem for '
+                             'AnalysisResult %s: %s',
+                             unicode(analysis_result), exc)
 
     def terminate_file_import_tasks(self):
         """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
