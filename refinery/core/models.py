@@ -1779,6 +1779,7 @@ class ExtendedGroupManager(models.Manager):
                 ExtendedGroup.MultipleObjectsReturned) as exc:
             logger.error('Failed to get ExtendedGroup for Refinery ID %s: %s',
                          str(settings.REFINERY_PUBLIC_GROUP_ID), exc)
+            return None
 
 
 class ExtendedGroup(Group):
