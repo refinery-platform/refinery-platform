@@ -431,7 +431,13 @@ class SharableResource(OwnableResource):
 
         for group_object, permission_list in permissions.items():
             group = {}
-            group["group"] = ExtendedGroup.objects.get(id=group_object.id)
+            try:
+                group["group"] = ExtendedGroup.objects.get(id=group_object.id)
+            except (ExtendedGroup.DoesNotExist,
+                    ExtendedGroup.MultipleObjectsReturned) as exc:
+                logger.error('Failed to get ExtendedGroup for Group %s: %s',
+                             unicode(group_object), exc)
+
             group["uuid"] = group["group"].uuid
             group["id"] = group["group"].id
             group["change"] = False
