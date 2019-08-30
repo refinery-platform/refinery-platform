@@ -235,11 +235,14 @@
     function checkNeedMoreNodes () {
       var moreFlag = false;
       var groupType = fileService.currentTypes[fileService.currentTypes.length - 1];
-      if (!_.property(fileService.currentGroup)(fileService.groupCollection)) {
+      var groupCollectionKeys = _.keys(fileService.groupCollection);
+      var strCurrentGroup = fileService.currentGroup.toString();
+
+      if (groupCollectionKeys.indexOf(strCurrentGroup) < 0) {
         moreFlag = true;
       } else if (groupType === 'PAIR') {
         // pair, requires 2 inputTypes
-        var inputLength = _.keys(fileService.groupCollection[fileService.currentGroup]).length;
+        var inputLength = _.keys(fileService.groupCollection[strCurrentGroup]).length;
         if (inputLength > 1) {
           moreFlag = areInputFileTypesEmpty();
         } else {
