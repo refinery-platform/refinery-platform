@@ -897,6 +897,7 @@ class InvestigationLink(models.Model):
             logger.error('Failed to get NodeCollection for '
                          'Investigation %s: %s',
                          unicode(self.investigation), exc)
+            return None
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):
