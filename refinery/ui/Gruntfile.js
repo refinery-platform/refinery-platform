@@ -481,10 +481,6 @@ module.exports = function (grunt) {
               pattern: 'node_modules/angular-mocks/angular-mocks.js',
               watched: false
             }],
-            [{
-              pattern: './karma.lodash.noConflict.js',
-              watched: false
-            }],
             'node_modules/phantomjs-polyfill/bind-polyfill.js',
             jsFilesByImportance(true),
             config.basePath.ui.src + '/**/*.html'
