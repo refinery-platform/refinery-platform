@@ -378,6 +378,7 @@ def _add_annotated_nodes(
     # Get the first study with study UUID
     try:
         study = Study.objects.filter(uuid=study_uuid)[0]
+    # NameError will raise almost immediately later
     except IndexError as e:
         logger.error('Study object does not exist for uuid %s: %s',
                      study_uuid, e)
@@ -385,6 +386,7 @@ def _add_annotated_nodes(
     if assay_uuid is not None:
         try:
             assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        # NameError will raise almost immediately later
         except IndexError as e:
             logger.error('Assay object does not exist for uuid %s: %s',
                          assay_uuid, e)
