@@ -1008,6 +1008,10 @@ class AssayAttributeAPIView(APIView):
                         "for id %s and assay %s: %s",
                         str(uuid), str(id), e
                     )
+                    return Response(
+                        'Could not find attributes to update',
+                        status=status.HTTP_404_NOT_FOUND
+                    )
             elif solr_field:
                 try:
                     attribute_order = AttributeOrder.objects.get(
@@ -1018,6 +1022,10 @@ class AssayAttributeAPIView(APIView):
                         "Couldn't fetch AttributeOrder "
                         "for solr_field %s and assay %s: %s",
                         str(uuid), str(solr_field), e
+                    )
+                    return Response(
+                        'Could not find attributes to update',
+                        status=status.HTTP_404_NOT_FOUND
                     )
             else:
                 return Response(
