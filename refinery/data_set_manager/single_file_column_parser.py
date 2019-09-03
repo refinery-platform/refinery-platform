@@ -409,8 +409,6 @@ def process_metadata_table(
     if existing_data_set_uuid:
         try:
             data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
-            data_set.update_with_revised_investigation(investigation)
-            return existing_data_set_uuid
         except (DataSet.DoesNotExist,
                 DataSet.MultipleObjectsReturned) as e:
             logger.error('DataSet for uuid %s not fetched and thus not '
@@ -424,6 +422,10 @@ def process_metadata_table(
                     existing_data_set_uuid, unicode(investigation)
                 )
             )
+        else:
+            data_set.update_with_revised_investigation(investigation)
+            return existing_data_set_uuid
+
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
         dataset_name=title, public=is_public

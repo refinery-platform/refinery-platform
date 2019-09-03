@@ -254,8 +254,6 @@ def parse_isatab(username, public, path, identity_id=None,
         if existing_data_set_uuid:
             try:
                 data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
-                data_set.update_with_revised_investigation(investigation)
-                return existing_data_set_uuid
             except (DataSet.DoesNotExist,
                     DataSet.MultipleObjectsReturned) as e:
                 logger.error('DataSet for uuid %s not fetched and thus not '
@@ -267,6 +265,9 @@ def parse_isatab(username, public, path, identity_id=None,
                          existing_data_set_uuid, unicode(investigation)
                     )
                 )
+            else:
+                data_set.update_with_revised_investigation(investigation)
+                return existing_data_set_uuid
 
         data_set_uuid = create_dataset(
             investigation.uuid, username, public=public
