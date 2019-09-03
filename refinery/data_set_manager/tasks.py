@@ -254,6 +254,8 @@ def parse_isatab(username, public, path, identity_id=None,
         if existing_data_set_uuid:
             try:
                 data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
+            # Raise the exception as the views.py error-handling will give
+            # the ui a graceful error instead of a django crash display
             except (DataSet.DoesNotExist,
                     DataSet.MultipleObjectsReturned) as e:
                 logger.error('DataSet for uuid %s not fetched and thus not '
