@@ -375,8 +375,8 @@ class SharableResource(OwnableResource):
     def get_owner(self):
         owner = None
         content_type_id = ContentType.objects.get_for_model(self).id
+        codename = 'share_%s' % self._meta.verbose_name
         try:
-            codename = 'share_%s' % self._meta.verbose_name
             permission_id = Permission.objects.filter(
                 codename=codename
             )[0].id
@@ -395,7 +395,7 @@ class SharableResource(OwnableResource):
             try:
                 owner = User.objects.get(id=perms[0].user_id)
             except (User.DoesNotExist, User.MultipleObjectsReturned) as exc:
-                logger.error("Error finding owner for user %s: %s",
+                logger.error("Error finding user with owner perms %s: %s",
                              unicode(perms[0]), exc)
 
         return owner
@@ -444,27 +444,27 @@ class SharableResource(OwnableResource):
                     ExtendedGroup.MultipleObjectsReturned) as exc:
                 logger.error('Failed to get ExtendedGroup for Group %s: %s',
                              unicode(group_object), exc)
+            else:
+                group["uuid"] = group["group"].uuid
+                group["id"] = group["group"].id
+                group["change"] = False
+                group["read"] = False
+                if self._meta.verbose_name == 'dataset':
+                    group["read_meta"] = False
 
-            group["uuid"] = group["group"].uuid
-            group["id"] = group["group"].id
-            group["change"] = False
-            group["read"] = False
-            if self._meta.verbose_name == 'dataset':
-                group["read_meta"] = False
+                for permission in permission_list:
+                    if permission.startswith("change"):
+                        group["change"] = True
+                    elif permission.startswith("read_meta"):
+                        group["read_meta"] = True
+                    elif permission.startswith("read"):
+                        group["read"] = True
 
-            for permission in permission_list:
-                if permission.startswith("change"):
-                    group["change"] = True
-                elif permission.startswith("read_meta"):
-                    group["read_meta"] = True
-                elif permission.startswith("read"):
-                    group["read"] = True
-
-            if group["change"] and readonly:
-                continue
-            if group["read"] and changeonly:
-                continue
-            groups.append(group)
+                if group["change"] and readonly:
+                    continue
+                if group["read"] and changeonly:
+                    continue
+                groups.append(group)
 
         return groups
 
