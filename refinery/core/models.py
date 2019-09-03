@@ -439,6 +439,7 @@ class SharableResource(OwnableResource):
             group = {}
             try:
                 group["group"] = ExtendedGroup.objects.get(id=group_object.id)
+            # catching silently causes a KeyError on the immediate next line
             except (ExtendedGroup.DoesNotExist,
                     ExtendedGroup.MultipleObjectsReturned) as exc:
                 logger.error('Failed to get ExtendedGroup for Group %s: %s',
@@ -892,6 +893,8 @@ class InvestigationLink(models.Model):
     def get_node_collection(self):
         try:
             return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        # this will error out downstream on the signal's use of it when None is
+        # returned
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as exc:
             logger.error('Failed to get NodeCollection for '
