@@ -36,23 +36,24 @@ class SingleFileColumnParser:
     file_column_index = last column
     file_permanent = files will be added to the file store permanently
     """
+
     def __init__(
-        self,
-        metadata_file,
-        file_source_translator,
-        source_column_index,
-        data_file_column_index=-1,
-        auxiliary_file_column_index=None,
-        file_base_path="",
-        data_file_permanent=False,
-        species_column_index=None,
-        genome_build_column_index=None,
-        annotation_column_index=None,
-        sample_column_index=None,
-        assay_column_index=None,
-        column_index_separator=" ",
-        delimiter="comma",
-        custom_delimiter_string=","
+            self,
+            metadata_file,
+            file_source_translator,
+            source_column_index,
+            data_file_column_index=-1,
+            auxiliary_file_column_index=None,
+            file_base_path="",
+            data_file_permanent=False,
+            species_column_index=None,
+            genome_build_column_index=None,
+            annotation_column_index=None,
+            sample_column_index=None,
+            assay_column_index=None,
+            column_index_separator=" ",
+            delimiter="comma",
+            custom_delimiter_string=","
     ):
         """Prepare metadata file for parsing"""
         # single character to be used to separate columns
@@ -93,7 +94,7 @@ class SingleFileColumnParser:
         # May be None. Negative values are allowed and are counted from the
         # last column of the file (-1 = last column)
         if auxiliary_file_column_index and auxiliary_file_column_index < 0:
-            self.auxiliary_file_column_index =\
+            self.auxiliary_file_column_index = \
                 self.num_columns + auxiliary_file_column_index
         else:
             self.auxiliary_file_column_index = auxiliary_file_column_index
@@ -279,24 +280,24 @@ class SingleFileColumnParser:
 
 
 def process_metadata_table(
-    username,
-    title,
-    metadata_file,
-    source_columns,
-    data_file_column,
-    auxiliary_file_column=None,
-    base_path="",
-    data_file_permanent=False,
-    species_column=None,
-    genome_build_column=None,
-    annotation_column=None,
-    sample_column=None,
-    assay_column=None,
-    is_public=False,
-    delimiter="comma",
-    custom_delimiter_string=",",
-    identity_id=None,
-    existing_data_set_uuid=None
+        username,
+        title,
+        metadata_file,
+        source_columns,
+        data_file_column,
+        auxiliary_file_column=None,
+        base_path="",
+        data_file_permanent=False,
+        species_column=None,
+        genome_build_column=None,
+        annotation_column=None,
+        sample_column=None,
+        assay_column=None,
+        is_public=False,
+        delimiter="comma",
+        custom_delimiter_string=",",
+        identity_id=None,
+        existing_data_set_uuid=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
@@ -409,12 +410,20 @@ def process_metadata_table(
         try:
             data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
             data_set.update_with_revised_investigation(investigation)
+            return existing_data_set_uuid
         except (DataSet.DoesNotExist,
                 DataSet.MultipleObjectsReturned) as e:
             logger.error('DataSet for uuid %s not fetched and thus not '
                          'updated with revised investigation %s: %s',
                          existing_data_set_uuid, unicode(investigation), e)
-        return existing_data_set_uuid
+            # Raise the exception as the views.py error-handling will give
+            # the ui a graceful error instead of a django crash display
+            raise type(e)(
+                'DataSet for uuid {} not fetched and thus not '
+                'updated with revised investigation {}'.format(
+                    existing_data_set_uuid, unicode(investigation)
+                )
+            )
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
         dataset_name=title, public=is_public
