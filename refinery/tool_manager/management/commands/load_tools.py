@@ -107,9 +107,23 @@ class Command(BaseCommand):
                 self.warn("Forcing deletion of of `{}`".format(
                     tool_annotation["name"])
                 )
-                ToolDefinition.objects.get(
-                    name=tool_annotation["name"]
-                ).delete()
+                try:
+                    tool_defintion = ToolDefinition.objects.get(
+                        name=tool_annotation["name"]
+                    )
+                except(ToolDefinition.DoesNotExist,
+                       ToolDefinition.MultipleObjectsReturned) as e:
+                    self.warn("Error in retrieving tool %s from DB: %s".format(
+                            str(tool_annotation["name"]), e
+                        )
+                    )
+                    raise type(e)(
+                            "Error in retrieving tool %s from DB: %s".format(
+                                    str(tool_annotation["name"]), e
+                                )
+                            )
+                else:
+                    tool_defintion.delete()
                 return False
             else:
                 self.warn(
