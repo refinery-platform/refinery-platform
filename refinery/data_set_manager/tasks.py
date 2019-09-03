@@ -51,6 +51,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     dataset = None
     try:
         investigation = Investigation.objects.get(uuid=investigation_uuid)
+    # will fail when the DataSet's investigation is updated
     except (Investigation.DoesNotExist,
             Investigation.MultipleObjectsReturned) as e:
         logger.error(
@@ -108,6 +109,7 @@ def annotate_nodes(investigation_uuid):
     """
     try:
         investigation = Investigation.objects.get(uuid=investigation_uuid)
+    # will fail immediately after this if DNE or MOR
     except (Investigation.DoesNotExist,
             Investigation.MultipleObjectsReturned) as e:
         logger.error(
@@ -208,13 +210,14 @@ def parse_isatab(username, public, path, identity_id=None,
                             file_store_item = FileStoreItem.objects.get(
                                 uuid=investigation.isarchive_file
                             )
+                            logger.info("Get file: %s", file_store_item)
+                        # will fail later on when the .datafile is accessed
                         except (FileStoreItem.DoesNotExist,
                                 FileStoreItem.MultipleObjectsReturned) as e:
                             logger.error(
                                 'Did not get FileStoreItem for uuid %s',
                                 unicode(investigation.isarchive_file), e)
 
-                        logger.info("Get file: %s", file_store_item)
                         try:
                             checksum = calculate_checksum(
                                 file_store_item.datafile
@@ -248,12 +251,18 @@ def parse_isatab(username, public, path, identity_id=None,
             try:
                 data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
                 data_set.update_with_revised_investigation(investigation)
+                return existing_data_set_uuid
             except (DataSet.DoesNotExist,
                     DataSet.MultipleObjectsReturned) as e:
                 logger.error('DataSet for uuid %s not fetched and thus not '
                              'updated with revised investigation %s: %s',
                              existing_data_set_uuid, unicode(investigation), e)
-            return existing_data_set_uuid
+                raise type(e)(
+                    'DataSet for uuid %s not fetched and thus not '
+                    'updated with revised investigation {}: {}'.format(
+                         existing_data_set_uuid, unicode(investigation)
+                    )
+                )
 
         data_set_uuid = create_dataset(
             investigation.uuid, username, public=public
