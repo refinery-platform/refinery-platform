@@ -207,6 +207,10 @@ def parse_isatab(username, public, path, identity_id=None,
                         # compare that to our given file.
                         investigation = ds.get_investigation()
                         try:
+                            # this handling really should not matter since
+                            # isaarchive_file should be a uuid foreign key
+                            # upon creation of either FileStoreItem or
+                            # Investigation in isa_tab_parser.py
                             file_store_item = FileStoreItem.objects.get(
                                 uuid=investigation.isarchive_file
                             )
