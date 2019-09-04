@@ -1,0 +1,24 @@
+<span>
+  <span>
+    <button class="refinery-base btn btn-default btn-xs header-button"
+      id="file-selection-box"
+      class="custom-control-input"
+      ng-click="updateSelection()"
+      ng-disabled="updatingSelectionStatus">
+      <span ng-if="!isAllSelected && !updatingSelectionStatus">
+        <i class="fa fa-check-square-o"></i>
+        Select All
+      </span>
+      <span ng-if="isAllSelected && !updatingSelectionStatus">
+        <i class="fa fa-square-o"></i>
+        Deselect All
+      </span>
+      <span ng-if="updatingSelectionStatus">
+        Updating selection...
+      </span>
+    </button>
+  </span>
+  <h3 class="p-l-1-2">
+   ({{ nodeSelectCount }} selected)
+  </h3>
+</span>
