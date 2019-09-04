@@ -1985,6 +1985,13 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self.assertTrue(self.tool_data_mock.called)
 
+    def test_galaxy_parameter_dict_creation_no_objects_raises_exception(self):
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         annotation_file_name='LIST:PAIR.json')
+        GalaxyParameter.objects.all().delete()
+        with self.assertRaises(GalaxyParameter.DoesNotExist):
+            self.tool._create_workflow_parameters_dict()
+
     def test_get_input_file_uuid_list_returns_proper_information(self):
         self.create_tool(ToolDefinition.WORKFLOW,
                          file_relationships=self.LIST_LIST_PAIR)
