@@ -440,8 +440,7 @@ class AssayAttributeAPITests(APITestCase):
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        self.client.login(username=self.user1.username,
-                          password=self.user1.password)
+        self.client.login(username='ownerJane', password='test1234')
         AttributeOrder.objects.all().delete()
         response = self.client.put(
             self.url_root + self.valid_uuid + '/attributes/',
@@ -449,7 +448,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content,
-                         '"Could not find attributes to update"')
+                         '"Could not find attribute orders to update"')
         self.client.logout()
 
     def test_put_object_solr_without_attribute_order(self):
@@ -466,7 +465,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content,
-                         '"Could not find attributes to update"')
+                         '"Could not find attribute orders to update"')
         self.client.logout()
 
 
