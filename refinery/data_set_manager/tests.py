@@ -1933,7 +1933,7 @@ class SingleFileColumnParserTests(TestCase):
         )
         with self.assertRaises(DataSet.DoesNotExist):
             with open(path) as f:
-                dataset_uuid = process_metadata_table(
+                process_metadata_table(
                     username='guest',
                     title='fake',
                     metadata_file=f,
@@ -1941,7 +1941,6 @@ class SingleFileColumnParserTests(TestCase):
                     data_file_column=2,
                     existing_data_set_uuid='foo'
                 )
-            return DataSet.objects.get(uuid=dataset_uuid)
 
 
 class InvestigationTests(IsaTabTestBase):

@@ -414,8 +414,6 @@ def process_metadata_table(
             logger.error('DataSet for uuid %s not fetched and thus not '
                          'updated with revised investigation %s: %s',
                          existing_data_set_uuid, unicode(investigation), e)
-            # Raise the exception as the views.py error-handling will give
-            # the ui a graceful error instead of a django crash display
             raise type(e)(
                 'DataSet for uuid {} not fetched and thus not '
                 'updated with revised investigation {}'.format(

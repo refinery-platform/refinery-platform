@@ -51,16 +51,10 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     dataset = None
     try:
         investigation = Investigation.objects.get(uuid=investigation_uuid)
-    # This fails when the investigation is accessed with a NameError so
-    # no functionality really changes by handling, but we do have error logging
-    # -----------------------------------------------------------
-    # The only place this task is called is almost immediately after the
-    # creation of an investigation in single_file_column_parser.py (~405-429)
-    # or getting an investigation in the isa_tab_parser task (~255)
     except (Investigation.DoesNotExist,
             Investigation.MultipleObjectsReturned) as e:
         logger.error(
-            'Did not get Investigation for uuid %s',
+            'Did not get Investigation for uuid %s: %s',
             investigation_uuid, e)
     if identifier is None:
         identifier = investigation.get_identifier()
@@ -118,7 +112,7 @@ def annotate_nodes(investigation_uuid):
     except (Investigation.DoesNotExist,
             Investigation.MultipleObjectsReturned) as e:
         logger.error(
-            'Did not get Investigation for uuid %s',
+            'Did not get Investigation for uuid %s:  %s',
             investigation_uuid, e)
 
     studies = investigation.study_set.all()
@@ -212,10 +206,9 @@ def parse_isatab(username, public, path, identity_id=None,
                         # compare that to our given file.
                         investigation = ds.get_investigation()
                         try:
-                            # this handling really should not matter since
-                            # isaarchive_file should be a uuid foreign key
-                            # upon creation of either FileStoreItem or
-                            # Investigation in isa_tab_parser.py
+                            """isaarchive_file should be a uuid foreign key
+                            upon creation of either FileStoreItem or
+                            Investigation in isa_tab_parser.py"""
                             file_store_item = FileStoreItem.objects.get(
                                 uuid=investigation.isarchive_file
                             )
@@ -259,8 +252,6 @@ def parse_isatab(username, public, path, identity_id=None,
         if existing_data_set_uuid:
             try:
                 data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
-            # Raise the exception as the views.py error-handling will give
-            # the ui a graceful error instead of a django crash display
             except (DataSet.DoesNotExist,
                     DataSet.MultipleObjectsReturned) as e:
                 logger.error('DataSet for uuid %s not fetched and thus not '

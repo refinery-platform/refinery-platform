@@ -423,7 +423,8 @@ class AssayAttributeAPITests(APITestCase):
                                'is_facet': 'False',
                                'is_active': 'False'}
 
-        self.client.login(username='guestName', password='test1234')
+        self.client.login(username=self.user1.username,
+                          password=self.user1.password)
         response = self.client.put(
             self.url_root + self.valid_uuid + '/attributes/',
             updated_attribute_4
@@ -439,7 +440,8 @@ class AssayAttributeAPITests(APITestCase):
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        self.client.login(username='ownerJane', password='test1234')
+        self.client.login(username=self.user1.username,
+                          password=self.user1.password)
         AttributeOrder.objects.all().delete()
         response = self.client.put(
             self.url_root + self.valid_uuid + '/attributes/',
