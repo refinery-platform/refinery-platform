@@ -51,7 +51,12 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     dataset = None
     try:
         investigation = Investigation.objects.get(uuid=investigation_uuid)
-    # will fail when the DataSet's investigation is updated
+    # This fails when the investigation is accessed with a NameError so
+    # no functionality really changes by handling, but we do have error logging
+    # -----------------------------------------------------------
+    # The only place this task is called is almost immediately after the
+    # creation of an investigation in single_file_column_parser.py (~405-429)
+    # or getting an investigation in the isa_tab_parser task (~255)
     except (Investigation.DoesNotExist,
             Investigation.MultipleObjectsReturned) as e:
         logger.error(
