@@ -230,6 +230,7 @@ def update_annotated_nodes(
     # Retrieve first study and assay ids
     try:
         study = Study.objects.get(uuid=study_uuid)
+    # NameError will be raised later
     except (Study.DoesNotExist,
             Study.MultipleObjectsReturned) as e:
         logger.error(
@@ -239,6 +240,7 @@ def update_annotated_nodes(
     if assay_uuid is not None:
         try:
             assay = Assay.objects.get(uuid=assay_uuid)
+        # NameError will be raised later
         except (Assay.DoesNotExist,
                 Assay.MultipleObjectsReturned) as e:
             logger.error(
