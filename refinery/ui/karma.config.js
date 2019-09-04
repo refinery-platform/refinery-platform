@@ -12,7 +12,7 @@ module.exports = function(config) {
 
     client: {
       // Set to `true` if `console.log()` should be captured.
-      captureConsole: false
+      captureConsole: true
     },
 
     // frameworks to use
@@ -25,8 +25,7 @@ module.exports = function(config) {
 
 
     // list of files to exclude
-    exclude: [
-    ],
+    exclude: [],
 
 
     // preprocess matching files before serving them to the browser

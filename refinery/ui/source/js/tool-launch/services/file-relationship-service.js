@@ -297,7 +297,7 @@
       }
       // checkbox selected
       if (selectionObj[vm.currentGroup][inputTypeUuid][nodeUuid]) {
-        if (_.has(vm.groupCollection, vm.currentGroup) === false) {
+        if (_.has(vm.groupCollection, vm.currentGroup.toString()) === false) {
           // intialize groupCollection[groupId]
           vm.groupCollection[vm.currentGroup] = {};
         }
