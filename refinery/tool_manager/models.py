@@ -935,6 +935,11 @@ class WorkflowTool(Tool):
                    GalaxyParameter.MultipleObjectsReturned) as e:
                 logger.error('Error locating the GalaxyParameter for uuid: %s '
                              ': %s', str(galaxy_parameter_uuid), e)
+                raise type(e)(
+                    'Error locating the GalaxyParameter for uuid: {}'.format(
+                        str(galaxy_parameter_uuid)
+                    )
+                )
             else:
                 workflow_step = galaxy_parameter.galaxy_workflow_step
 
