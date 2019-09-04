@@ -38,22 +38,22 @@ class SingleFileColumnParser:
     """
 
     def __init__(
-            self,
-            metadata_file,
-            file_source_translator,
-            source_column_index,
-            data_file_column_index=-1,
-            auxiliary_file_column_index=None,
-            file_base_path="",
-            data_file_permanent=False,
-            species_column_index=None,
-            genome_build_column_index=None,
-            annotation_column_index=None,
-            sample_column_index=None,
-            assay_column_index=None,
-            column_index_separator=" ",
-            delimiter="comma",
-            custom_delimiter_string=","
+        self,
+        metadata_file,
+        file_source_translator,
+        source_column_index,
+        data_file_column_index=-1,
+        auxiliary_file_column_index=None,
+        file_base_path="",
+        data_file_permanent=False,
+        species_column_index=None,
+        genome_build_column_index=None,
+        annotation_column_index=None,
+        sample_column_index=None,
+        assay_column_index=None,
+        column_index_separator=" ",
+        delimiter="comma",
+        custom_delimiter_string=","
     ):
         """Prepare metadata file for parsing"""
         # single character to be used to separate columns
@@ -280,24 +280,24 @@ class SingleFileColumnParser:
 
 
 def process_metadata_table(
-        username,
-        title,
-        metadata_file,
-        source_columns,
-        data_file_column,
-        auxiliary_file_column=None,
-        base_path="",
-        data_file_permanent=False,
-        species_column=None,
-        genome_build_column=None,
-        annotation_column=None,
-        sample_column=None,
-        assay_column=None,
-        is_public=False,
-        delimiter="comma",
-        custom_delimiter_string=",",
-        identity_id=None,
-        existing_data_set_uuid=None
+    username,
+    title,
+    metadata_file,
+    source_columns,
+    data_file_column,
+    auxiliary_file_column=None,
+    base_path="",
+    data_file_permanent=False,
+    species_column=None,
+    genome_build_column=None,
+    annotation_column=None,
+    sample_column=None,
+    assay_column=None,
+    is_public=False,
+    delimiter="comma",
+    custom_delimiter_string=",",
+    identity_id=None,
+    existing_data_set_uuid=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
