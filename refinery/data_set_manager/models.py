@@ -716,13 +716,13 @@ class Attribute(models.Model):
     type = models.TextField(db_index=True)
     # subtype further qualifies the attribute type, e.g. type = factor value
     # and subtype = age
-    subtype = models.TextField(blank=True, null=True, db_index=True)
-    value = models.TextField(blank=True, null=True, db_index=True)
-    value_unit = models.TextField(blank=True, null=True)
+    subtype = models.TextField(null=True, db_index=True)
+    value = models.TextField(null=True, db_index=True)
+    value_unit = models.TextField(null=True)
     # if value_unit is not null value is numeric and value_accession and
     # value_source refer to value_unit (rather than value)
-    value_accession = models.TextField(blank=True, null=True)
-    value_source = models.TextField(blank=True, null=True)
+    value_accession = models.TextField(null=True)
+    value_source = models.TextField(null=True)
 
     def __unicode__(self):
         return (
