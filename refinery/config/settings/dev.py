@@ -6,8 +6,6 @@ DEBUG = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-CELERY_ALWAYS_EAGER = True
-
 INSTALLED_APPS += (  # NOQA: F405
     'django_extensions',
 )
