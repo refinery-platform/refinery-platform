@@ -221,8 +221,16 @@ class AssayAPIViewTests(APITestCase):
 class AssayAttributeAPITests(APITestCase):
 
     def setUp(self):
-        self.user1 = User.objects.create_user('ownerJane', '', 'test1234')
-        self.user2 = User.objects.create_user('guestName', '', 'test1234')
+        self.user1_username = 'ownerJane'
+        self.user1_password = 'test1234'
+        self.user2_username = 'guestName'
+        self.user2_password = 'test1234'
+        self.user1 = User.objects.create_user(
+            self.user1_username, '', self.user1_password
+        )
+        self.user2 = User.objects.create_user(
+            self.user2_username, '', self.user2_password
+        )
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
         self.data_set = DataSet.objects.create(title="Test DataSet")
@@ -375,7 +383,8 @@ class AssayAttributeAPITests(APITestCase):
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        self.client.login(username='ownerJane', password='test1234')
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
         response = self.client.put(
             self.url_root + self.valid_uuid + '/attributes/',
             updated_attribute_1
@@ -406,7 +415,8 @@ class AssayAttributeAPITests(APITestCase):
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False'}
-        self.client.login(username='ownerJane', password='test1234')
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
         response = self.client.put(
             self.url_root + self.valid_uuid + '/attributes/',
             updated_attribute_3
@@ -423,7 +433,8 @@ class AssayAttributeAPITests(APITestCase):
                                'is_facet': 'False',
                                'is_active': 'False'}
 
-        self.client.login(username='guestName', password='test1234')
+        self.client.login(username=self.user1.username,
+                          password=self.user1.password)
         response = self.client.put(
             self.url_root + self.valid_uuid + '/attributes/',
             updated_attribute_4
@@ -431,6 +442,42 @@ class AssayAttributeAPITests(APITestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.content,
                          '"Only owner may edit attribute order."')
+        self.client.logout()
+
+    def test_put_object_id_without_attribute_order(self):
+        updated_attribute_2 = {'id': self.attribute_order_array[2].get('id'),
+                               'rank': 1,
+                               'is_exposed': False,
+                               'is_facet': False,
+                               'is_active': False}
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
+        AttributeOrder.objects.all().delete()
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_2
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.content,
+                         '"Could not find attribute orders to update"')
+        self.client.logout()
+
+    def test_put_object_solr_without_attribute_order(self):
+        updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
+                               'rank': 3,
+                               'is_exposed': False,
+                               'is_facet': False,
+                               'is_active': False}
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
+        AttributeOrder.objects.all().delete()
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_1
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.content,
+                         '"Could not find attribute orders to update"')
         self.client.logout()
 
 

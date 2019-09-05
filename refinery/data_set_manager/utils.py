@@ -228,10 +228,24 @@ def update_annotated_nodes(
         assay_uuid=None,
         update=False):
     # Retrieve first study and assay ids
-    study = Study.objects.get(uuid=study_uuid)
+    try:
+        study = Study.objects.get(uuid=study_uuid)
+    # NameError will be raised later
+    except (Study.DoesNotExist,
+            Study.MultipleObjectsReturned) as e:
+        logger.error(
+            "Couldn't fetch Study %s: %s", str(study_uuid), e
+        )
 
     if assay_uuid is not None:
-        assay = Assay.objects.get(uuid=assay_uuid)
+        try:
+            assay = Assay.objects.get(uuid=assay_uuid)
+        # NameError will be raised later
+        except (Assay.DoesNotExist,
+                Assay.MultipleObjectsReturned) as e:
+            logger.error(
+                "Couldn't fetch Assay %s: %s", str(assay_uuid), e
+            )
     else:
         assay = None
 
@@ -364,10 +378,20 @@ def _add_annotated_nodes(
         return
 
     # Get the first study with study UUID
-    study = Study.objects.filter(uuid=study_uuid)[0]
+    try:
+        study = Study.objects.filter(uuid=study_uuid)[0]
+    # NameError will raise almost immediately later
+    except IndexError as e:
+        logger.error('Study object does not exist for uuid %s: %s',
+                     study_uuid, e)
 
     if assay_uuid is not None:
-        assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        try:
+            assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        # NameError will raise almost immediately later
+        except IndexError as e:
+            logger.error('Assay object does not exist for uuid %s: %s',
+                         assay_uuid, e)
     else:
         assay = None
 

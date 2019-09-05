@@ -49,7 +49,13 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         return None  # TODO: make sure this is never happens
 
     dataset = None
-    investigation = Investigation.objects.get(uuid=investigation_uuid)
+    try:
+        investigation = Investigation.objects.get(uuid=investigation_uuid)
+    except (Investigation.DoesNotExist,
+            Investigation.MultipleObjectsReturned) as e:
+        logger.error(
+            'Did not get Investigation for uuid %s: %s',
+            investigation_uuid, e)
     if identifier is None:
         identifier = investigation.get_identifier()
     if title is None:
@@ -100,7 +106,14 @@ def annotate_nodes(investigation_uuid):
     """Adds all nodes in this investigation to the annotated nodes table for
     faster lookup
     """
-    investigation = Investigation.objects.get(uuid=investigation_uuid)
+    try:
+        investigation = Investigation.objects.get(uuid=investigation_uuid)
+    # will fail immediately after this if DNE or MOR
+    except (Investigation.DoesNotExist,
+            Investigation.MultipleObjectsReturned) as e:
+        logger.error(
+            'Did not get Investigation for uuid %s:  %s',
+            investigation_uuid, e)
 
     studies = investigation.study_set.all()
 
@@ -192,10 +205,21 @@ def parse_isatab(username, public, path, identity_id=None,
                         # 3. Finally we need to get the checksum so that we can
                         # compare that to our given file.
                         investigation = ds.get_investigation()
-                        file_store_item = FileStoreItem.objects.get(
-                            uuid=investigation.isarchive_file
-                        )
-                        logger.info("Get file: %s", file_store_item)
+                        try:
+                            """isaarchive_file should be a uuid foreign key
+                            upon creation of either FileStoreItem or
+                            Investigation in isa_tab_parser.py"""
+                            file_store_item = FileStoreItem.objects.get(
+                                uuid=investigation.isarchive_file
+                            )
+                            logger.info("Get file: %s", file_store_item)
+                        # will fail later on when the .datafile is accessed
+                        except (FileStoreItem.DoesNotExist,
+                                FileStoreItem.MultipleObjectsReturned) as e:
+                            logger.error(
+                                'Did not get FileStoreItem for uuid %s',
+                                unicode(investigation.isarchive_file), e)
+
                         try:
                             checksum = calculate_checksum(
                                 file_store_item.datafile
@@ -226,9 +250,22 @@ def parse_isatab(username, public, path, identity_id=None,
             path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
         if existing_data_set_uuid:
-            data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
-            data_set.update_with_revised_investigation(investigation)
-            return existing_data_set_uuid
+            try:
+                data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
+            except (DataSet.DoesNotExist,
+                    DataSet.MultipleObjectsReturned) as e:
+                logger.error('DataSet for uuid %s not fetched and thus not '
+                             'updated with revised investigation %s: %s',
+                             existing_data_set_uuid, unicode(investigation), e)
+                raise type(e)(
+                    'DataSet for uuid %s not fetched and thus not '
+                    'updated with revised investigation {}: {}'.format(
+                         existing_data_set_uuid, unicode(investigation)
+                    )
+                )
+            else:
+                data_set.update_with_revised_investigation(investigation)
+                return existing_data_set_uuid
 
         data_set_uuid = create_dataset(
             investigation.uuid, username, public=public
