@@ -593,7 +593,6 @@
       function () {
         vm.currentTypes = fileService.currentTypes;
         vm.tool = toolService.selectedTool;
-        console.log(vm.tool);
         if (fileBrowserFactory.customColumnNames.length > 0) {
           toggleToolColumn();
         }

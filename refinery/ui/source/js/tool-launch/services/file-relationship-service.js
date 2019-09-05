@@ -49,7 +49,7 @@
     vm.removeGroupFromCollections = removeGroupFromCollections;
     vm.resetInputGroup = resetInputGroup;
     vm.resetToolRelated = resetToolRelated;
-    vm.nodeSelectCount = 0; // only used for single depth lists`
+    vm.nodeSelectCount = 0; // only used for single depth lists
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
     /*

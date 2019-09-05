@@ -39,13 +39,13 @@
     fileRelationshipService,
     toolSelectService
   ) {
-    var inputTypeUuid = '';
+    var inputTypeUuid = toolSelectService.selectedTool.file_relationship.input_files[0].uuid;
     var totalFileCount = dataSetPropsService.dataSet.file_count;
     var vm = this;
     vm.isAllSelected = true; // Toggle text on select all
     vm.hexInputColor = fileRelationshipService.inputFileTypeColor[inputTypeUuid];
-    vm.nodeSelectCount = 0; // view display number selected
-    vm.updatingSelectionStatus = false;
+    vm.nodeSelectCount = 0; // initializes number displaying nodes selected count
+    vm.updatingSelectionStatus = false; // display wait message during api wait
     vm.updateSelection = updateSelection;
 
     /**
@@ -59,15 +59,12 @@
         uuid: $window.externalAssayUuid,
         include_facet_count: false
       };
-     // encodes all field names to avoid issues with escape characters.
-      var internalName = fileBrowserFactory.attributesNameKey.Name;
       params.filter_attribute = fileParamService.fileParam.filter_attribute;
       // grabbing a subset of attributes
       var attributeNames = Object.keys(params.filter_attribute).concat([
-        'uuid', internalName
+        'uuid', fileBrowserFactory.attributesNameKey.Name
       ]);
       params.facets = attributeNames.join(',');
-
       return params;
     }
 
@@ -130,8 +127,6 @@
     }
 
     vm.$onInit = function () {
-      console.log(toolSelectService.selectedTool.file_relationship);
-      inputTypeUuid = toolSelectService.selectedTool.file_relationship.input_files[0].uuid;
       // resets selection when filters are updated
       $scope.$watchCollection(function () {
         return assayFiltersService.attributeFilter;
