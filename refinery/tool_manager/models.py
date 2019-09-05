@@ -927,21 +927,32 @@ class WorkflowTool(Tool):
         launch_parameters = self._get_launch_parameters()
 
         for galaxy_parameter_uuid in launch_parameters:
-            galaxy_parameter = GalaxyParameter.objects.get(
-                uuid=galaxy_parameter_uuid
-            )
-            workflow_step = galaxy_parameter.galaxy_workflow_step
-
-            if params_dict.get(workflow_step) is None:
-                params_dict[workflow_step] = self._get_tool_inputs_dict(
-                    workflow_step
+            try:
+                galaxy_parameter = GalaxyParameter.objects.get(
+                    uuid=galaxy_parameter_uuid
                 )
-
-            params_dict[workflow_step][galaxy_parameter.name] = (
-                galaxy_parameter.cast_param_value_to_proper_type(
-                    launch_parameters[galaxy_parameter_uuid]
+            except(GalaxyParameter.DoesNotExist,
+                   GalaxyParameter.MultipleObjectsReturned) as e:
+                logger.error('Error locating the GalaxyParameter for uuid: %s '
+                             ': %s', str(galaxy_parameter_uuid), e)
+                raise type(e)(
+                    'Error locating the GalaxyParameter for uuid: {}'.format(
+                        str(galaxy_parameter_uuid)
+                    )
                 )
-            )
+            else:
+                workflow_step = galaxy_parameter.galaxy_workflow_step
+
+                if params_dict.get(workflow_step) is None:
+                    params_dict[workflow_step] = self._get_tool_inputs_dict(
+                        workflow_step
+                    )
+
+                params_dict[workflow_step][galaxy_parameter.name] = (
+                    galaxy_parameter.cast_param_value_to_proper_type(
+                        launch_parameters[galaxy_parameter_uuid]
+                    )
+                )
         return params_dict
 
     def _flatten_file_relationships_nesting(self, nesting=None,
