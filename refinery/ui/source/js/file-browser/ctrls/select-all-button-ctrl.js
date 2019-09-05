@@ -39,7 +39,7 @@
     fileRelationshipService,
     toolSelectService
   ) {
-    var inputTypeUuid = toolSelectService.selectedTool.file_relationship.input_files[0].uuid;
+    var inputTypeUuid = '';
     var totalFileCount = dataSetPropsService.dataSet.file_count;
     var vm = this;
     vm.isAllSelected = true; // Toggle text on select all
@@ -130,6 +130,8 @@
     }
 
     vm.$onInit = function () {
+      console.log(toolSelectService.selectedTool.file_relationship);
+      inputTypeUuid = toolSelectService.selectedTool.file_relationship.input_files[0].uuid;
       // resets selection when filters are updated
       $scope.$watchCollection(function () {
         return assayFiltersService.attributeFilter;
