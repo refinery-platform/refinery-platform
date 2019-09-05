@@ -7,7 +7,6 @@ from guardian.utils import get_anonymous_user
 from analysis_manager.utils import (
     fetch_objects_required_for_analysis, validate_analysis_config
 )
-
 from core.models import Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay
 from factory_boy.django_model_factories import GalaxyInstanceFactory

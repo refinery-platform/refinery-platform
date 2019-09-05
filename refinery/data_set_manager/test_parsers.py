@@ -16,7 +16,6 @@ from .isa_tab_parser import IsaTabParser, ParserException
 from .models import AnnotatedNode, Investigation, Node
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
-
 from .tests import IsaTabTestBase
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"

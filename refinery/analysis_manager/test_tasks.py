@@ -12,9 +12,8 @@ from analysis_manager.tasks import (
     _check_galaxy_history_state, _get_analysis, _get_analysis_status,
     run_analysis
 )
+from analysis_manager.tests import AnalysisManagerTestBase
 from core.models import Analysis
-
-from tests import AnalysisManagerTestBase
 
 
 # tasks

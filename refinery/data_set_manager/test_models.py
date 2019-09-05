@@ -14,8 +14,7 @@ from core.models import Analysis, DataSet, InvestigationLink
 from file_store.models import FileStoreItem
 
 from .models import (Assay, Investigation, Node, Study)
-
-from tests import IsaTabTestBase
+from .tests import IsaTabTestBase
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 

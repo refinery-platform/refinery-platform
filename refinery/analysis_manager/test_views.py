@@ -5,11 +5,9 @@ from django.test import RequestFactory
 import mock
 
 from analysis_manager.models import AnalysisStatus
-
+from analysis_manager.tests import AnalysisManagerTestBase
 from analysis_manager.views import analysis_status
 from core.models import Analysis
-
-from tests import AnalysisManagerTestBase
 
 
 class AnalysisViewsTests(AnalysisManagerTestBase):

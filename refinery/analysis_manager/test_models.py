@@ -1,8 +1,7 @@
 import uuid
 
 from analysis_manager.models import AnalysisStatus
-
-from tests import AnalysisManagerTestBase
+from analysis_manager.tests import AnalysisManagerTestBase
 
 
 # models
