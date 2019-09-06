@@ -28,7 +28,6 @@ djangular==0.3.0b1
 factory_boy==2.8.1
 flake8==2.5.4
 flower==0.9.1
-Jinja2==2.6
 jsonschema==2.6.0
 librabbitmq==2.0.0
 Markdown==2.2.1
