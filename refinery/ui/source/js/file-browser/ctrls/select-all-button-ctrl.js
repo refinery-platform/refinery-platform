@@ -71,6 +71,11 @@
       return params;
     }
 
+    /**
+     * @name getSelectionGroup
+     * @desc  Helper private method which generates the latest params
+     * @memberOf refineryFileBrowser.getSelectionGroup
+    **/
     function getSelectionGroup () {
       if (!_.has(activeNodeService.selectionObj, '0.' + inputTypeUuid)) {
         activeNodeService.selectionObj = angular.copy({ 0: {} });
@@ -79,11 +84,15 @@
       return activeNodeService.selectionObj[0][inputTypeUuid];
     }
 
+    /**
+     * @name setNodeAndGroupSelection
+     * @desc  Helper private method which updates the nodeSelectionGroup and
+     * groupCollections used in tool launch panel and grid
+     * @memberOf refineryFileBrowser.getSelectionGroup
+    **/
     function setNodeAndGroupSelection (files, selectionGroup, deselectFlag) {
       for (var i = 0; i < files.length; i++) {
         var fileUuid = files[i].uuid;
-        console.log(deselectFlag);
-        console.log(selectionGroup);
         if (!deselectFlag && !_.has(selectionGroup, fileUuid) || !selectionGroup[fileUuid]) {
           angular.copy(files[i], activeNodeService.activeNodeRow);
           selectionGroup[fileUuid] = true;
@@ -117,38 +126,26 @@
       var totalAssayCount = fileBrowserFactory.assayFilesTotalItems.count;
       var selectionGroup = getSelectionGroup();
 
-      if (!vm.isAllSelected) {
-        vm.isAllSelected = true;
+      // if current assay files list is > set continious scroll list ?100
+      // then call API
+      if (totalAssayCount > maxFileCount) {
         vm.updatingSelectionStatus = true;
-        // if current assay files list is > set continious scroll list ?100
-        // then call API
-        if (totalAssayCount > maxFileCount) {
-          var assayFilesQuery = assayFileService.query(getCurrentParams());
-          assayFilesQuery.$promise.then(function (response) {
-            setNodeAndGroupSelection(response.nodes, selectionGroup, false);
-          });
-        } else {
-          setNodeAndGroupSelection(assayFiles, selectionGroup, false);
-        }
-        // reset selected node in UI
-        angular.copy({}, activeNodeService.activeNodeRow);
-        vm.updatingSelectionStatus = false;
+        var deselectFlag = vm.isAllSelected;
+        var assayFilesQuery = assayFileService.query(getCurrentParams());
+        assayFilesQuery.$promise.then(function (response) {
+          setNodeAndGroupSelection(response.nodes, selectionGroup, deselectFlag);
+          vm.updatingSelectionStatus = false;
+          // reset selected node in UI
+          angular.copy({}, activeNodeService.activeNodeRow);
+        });
       } else if (vm.nodeSelectCount === totalFileCount && totalFileCount === totalAssayCount) {
-        vm.isAllSelected = false;
         fileRelationshipService.resetInputGroup();
       } else {
-        // remove selection on the currect view
-        vm.isAllSelected = false;
-        if (totalAssayCount > maxFileCount) {
-          var assayQuery = assayFileService.query(getCurrentParams());
-          assayQuery.$promise.then(function (response) {
-            setNodeAndGroupSelection(response.nodes, selectionGroup, true);
-          });
-        } else {
-          setNodeAndGroupSelection(assayFiles, selectionGroup, true);
-        }
-        angular.copy({}, activeNodeService.activeNodeRow);
+        setNodeAndGroupSelection(assayFiles, selectionGroup, vm.isAllSelected);
       }
+
+      vm.isAllSelected = !vm.isAllSelected;
+      angular.copy({}, activeNodeService.activeNodeRow);
     }
 
     vm.$onInit = function () {

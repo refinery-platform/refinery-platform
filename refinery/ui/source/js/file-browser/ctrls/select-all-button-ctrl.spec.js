@@ -78,15 +78,30 @@
         expect(ctrl.isAllSelected).toBe(false);
       });
 
-      it('updateSelection calls on mock service', function () {
+      it('updateSelection calls on mock service when isAllSelected', function () {
+        ctrl.isAllSelected = true;
         fileFactory.assayFilesTotalItems.count = maxFileCount + 1;
         dataSetService.dataSet.file_count = maxFileCount + 1;
         ctrl.updateSelection();
         expect(mockAssayService).toHaveBeenCalled();
       });
 
-      it('updateSelection does not call on mock service', function () {
+      it('updateSelection calls on mock service when !isAllSelected', function () {
+        ctrl.isAllSelected = false;
+        fileFactory.assayFilesTotalItems.count = maxFileCount + 1;
+        dataSetService.dataSet.file_count = maxFileCount + 1;
+        ctrl.updateSelection();
+        expect(mockAssayService).toHaveBeenCalled();
+      });
+
+      it('updateSelection does not call on mock service when isAllSelected', function () {
         ctrl.isAllSelected = true;
+        ctrl.updateSelection();
+        expect(mockAssayService).not.toHaveBeenCalled();
+      });
+
+      it('updateSelection does not call on mock service when !isAllSelected', function () {
+        ctrl.isAllSelected = false;
         ctrl.updateSelection();
         expect(mockAssayService).not.toHaveBeenCalled();
       });
