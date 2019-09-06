@@ -106,6 +106,10 @@
         expect(mockAssayService).not.toHaveBeenCalled();
       });
 
+      it('updateSelection does not call on mock mockResetGroup', function () {
+        ctrl.updateSelection();
+        expect(mockResetGroup).not.toHaveBeenCalled();
+      });
 
       it('updateSelection calls on mock mockResetGroup', function () {
         ctrl.isAllSelected = true;
