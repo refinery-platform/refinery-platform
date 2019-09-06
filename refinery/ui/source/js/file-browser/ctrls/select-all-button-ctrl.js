@@ -20,6 +20,7 @@
     'assayFiltersService',
     'dataSetPropsService',
     'fileBrowserFactory',
+    'fileBrowserSettings',
     'fileParamService',
     'fileRelationshipService',
     'toolSelectService'
@@ -35,14 +36,16 @@
     assayFiltersService,
     dataSetPropsService,
     fileBrowserFactory,
+    fileBrowserSettings,
     fileParamService,
     fileRelationshipService,
     toolSelectService
   ) {
     var inputTypeUuid = toolSelectService.selectedTool.file_relationship.input_files[0].uuid;
+    var maxFileCount = fileBrowserSettings.maxFileRequest;
     var totalFileCount = dataSetPropsService.dataSet.file_count;
     var vm = this;
-    vm.isAllSelected = true; // Toggle text on select all
+    vm.isAllSelected = false; // Toggle text on select all
     vm.hexInputColor = fileRelationshipService.inputFileTypeColor[inputTypeUuid];
     vm.nodeSelectCount = 0; // initializes number displaying nodes selected count
     vm.updatingSelectionStatus = false; // display wait message during api wait
@@ -68,6 +71,41 @@
       return params;
     }
 
+    function getSelectionGroup () {
+      if (!_.has(activeNodeService.selectionObj, '0.' + inputTypeUuid)) {
+        activeNodeService.selectionObj = angular.copy({ 0: {} });
+        activeNodeService.selectionObj[0][inputTypeUuid] = {};
+      }
+      return activeNodeService.selectionObj[0][inputTypeUuid];
+    }
+
+    function setNodeAndGroupSelection (files, selectionGroup, deselectFlag) {
+      for (var i = 0; i < files.length; i++) {
+        var fileUuid = files[i].uuid;
+        console.log(deselectFlag);
+        console.log(selectionGroup);
+        if (!deselectFlag && !_.has(selectionGroup, fileUuid) || !selectionGroup[fileUuid]) {
+          angular.copy(files[i], activeNodeService.activeNodeRow);
+          selectionGroup[fileUuid] = true;
+          fileRelationshipService.setNodeSelectCollection(
+            inputTypeUuid, activeNodeService.selectionObj
+          );
+          fileRelationshipService.setGroupCollection(
+            inputTypeUuid, activeNodeService.selectionObj
+          );
+        } else if (deselectFlag && selectionGroup[fileUuid]) {
+          angular.copy(files[i], activeNodeService.activeNodeRow);
+          selectionGroup[fileUuid] = false;
+          fileRelationshipService.setNodeSelectCollection(
+            inputTypeUuid, activeNodeService.selectionObj, fileUuid
+          );
+          fileRelationshipService.setGroupCollection(
+            inputTypeUuid, activeNodeService.selectionObj, fileUuid
+          );
+        }
+      }
+    }
+
     /**
      * @name updateSelection
      * @desc  View method which updates the node selections for single input
@@ -76,53 +114,40 @@
     **/
     function updateSelection () {
       var assayFiles = fileBrowserFactory.assayFiles;
+      var totalAssayCount = fileBrowserFactory.assayFilesTotalItems.count;
+      var selectionGroup = getSelectionGroup();
+
       if (!vm.isAllSelected) {
         vm.isAllSelected = true;
         vm.updatingSelectionStatus = true;
-
-        var assayFilesQuery = assayFileService.query(getCurrentParams());
-        assayFilesQuery.$promise.then(function (response) {
-          if (!_.has(activeNodeService.selectionObj, '0.' + inputTypeUuid)) {
-            activeNodeService.selectionObj = angular.copy({ 0: {} });
-            activeNodeService.selectionObj[0][inputTypeUuid] = {};
-          }
-          for (var i = 0; i < response.nodes.length; i++) {
-            if (!_.has(activeNodeService.selectionObj[0][inputTypeUuid],
-              response.nodes[i].uuid) || !activeNodeService.selectionObj[0][inputTypeUuid]
-              [response.nodes[i].uuid]) {
-              angular.copy(response.nodes[i], activeNodeService.activeNodeRow);
-              activeNodeService.selectionObj[0][inputTypeUuid][response.nodes[i].uuid] = true;
-              fileRelationshipService.setNodeSelectCollection(
-                inputTypeUuid, activeNodeService.selectionObj
-              );
-              fileRelationshipService.setGroupCollection(
-                inputTypeUuid, activeNodeService.selectionObj
-              );
-            }
-          }
-          // reset selected node in UI
-          angular.copy({}, activeNodeService.activeNodeRow);
-          vm.updatingSelectionStatus = false;
-        });
-      } else if (vm.nodeSelectCount === totalFileCount === assayFiles) {
+        // if current assay files list is > set continious scroll list ?100
+        // then call API
+        if (totalAssayCount > maxFileCount) {
+          var assayFilesQuery = assayFileService.query(getCurrentParams());
+          assayFilesQuery.$promise.then(function (response) {
+            setNodeAndGroupSelection(response.nodes, selectionGroup, false);
+          });
+        } else {
+          setNodeAndGroupSelection(assayFiles, selectionGroup, false);
+        }
+        // reset selected node in UI
+        angular.copy({}, activeNodeService.activeNodeRow);
+        vm.updatingSelectionStatus = false;
+      } else if (vm.nodeSelectCount === totalFileCount && totalFileCount === totalAssayCount) {
         vm.isAllSelected = false;
         fileRelationshipService.resetInputGroup();
       } else {
         // remove selection on the currect view
         vm.isAllSelected = false;
-        var selectionGroup = activeNodeService.selectionObj[0][inputTypeUuid];
-        for (var i = 0; i < assayFiles.length; i++) {
-          if (selectionGroup[assayFiles[i].uuid] || selectionGroup[assayFiles[i].uuid]) {
-            angular.copy(assayFiles[i], activeNodeService.activeNodeRow);
-            selectionGroup[assayFiles[i].uuid] = false;
-            fileRelationshipService.setNodeSelectCollection(
-              inputTypeUuid, activeNodeService.selectionObj, assayFiles[i].uuid
-            );
-            fileRelationshipService.setGroupCollection(
-              inputTypeUuid, activeNodeService.selectionObj, assayFiles[i].uuid
-            );
-          }
+        if (totalAssayCount > maxFileCount) {
+          var assayQuery = assayFileService.query(getCurrentParams());
+          assayQuery.$promise.then(function (response) {
+            setNodeAndGroupSelection(response.nodes, selectionGroup, true);
+          });
+        } else {
+          setNodeAndGroupSelection(assayFiles, selectionGroup, true);
         }
+        angular.copy({}, activeNodeService.activeNodeRow);
       }
     }
 
