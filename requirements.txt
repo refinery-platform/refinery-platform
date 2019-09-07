@@ -44,7 +44,6 @@ pysam==0.9.1.4
 pysolr==3.3.2
 python-magic==0.4.6
 python-memcached==1.57
-PyYAML==3.11
 readline==6.2.2
 requests==2.21.0
 six==1.10.0
