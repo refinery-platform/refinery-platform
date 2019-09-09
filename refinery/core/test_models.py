@@ -1,4 +1,5 @@
 from datetime import timedelta
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -16,9 +17,13 @@ from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import (AnnotatedNode, Assay, Investigation,
                                      Node, NodeCollection, Study)
 from factory_boy.django_model_factories import (AnalysisNodeConnectionFactory,
+                                                AnalysisResultFactory,
                                                 FileRelationshipFactory,
                                                 FileStoreItemFactory,
+                                                FileTypeFactory,
                                                 GalaxyInstanceFactory,
+                                                InvestigationFactory,
+                                                InvestigationLinkFactory,
                                                 NodeFactory,
                                                 ToolDefinitionFactory,
                                                 ToolFactory)
@@ -32,9 +37,10 @@ from tool_manager.models import ToolDefinition
 from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
-                     DataSet, Event, ExtendedGroup, InvestigationLink,
-                     Project, SiteProfile, SiteStatistics, SiteVideo,
-                     Tutorials, UserProfile, Workflow, WorkflowEngine)
+                     DataSet, Download, Event, ExtendedGroup,
+                     InvestigationLink, Project, SiteProfile, SiteStatistics,
+                     SiteVideo, Tutorials, UserProfile, Workflow,
+                     WorkflowEngine)
 from .tasks import collect_site_statistics
 
 
@@ -321,6 +327,30 @@ class AnalysisTests(TestCase):
             '{}_{}'.format(self.analysis_node_connection_a.step,
                            self.analysis_node_connection_a.name)
         )
+
+    def test_attach_outputs_downloads_no_file(self):
+        AnalysisResultFactory(
+            analysis=self.analysis,
+            file_store_uuid=uuid.uuid4()
+        )
+        self.analysis.attach_outputs_downloads()
+        downloads_list = Download.objects.all()
+        download_owners = [download.get_owner() for download in downloads_list]
+        self.assertNotIn(self.analysis.get_owner(), download_owners)
+
+    def test_attach_outputs_downloads_file(self):
+        analysis_result = AnalysisResultFactory(
+            analysis=self.analysis,
+            file_store_uuid=uuid.uuid4()
+        )
+        FileStoreItemFactory(
+            uuid=analysis_result.file_store_uuid,
+            filetype=FileTypeFactory()
+        )
+        self.analysis.attach_outputs_downloads()
+        downloads_list = Download.objects.all()
+        download_owners = [download.get_owner() for download in downloads_list]
+        self.assertIn(self.analysis.get_owner(), download_owners)
 
     def test__create_derived_data_file_node(self):
         derived_data_file_node = self.analysis._create_derived_data_file_node(
@@ -1266,6 +1296,16 @@ class UserTutorialsTest(TestCase):
             Tutorials.objects.get(user_profile=self.userprofile)
         )
 
+    def test_has_viewed_data_upload_tut_tutorial_exists(self):
+        self.tutorial = Tutorials(user_profile=self.userprofile)
+        self.assertEqual(self.tutorial.data_upload_tutorial_viewed,
+                         self.userprofile.has_viewed_data_upload_tut())
+
+    def test_has_viewed_collaboration_tut_tutorial_exists(self):
+        self.tutorial = Tutorials(user_profile=self.userprofile)
+        self.assertEqual(self.tutorial.collaboration_tutorial_viewed,
+                         self.userprofile.has_viewed_collaboration_tut())
+
 
 class WorkflowDeletionTest(TestCase):
     """Testing for the deletion of Workflows"""
@@ -1313,3 +1353,19 @@ class WorkflowDeletionTest(TestCase):
         self.assertRaises(Workflow.DoesNotExist,
                           Workflow.objects.get,
                           name="workflow_not_used_by_analyses")
+
+
+class InvestigationLinkTest(TestCase):
+    def setUp(self):
+        self.investigation = InvestigationFactory()
+        self.data_set = create_dataset_with_necessary_models()
+        self.investigation_link = InvestigationLinkFactory(
+            data_set=self.data_set,
+            investigation=self.investigation
+        )
+
+    def test_get_node_collection_success(self):
+        collection_uuid = self.investigation_link.get_node_collection().uuid
+        # the uuid's are of different types for now
+        self.assertEqual(str(self.investigation.uuid),
+                         str(collection_uuid))

@@ -1000,11 +1000,54 @@ class AssayAttributeAPIView(APIView):
             new_rank = request.data.get('rank', None)
 
             if id:
-                attribute_order = AttributeOrder.objects.get(
-                    assay__uuid=uuid, id=id)
+                try:
+                    attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, id=id
+                    )
+                except AttributeOrder.DoesNotExist as e:
+                    logger.error(
+                        "Couldn't fetch AttributeOrder "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(id), e
+                    )
+                    return Response(
+                        'Could not find attribute orders to update',
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                except AttributeOrder.MultipleObjectsReturned as e:
+                    logger.error(
+                        "Too many AttributeOrder objects "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(id), e
+                    )
+                    return Response(
+                        'Too many attribute orders found for assay',
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             elif solr_field:
-                attribute_order = AttributeOrder.objects.get(
-                    assay__uuid=uuid, solr_field=solr_field)
+                try:
+                    attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, solr_field=solr_field)
+                except AttributeOrder.DoesNotExist as e:
+                    logger.error(
+                        "Couldn't fetch AttributeOrder "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(solr_field), e
+                    )
+                    return Response(
+                        'Could not find attribute orders to update',
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                except AttributeOrder.MultipleObjectsReturned as e:
+                    logger.error(
+                        "Too many AttributeOrder objects "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(solr_field), e
+                    )
+                    return Response(
+                        'Too many attribute orders found for assay',
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             else:
                 return Response(
                     'Requires attribute id or solr_field name.',

@@ -1925,6 +1925,23 @@ class SingleFileColumnParserTests(TestCase):
         self.assert_expected_nodes(dataset, 2)
         self.assertEqual(2, update_object_mock.call_count)
 
+    def test_without_dataset_raises_exception(self):
+        path = os.path.join(
+            TEST_DATA_BASE_PATH,
+            'single-file',
+            'one-line.csv'
+        )
+        with self.assertRaises(DataSet.DoesNotExist):
+            with open(path) as f:
+                process_metadata_table(
+                    username='guest',
+                    title='fake',
+                    metadata_file=f,
+                    source_columns=[0],
+                    data_file_column=2,
+                    existing_data_set_uuid='foo'
+                )
+
 
 class InvestigationTests(IsaTabTestBase):
     def setUp(self):

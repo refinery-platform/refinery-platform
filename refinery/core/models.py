@@ -96,12 +96,22 @@ class UserProfile(models.Model):
                " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_data_upload_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).data_upload_tutorial_viewed
+        try:
+            return Tutorials.objects.get(
+                user_profile=self).data_upload_tutorial_viewed
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get Tutorial for UserProfile %s: %s',
+                         unicode(self), exc)
 
     def has_viewed_collaboration_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).collaboration_tutorial_viewed
+        try:
+            return Tutorials.objects.get(
+                user_profile=self).collaboration_tutorial_viewed
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get Tutorial for UserProfile %s: %s',
+                         unicode(self), exc)
 
 
 def get_user_import_dir(user):
@@ -364,11 +374,16 @@ class SharableResource(OwnableResource):
 
     def get_owner(self):
         owner = None
-
         content_type_id = ContentType.objects.get_for_model(self).id
-        permission_id = Permission.objects.filter(
-            codename='share_%s' % self._meta.verbose_name
-        )[0].id
+        codename = 'share_%s' % self._meta.verbose_name
+        try:
+            permission_id = Permission.objects.filter(
+                codename=codename
+            )[0].id
+        except IndexError:
+            logger.error('No Permission objects returned for codename %s',
+                         codename)
+            return owner
 
         perms = UserObjectPermission.objects.filter(
             content_type_id=content_type_id,
@@ -379,8 +394,9 @@ class SharableResource(OwnableResource):
         if perms.count() > 0:
             try:
                 owner = User.objects.get(id=perms[0].user_id)
-            except User.DoesNotExist:
-                pass
+            except (User.DoesNotExist, User.MultipleObjectsReturned) as exc:
+                logger.error("Error finding user with owner perms %s: %s",
+                             unicode(perms[0]), exc)
 
         return owner
 
@@ -421,27 +437,33 @@ class SharableResource(OwnableResource):
 
         for group_object, permission_list in permissions.items():
             group = {}
-            group["group"] = ExtendedGroup.objects.get(id=group_object.id)
-            group["uuid"] = group["group"].uuid
-            group["id"] = group["group"].id
-            group["change"] = False
-            group["read"] = False
-            if self._meta.verbose_name == 'dataset':
-                group["read_meta"] = False
+            try:
+                group["group"] = ExtendedGroup.objects.get(id=group_object.id)
+            except (ExtendedGroup.DoesNotExist,
+                    ExtendedGroup.MultipleObjectsReturned) as exc:
+                logger.error('Failed to get ExtendedGroup for Group %s: %s',
+                             unicode(group_object), exc)
+            else:
+                group["uuid"] = group["group"].uuid
+                group["id"] = group["group"].id
+                group["change"] = False
+                group["read"] = False
+                if self._meta.verbose_name == 'dataset':
+                    group["read_meta"] = False
 
-            for permission in permission_list:
-                if permission.startswith("change"):
-                    group["change"] = True
-                elif permission.startswith("read_meta"):
-                    group["read_meta"] = True
-                elif permission.startswith("read"):
-                    group["read"] = True
+                for permission in permission_list:
+                    if permission.startswith("change"):
+                        group["change"] = True
+                    elif permission.startswith("read_meta"):
+                        group["read_meta"] = True
+                    elif permission.startswith("read"):
+                        group["read"] = True
 
-            if group["change"] and readonly:
-                continue
-            if group["read"] and changeonly:
-                continue
-            groups.append(group)
+                if group["change"] and readonly:
+                    continue
+                if group["read"] and changeonly:
+                    continue
+                groups.append(group)
 
         return groups
 
@@ -868,7 +890,16 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        try:
+            return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        # this will error out downstream on the signal's use of it when None is
+        # returned
+        except (NodeCollection.DoesNotExist,
+                NodeCollection.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get NodeCollection for '
+                         'Investigation %s: %s',
+                         unicode(self.investigation), exc)
+            return None
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):
@@ -1362,19 +1393,19 @@ class Analysis(OwnableResource):
             return
 
         for analysis_result in self.results.all():
-            item = FileStoreItem.objects.get(
-                uuid=analysis_result.file_store_uuid
-            )
-            if item:
+            try:
+                item = FileStoreItem.objects.get(
+                    uuid=analysis_result.file_store_uuid
+                )
                 download = Download.objects.create(name=self.name,
                                                    data_set=self.data_set,
                                                    file_store_item=item)
                 download.set_owner(self.get_owner())
-            else:
-                logger.warning(
-                    "No file found for '%s' in download '%s' ('%s')",
-                    analysis_result.file_store_uuid, self.name, self.uuid
-                )
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error('Failed to get FileStoreItem for '
+                             'AnalysisResult %s: %s',
+                             unicode(analysis_result), exc)
 
     def terminate_file_import_tasks(self):
         """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
@@ -1530,9 +1561,16 @@ class Analysis(OwnableResource):
                 # retrieve uuid of corresponding output file if exists
                 logger.info("Results for '%s' and %s: %s", self.uuid,
                             output_connection, analysis_result)
-                derived_data_file_node.file_item = FileStoreItem.objects.get(
-                    uuid=analysis_result.file_store_uuid
-                )
+                try:
+                    derived_data_file_node.file_item = \
+                        FileStoreItem.objects.get(
+                            uuid=analysis_result.file_store_uuid
+                        )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as exc:
+                    logger.error('Failed to get FileStoreItem for '
+                                 'AnalysisResult %s: %s',
+                                 unicode(analysis_result), exc)
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
                     output_connection, analysis_result.file_store_uuid,
@@ -1740,7 +1778,10 @@ class ExtendedGroupManager(models.Manager):
             return ExtendedGroup.objects.get(
                 id=settings.REFINERY_PUBLIC_GROUP_ID
             )
-        except:
+        except (ExtendedGroup.DoesNotExist,
+                ExtendedGroup.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get ExtendedGroup for Refinery ID %s: %s',
+                         str(settings.REFINERY_PUBLIC_GROUP_ID), exc)
             return None
 
 
@@ -1787,7 +1828,8 @@ class ExtendedGroup(Group):
     def get_managed_group(self):
         try:
             return (self.managed_group.all()[0])
-        except:
+        # out of bounds exception
+        except IndexError:
             return None
 
     def is_user_a_group_manager(self, user):
