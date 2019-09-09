@@ -94,7 +94,7 @@
     function setNodeAndGroupSelection (files, selectionGroup, deselectFlag) {
       for (var i = 0; i < files.length; i++) {
         var fileUuid = files[i].uuid;
-        if (!deselectFlag && !_.has(selectionGroup, fileUuid) || !selectionGroup[fileUuid]) {
+        if (!deselectFlag && (!_.has(selectionGroup, fileUuid) || !selectionGroup[fileUuid])) {
           angular.copy(files[i], activeNodeService.activeNodeRow);
           selectionGroup[fileUuid] = true;
           fileRelationshipService.setNodeSelectCollection(
@@ -103,7 +103,7 @@
           fileRelationshipService.setGroupCollection(
             inputTypeUuid, activeNodeService.selectionObj
           );
-        } else if (deselectFlag && (!_.has(selectionGroup, fileUuid) && selectionGroup[fileUuid])) {
+        } else if (deselectFlag && (_.has(selectionGroup, fileUuid) && selectionGroup[fileUuid])) {
           angular.copy(files[i], activeNodeService.activeNodeRow);
           selectionGroup[fileUuid] = false;
           fileRelationshipService.setNodeSelectCollection(
