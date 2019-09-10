@@ -41,7 +41,7 @@ describe('Common.service.siteProfileV2Service: unit tests', function () {
         .expectGET(
           refinerySettings.appRoot +
           refinerySettings.refineryApiV2 +
-          '/site_profiles/'
+          '/site_profiles?current=true/'
       ).respond(200, siteProfile);
 
       var results;
