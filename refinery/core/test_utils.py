@@ -51,7 +51,8 @@ class TestGetAbsoluteURL(TestCase):
 
     def test_build_absolute_url_with_invalid_current_site(self):
         Site.objects.all().delete()
-        self.assertIsNone(build_absolute_url('/path/to/file'))
+        with self.assertRaises(RuntimeError):
+            build_absolute_url('/path/to/file')
 
 
 class SimpleUtilitiesTest(TestCase):
