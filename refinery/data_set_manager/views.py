@@ -140,12 +140,32 @@ class TakeOwnershipOfPublicDatasetView(View):
         if request.user.has_perm('core.read_dataset', data_set) \
                 or 'read_dataset' in get_perms(public_group, data_set):
             investigation = data_set.get_investigation()
-            full_isa_tab_url = get_absolute_url(
-                investigation.get_file_store_item().get_datafile_url()
-            )
-            response = HttpResponseRedirect(
-                get_absolute_url(reverse('process_isa_tab', args=['ajax']))
-            )
+            file_url = investigation.get_file_store_item().get_datafile_url()
+            try:
+                full_isa_tab_url = get_absolute_url(file_url)
+            except ValueError:
+                logger.error('URL {} is not a relative url'.format(file_url))
+                return HttpResponseBadRequest('No file url found for '
+                                              'investigation of DataSet')
+            else:
+                if full_isa_tab_url is None:
+                    logger.error('No Current Site found')
+                    return HttpResponseBadRequest('No current site found')
+            relative_isa_tab_url = reverse('process_isa_tab', args=['ajax'])
+            try:
+                isa_tab_url = get_absolute_url(relative_isa_tab_url)
+            except ValueError:
+                logger.error(
+                    '{} is not relative url'.format(str(relative_isa_tab_url))
+                )
+                return HttpResponseBadRequest('Could not set isa_tab_url '
+                                              ' cookie due to bad redirect')
+            else:
+                if full_isa_tab_url is None:
+                    if full_isa_tab_url is None:
+                        logger.error('No Current Site found')
+                        return HttpResponseBadRequest('No current site found')
+            response = HttpResponseRedirect(isa_tab_url)
             # set cookie
             response.set_cookie('isa_tab_url', full_isa_tab_url)
             return response

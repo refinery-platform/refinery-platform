@@ -945,7 +945,11 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
                     "Node with uuid: {} has no associated file url"
                     .format(node_uuid)
                 )
-        return core.utils.get_absolute_url(url) if url else None
+        try:
+            return core.utils.get_absolute_url(url) if url else None
+        except ValueError as e:
+            logger.error('URL {} is not a valid relative url'.format(str(url)))
+            raise type(e)(e.message)
 
 
 def fix_last_column(file):

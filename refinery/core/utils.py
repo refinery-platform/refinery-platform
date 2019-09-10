@@ -120,9 +120,8 @@ def get_absolute_url(string):
     """Creates an absolute URL from a relative URL using the current Site
     domain and REFINERY_URL_SCHEME Django setting
     """
-    if not string or is_absolute_url(string):
-        return string
-
+    if not string:
+        raise ValueError('Only relative urls allowed, not: {}'.format(string))
     try:
         current_site = Site.objects.get_current()
     except Site.DoesNotExist:
