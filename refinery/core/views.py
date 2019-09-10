@@ -1439,8 +1439,8 @@ class SiteProfileAPIView(APIView):
         :param request: API request
         :return: serialized site profile(s)
         """
-        if request.query_params.get('current'):
-            if request.query_params.get('current') == 'true':
+        if request.query_params.get('current_site'):
+            if request.query_params.get('current_site') == 'true':
                 try:
                     site_profile = SiteProfile.objects.get(
                         site=get_current_site(request)
@@ -1455,7 +1455,7 @@ class SiteProfileAPIView(APIView):
                     return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
                 serializer = SiteProfileSerializer(site_profile)
-            elif request.query_params.get('current') == 'false':
+            elif request.query_params.get('current_site') == 'false':
                 serializer = SiteProfileAPIView.all_site_profiles_serialized()
             else:
                 return Response(

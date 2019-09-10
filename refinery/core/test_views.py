@@ -1951,13 +1951,13 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         username = password = "admin"
         self.admin_user = User.objects.create_superuser(username, '', password)
         self.get_request_current_true = self.factory.get(
-            self.url_root + '?current=true'
+            self.url_root + '?current_site=true'
         )
         self.get_request_current_false = self.factory.get(
-            self.url_root + '?current=false'
+            self.url_root + '?current_site=false'
         )
         self.get_request_current_foo = self.factory.get(
-            self.url_root + '?current=foo'
+            self.url_root + '?current_site=foo'
         )
         self.get_request_no_params = self.factory.get(self.url_root)
 

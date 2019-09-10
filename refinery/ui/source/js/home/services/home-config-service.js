@@ -40,7 +40,7 @@
      * @memberOf refineryHome.getConfigs
     **/
     function getConfigs () {
-      var configs = siteProfileService.query({ current: 'true' });
+      var configs = siteProfileService.query({ current_site: 'true' });
       configs.$promise.then(function (response) {
         homeConfig.aboutMarkdown = response.about_markdown;
         homeConfig.introMarkdown = response.intro_markdown;
