@@ -122,6 +122,8 @@ def get_absolute_url(string):
     """
     if not string:
         raise ValueError('Only relative urls allowed, not: {}'.format(string))
+    if is_absolute_url(string):
+        return string
     try:
         current_site = Site.objects.get_current()
     except Site.DoesNotExist:
