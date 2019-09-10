@@ -7,7 +7,7 @@ describe('Anonymous user explores home page', function () {
     cy.server();
     cy.route({
       method: 'GET',
-      url: '/api/v2/site_profiles/',
+      url: '/api/v2/site_profiles/?current=true',
       response: '@site_profiles'
     }).as('getSiteProfile');
     cy.route({
