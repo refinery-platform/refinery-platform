@@ -950,6 +950,12 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
         except ValueError as e:
             logger.error('URL {} is not a valid relative url'.format(str(url)))
             raise type(e)(e.message)
+        except RuntimeError as e:
+            logger.error('Could not build absolute URL for {}'.format(
+                    str(url)
+                )
+            )
+            raise type(e)(e.message)
 
 
 def fix_last_column(file):

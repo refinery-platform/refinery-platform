@@ -197,11 +197,16 @@ def _get_download_url_or_import_state(file_store_item):
             absolute_download_url = build_absolute_url(download_url)
             return absolute_download_url
         except ValueError:
-            logger.error('{} is not a valid relative url'.format(download_url))
+            logger.error('{} is not a valid relative url'.format(
+                    str(download_url)
+                )
+            )
             return None
-        else:
-            if not absolute_download_url:
-                logger.error('Could not fetch full absolute url')
+        except RuntimeError:
+            logger.error('Could not fetch full absolute url for {}'.format(
+                    str(download_url)
+                )
+            )
             return None
 
     # "PENDING" if an import_task_id doesn't exist and

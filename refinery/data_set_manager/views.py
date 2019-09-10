@@ -144,13 +144,19 @@ class TakeOwnershipOfPublicDatasetView(View):
             try:
                 full_isa_tab_url = build_absolute_url(file_url)
             except ValueError:
-                logger.error('URL {} is not a relative url'.format(file_url))
+                logger.error('URL {} is not a relative url'.format(
+                        str(file_url)
+                    )
+                )
                 return HttpResponseBadRequest('No file url found for '
                                               'investigation of DataSet')
-            else:
-                if full_isa_tab_url is None:
-                    logger.error('No Current Site found')
-                    return HttpResponseBadRequest('No current site found')
+            except RuntimeError as e:
+                logger.error('Could not build URL for {}'.format(
+                        str(file_url)
+                    )
+                )
+                return HttpResponseBadRequest('Could not build URL for {}'.
+                                              format(str(file_url)))
             relative_isa_tab_url = reverse('process_isa_tab', args=['ajax'])
             try:
                 isa_tab_url = build_absolute_url(relative_isa_tab_url)
@@ -160,11 +166,14 @@ class TakeOwnershipOfPublicDatasetView(View):
                 )
                 return HttpResponseBadRequest('Could not set isa_tab_url '
                                               ' cookie due to bad redirect')
-            else:
-                if full_isa_tab_url is None:
-                    if full_isa_tab_url is None:
-                        logger.error('No Current Site found')
-                        return HttpResponseBadRequest('No current site found')
+            except RuntimeError as e:
+                logger.error('No Current Site found')
+                logger.error('Could not build URL for {}'.format(
+                        str(relative_isa_tab_url)
+                    )
+                )
+                return HttpResponseBadRequest('Could not build URL for {}'.
+                                              format(str(file_url)))
             response = HttpResponseRedirect(isa_tab_url)
             # set cookie
             response.set_cookie('isa_tab_url', full_isa_tab_url)

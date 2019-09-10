@@ -310,16 +310,15 @@ class Tool(OwnableResource):
             abs_url = build_absolute_url(self.container_input_json_url)
         except ValueError:
             logger.error('{} is not a relative url'.format(
-                    self.container_input_json_url
+                    str(self.container_input_json_url)
                 )
             )
-        else:
-            if abs_url is None:
-                logger.error('Could not get current site for URL {}'.format(
-                        abs_url
-                    )
+        except RuntimeError:
+            logger.error('Could not build URL for {}'.format(
+                    str(self.container_input_json_url)
                 )
-                return None
+            )
+            return None
         return DockerClientRunWrapper(
             DockerClientSpec(input_json_url=abs_url),
             mem_limit_mb=settings.DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB

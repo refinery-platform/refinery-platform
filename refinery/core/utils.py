@@ -126,10 +126,10 @@ def build_absolute_url(string):
         return string
     try:
         current_site = Site.objects.get_current()
-    except Site.DoesNotExist:
+    except Site.DoesNotExist as e:
         logger.error("Can not construct a full URL: no Sites configured or "
                      "SITE_ID is invalid")
-        return None
+        raise RuntimeError(e.message)
 
     return "{}://{}{}".format(
         settings.REFINERY_URL_SCHEME, current_site.domain, string

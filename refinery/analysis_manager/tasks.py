@@ -427,11 +427,10 @@ def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
         logger.error('{} is not a relative URL'.format(str(file_store_url)))
         run_analysis.update_state(state=celery.states.FAILURE)
         return
-    else:
-        if file_url_absolute is None:
-            logger.error('No current site found')
-            run_analysis.update_state(state=celery.states.FAILURE)
-            return
+    except RuntimeError:
+        logger.error('Could not build URL for {}'.format(str(file_store_url)))
+        run_analysis.update_state(state=celery.states.FAILURE)
+        return
     library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
         file_url_absolute
