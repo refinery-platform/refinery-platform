@@ -946,7 +946,7 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
                     .format(node_uuid)
                 )
         try:
-            return core.utils.get_absolute_url(url) if url else None
+            return core.utils.build_absolute_url(url) if url else None
         except ValueError as e:
             logger.error('URL {} is not a valid relative url'.format(str(url)))
             raise type(e)(e.message)

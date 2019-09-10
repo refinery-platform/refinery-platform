@@ -32,7 +32,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          Workflow)
 
 from core.models import Event
-from core.utils import get_absolute_url
+from core.utils import build_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (
     get_file_url_from_node_uuid, get_solr_response_json
@@ -307,7 +307,7 @@ class Tool(OwnableResource):
     @property
     def django_docker_client(self):
         try:
-            abs_url = get_absolute_url(self.container_input_json_url)
+            abs_url = build_absolute_url(self.container_input_json_url)
         except ValueError:
             logger.error('{} is not a relative url'.format(
                     self.container_input_json_url

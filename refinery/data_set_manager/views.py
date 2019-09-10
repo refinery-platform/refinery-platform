@@ -33,7 +33,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
-from core.utils import get_absolute_url, get_data_set_for_view_set
+from core.utils import build_absolute_url, get_data_set_for_view_set
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
@@ -142,7 +142,7 @@ class TakeOwnershipOfPublicDatasetView(View):
             investigation = data_set.get_investigation()
             file_url = investigation.get_file_store_item().get_datafile_url()
             try:
-                full_isa_tab_url = get_absolute_url(file_url)
+                full_isa_tab_url = build_absolute_url(file_url)
             except ValueError:
                 logger.error('URL {} is not a relative url'.format(file_url))
                 return HttpResponseBadRequest('No file url found for '
@@ -153,7 +153,7 @@ class TakeOwnershipOfPublicDatasetView(View):
                     return HttpResponseBadRequest('No current site found')
             relative_isa_tab_url = reverse('process_isa_tab', args=['ajax'])
             try:
-                isa_tab_url = get_absolute_url(relative_isa_tab_url)
+                isa_tab_url = build_absolute_url(relative_isa_tab_url)
             except ValueError:
                 logger.error(
                     '{} is not relative url'.format(str(relative_isa_tab_url))

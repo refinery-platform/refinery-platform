@@ -116,7 +116,7 @@ def invalidate_cached_object(instance, is_test=False):
         return mc
 
 
-def get_absolute_url(string):
+def build_absolute_url(string):
     """Creates an absolute URL from a relative URL using the current Site
     domain and REFINERY_URL_SCHEME Django setting
     """
