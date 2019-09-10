@@ -810,14 +810,25 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
 
     def test_get_with_study_uuid_returns_file_uuid_field(self):
+        nodes = self.hg_19_data_set.get_nodes()
+        file_node = nodes.filter(
+            name='s5_p42_E2_45min.fastq.gz'
+        )[0]
+        file_item_uuid = file_node.file_item.uuid
+
         get_request = self.factory.get(self.url_root,
                                        {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
-        first_node = get_response.data[0]
+        file_node_response = None
+        for node in get_response.data:
+            if file_node.uuid == node.get('uuid'):
+                file_node_response = node
+                break
+
         self.assertEqual(
-            first_node.get('file_uuid'),
-            Node.objects.get(uuid=first_node.get('uuid')).file_item.uuid
+            file_item_uuid,
+            file_node_response.get('file_uuid')
         )
 
     def test_get_with_study_uuid_returns_name_field(self):
