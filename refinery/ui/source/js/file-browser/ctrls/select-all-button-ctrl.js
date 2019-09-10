@@ -13,6 +13,7 @@
   SelectAllButtonCtrl.$inject = [
     '$',
     '_',
+    '$log',
     '$scope',
     '$window',
     'activeNodeService',
@@ -29,6 +30,7 @@
   function SelectAllButtonCtrl (
     $,
     _,
+    $log,
     $scope,
     $window,
     activeNodeService,
@@ -137,6 +139,10 @@
           vm.updatingSelectionStatus = false;
           // reset selected node in UI
           angular.copy({}, activeNodeService.activeNodeRow);
+        }, function (error) {
+          $log.error(error);
+          vm.isAllSelected = !vm.isAllSelected; // revert toggling below
+          vm.updatingSelectionStatus = false;
         });
       } else if (vm.nodeSelectCount === totalFileCount && totalFileCount === totalAssayCount) {
         fileRelationshipService.resetInputGroup();
