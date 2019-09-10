@@ -1956,6 +1956,9 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         self.get_request_current_false = self.factory.get(
             self.url_root + '?current=false'
         )
+        self.get_request_current_foo = self.factory.get(
+            self.url_root + '?current=foo'
+        )
         self.get_request_no_params = self.factory.get(self.url_root)
 
     def test_serializer_list_empty(self):
@@ -1990,6 +1993,11 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         get_response = self.view(self.get_request_no_params)
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(len(get_response.data), 2)
+
+    def test_get_returns_400_status_for_current_foo(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_current_foo)
+        self.assertEqual(get_response.status_code, 400)
 
     def test_get_current_profile_returns_200_status_for_anon_user(self):
         get_response = self.view(self.get_request_current_true)

@@ -1455,8 +1455,14 @@ class SiteProfileAPIView(APIView):
                     return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
                 serializer = SiteProfileSerializer(site_profile)
-            else:
+            elif request.query_params.get('current') == 'false':
                 serializer = SiteProfileAPIView.all_site_profiles_serialized()
+            else:
+                return Response(
+                    'The ?current parameter is a boolean: provide'
+                    ' one of true or false.',
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             serializer = SiteProfileAPIView.all_site_profiles_serialized()
         return Response(serializer.data)
