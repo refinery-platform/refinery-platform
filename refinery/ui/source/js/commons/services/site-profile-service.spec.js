@@ -45,7 +45,7 @@ describe('Common.service.siteProfileV2Service: unit tests', function () {
       ).respond(200, siteProfile);
 
       var results;
-      var promise = service.query().$promise
+      var promise = service.query({ current: 'true' }).$promise
         .then(function (response) {
           results = response;
         });
