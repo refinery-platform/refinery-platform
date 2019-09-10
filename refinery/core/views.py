@@ -1434,18 +1434,31 @@ class SiteProfileAPIView(APIView):
     http_method_names = ["get", "patch"]
 
     def get(self, request):
-        try:
-            site_profile = SiteProfile.objects.get(
-                site=get_current_site(request)
-            )
-        except SiteProfile.DoesNotExist as e:
-            logger.error("Site profile for the current site does not exist.")
-            return HttpResponseNotFound(e)
-        except SiteProfile.MultipleObjectsReturned:
-            logger.error("Multiple site profiles for current site error.")
-            return HttpResponseServerError(e)
+        """
+        Returns the current profile ('current' param) or a list of profiles
+        :param request: API request
+        :return: serialized site profile(s)
+        """
+        if request.query_params.get('current'):
+            if request.query_params.get('current') == 'true':
+                try:
+                    site_profile = SiteProfile.objects.get(
+                        site=get_current_site(request)
+                    )
+                except SiteProfile.DoesNotExist as e:
+                    logger.error("Site profile for the current "
+                                 "site does not exist.")
+                    return Response(str(e), status=status.HTTP_404_NOT_FOUND)
+                except SiteProfile.MultipleObjectsReturned as e:
+                    logger.error("Multiple site profiles for "
+                                 "current site error.")
+                    return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = SiteProfileSerializer(site_profile)
+                serializer = SiteProfileSerializer(site_profile)
+            else:
+                serializer = SiteProfileAPIView.all_site_profiles_serialized()
+        else:
+            serializer = SiteProfileAPIView.all_site_profiles_serialized()
         return Response(serializer.data)
 
     def patch(self, request):
@@ -1508,6 +1521,12 @@ class SiteProfileAPIView(APIView):
         return Response(
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
+
+    @staticmethod
+    def all_site_profiles_serialized():
+        site_profiles = SiteProfile.objects.all()
+        serializer = SiteProfileSerializer(site_profiles, many=True)
+        return serializer
 
 
 class UserProfileAPIView(APIView):

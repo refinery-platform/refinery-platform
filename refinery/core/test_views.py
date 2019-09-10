@@ -1922,56 +1922,97 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             view=SiteProfileAPIView.as_view()
         )
         self.current_site = Site.objects.get_current()
-        self.site_profile = SiteProfile.objects.create(
+        self.other_site = Site.objects.create(domain='google.com', name='test')
+        self.site_profile_current = SiteProfile.objects.create(
             site=self.current_site,
             about_markdown='About the platform paragraph.',
             intro_markdown='The refinery platform intro paragraph.',
             twitter_username='Mock_twitter_name'
         )
+        self.site_profile_other = SiteProfile.objects.create(
+            site=self.other_site,
+            about_markdown='About the other platform paragraph.',
+            intro_markdown='The other platform intro paragraph.',
+            twitter_username='Mock_twitter_name'
+        )
         self.site_video_1 = SiteVideo.objects.create(
             caption="Dashboard video",
-            site_profile=self.site_profile,
+            site_profile=self.site_profile_current,
             source="YouTube",
             source_id="yt_5tc"
         )
         self.site_video_2 = SiteVideo.objects.create(
             caption="Analysis video",
-            site_profile=self.site_profile,
+            site_profile=self.site_profile_current,
             source="YouTube",
             source_id="yt_875"
         )
 
         username = password = "admin"
         self.admin_user = User.objects.create_superuser(username, '', password)
-        self.get_request = self.factory.get(self.url_root)
+        self.get_request_current_true = self.factory.get(
+            self.url_root + '?current=true'
+        )
+        self.get_request_current_false = self.factory.get(
+            self.url_root + '?current=false'
+        )
+        self.get_request_no_params = self.factory.get(self.url_root)
 
-    def test_get_returns_404_status_for_missing_site_profiles(self):
+    def test_serializer_list_empty(self):
         SiteProfile.objects.all().delete()
-        get_response = self.view(self.get_request)
+        self.assertEqual(
+            len(SiteProfileAPIView.all_site_profiles_serialized().data), 0
+        )
+
+    def test_serializer_list(self):
+        self.assertEqual(
+            len(SiteProfileAPIView.all_site_profiles_serialized().data), 2
+        )
+
+    def test_get_returns_404_status_for_missing_current_site_profile(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.status_code, 404)
 
-    def test_get_returns_200_status_for_anon_user(self):
-        get_response = self.view(self.get_request)
+    def test_get_returns_empty_for_not_current_missing_list(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_current_false)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(len(get_response.data), 0)
+
+    def test_get_returns_empty_for_no_params_missing_list(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_no_params)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(len(get_response.data), 0)
+
+    def test_get_returns_list_for_no_params(self):
+        get_response = self.view(self.get_request_no_params)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(len(get_response.data), 2)
+
+    def test_get_current_profile_returns_200_status_for_anon_user(self):
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.status_code, 200)
 
-    def test_get_returns_site_profile(self):
-        get_response = self.view(self.get_request)
+    def test_get_current_profile_returns_site_profile(self):
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('site'), self.current_site.id)
 
     def test_get_returns_site_markdown_fields(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('about_markdown'),
-                         self.site_profile.about_markdown)
+                         self.site_profile_current.about_markdown)
         self.assertEqual(get_response.data.get('intro_markdown'),
-                         self.site_profile.intro_markdown)
+                         self.site_profile_current.intro_markdown)
 
     def test_get_returns_twitter_username(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('twitter_username'),
-                         self.site_profile.twitter_username)
+                         self.site_profile_current.twitter_username)
 
     def test_get_returns_site_videos(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         response_videos = [video.get('source_id') for video in
                            get_response.data.get('site_videos')]
         self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
@@ -2030,21 +2071,21 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def test_patch_updates_site_videos_lists_add(self):
         site_video_1_data = {
             "caption": self.site_video_1.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_1.source,
             "source_id": self.site_video_1.source_id,
             "id": self.site_video_1.id
         }
         site_video_2_data = {
             "caption": self.site_video_2.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_2.source,
             "source_id": self.site_video_2.source_id,
             "id": self.site_video_2.id
         }
         site_video_3_data = {
             "caption": "Video caption three.",
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": "youtube",
             "source_id": "yt_349v"
         }
@@ -2056,14 +2097,14 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.admin_user
         patch_response = self.view(patch_request)
-        self.site_profile.refresh_from_db()
-        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+        self.site_profile_current.refresh_from_db()
+        self.assertEqual(len(self.site_profile_current.sitevideo_set.all()),
                          len(patch_response.data.get('site_videos')))
 
     def test_patch_updates_site_videos_lists_removal(self):
         site_video_2_data = {
             "caption": self.site_video_2.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_2.source,
             "source_id": self.site_video_2.source_id,
             "id": self.site_video_2.id,
@@ -2074,15 +2115,15 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.admin_user
         patch_response = self.view(patch_request)
-        self.site_profile.refresh_from_db()
-        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+        self.site_profile_current.refresh_from_db()
+        self.assertEqual(len(self.site_profile_current.sitevideo_set.all()),
                          len(patch_response.data.get('site_videos')))
 
     def test_patch_updates_site_videos_lists_updates_video_caption(self):
         new_caption = 'New analysis video caption.'
         site_video_1_data = {
             "caption": new_caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_1.source,
             "source_id": self.site_video_1.source_id,
             "id": self.site_video_1.id
