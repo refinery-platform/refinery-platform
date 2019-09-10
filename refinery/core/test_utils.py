@@ -46,9 +46,8 @@ class TestGetAbsoluteURL(TestCase):
                              'http://example.org')
 
     def test_get_absolute_url_with_empty_input(self):
-        with override_settings(SITE_ID=self.current_site.id):
-            self.assertEqual(get_absolute_url(None), None)
-            self.assertEqual(get_absolute_url(''), '')
+        with self.assertRaises(ValueError):
+            get_absolute_url(None)
 
     def test_get_absolute_url_with_invalid_current_site(self):
         Site.objects.all().delete()
