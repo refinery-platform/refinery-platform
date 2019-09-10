@@ -812,7 +812,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def test_get_with_study_uuid_returns_file_uuid_field(self):
         nodes = self.hg_19_data_set.get_nodes()
         file_node = nodes.filter(
-            name='s5_p42_E2_45min.fastq.gz'
+            type=Node.RAW_DATA_FILE, name='s5_p42_E2_45min.fastq.gz'
         )[0]
         file_item_uuid = file_node.file_item.uuid
 
