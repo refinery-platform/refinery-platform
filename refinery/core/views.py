@@ -1440,7 +1440,7 @@ class SiteProfileAPIView(APIView):
         :return: serialized site profile(s)
         """
         if request.query_params.get('current_site'):
-            if request.query_params.get('current_site') == 'true':
+            if request.query_params.get('current_site') == 'True':
                 try:
                     site_profile = SiteProfile.objects.get(
                         site=get_current_site(request)
@@ -1455,16 +1455,12 @@ class SiteProfileAPIView(APIView):
                     return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
                 serializer = SiteProfileSerializer(site_profile)
-            elif request.query_params.get('current_site') == 'false':
-                serializer = SiteProfileAPIView.all_site_profiles_serialized()
             else:
-                return Response(
-                    'The ?current parameter is a boolean: provide'
-                    ' one of true or false.',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                site_profiles = SiteProfile.objects.all()
+                serializer = SiteProfileSerializer(site_profiles, many=True)
         else:
-            serializer = SiteProfileAPIView.all_site_profiles_serialized()
+            site_profiles = SiteProfile.objects.all()
+            serializer = SiteProfileSerializer(site_profiles, many=True)
         return Response(serializer.data)
 
     def patch(self, request):
@@ -1527,12 +1523,6 @@ class SiteProfileAPIView(APIView):
         return Response(
             serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )
-
-    @staticmethod
-    def all_site_profiles_serialized():
-        site_profiles = SiteProfile.objects.all()
-        serializer = SiteProfileSerializer(site_profiles, many=True)
-        return serializer
 
 
 class UserProfileAPIView(APIView):

@@ -1922,7 +1922,9 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             view=SiteProfileAPIView.as_view()
         )
         self.current_site = Site.objects.get_current()
-        self.other_site = Site.objects.create(domain='google.com', name='test')
+        self.other_site = Site.objects.create(
+            domain='example.com', name='test'
+        )
         self.site_profile_current = SiteProfile.objects.create(
             site=self.current_site,
             about_markdown='About the platform paragraph.',
@@ -1961,17 +1963,6 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         self.get_request_no_params = self.factory.get(self.url_root)
 
-    def test_serializer_list_empty(self):
-        SiteProfile.objects.all().delete()
-        self.assertEqual(
-            len(SiteProfileAPIView.all_site_profiles_serialized().data), 0
-        )
-
-    def test_serializer_list(self):
-        self.assertEqual(
-            len(SiteProfileAPIView.all_site_profiles_serialized().data), 2
-        )
-
     def test_get_returns_404_status_for_missing_current_site_profile(self):
         SiteProfile.objects.all().delete()
         get_response = self.view(self.get_request_current_true)
@@ -1983,7 +1974,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(len(get_response.data), 0)
 
-    def test_get_returns_empty_for_no_params_missing_list(self):
+    def test_get_returns_empty_list_for_no_params_no_profiles(self):
         SiteProfile.objects.all().delete()
         get_response = self.view(self.get_request_no_params)
         self.assertEqual(get_response.status_code, 200)
@@ -1992,7 +1983,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def test_get_returns_list_for_no_params(self):
         get_response = self.view(self.get_request_no_params)
         self.assertEqual(get_response.status_code, 200)
-        self.assertEqual(len(get_response.data), 2)
+        self.assertGreater(len(get_response.data), 0)
 
     def test_get_returns_400_status_for_current_foo(self):
         SiteProfile.objects.all().delete()

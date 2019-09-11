@@ -41,11 +41,11 @@ describe('Common.service.siteProfileV2Service: unit tests', function () {
         .expectGET(
           refinerySettings.appRoot +
           refinerySettings.refineryApiV2 +
-          '/site_profiles/?current_site=true'
+          '/site_profiles/?current_site=True'
       ).respond(200, siteProfile);
 
       var results;
-      var promise = service.query({ current_site: 'true' }).$promise
+      var promise = service.query({ current_site: 'True' }).$promise
         .then(function (response) {
           results = response;
         });
