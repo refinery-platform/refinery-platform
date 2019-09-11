@@ -81,9 +81,9 @@
       function () {
         vm.groupCollection = fileService.groupCollection;
         vm.nodeSelection = fileService.nodeSelectCollection;
+        vm.selectionObj = nodeService.selectionObj;
       }
     );
-
 
     // When user selects/deselects row
     $scope.$watch(

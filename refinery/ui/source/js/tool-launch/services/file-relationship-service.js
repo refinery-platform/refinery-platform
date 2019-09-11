@@ -49,6 +49,7 @@
     vm.removeGroupFromCollections = removeGroupFromCollections;
     vm.resetInputGroup = resetInputGroup;
     vm.resetToolRelated = resetToolRelated;
+    vm.nodeSelectCount = 0; // only used for single depth lists
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
     /*
@@ -255,6 +256,7 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      vm.nodeSelectCount = 0;
       angular.copy({}, nodeService.selectionObj);
     }
 
@@ -272,6 +274,7 @@
       vm.inputFileTypes = [];
       vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
+      vm.nodeSelectCount = 0;
       angular.copy({}, nodeService.selectionObj);
     }
 
@@ -313,6 +316,10 @@
             break;
           }
         }
+      }
+       // Syncs up select all feature with individually selecting nodes in grid.
+      if (vm.currentTypes.length === 1 && vm.currentTypes[0] === 'LIST') {
+        vm.nodeSelectCount = vm.groupCollection[0][inputTypeUuid].length;
       }
     }
 
