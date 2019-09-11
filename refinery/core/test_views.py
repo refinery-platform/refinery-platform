@@ -1968,12 +1968,6 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.status_code, 404)
 
-    def test_get_returns_empty_for_not_current_missing_list(self):
-        SiteProfile.objects.all().delete()
-        get_response = self.view(self.get_request_current_false)
-        self.assertEqual(get_response.status_code, 200)
-        self.assertEqual(len(get_response.data), 0)
-
     def test_get_returns_empty_list_for_no_params_no_profiles(self):
         SiteProfile.objects.all().delete()
         get_response = self.view(self.get_request_no_params)
