@@ -1876,3 +1876,15 @@ class TakeOwnershipOfPublicDatasetViewTest(APIV2TestCase):
         post_request.user = self.user_owner
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 400)
+
+    @mock.patch("data_set_manager.views.build_absolute_url")
+    def test_take_ownership_returns_400_without_relative_url(self, mock_url):
+        def raise_error(file):
+            raise ValueError
+        mock_url.side_effect = raise_error
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(post_response.status_code, 400)
