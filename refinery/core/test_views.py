@@ -1982,7 +1982,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def test_get_returns_400_status_for_current_foo(self):
         SiteProfile.objects.all().delete()
         get_response = self.view(self.get_request_current_foo)
-        self.assertEqual(get_response.status_code, 400)
+        self.assertEqual(get_response.status_code, 200)
 
     def test_get_current_profile_returns_200_status_for_anon_user(self):
         get_response = self.view(self.get_request_current_true)
