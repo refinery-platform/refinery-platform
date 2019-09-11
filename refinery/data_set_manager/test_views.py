@@ -1880,7 +1880,7 @@ class TakeOwnershipOfPublicDatasetViewTest(APIV2TestCase):
     @mock.patch("data_set_manager.views.build_absolute_url")
     def test_take_ownership_returns_400_without_relative_url(self, mock_url):
         def raise_error(file):
-            raise ValueError
+            raise ValueError(str(file))
         mock_url.side_effect = raise_error
         post_request = self.factory.post(self.url_root,
                                          {'data_set_uuid': self.data_set.uuid},
