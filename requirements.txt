@@ -4,10 +4,9 @@ bioblend==0.9.0
 boto3==1.4.4
 celery==3.1.26.post2
 certifi==2018.11.29
-cffi==1.9.1
 codecov==2.0.11
 coverage==4.0.3
-cryptography==1.7.1
+cryptography==2.1.4
 Django==1.8.18
 django-celery==3.2.2
 django-chunked-upload==1.1.0
@@ -33,11 +32,8 @@ librabbitmq==2.0.0
 Markdown==2.2.1
 mock==2.0.0
 mockcache==1.0.2
-ndg-httpsclient==0.3.2
 networkx==1.7
 psycopg2-binary==2.7.4
-pyasn1==0.1.9
-pycparser==2.13
 Pygments==1.6rc1
 pyOpenSSL==17.5.0
 pysam==0.9.1.4
