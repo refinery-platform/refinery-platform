@@ -18,7 +18,8 @@
     var fileParam = {
       uuid: $window.externalAssayUuid,
       data_set_uuid: $window.dataSetUuid,
-      offset: 0
+      offset: 0,
+      filter_attribute: {}
     };
 
     var service = {
