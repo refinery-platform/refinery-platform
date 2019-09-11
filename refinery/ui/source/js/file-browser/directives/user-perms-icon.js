@@ -2,7 +2,7 @@
  * User Perms Icon Component
  * @namespace rpUserPermsIcon
  * @desc Component which displays a data set's permissions by users
- * @memberOf refineryApp.refineryToolLaunch
+ * @memberOf refineryApp.refineryFileBrowser
  */
 (function () {
   'use strict';
