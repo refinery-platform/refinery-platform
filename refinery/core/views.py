@@ -1439,25 +1439,22 @@ class SiteProfileAPIView(APIView):
         :param request: API request
         :return: serialized site profile(s)
         """
-        if request.query_params.get('current_site'):
-            if request.query_params.get('current_site') == 'True':
-                try:
-                    site_profile = SiteProfile.objects.get(
-                        site=get_current_site(request)
-                    )
-                except SiteProfile.DoesNotExist as e:
-                    logger.error("Site profile for the current "
-                                 "site does not exist.")
-                    return Response(str(e), status=status.HTTP_404_NOT_FOUND)
-                except SiteProfile.MultipleObjectsReturned as e:
-                    logger.error("Multiple site profiles for "
-                                 "current site error.")
-                    return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        current_site = request.query_params.get('current_site', None)
+        if current_site == 'True':
+            try:
+                site_profile = SiteProfile.objects.get(
+                    site=get_current_site(request)
+                )
+            except SiteProfile.DoesNotExist as e:
+                logger.error("Site profile for the current "
+                             "site does not exist.")
+                return Response(str(e), status=status.HTTP_404_NOT_FOUND)
+            except SiteProfile.MultipleObjectsReturned as e:
+                logger.error("Multiple site profiles for "
+                             "current site error.")
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
-                serializer = SiteProfileSerializer(site_profile)
-            else:
-                site_profiles = SiteProfile.objects.all()
-                serializer = SiteProfileSerializer(site_profiles, many=True)
+            serializer = SiteProfileSerializer(site_profile)
         else:
             site_profiles = SiteProfile.objects.all()
             serializer = SiteProfileSerializer(site_profiles, many=True)
