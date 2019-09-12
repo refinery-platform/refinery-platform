@@ -24,7 +24,6 @@ django-registration-redux==1.11
 djangorestframework==3.3.3
 djangorestframework-recursive==0.1.2
 django-storages==1.6.0
-djangular==0.3.0b1
 factory_boy==2.8.1
 flake8==2.5.4
 flower==0.9.1
