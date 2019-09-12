@@ -313,6 +313,7 @@ class Tool(OwnableResource):
                     str(self.container_input_json_url)
                 )
             )
+            return None
         except RuntimeError:
             logger.error('Could not build URL for {}'.format(
                     str(self.container_input_json_url)
