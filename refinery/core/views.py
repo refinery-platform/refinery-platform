@@ -2,7 +2,7 @@ import csv
 from datetime import timedelta
 import json
 import logging
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import uuid
 from xml.parsers.expat import ExpatError
 
@@ -327,7 +327,7 @@ def doi(request, id):
     # This encoding is needed because forward slashes cause 404 errors even
     # when they are URL encoded as they are still regarded as forward
     # slashes.
-    id = urllib.unquote(id).decode('utf8')
+    id = urllib.parse.unquote(id).decode('utf8')
     id = id.replace('$', '/')
     url = "https://doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
@@ -380,7 +380,7 @@ def pubmed_search(request, term):
     Example:
     https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1&term=10.1093%2Fbioinformatics%2Fbtu707
     """
-    term = urllib.unquote(term).decode('utf8')
+    term = urllib.parse.unquote(term).decode('utf8')
     term = term.replace('$', '/')
 
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"

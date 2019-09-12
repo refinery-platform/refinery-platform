@@ -2,7 +2,7 @@ import json
 import os
 import re
 import sys
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -93,7 +93,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _ask_for_confirmation():
-        return raw_input("Are you sure you want to `--force`? This will "
+        return input("Are you sure you want to `--force`? This will "
                          "delete any existing ToolDefinitions with the "
                          "same name as any new ones you're trying to "
                          "import: [y/n]: ")

@@ -146,7 +146,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                     data[key].add(constants.NOT_AVAILABLE)
 
         # iterate over all keys in data and join sets into strings
-        for key, value in data.iteritems():
+        for key, value in data.items():
             if type(value) is set:
                 data[key] = " + ".join(i for i in sorted(value))
 

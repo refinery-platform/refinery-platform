@@ -44,6 +44,7 @@ class refinery::python (
     ensure  => present,
     owner   => $app_user,
     group   => $app_group,
+    version => '3.7',
     require => [
       Package[
         $base_dependencies,

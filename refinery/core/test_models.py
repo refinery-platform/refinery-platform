@@ -246,7 +246,7 @@ class AnalysisTests(TestCase):
         self.assertEqual(self.analysis_status.galaxy_file_import_state(), [])
 
     def test_facet_name(self):
-        self.assertRegexpMatches(
+        self.assertRegex(
             self.analysis_with_node_analyzed_further.facet_name(),
             'REFINERY_ANALYSIS_UUID_' + r'\d+_\d+' + '_s'
         )
@@ -774,16 +774,16 @@ class EventTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(self.user)
-        self.pre_re = u'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
-        self.post_re = u' data set Test DataSet - [0-9a-f-]+$'
+        self.pre_re = '^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
+        self.post_re = ' data set Test DataSet - [0-9a-f-]+$'
 
     def test_data_set_create(self):
         create_dataset_with_necessary_models()
         events = Event.objects.all()
         self.assertEqual(len(events), 1)
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(events[0]),
-            self.pre_re + u'created data set Test DataSet - [0-9a-f-]+$'
+            self.pre_re + 'created data set Test DataSet - [0-9a-f-]+$'
         )
 
     # DataSetPermissionsUpdateTests covers data_set_permissions_change.
@@ -802,11 +802,11 @@ class EventTests(TestCase):
 
         events = Event.objects.all()
         self.assertEqual(len(events), 2)
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(events[0]),
             self.pre_re + r'created' + self.post_re
         )
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(events[1]),
             self.pre_re +
             r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' +
@@ -821,14 +821,14 @@ class EventTests(TestCase):
 
         events = Event.objects.all()
         self.assertEqual(len(events), 2)
-        self.assertRegexpMatches(
-            unicode(events[0]),
-            self.pre_re + u'created' + self.post_re
+        self.assertRegex(
+            str(events[0]),
+            self.pre_re + 'created' + self.post_re
         )
-        self.assertRegexpMatches(
-            unicode(events[1]),
+        self.assertRegex(
+            str(events[1]),
             self.pre_re +
-            u'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
+            'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
             self.post_re
         )
 
@@ -866,7 +866,7 @@ class EventTests(TestCase):
         self.assertEqual(
             event.get_details_as_dict(),
             {
-                u'display_name': tool.display_name
+                'display_name': tool.display_name
             }
         )
 

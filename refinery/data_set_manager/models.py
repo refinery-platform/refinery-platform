@@ -73,13 +73,13 @@ class NodeCollection(models.Model):
 
     def __unicode__(self):
         return (
-            unicode(self.identifier) +
+            str(self.identifier) +
             (
                 ": " +
-                unicode(self.title) if unicode(self.title) != "" else ""
+                str(self.title) if str(self.title) != "" else ""
             ) +
             ": " +
-            unicode(self.id)
+            str(self.id)
         )
 
     def normalize_date(self, dateString):
@@ -120,7 +120,7 @@ class Publication(models.Model):
     status_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.authors) + ": " + unicode(self.title)
+        return str(self.authors) + ": " + str(self.title)
 
 
 class Contact(models.Model):
@@ -142,11 +142,11 @@ class Contact(models.Model):
 
     def __unicode__(self):
         return (
-            unicode(self.first_name) +
+            str(self.first_name) +
             " " +
-            unicode(self.last_name) +
+            str(self.last_name) +
             " (" +
-            unicode(self.email) +
+            str(self.email) +
             ")"
         )
 
@@ -281,7 +281,7 @@ class Ontology(models.Model):
     description = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.name) + " (" + unicode(self.file_name) + ")"
+        return str(self.name) + " (" + str(self.file_name) + ")"
 
 
 class Study(NodeCollection):
@@ -304,7 +304,7 @@ class Study(NodeCollection):
         return data_set
 
     def __unicode__(self):
-        return unicode(self.identifier) + ": " + unicode(self.title)
+        return str(self.identifier) + ": " + str(self.title)
 
 
 @receiver(pre_delete, sender=Study)
@@ -328,7 +328,7 @@ class Design(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.type)
+        return str(self.type)
 
 
 class Factor(models.Model):
@@ -340,7 +340,7 @@ class Factor(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.name) + ": " + unicode(self.type)
+        return str(self.name) + ": " + str(self.type)
 
 
 class Assay(models.Model):
@@ -360,15 +360,15 @@ class Assay(models.Model):
     def __unicode__(self):
         retstr = ""
         if self.measurement:
-            retstr += "Measurement: %s; " % unicode(self.measurement)
+            retstr += "Measurement: %s; " % str(self.measurement)
 
         if self.technology:
-            retstr += "Technology: %s; " % unicode(self.technology)
+            retstr += "Technology: %s; " % str(self.technology)
 
         if self.platform:
-            retstr += "Platform: %s; " % unicode(self.platform)
+            retstr += "Platform: %s; " % str(self.platform)
 
-        retstr += "File: %s" % unicode(self.file_name)
+        retstr += "File: %s" % str(self.file_name)
         return retstr
 
 
@@ -393,7 +393,7 @@ class Protocol(models.Model):
     # protocol components: via FK
 
     def __unicode__(self):
-        return unicode(self.name) + ": " + unicode(self.type)
+        return str(self.name) + ": " + str(self.type)
 
     class Meta:
         ordering = ['id']
@@ -513,11 +513,11 @@ class Node(models.Model):
     workflow_output = models.CharField(null=True, blank=False, max_length=500)
 
     def __unicode__(self):
-        return unicode(self.type) + ": " + unicode(self.name) + " (" +\
-               unicode(self.parents.count()) + " parents, " +\
-               unicode(self.children.count()) + " children " + "| " +\
-               "species: " + unicode(self.species) +\
-               ", genome build: " + unicode(self.genome_build) + ")"
+        return str(self.type) + ": " + str(self.name) + " (" +\
+               str(self.parents.count()) + " parents, " +\
+               str(self.children.count()) + " children " + "| " +\
+               "species: " + str(self.species) +\
+               ", genome build: " + str(self.genome_build) + ")"
 
     def add_child(self, node):
         if node is None:
@@ -726,13 +726,13 @@ class Attribute(models.Model):
 
     def __unicode__(self):
         return (
-            unicode(self.type) + (
-                "" if self.subtype is None else " (" + unicode(
+            str(self.type) + (
+                "" if self.subtype is None else " (" + str(
                     self.subtype
                 ) + ")"
             ) +
             " = " +
-            unicode(self.value)
+            str(self.value)
         )
 
 
@@ -755,7 +755,7 @@ class AttributeOrder(models.Model):
     is_internal = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return unicode(
+        return str(
             self.solr_field +
             " [facet = " +
             str(self.is_facet) +
@@ -809,7 +809,7 @@ class AnnotatedNode(models.Model):
     is_annotation = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return unicode(self.node_uuid)
+        return str(self.node_uuid)
 
 
 def _is_internal_attribute(attribute):
@@ -964,7 +964,7 @@ class ProtocolReference(models.Model):
     comment = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.protocol) + " (reference)"
+        return str(self.protocol) + " (reference)"
 
 
 class ProtocolReferenceParameter(models.Model):
@@ -978,4 +978,4 @@ class ProtocolReferenceParameter(models.Model):
     value_source = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
-        return unicode(self.name) + " = " + unicode(self.value)
+        return str(self.name) + " = " + str(self.value)

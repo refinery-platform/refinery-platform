@@ -3,7 +3,7 @@ Created on Feb 20, 2012
 
 @author: nils
 '''
-from __future__ import absolute_import
+
 
 import ast
 from collections import defaultdict
@@ -13,7 +13,7 @@ import logging
 import os
 import smtplib
 import socket
-from urlparse import urljoin
+from urllib.parse import urljoin
 import uuid as uuid_lib
 
 from django import forms
@@ -102,7 +102,7 @@ class UserProfile(models.Model):
         except (Tutorials.DoesNotExist,
                 Tutorials.MultipleObjectsReturned) as exc:
             logger.error('Failed to get Tutorial for UserProfile %s: %s',
-                         unicode(self), exc)
+                         str(self), exc)
 
     def has_viewed_collaboration_tut(self):
         try:
@@ -111,7 +111,7 @@ class UserProfile(models.Model):
         except (Tutorials.DoesNotExist,
                 Tutorials.MultipleObjectsReturned) as exc:
             logger.error('Failed to get Tutorial for UserProfile %s: %s',
-                         unicode(self), exc)
+                         str(self), exc)
 
 
 def get_user_import_dir(user):
@@ -337,7 +337,7 @@ class OwnableResource(BaseResource):
             attach_perms=True,
             with_group_users=False
         )
-        for user, permission in user_permissions.iteritems():
+        for user, permission in user_permissions.items():
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
         return None
@@ -396,7 +396,7 @@ class SharableResource(OwnableResource):
                 owner = User.objects.get(id=perms[0].user_id)
             except (User.DoesNotExist, User.MultipleObjectsReturned) as exc:
                 logger.error("Error finding user with owner perms %s: %s",
-                             unicode(perms[0]), exc)
+                             str(perms[0]), exc)
 
         return owner
 
@@ -435,14 +435,14 @@ class SharableResource(OwnableResource):
 
         groups = []
 
-        for group_object, permission_list in permissions.items():
+        for group_object, permission_list in list(permissions.items()):
             group = {}
             try:
                 group["group"] = ExtendedGroup.objects.get(id=group_object.id)
             except (ExtendedGroup.DoesNotExist,
                     ExtendedGroup.MultipleObjectsReturned) as exc:
                 logger.error('Failed to get ExtendedGroup for Group %s: %s',
-                             unicode(group_object), exc)
+                             str(group_object), exc)
             else:
                 group["uuid"] = group["group"].uuid
                 group["id"] = group["group"].id
@@ -481,7 +481,7 @@ class SharableResource(OwnableResource):
     def is_public(self):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
-        for group_object, permission_list in permissions.items():
+        for group_object, permission_list in list(permissions.items()):
             if ExtendedGroup.objects.public_group().id == group_object.id:
                 for permission in permission_list:
                     if permission.startswith("change"):
@@ -525,7 +525,7 @@ class ManageableResource(models.Model):
         # ownership is determined by "add" permission
         group_permissions = get_groups_with_perms(self, attach_perms=True)
 
-        for group, permission in group_permissions.iteritems():
+        for group, permission in group_permissions.items():
             if "add_%s" % self._meta.verbose_name in permission:
                 return group.extendedgroup
 
@@ -561,9 +561,9 @@ class DataSet(SharableResource):
 
     def __unicode__(self):
         return (
-            unicode(self.name) + u' - ' +
-            unicode(self.get_owner_username()) + u' - ' +
-            unicode(self.summary)
+            str(self.name) + ' - ' +
+            str(self.get_owner_username()) + ' - ' +
+            str(self.summary)
         )
 
     def save(self, *args, **kwargs):
@@ -709,7 +709,7 @@ class DataSet(SharableResource):
 
         update_data_set_index(self)
         invalidate_cached_object(self)
-        user_ids = map(lambda user: user.id, group.user_set.all())
+        user_ids = [user.id for user in group.user_set.all()]
 
         # We need to give the anonymous user read access too.
         if group.id == ExtendedGroup.objects.public_group().id:
@@ -898,7 +898,7 @@ class InvestigationLink(models.Model):
                 NodeCollection.MultipleObjectsReturned) as exc:
             logger.error('Failed to get NodeCollection for '
                          'Investigation %s: %s',
-                         unicode(self.investigation), exc)
+                         str(self.investigation), exc)
             return None
 
 
@@ -1405,7 +1405,7 @@ class Analysis(OwnableResource):
                     FileStoreItem.MultipleObjectsReturned) as exc:
                 logger.error('Failed to get FileStoreItem for '
                              'AnalysisResult %s: %s',
-                             unicode(analysis_result), exc)
+                             str(analysis_result), exc)
 
     def terminate_file_import_tasks(self):
         """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
@@ -1467,7 +1467,7 @@ class Analysis(OwnableResource):
             )
         # Associate the AnalysisNodeConnections with their respective
         # AnalysisResults
-        for output_connections in distinct_filenames_map.values():
+        for output_connections in list(distinct_filenames_map.values()):
             for index, output_connection in enumerate(output_connections):
                 analysis_result = None
                 if output_connection.is_refinery_file:
@@ -1570,7 +1570,7 @@ class Analysis(OwnableResource):
                         FileStoreItem.MultipleObjectsReturned) as exc:
                     logger.error('Failed to get FileStoreItem for '
                                  'AnalysisResult %s: %s',
-                                 unicode(analysis_result), exc)
+                                 str(analysis_result), exc)
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
                     output_connection, analysis_result.file_store_uuid,
@@ -1764,10 +1764,7 @@ def get_shared_groups(user1, user2, include_public_group=False):
     shared_groups = list(set(user1.groups.all()) & set(user2.groups.all()))
 
     if not include_public_group:
-        return filter(
-            lambda eg: eg != ExtendedGroup.objects.public_group(),
-            [g.extendedgroup for g in shared_groups]
-        )
+        return [eg for eg in [g.extendedgroup for g in shared_groups] if eg != ExtendedGroup.objects.public_group()]
 
     return [g.extendedgroup for g in shared_groups]
 
@@ -1847,7 +1844,7 @@ def create_manager_group(sender, instance, created, **kwargs):
         # (but don't create manager groups for manager groups ...)
         post_save.disconnect(create_manager_group, sender=ExtendedGroup)
         instance.manager_group = ExtendedGroup.objects.create(
-            name=unicode(".Managers " + instance.uuid)
+            name=str(".Managers " + instance.uuid)
         )
         instance.save()
         instance.manager_group.save()
@@ -2133,9 +2130,9 @@ class SiteStatistics(models.Model):
         def get_aggregate_sum(field_name):
             if not aggregates:
                 return getattr(self, field_name)
-            return SiteStatistics.objects.filter(
+            return list(SiteStatistics.objects.filter(
                 run_date__lte=self.run_date
-            ).aggregate(Sum(field_name)).values()[0]
+            ).aggregate(Sum(field_name)).values())[0]
 
         return [
             self.pk, get_aggregate_sum("datasets_shared"),
@@ -2423,13 +2420,13 @@ class Event(models.Model):
                 elif self.sub_type == Event.ANALYSIS_DELETION:
                     return self.render_data_set_analysis_deletion()
                 else:
-                    raise StandardError(
+                    raise Exception(
                         'Invalid event sub-type for data_set: {}'.format(
                             self.sub_type
                         )
                     )
             else:
-                raise StandardError(
+                raise Exception(
                     'Invalid event type for data_set: {}'.format(self.type)
                 )
         elif self.group is not None and self.data_set is None:
@@ -2453,17 +2450,17 @@ class Event(models.Model):
                 elif self.sub_type == Event.USER_REMOVAL:
                     return self.render_group_user_removal()
                 else:
-                    raise StandardError(
+                    raise Exception(
                         'Invalid event sub-type for group: {}'.format(
                             self.sub_type
                         )
                     )
             else:
-                raise StandardError(
+                raise Exception(
                     'Invalid event type for group: {}'.format(self.type)
                 )
         else:
-            raise StandardError(
+            raise Exception(
                 'Expected exactly one of data_set and group to be not None, '
                 'instead data_set="{}" and group="{}"'.format(
                     self.data_set, self.group

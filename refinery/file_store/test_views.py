@@ -26,7 +26,7 @@ class FileStoreItemAPITests(APITestCase):
         expected_response = FileStoreItemSerializer(self.item)
         request = self.factory.get(self.url_root + self.item.uuid + '/')
         response = self.view(request, self.item.uuid)
-        response_keys = response.data.keys()
+        response_keys = list(response.data.keys())
         for field in response_keys:
             self.assertEqual(response.data[field],
                              expected_response.data[field])

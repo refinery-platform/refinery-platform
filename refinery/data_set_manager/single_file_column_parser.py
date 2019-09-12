@@ -78,7 +78,7 @@ class SingleFileColumnParser:
             logger.exception("Unable to read file %s", str(self.metadata_file))
             raise
         # compute number of columns
-        self.headers = self.metadata_reader.next()
+        self.headers = next(self.metadata_reader)
         self.num_columns = len(self.headers)
         # data file reference converter
         self.file_source_translator = file_source_translator
@@ -413,11 +413,11 @@ def process_metadata_table(
                 DataSet.MultipleObjectsReturned) as e:
             logger.error('DataSet for uuid %s not fetched and thus not '
                          'updated with revised investigation %s: %s',
-                         existing_data_set_uuid, unicode(investigation), e)
+                         existing_data_set_uuid, str(investigation), e)
             raise type(e)(
                 'DataSet for uuid {} not fetched and thus not '
                 'updated with revised investigation {}'.format(
-                    existing_data_set_uuid, unicode(investigation)
+                    existing_data_set_uuid, str(investigation)
                 )
             )
         else:

@@ -1,10 +1,10 @@
-from __future__ import division
+
 import contextlib
 import os
 import tempfile
 import threading
-import urllib2
-import urlparse
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 
 from django.conf import settings
 
@@ -214,7 +214,7 @@ class FileImportTask(celery.Task):
         # move the file from temp dir into file store dir
         storage = SymlinkedFileSystemStorage()
         # remove query string from URL before extracting file name
-        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        source_file_name = os.path.basename(urllib.parse.urlparse(source_url).path)
         file_store_name = storage.get_name(source_file_name)
         file_store_path = storage.path(file_store_name)
 
@@ -222,7 +222,7 @@ class FileImportTask(celery.Task):
                      source_url, file_store_path)
         make_dir(os.path.dirname(file_store_path))
         try:
-            with contextlib.closing(urllib2.urlopen(source_url,
+            with contextlib.closing(urllib.request.urlopen(source_url,
                                                     timeout=30)) as response, \
                     open(file_store_path, 'wb') as destination:
                 copy_file_object(response, destination,
@@ -241,13 +241,13 @@ class FileImportTask(celery.Task):
         """Download file from URL and upload to MEDIA_BUCKET"""
         storage = S3MediaStorage()
         # remove query string from URL before extracting file name
-        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        source_file_name = os.path.basename(urllib.parse.urlparse(source_url).path)
         file_store_name = storage.get_name(source_file_name)
 
         logger.debug("Transferring from '%s' to 's3://%s/%s'",
                      source_url, settings.MEDIA_BUCKET, file_store_name)
         try:
-            with contextlib.closing(urllib2.urlopen(source_url, timeout=30)) \
+            with contextlib.closing(urllib.request.urlopen(source_url, timeout=30)) \
                     as response:
                 upload_file_object(
                     response, settings.MEDIA_BUCKET, file_store_name,

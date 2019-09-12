@@ -3,7 +3,7 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-import urlparse
+import urllib.parse
 
 from django.conf import settings
 
@@ -478,7 +478,7 @@ def _get_galaxy_download_task_ids(analysis):
             result_name = "{}.{}".format(results['name'], file_extension)
             # size of file defined by galaxy
             file_size = results['file_size']
-            file_store_item = FileStoreItem(source=urlparse.urljoin(
+            file_store_item = FileStoreItem(source=urllib.parse.urljoin(
                 galaxy_instance.base_url,
                 "datasets/{}/display?to_ext=txt".format(results['dataset_id'])
             ))

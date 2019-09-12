@@ -1,6 +1,6 @@
 import json
 import logging
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 import uuid
 from django.contrib.auth.hashers import make_password
@@ -69,7 +69,7 @@ class UserFileAPITests(APITestCase):
             'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
                 'fake-filename',
             'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
-                u'handles\u2013unicode'
+                'handles\u2013unicode'
             # Just want to exercise "_Characteristics" and "_Factor_Value":
             # Doesn't matter if the names are backwards.
         }
@@ -161,7 +161,7 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_obj(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(query.keys(), ['json', 'params'])
+        self.assertItemsEqual(list(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_user_returns_params(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
@@ -176,7 +176,7 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_json_facet(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(query.get('json').get('facet').keys(),
+        self.assertItemsEqual(list(query.get('json').get('facet').keys()),
                               ['antibody_Characteristics_generic_s',
                                'technology_Characteristics_generic_s',
                                'cell_type_Characteristics_generic_s',

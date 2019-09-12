@@ -1,5 +1,5 @@
 import os
-from urlparse import urljoin
+from urllib.parse import urljoin
 import uuid
 
 from django.conf import settings

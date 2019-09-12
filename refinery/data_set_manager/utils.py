@@ -11,7 +11,7 @@ import logging
 import shutil
 import tempfile
 import time
-import urlparse
+import urllib.parse
 
 from django.conf import settings
 from django.db.models import Q
@@ -40,8 +40,8 @@ MAX_BULK_LIST_SIZE = 75
 # make a list of values unique
 def uniquify(seq):
     set = {}
-    map(set.__setitem__, seq, [])
-    return set.keys()
+    list(map(set.__setitem__, seq, []))
+    return list(set.keys())
 
 
 # for an assay declaration (= assay file in a study)
@@ -296,7 +296,7 @@ def update_annotated_nodes(
 
     # To avoid exponential node creation, count the number of nodes to be
     # created first.
-    for node_id, node in nodes.iteritems():
+    for node_id, node in nodes.items():
         total_unique_attrs += len(
             nodes[node_id]["attributes"]
         )
@@ -307,7 +307,7 @@ def update_annotated_nodes(
             total_attrs += u_len
     if total_attrs == total_unique_attrs * num_nodes_of_type \
             and len([
-                n for n in nodes.values() if n['type'] == 'Sample Name'
+                n for n in list(nodes.values()) if n['type'] == 'Sample Name'
             ]) > 1:
         # This should exclude CSV imports
         # TODO: Not happy about this hack at all.
@@ -318,7 +318,7 @@ def update_annotated_nodes(
 
         logger.error(error_message)
 
-    for node_id, node in nodes.iteritems():
+    for node_id, node in nodes.items():
         if node["type"] == node_type:
             bulk_list, counter = _create_annotated_node_objs(
                 bulk_list,
@@ -405,7 +405,7 @@ def _add_annotated_nodes(
     counter = 0
     bulk_list = []
 
-    for node_id, node in nodes.iteritems():
+    for node_id, node in nodes.items():
         if node["type"] == node_type:
             if node["uuid"] in node_uuids:
                 bulk_list, num_created = _create_annotated_node_objs(
@@ -549,7 +549,7 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
         }
 
     if facet_filter:
-        if isinstance(facet_filter, unicode):
+        if isinstance(facet_filter, str):
             facet_filter = urlunquote(facet_filter)
             try:
                 facet_filter = json.loads(facet_filter)
@@ -666,7 +666,7 @@ def generate_filtered_facet_fields(attributes):
         field_limit_list.append(field.get("solr_field"))
 
     # add refinery_datafile_s index here
-    field_limit_list.insert(0, unicode(NodeIndex.DATAFILE, "utf-8"))
+    field_limit_list.insert(0, str(NodeIndex.DATAFILE, "utf-8"))
 
     return {'facet_field': facet_field,
             'field_limit': field_limit_list}
@@ -679,7 +679,7 @@ def search_solr(encoded_params, core):
         core: Specify which node
     """
     url_portion = '/'.join([core, "select"])
-    url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+    url = urllib.parse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.post(url,
                                   json=encoded_params.get('json'),
                                   params=encoded_params.get('params'))
@@ -761,7 +761,7 @@ def create_facet_field_counts(facet_fields):
     # buckets with an array of objects {count: int, val: str}
 
     facet_field_counts = {}
-    for field_name, count_obj in facet_fields.iteritems():
+    for field_name, count_obj in facet_fields.items():
         if field_name == 'count':
             continue
         count_array = count_obj.get('buckets')
@@ -962,7 +962,7 @@ def fix_last_column(file):
     tempfilename = tempfile.NamedTemporaryFile().name
     writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
     # check that all rows have the same length
-    header = reader.next()
+    header = next(reader)
     header_length = len(header)
     num_empty_cols = 0  # number of empty header columns
     # TODO: throw exception if there is an empty field in the header between

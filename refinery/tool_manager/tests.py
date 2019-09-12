@@ -1,8 +1,8 @@
-import StringIO
+import io
 import ast
 import json
 import logging
-from urlparse import urljoin
+from urllib.parse import urljoin
 import uuid
 
 from django.conf import settings
@@ -26,7 +26,7 @@ from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
+from .test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_dataset_provenance_1,
                                     galaxy_datasets_list,
                                     galaxy_datasets_list_same_output_names,
@@ -199,7 +199,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         self.create_mock_file_relationships()
 
-        test_file = StringIO.StringIO()
+        test_file = io.StringIO()
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(
             source='http://www.example.com/test_file.txt'
@@ -483,7 +483,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         )
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
-        test_file = StringIO.StringIO()
+        test_file = io.StringIO()
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(source=source)
 
@@ -667,10 +667,10 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         for tool_definition in self.get_response.data:
             for parameter in tool_definition[ToolDefinition.PARAMETERS]:
                 if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
-                    self.assertIn("galaxy_workflow_step", parameter.keys())
+                    self.assertIn("galaxy_workflow_step", list(parameter.keys()))
                 elif (tool_definition["tool_type"] ==
                       ToolDefinition.VISUALIZATION):
-                    self.assertNotIn("galaxy_workflow_step", parameter.keys())
+                    self.assertNotIn("galaxy_workflow_step", list(parameter.keys()))
 
     def test_request_from_owned_dataset_shows_all_tool_defs(self):
         self.assertNotEqual(len(self.get_response.data), 0)
@@ -1499,7 +1499,7 @@ class ToolTests(ToolManagerTestBase):
             self.tool.get_galaxy_dict(),
             {
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                    unicode(
+                    str(
                         self.tool.get_galaxy_file_relationships()
                     ).replace("'", '"')
                 ),
@@ -2077,7 +2077,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
-            self.assertRegexpMatches(str(task_id), constants.UUID_RE)
+            self.assertRegex(str(task_id), constants.UUID_RE)
 
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
@@ -2132,7 +2132,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.tool.get_galaxy_dict()[
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY
             ],
-            unicode(
+            str(
                 self.tool.get_galaxy_file_relationships()
             ).replace("'", '"')
         )
@@ -2154,8 +2154,8 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         parameters_dict = self.tool._create_workflow_parameters_dict()
         parameters_dict_with_uuids = {}
-        for key in parameters_dict.keys():
-            for k in parameters_dict[key].keys():
+        for key in list(parameters_dict.keys()):
+            for k in list(parameters_dict[key].keys()):
                 parameters_dict_with_uuids[
                     str(GalaxyParameter.objects.get(name=k).uuid)
                 ] = str(parameters_dict[key][k])
@@ -2164,15 +2164,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.tool.get_tool_launch_config(),
             {
                 self.tool.FILE_UUID_LIST: [self.node.file_item.uuid],
-                u"dataset_uuid": self.dataset.uuid,
-                u"tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: u"[{}]".format(self.node.uuid),
+                "dataset_uuid": self.dataset.uuid,
+                "tool_definition_uuid": self.td.uuid,
+                Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
                 self.tool.FILE_RELATIONSHIPS_URLS:
-                    u"['http://www.example.com/test_file.txt']",
+                    "['http://www.example.com/test_file.txt']",
                 ToolDefinition.PARAMETERS: parameters_dict_with_uuids,
                 WorkflowTool.GALAXY_DATA: {
                     WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                        unicode(
+                        str(
                             self.tool.get_galaxy_file_relationships()
                         ).replace("'", '"')
                     ),
@@ -2875,7 +2875,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             'uuid': self.tool.uuid
         }
 
-        for key in expected_response_fields.keys():
+        for key in list(expected_response_fields.keys()):
             self.assertEqual(
                 dict(self.get_response.data[0])[key],
                 expected_response_fields[key]
@@ -2883,7 +2883,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
     def test_vis_tools_returned_are_from_a_single_dataset(self):
         vis_tools_to_create = 3
-        for i in xrange(vis_tools_to_create):
+        for i in range(vis_tools_to_create):
             self.create_tool(ToolDefinition.VISUALIZATION,
                              create_unique_name=True)
 
@@ -2903,7 +2903,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
 
     def _create_workflow_and_vis_tools(self, number_to_create=2):
-        for i in xrange(number_to_create):
+        for i in range(number_to_create):
             self.create_tool(ToolDefinition.VISUALIZATION,
                              create_unique_name=True)
             self.create_tool(ToolDefinition.WORKFLOW,
@@ -3082,7 +3082,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertEqual(
             self.tool.analysis.workflow_steps_num,
-            len(galaxy_workflow_dict["steps"].keys())
+            len(list(galaxy_workflow_dict["steps"].keys()))
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):
@@ -3521,7 +3521,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(tool_name.strip(), self.tool.get_tool_name())
         self.assertEqual(username.strip(),
                          self.tool.get_owner_username().title())
-        self.assertRegexpMatches(
+        self.assertRegex(
             timestamp,
             r'\d{4}\/\d{2}\/\d{1,2}\s\d{1,2}:\d{2}:\d{2}'
         )

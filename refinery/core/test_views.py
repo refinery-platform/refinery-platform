@@ -4,7 +4,7 @@ import json
 import random
 import string
 import uuid as uuid_lib
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from cuser.middleware import CuserMiddleware
 from django.conf import settings
@@ -66,7 +66,7 @@ class APIV2TestCase(APITestCase):
 class DataSetApiV2Tests(APIV2TestCase):
     def create_rand_str(self, count):
         return ''.join(
-            random.choice(string.ascii_lowercase) for _ in xrange(count)
+            random.choice(string.ascii_lowercase) for _ in range(count)
         )
 
     def setUp(self):
@@ -727,7 +727,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
         email = view_set.send_transfer_notification_email(self.user,
                                                           new_owner, groups)
-        self.assertEquals(email.to, [new_owner_email, self.user.email])
+        self.assertEqual(email.to, [new_owner_email, self.user.email])
 
     def test_send_transfer_notification_email_sends_names(self):
         new_owner_email = 'new_owner@example.com'

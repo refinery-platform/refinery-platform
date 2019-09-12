@@ -643,7 +643,7 @@ class IsaTabParser:
                                           dialect="excel-tab")
         # read column headers
         headers = []
-        headers = self._current_reader.next()
+        headers = next(self._current_reader)
 
         try:
             headers.remove("")

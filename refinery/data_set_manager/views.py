@@ -9,7 +9,7 @@ import logging
 import os
 import shutil
 import traceback
-import urlparse
+import urllib.parse
 import tempfile
 
 from django import forms
@@ -186,7 +186,7 @@ def import_by_file(file_obj):
 def import_by_url(url):
     # TODO: replace with chain
     # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-    parsed_url = urlparse.urlparse(url)
+    parsed_url = urllib.parse.urlparse(url)
     file_name = parsed_url.path.split('/')[-1]
     temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
     try:
@@ -249,7 +249,7 @@ class ProcessISATabView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
-        u = urlparse.urlparse(url)
+        u = urllib.parse.urlparse(url)
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
         try:
@@ -623,7 +623,7 @@ class CheckDataFilesView(View):
                 uploaded_s3_key_list.append(s3_object.key)
 
         for input_file_path in input_file_list:
-            if not isinstance(input_file_path, unicode):
+            if not isinstance(input_file_path, str):
                 bad_file_list.append(input_file_path)
                 logger.error("Uploaded file path '%s' is not a string",
                              input_file_path)

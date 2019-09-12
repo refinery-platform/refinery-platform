@@ -1,4 +1,4 @@
-from StringIO import StringIO
+from io import StringIO
 import contextlib
 import logging
 import json
@@ -430,8 +430,8 @@ class UtilitiesTests(TestCase):
                         'TYPE': ['Raw Data File']}
         facet_field_query = create_facet_filter_query(facet_filter)
         self.assertEqual(facet_field_query,
-                         [u'{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',
-                          u'{!tag=AUTHOR}Author:(Vezza OR McConnell)'])
+                         ['{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',
+                          '{!tag=AUTHOR}Author:(Vezza OR McConnell)'])
 
     def test_hide_fields_from_list(self):
         weighted_list = [{'solr_field': 'uuid'},
@@ -484,7 +484,7 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_facet(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query['json']['facet'].keys(),
+        self.assertItemsEqual(list(query['json']['facet'].keys()),
                               ['Analysis', 'Cell Line', 'Cell Type',
                                'Group Name', 'Organism', 'Type'])
 
@@ -513,7 +513,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(query.keys(), ['json', 'params'])
+        self.assertItemsEqual(list(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_assay_with_params_returns_params(self):
         parameter_dict = {'limit': 7, 'offset': 2,
@@ -540,7 +540,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(query['json']['facet'].keys(),
+        self.assertItemsEqual(list(query['json']['facet'].keys()),
                               ['cats', 'dog', 'horse', 'mouse'])
 
     def test_generate_solr_params_params_returns_json_fields(self):
@@ -700,53 +700,53 @@ class UtilitiesTests(TestCase):
             formatted_response,
             {
                 'facet_field_counts': {
-                    u'REFINERY_SUBANALYSIS_16_82_s': [
-                        {'name': u'-1', 'count': 16}
+                    'REFINERY_SUBANALYSIS_16_82_s': [
+                        {'name': '-1', 'count': 16}
                     ],
-                    u'REFINERY_TYPE_16_82_s': [
-                        {'name': u'Array Data File', 'count': 14},
-                        {'name': u'Derived Array Data File', 'count': 2}
+                    'REFINERY_TYPE_16_82_s': [
+                        {'name': 'Array Data File', 'count': 14},
+                        {'name': 'Derived Array Data File', 'count': 2}
                     ],
-                    u'REFINERY_WORKFLOW_OUTPUT_16_82_s': [
-                        {'name': u'N/A', 'count': 16}
+                    'REFINERY_WORKFLOW_OUTPUT_16_82_s': [
+                        {'name': 'N/A', 'count': 16}
                     ],
-                    u'organism_Characteristics_16_82_s': [
-                        {'name': u'Danio', 'count': 16}
+                    'organism_Characteristics_16_82_s': [
+                        {'name': 'Danio', 'count': 16}
                     ]
                 },
                 'attributes': [
                     {
                         'attribute_type': 'Internal',
                         'display_name': 'Analysis Group',
-                        'file_ext': u's',
-                        'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'
+                        'file_ext': 's',
+                        'internal_name': 'REFINERY_SUBANALYSIS_16_82_s'
                     },
                     {
                         'attribute_type': 'Internal',
                         'display_name': 'Output Type',
-                        'file_ext': u's',
-                        'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'
+                        'file_ext': 's',
+                        'internal_name': 'REFINERY_WORKFLOW_OUTPUT_16_82_s'
                     },
                     {
                         'attribute_type': 'Characteristics',
-                        'display_name': u'Organism',
-                        'file_ext': u's',
-                        'internal_name': u'organism_Characteristics_16_82_s'
+                        'display_name': 'Organism',
+                        'file_ext': 's',
+                        'internal_name': 'organism_Characteristics_16_82_s'
                     },
                     {
                         'attribute_type': 'Internal',
-                        'display_name': u'Type',
-                        'file_ext': u's',
-                        'internal_name': u'REFINERY_TYPE_16_82_s'
+                        'display_name': 'Type',
+                        'file_ext': 's',
+                        'internal_name': 'REFINERY_TYPE_16_82_s'
                     }
                 ],
                 'nodes_count': 1,
                 'nodes': [
                     {
-                        u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
-                        u'organism_Characteristics_16_82_s': u'Danio',
-                        u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
-                        u'REFINERY_TYPE_16_82_s': u'Array Data File'
+                        'REFINERY_WORKFLOW_OUTPUT_16_82_s': 'N/A',
+                        'organism_Characteristics_16_82_s': 'Danio',
+                        'REFINERY_SUBANALYSIS_16_82_s': '-1',
+                        'REFINERY_TYPE_16_82_s': 'Array Data File'
                     }
                 ]
             }
@@ -1404,7 +1404,7 @@ class NodeClassMethodTests(TestCase):
 
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
-        for i in xrange(2):
+        for i in range(2):
             self.node._create_and_associate_auxiliary_node(self.filestore_item)
             # Still just one child even on second time
             self.assertEqual(len(self.node.get_children()), 1)
@@ -1472,19 +1472,19 @@ class NodeIndexTests(APITestCase):
             (
                 re.sub(r'\d+', '#', key),
                 re.sub(r'\d+', '#', value) if
-                type(value) in (unicode, str) and
+                type(value) in (str, str) and
                 key != 'REFINERY_DOWNLOAD_URL_s' and
                 'uuid' not in key
                 else value
             )
-            for (key, value) in data.items()
+            for (key, value) in list(data.items())
         )
         return data
 
     def _assert_node_index_prepared_correctly(self, data_to_be_indexed,
                                               expected_download_url=None,
                                               expected_filetype=None,
-                                              expected_datafile=u''):
+                                              expected_datafile=''):
         self.assertEqual(
             data_to_be_indexed,
             {
@@ -1497,19 +1497,19 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
-                'assay_uuid': unicode(self.assay.uuid),
+                'assay_uuid': str(self.assay.uuid),
                 'data_set_uuid': self.data_set_uuid,
-                u'django_ct': u'data_set_manager.node',
-                u'django_id': u'#',
+                'django_ct': 'data_set_manager.node',
+                'django_id': '#',
                 'file_uuid': self.file_uuid,
                 'filetype_Characteristics_generic_s': expected_filetype,
                 'genome_build': None,
-                u'id': u'data_set_manager.node.#',
+                'id': 'data_set_manager.node.#',
                 'is_annotation': False,
                 'measurement_Characteristics_generic_s': '',
                 'measurement_accession_Characteristics_generic_s': '',
                 'measurement_source_Characteristics_generic_s': '',
-                'name': u'http://example.com/fake.txt',
+                'name': 'http://example.com/fake.txt',
                 'platform_Characteristics_generic_s': '',
                 'species': None,
                 'study_uuid': self.study_uuid,
@@ -1517,8 +1517,8 @@ class NodeIndexTests(APITestCase):
                 'technology_Characteristics_generic_s': 'whizbang',
                 'technology_accession_Characteristics_generic_s': '',
                 'technology_source_Characteristics_generic_s': '',
-                'text': u'',
-                'type': u'Raw Data File',
+                'text': '',
+                'type': 'Raw Data File',
                 'uuid': self.node_uuid,
                 'workflow_output': None
             }
@@ -1536,7 +1536,7 @@ class NodeIndexTests(APITestCase):
             )
 
     def test_prepare_node_remote_datafile_source(self):
-        self.file_store_item.source = u'http://www.example.org/test.txt'
+        self.file_store_item.source = 'http://www.example.org/test.txt'
         self.file_store_item.save()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
@@ -1996,9 +1996,9 @@ class InvestigationTests(IsaTabTestBase):
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(
             investigation.get_datafile_names(),
-            [u'rfc-test.zip', u'rfc111.txt', u'rfc125.txt', u'rfc126.txt',
-             u'rfc134.txt', u'rfc174.txt', u'rfc177.txt', u'rfc178.txt',
-             u'rfc86.txt', u'rfc94.txt']
+            ['rfc-test.zip', 'rfc111.txt', 'rfc125.txt', 'rfc126.txt',
+             'rfc134.txt', 'rfc174.txt', 'rfc177.txt', 'rfc178.txt',
+             'rfc86.txt', 'rfc94.txt']
         )
 
     def test_get_datafile_names_local_only(self):
@@ -2006,7 +2006,7 @@ class InvestigationTests(IsaTabTestBase):
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(investigation.get_datafile_names(local_only=True),
-                         [u'rfc-test.zip'])
+                         ['rfc-test.zip'])
 
     def test_get_datafile_names_exclude_metadata_file(self):
         with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
@@ -2014,9 +2014,9 @@ class InvestigationTests(IsaTabTestBase):
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(investigation.get_datafile_names(
             exclude_metadata_file=True),
-            [u'rfc111.txt', u'rfc125.txt', u'rfc126.txt', u'rfc134.txt',
-             u'rfc174.txt', u'rfc177.txt', u'rfc178.txt', u'rfc86.txt',
-             u'rfc94.txt'])
+            ['rfc111.txt', 'rfc125.txt', 'rfc126.txt', 'rfc134.txt',
+             'rfc174.txt', 'rfc177.txt', 'rfc178.txt', 'rfc86.txt',
+             'rfc94.txt'])
 
     def test_get_file_store_items(self):
         with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
