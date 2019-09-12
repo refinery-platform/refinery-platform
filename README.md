@@ -30,7 +30,7 @@ Open <http://192.168.50.50:8000/> in your web browser.
 
 ### Configure Deployment Environment on the Host
 
-Create a Python 2.7 virtual environment (optional but recommended, assumes `virtualenvwrapper` is installed):
+Create a Python 3.7 virtual environment (optional but recommended, assumes `virtualenvwrapper` is installed):
 ```bash
 $ mkvirtualenv -a $(pwd) refinery-deployment
 ```
