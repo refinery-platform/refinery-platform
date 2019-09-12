@@ -31,7 +31,6 @@ jsonschema==2.6.0
 librabbitmq==2.0.0
 Markdown==2.2.1
 mock==2.0.0
-mockcache==1.0.3
 ndg-httpsclient==0.3.2
 networkx==1.7
 psycopg2-binary==2.7.4
