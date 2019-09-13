@@ -8,7 +8,6 @@ class refinery::python (
 ) inherits refinery::params {
 
   class { '::python':
-    version => 3.7,
     dev        => 'present',
     gunicorn   => 'absent',
     pip        => 'latest',
@@ -45,7 +44,6 @@ class refinery::python (
     ensure  => present,
     owner   => $app_user,
     group   => $app_group,
-    version => 3.7,
     require => [
       Package[
         $base_dependencies,
