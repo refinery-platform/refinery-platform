@@ -51,7 +51,7 @@ class refinery::python (
         'libpq5',
         'libpq-dev'
       ],
-    ]
+    ],
   }
 
   python::requirements { "${project_root}/requirements.txt":
