@@ -33,7 +33,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
-from core.utils import get_absolute_url, get_data_set_for_view_set
+from core.utils import build_absolute_url, get_data_set_for_view_set
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
@@ -140,12 +140,41 @@ class TakeOwnershipOfPublicDatasetView(View):
         if request.user.has_perm('core.read_dataset', data_set) \
                 or 'read_dataset' in get_perms(public_group, data_set):
             investigation = data_set.get_investigation()
-            full_isa_tab_url = get_absolute_url(
-                investigation.get_file_store_item().get_datafile_url()
-            )
-            response = HttpResponseRedirect(
-                get_absolute_url(reverse('process_isa_tab', args=['ajax']))
-            )
+            file_url = investigation.get_file_store_item().get_datafile_url()
+            try:
+                full_isa_tab_url = build_absolute_url(file_url)
+            except ValueError:
+                logger.error('URL {} is not a relative url'.format(
+                        str(file_url)
+                    )
+                )
+                return HttpResponseBadRequest('No file url found for '
+                                              'investigation of DataSet')
+            except RuntimeError as e:
+                logger.error('Could not build URL for {}'.format(
+                        str(file_url)
+                    )
+                )
+                return HttpResponseBadRequest('Could not build URL for {}'.
+                                              format(str(file_url)))
+            relative_isa_tab_url = reverse('process_isa_tab', args=['ajax'])
+            try:
+                isa_tab_url = build_absolute_url(relative_isa_tab_url)
+            except ValueError:
+                logger.error(
+                    '{} is not relative url'.format(str(relative_isa_tab_url))
+                )
+                return HttpResponseBadRequest('Could not set isa_tab_url '
+                                              ' cookie due to bad redirect')
+            except RuntimeError as e:
+                logger.error('No Current Site found')
+                logger.error('Could not build URL for {}'.format(
+                        str(relative_isa_tab_url)
+                    )
+                )
+                return HttpResponseBadRequest('Could not build URL for {}'.
+                                              format(str(file_url)))
+            response = HttpResponseRedirect(isa_tab_url)
             # set cookie
             response.set_cookie('isa_tab_url', full_isa_tab_url)
             return response

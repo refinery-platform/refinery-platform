@@ -15,7 +15,7 @@ from haystack.exceptions import SkipDocument
 
 import constants
 import core
-from core.utils import get_absolute_url
+from core.utils import build_absolute_url
 
 from .models import AnnotatedNode, Assay, Node
 
@@ -193,7 +193,21 @@ def _get_download_url_or_import_state(file_store_item):
 
     download_url = file_store_item.get_datafile_url()
     if download_url:
-        return get_absolute_url(download_url)
+        try:
+            absolute_download_url = build_absolute_url(download_url)
+            return absolute_download_url
+        except ValueError:
+            logger.error('{} is not a valid relative url'.format(
+                    str(download_url)
+                )
+            )
+            return None
+        except RuntimeError:
+            logger.error('Could not fetch full absolute url for {}'.format(
+                    str(download_url)
+                )
+            )
+            return None
 
     # "PENDING" if an import_task_id doesn't exist and
     # there is no valid download_url

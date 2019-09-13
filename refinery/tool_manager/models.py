@@ -32,7 +32,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          Workflow)
 
 from core.models import Event
-from core.utils import get_absolute_url
+from core.utils import build_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (
     get_file_url_from_node_uuid, get_solr_response_json
@@ -306,10 +306,22 @@ class Tool(OwnableResource):
 
     @property
     def django_docker_client(self):
+        try:
+            abs_url = build_absolute_url(self.container_input_json_url)
+        except ValueError:
+            logger.error('{} is not a relative url'.format(
+                    str(self.container_input_json_url)
+                )
+            )
+            return None
+        except RuntimeError:
+            logger.error('Could not build URL for {}'.format(
+                    str(self.container_input_json_url)
+                )
+            )
+            return None
         return DockerClientRunWrapper(
-            DockerClientSpec(
-                input_json_url=get_absolute_url(self.container_input_json_url)
-            ),
+            DockerClientSpec(input_json_url=abs_url),
             mem_limit_mb=settings.DJANGO_DOCKER_ENGINE_MEM_LIMIT_MB
         )
 

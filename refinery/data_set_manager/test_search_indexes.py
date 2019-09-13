@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from celery.states import FAILURE, PENDING
 from djcelery.models import TaskMeta
 
-from core.utils import get_absolute_url
+from core.utils import build_absolute_url
 from factory_boy.utils import make_analyses_with_single_dataset
 from haystack.exceptions import SkipDocument
 import mock
@@ -120,7 +120,7 @@ class NodeIndexTests(APITestCase):
                                return_value='/media/file_store/test_file.txt'):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=get_absolute_url(
+                expected_download_url=build_absolute_url(
                     self.file_store_item.get_datafile_url()
                 ),
                 expected_datafile=self.file_store_item.datafile
@@ -192,7 +192,7 @@ class NodeIndexTests(APITestCase):
                                return_value='/media/file_store/test.txt'):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=get_absolute_url(
+                expected_download_url=build_absolute_url(
                     self.file_store_item.get_datafile_url()
                 ),
                 expected_filetype=self.file_store_item.filetype,
@@ -221,7 +221,7 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(INPUT_CONNECTION, False)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=get_absolute_url(
+                expected_download_url=build_absolute_url(
                     self.file_store_item.get_datafile_url()
                 ),
                 expected_datafile=self.file_store_item.datafile
@@ -235,7 +235,7 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(INPUT_CONNECTION, True)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=get_absolute_url(
+                expected_download_url=build_absolute_url(
                     self.file_store_item.get_datafile_url()
                 ),
                 expected_datafile=self.file_store_item.datafile
@@ -256,7 +256,7 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=get_absolute_url(
+                expected_download_url=build_absolute_url(
                     self.file_store_item.get_datafile_url()
                 ),
                 expected_datafile=self.file_store_item.datafile
