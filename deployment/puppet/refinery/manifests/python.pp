@@ -67,7 +67,7 @@ class refinery::python (
       virtualenv => $virtualenv,
       owner      => $app_user,
       group      => $app_group,
-      # require metaparameter does not actually trigger installation
+      # require metaparameter does not actually trigger the installation
       subscribe  => Python::Virtualenv[$virtualenv],
     }
   }

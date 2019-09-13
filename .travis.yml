@@ -74,7 +74,7 @@ script:
 
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
-  - flake8 ..
+  # - flake8 ..
 
   - echo 'travis_fold:start:grunt'
   - pushd ui && grunt test && popd
