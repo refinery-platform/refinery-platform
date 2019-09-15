@@ -19,7 +19,7 @@ class refinery::python (
     virtualenv => 'latest',
   }
 
-  $base_dependencies = ['build-essential', 'libncurses5-dev', ' python3.7-dev']
+  $base_dependencies = ['build-essential', 'libncurses5-dev', 'python3.7-dev']
   $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
   package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]: }
