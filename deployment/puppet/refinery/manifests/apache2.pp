@@ -8,7 +8,7 @@ class refinery::apache2 (
   $django_root         = $refinery::params::django_root,
   $media_root          = $refinery::params::media_root,
   $conf_mode           = $refinery::params::conf_mode,
-  $virtualenv          = $refinery::params::virtualenv,
+  $pyenv               = $refinery::params::pyenv,
 ) inherits refinery::params {
 
   # must be set to the ELB IdleTimeout value in the CloudFormation template
@@ -132,7 +132,7 @@ class refinery::apache2 (
       'refinery' => {
         'user'        => $app_user,
         'group'       => $app_group,
-        'python-path' => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
+        'python-path' => "${django_root}:${pyenv}/lib/python2.7/site-packages",
       }
     },
     wsgi_process_group      => 'refinery',

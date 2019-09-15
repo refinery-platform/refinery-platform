@@ -10,7 +10,7 @@ class refinery::params (
 
   $app_group = $app_user
 
-  $virtualenv = "/home/${app_user}/.virtualenvs/refinery-platform"
+  $pyenv = "/home/${app_user}/.pyenv/refinery-platform"
 
   $db_name = 'refinery'
 
