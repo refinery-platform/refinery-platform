@@ -2368,7 +2368,7 @@ class SiteStatisticsViewTests(TestCase):
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_deltas_csv(self, get_csv_row_mock):
         response = self.client.get("/sitestatistics/deltas.csv")
-        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS).encode(),
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=False)
 
@@ -2378,7 +2378,7 @@ class SiteStatisticsViewTests(TestCase):
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_totals_csv(self, get_csv_row_mock):
         response = self.client.get("/sitestatistics/totals.csv")
-        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS).encode(),
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=True)
         self.assertEqual(get_csv_row_mock.call_count, 2)
