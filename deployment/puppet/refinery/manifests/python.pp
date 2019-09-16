@@ -17,12 +17,16 @@ class refinery::python (
     gunicorn   => 'absent',
     pip        => 'latest',
     virtualenv => 'latest',
+    require    => Apt::Ppa['ppa:deadsnakes/ppa']
   }
 
+  # python3.7-dev needed for cffi (c function interface)
   $base_dependencies = ['build-essential', 'libncurses5-dev', 'python3.7-dev']
-  $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
-  package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]: }
+  $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev'] # pysam mod
+  package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]:
+    require => Class['apt::update']
+  }
 
   # for psycopg2 module
   package { 'libpq5':
@@ -56,7 +60,8 @@ class refinery::python (
         $base_dependencies,
         $crypto_dependencies,
         'libpq5',
-        'libpq-dev'
+        'libpq-dev',
+        $pysam_dependecies
       ],
     ],
   }
