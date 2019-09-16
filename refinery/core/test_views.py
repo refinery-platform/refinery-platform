@@ -1890,7 +1890,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
 class WorkflowApiV2Tests(APIV2TestCase):
     def setUp(self):
-        self.mock_workflow_graph = "{is_test_workflow_graph: true}"
+        self.mock_workflow_graph = b"{is_test_workflow_graph: true}"
         super(WorkflowApiV2Tests, self).setUp(
             api_base_name="workflows/",
             view=WorkflowViewSet.as_view({"get": "graph"})
