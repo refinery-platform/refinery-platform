@@ -461,7 +461,7 @@ def validate_tool_annotation(annotation_dictionary):
         raise RuntimeError(
             "{}\n\n{}\n\n{}".format(
                 ANNOTATION_ERROR_MESSAGE,
-                e.message,
+                e,
                 ["{}".format(err.message) for err in e.context]
             )
         )

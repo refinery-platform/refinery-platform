@@ -273,7 +273,7 @@ class ProcessISATabView(View):
         except ParserException as e:
             error_message = "{} {}".format(
                 PARSER_ERROR_MESSAGE,
-                e.message
+                e
             )
             logger.error(error_message)
             return HttpResponseBadRequest(error_message)
@@ -285,7 +285,7 @@ class ProcessISATabView(View):
             logger.error(error_message)
             return HttpResponseBadRequest(
                 PARSER_UNEXPECTED_ERROR_MESSAGE +
-                e.message
+                e
             )
         try:
             os.unlink(temp_file_path)
@@ -393,7 +393,7 @@ class ProcessISATabView(View):
             except ParserException as e:
                 error_message = "{} {}".format(
                     PARSER_ERROR_MESSAGE,
-                    e.message
+                    e
                 )
                 logger.error(error_message)
                 return HttpResponseBadRequest(error_message)
