@@ -43,7 +43,7 @@ class AnalysisStatus(models.Model):
     class Meta:
         verbose_name_plural = 'analysis statuses'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.analysis.name
 
     def set_galaxy_history_state(self, state):

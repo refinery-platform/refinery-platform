@@ -71,7 +71,7 @@ class NodeCollection(models.Model):
 
         super(NodeCollection, self).__init__(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             str(self.identifier) +
             (
@@ -119,7 +119,7 @@ class Publication(models.Model):
     status_accession = models.TextField(blank=True, null=True)
     status_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.authors) + ": " + str(self.title)
 
 
@@ -140,7 +140,7 @@ class Contact(models.Model):
     roles_accession = models.TextField(blank=True, null=True)
     roles_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             str(self.first_name) +
             " " +
@@ -280,7 +280,7 @@ class Ontology(models.Model):
     version = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name) + " (" + str(self.file_name) + ")"
 
 
@@ -303,7 +303,7 @@ class Study(NodeCollection):
             )
         return data_set
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.identifier) + ": " + str(self.title)
 
 
@@ -327,7 +327,7 @@ class Design(models.Model):
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.type)
 
 
@@ -339,7 +339,7 @@ class Factor(models.Model):
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name) + ": " + str(self.type)
 
 
@@ -357,7 +357,7 @@ class Assay(models.Model):
     platform = models.TextField(blank=True, null=True)
     file_name = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         retstr = ""
         if self.measurement:
             retstr += "Measurement: %s; " % str(self.measurement)
@@ -392,7 +392,7 @@ class Protocol(models.Model):
     # protocol parameters: via FK
     # protocol components: via FK
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name) + ": " + str(self.type)
 
     class Meta:
@@ -512,7 +512,7 @@ class Node(models.Model):
     subanalysis = models.IntegerField(null=True, blank=False)
     workflow_output = models.CharField(null=True, blank=False, max_length=500)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.type) + ": " + str(self.name) + " (" +\
                str(self.parents.count()) + " parents, " +\
                str(self.children.count()) + " children " + "| " +\
@@ -724,7 +724,7 @@ class Attribute(models.Model):
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             str(self.type) + (
                 "" if self.subtype is None else " (" + str(
@@ -754,7 +754,7 @@ class AttributeOrder(models.Model):
     # user)
     is_internal = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(
             self.solr_field +
             " [facet = " +
@@ -808,7 +808,7 @@ class AnnotatedNode(models.Model):
     # other information
     is_annotation = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.node_uuid)
 
 
@@ -963,7 +963,7 @@ class ProtocolReference(models.Model):
     date = models.DateField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.protocol) + " (reference)"
 
 
@@ -977,5 +977,5 @@ class ProtocolReferenceParameter(models.Model):
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name) + " = " + str(self.value)

@@ -16,7 +16,7 @@ class Taxon(models.Model):
     class Meta:
         unique_together = ("taxon_id", "name")
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s" % (self.taxon_id, self.name)
 
 
@@ -31,7 +31,7 @@ class GenomeBuild(models.Model):
     available = models.BooleanField(default=True)
     default_build = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s" % (self.name, self.description)
 
 
@@ -128,7 +128,7 @@ class CytoBand (models.Model):
     name = models.CharField(max_length=255, db_index=True)
     gieStain = models.CharField(max_length=255)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.chrom + " - " + self.name
 
     class Meta:
@@ -168,7 +168,7 @@ class Gene (models.Model):
     cdsEndStat = models.CharField(max_length=10, db_index=True)
     exonFrames = models.CommaSeparatedIntegerField(max_length=3700)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " - " + self.chrom
 
     class Meta:
@@ -190,7 +190,7 @@ class GapRegionFile(models.Model):
     type = models.CharField(max_length=255)
     bridge = models.CharField(max_length=255)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.chrom + ":" + self.chromStart + "-" + self.chromEnd
 
     class Meta:
@@ -209,7 +209,7 @@ class WigDescription(models.Model):
     type = models.CharField(max_length=255)
     description = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + "=" + self.description + ", " + self.type
 
 
@@ -231,7 +231,7 @@ class BedFile (models.Model):
     blockSizes = models.CommaSeparatedIntegerField(max_length=3700)
     blockStarts = models.CommaSeparatedIntegerField(max_length=3700)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " - " + self.chrom + ":" \
                + self.chromStart + "-" + self.chromEnd
 
@@ -255,7 +255,7 @@ class GffFile (models.Model):
     frame = models.CharField(max_length=100)
     attribute = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.feature + " - " + self.chrom + ":" + \
                self.start + "-" + self.end
 
@@ -271,7 +271,7 @@ class GtfFile (GffFile):
     gene_id = models.CharField(max_length=255, db_index=True)
     transcript_id = models.CharField(max_length=255, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.gene_id + " - " + self.chrom + ":" + \
                self.start + "-" + self.end
 
@@ -291,7 +291,7 @@ class WigFile(models.Model):
     position = models.IntegerField(db_index=True)
     value = models.FloatField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.chrom + ":" + self.position + " = " + self.value
 
     class Meta:

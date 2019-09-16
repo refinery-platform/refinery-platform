@@ -91,7 +91,7 @@ class UserProfile(models.Model):
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.user.first_name + " " + self.user.last_name + \
                " (" + self.affiliation + "): " + self.user.email
 
@@ -226,7 +226,7 @@ class Tutorials(models.Model):
     collaboration_tutorial_viewed = models.BooleanField(default=False)
     data_upload_tutorial_viewed = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             "User: {} | Collaboration: {}, DataUpload:"
             " {}".format(
@@ -252,7 +252,7 @@ class BaseResource(models.Model):
     description = models.TextField(max_length=5000, blank=True)
     slug = models.CharField(max_length=250, blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " (" + self.uuid + ")"
 
     class Meta:
@@ -307,7 +307,7 @@ class OwnableResource(BaseResource):
     permissions, where "xxx" is the simple_modelname
     """
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def set_owner(self, user):
@@ -369,7 +369,7 @@ class SharableResource(OwnableResource):
     """
     share_list = None
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def get_owner(self):
@@ -500,7 +500,7 @@ class TemporaryResource(models.Model):
     # Expiration time and date of the instance
     expiration = models.DateTimeField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " (" + self.uuid + ")"
 
     class Meta:
@@ -512,7 +512,7 @@ class ManageableResource(models.Model):
     workflow engines
     """
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " (" + self.uuid + ")"
 
     def set_manager_group(self, group):
@@ -559,7 +559,7 @@ class DataSet(SharableResource):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             str(self.name) + ' - ' +
             str(self.get_owner_username()) + ' - ' +
@@ -882,7 +882,7 @@ class InvestigationLink(models.Model):
     class Meta:
         unique_together = ('data_set', 'investigation', 'version')
 
-    def __unicode__(self):
+    def __str__(self):
         retstr = (
             "%s: ver=%s, %s"
             % (self.investigation.get_identifier(), self.version, self.message)
@@ -906,7 +906,7 @@ class WorkflowEngine(OwnableResource, ManageableResource):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey(Instance, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name) + " - " + str(self.summary)
 
     class Meta:
@@ -1011,7 +1011,7 @@ class Workflow(SharableResource, ManageableResource):
 class Project(SharableResource):
     is_catch_all = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             str(self.name) + " - " + str(self.get_owner_username()) + " - " +
             str(self.summary)
@@ -1731,7 +1731,7 @@ class AnalysisNodeConnection(models.Model):
     galaxy_dataset_name = models.CharField(null=True, blank=True,
                                            max_length=250)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{}: {}_{} ({}) {}".format(
             self.direction,
             self.step,
@@ -1863,7 +1863,7 @@ class Invitation(models.Model):
     sender = models.ForeignKey(User, null=True)
     recipient_email = models.CharField(max_length=250, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.token_uuid) + ' | ' + str(self.group_id)
 
     def save(self, *arg, **kwargs):
@@ -2029,7 +2029,7 @@ class SiteProfile(models.Model):
     intro_markdown = models.TextField(blank=True)
     twitter_username = models.CharField(max_length=100, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.site.name
 
 
@@ -2398,7 +2398,7 @@ class Event(models.Model):
     # def render_group_user_removal(self):
     #     return '{}'.format(self.user)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.data_set is not None and self.group is None:
             if self.type == Event.CREATE:
                 return self.render_data_set_create()
