@@ -1974,7 +1974,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         get_response = self.view(self.get_request)
         response_videos = [video.get('source_id') for video in
                            get_response.data.get('site_videos')]
-        self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
+        self.assertCountEqual(response_videos, [self.site_video_1.source_id,
                                                 self.site_video_2.source_id])
 
     def test_patch_returns_401_status_for_anon_user(self):

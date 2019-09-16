@@ -1435,6 +1435,7 @@ class SiteProfileAPIView(APIView):
 
     def get(self, request):
         try:
+
             site_profile = SiteProfile.objects.get(
                 site=get_current_site(request)
             )

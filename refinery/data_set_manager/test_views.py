@@ -356,7 +356,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(self.attribute_order_response, response.data)
+        self.assertCountEqual(self.attribute_order_response, response.data)
 
     def test_get_unknown_uuid(self):
         request = self.factory.get(
@@ -1003,7 +1003,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         derived_nodes_uuid = [node.uuid for node in assay_nodes if
                               node.is_derived()]
-        self.assertItemsEqual(get_response.data, derived_nodes_uuid)
+        self.assertCountEqual(get_response.data, derived_nodes_uuid)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_remove_data_file_200_status(self, mock_index):

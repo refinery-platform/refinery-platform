@@ -469,11 +469,11 @@ class UtilitiesTests(TestCase):
     def test_generate_solr_params_no_params_returns_obj(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
+        self.assertCountEqual(sorted(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_no_params_returns_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query['params'],
+        self.assertCountEqual(query['params'],
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -484,13 +484,13 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_facet(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(list(query['json']['facet'].keys()),
+        self.assertCountEqual(list(query['json']['facet'].keys()),
                               ['Analysis', 'Cell Line', 'Cell Type',
                                'Group Name', 'Organism', 'Type'])
 
     def test_generate_solr_params_no_params_returns_json_fields(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query['json']['fields'],
+        self.assertCountEqual(query['json']['fields'],
                               ['Analysis', 'Cell Line', 'Cell Type',
                                'Character_Title', 'Group Name', 'Organism',
                                'REFINERY_DATAFILE_s', 'Specimen', 'Type'])
@@ -513,7 +513,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(list(query.keys()), ['json', 'params'])
+        self.assertCountEqual(list(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_assay_with_params_returns_params(self):
         parameter_dict = {'limit': 7, 'offset': 2,
@@ -523,7 +523,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(query['params'],
+        self.assertCountEqual(query['params'],
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -540,7 +540,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(list(query['json']['facet'].keys()),
+        self.assertCountEqual(list(query['json']['facet'].keys()),
                               ['cats', 'dog', 'horse', 'mouse'])
 
     def test_generate_solr_params_params_returns_json_fields(self):
@@ -1151,7 +1151,7 @@ class UtilitiesTests(TestCase):
                                                 attribute_order.rank)
         self.assertEqual(response, 'Error: New rank == old rank')
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
-        self.assertItemsEqual(old_attribute_list, attribute_list)
+        self.assertCountEqual(old_attribute_list, attribute_list)
 
     @mock.patch("data_set_manager.utils.core.utils.get_absolute_url")
     def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):

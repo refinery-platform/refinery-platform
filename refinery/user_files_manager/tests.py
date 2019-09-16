@@ -39,7 +39,7 @@ class UserFileAPITests(APITestCase):
         force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(sorted(response.data.keys()), [
+        self.assertCountEqual(sorted(response.data.keys()), [
             'attributes',
             'facet_field_counts',
             'nodes',
@@ -160,11 +160,11 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_obj(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(list(query.keys()), ['json', 'params'])
+        self.assertCountEqual(list(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_user_returns_params(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(query.get('params'),
+        self.assertCountEqual(query.get('params'),
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -175,7 +175,7 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_json_facet(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(list(query.get('json').get('facet').keys()),
+        self.assertCountEqual(list(query.get('json').get('facet').keys()),
                               ['antibody_Characteristics_generic_s',
                                'technology_Characteristics_generic_s',
                                'cell_type_Characteristics_generic_s',
