@@ -383,6 +383,7 @@ class AnalysisRunTests(AnalysisManagerTestBase):
             galaxy_progress_mock
     ):
         self.analysis_status.galaxy_history_progress = 25
+        self.analysis_status.save()
         _check_galaxy_history_state(self.analysis.uuid)
 
         analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
@@ -400,6 +401,7 @@ class AnalysisRunTests(AnalysisManagerTestBase):
             galaxy_progress_mock
     ):
         self.analysis_status.galaxy_history_progress = 100
+        self.analysis_status.save()
         _check_galaxy_history_state(self.analysis.uuid)
 
         analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
