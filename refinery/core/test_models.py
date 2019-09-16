@@ -119,7 +119,7 @@ class AnalysisTests(TestCase):
             name="Workflow1", workflow_engine=self.workflow_engine
         )
         self.file_store_item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile('test_file.txt',
+            datafile=SimpleUploadedFile(b'test_file.txt',
                                         'Coffee is delicious!'),
             filetype=FileType.objects.get(name="TXT")
         )

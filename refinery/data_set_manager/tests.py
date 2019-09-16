@@ -1328,17 +1328,17 @@ class NodeClassMethodTests(TestCase):
         self.filestore_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.bam',
-                'Coffee is delicious!')
+                b'Coffee is delicious!')
         )
         self.filestore_item_1 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.bed',
-                'Coffee is delicious!')
+                b'Coffee is delicious!')
         )
         self.filestore_item_2 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.seg',
-                'Coffee is delicious!')
+                b'Coffee is delicious!')
         )
         self.dataset = DataSet.objects.create()
         # Create Investigation/InvestigationLinks for the DataSets

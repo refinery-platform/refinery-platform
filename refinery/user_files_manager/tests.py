@@ -84,8 +84,7 @@ class UserFileAPITests(APITestCase):
             response = user_files_csv(request)
             self.assertEqual(
                 response.content,
-                'url,filename,fake\r\n'
-                'fake-url,fake-filename,\r\n'
+                b'url,filename,fake\r\nfake-url,fake-filename,\r\n'
             )
 
     @override_settings(USER_FILES_COLUMNS='filename,fake')
@@ -142,7 +141,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         response = self.view(request)
         self.assertEqual(
             response.content,
-            'url,name,fake\r\n'
+            b'url,name,fake\r\n'
         )
 
 

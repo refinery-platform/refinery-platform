@@ -3007,7 +3007,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.post_response = self.tools_view(self.post_request)
         self.assertEqual(self.post_response.status_code, 400)
         self.assertEqual(
-            "A Tool already exists with a display_name of: '{}'".format(
+            b"A Tool already exists with a display_name of: '{}'".format(
                 display_name
             ),
             self.post_response.content
