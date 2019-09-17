@@ -674,7 +674,7 @@ class DataSetTests(TestCase):
         self.isa_tab_dataset.get_latest_study().delete()
         with self.assertRaises(RuntimeError) as context:
             self.isa_tab_dataset.get_latest_study()
-            self.assertIn("Couldn't fetch Study", context.exception.message)
+            self.assertIn("Couldn't fetch Study", str(context.exception))
 
     def test_get_nodes(self):
         nodes = Node.objects.all()

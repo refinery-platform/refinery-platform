@@ -253,7 +253,7 @@ class Command(BaseCommand):
                 "({}): {}".format(settings.REFINERY_VISUALIZATION_REGISTRY, e)
             )
         return ', '.join(
-            re.findall(r"tool-annotations/(.+?)\.json",  response.content)
+            re.findall(r"tool-annotations/(.+?)\.json",  str(response.content))
         )
 
     @staticmethod

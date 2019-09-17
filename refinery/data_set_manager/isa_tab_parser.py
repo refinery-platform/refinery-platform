@@ -750,9 +750,7 @@ class IsaTabParser:
             try:
                 start_position = self._current_file.tell()
                 line = (
-                    self._current_file.readline()
-                    .decode("utf-8", "replace")
-                    .rstrip("\n")
+                    self._current_file.readline().rstrip("\n")
                 )
                 end_position = self._current_file.tell()
 
@@ -842,9 +840,7 @@ class IsaTabParser:
             try:
                 start_position = self._current_file.tell()
                 line = (
-                    self._current_file.readline()
-                    .decode("utf-8", "replace")
-                    .rstrip("\n")
+                    self._current_file.readline().rstrip("\n")
                 )
                 end_position = self._current_file.tell()
 
@@ -867,7 +863,8 @@ class IsaTabParser:
     def _parse_investigation_file(self, file_name):
 
         self._current_file_name = file_name
-        self._current_file = open(file_name, "rU")
+        self._current_file = open(file_name, 'r' ,
+                                  newline='', encoding='latin-1')
 
         section_title = None
 
@@ -877,9 +874,7 @@ class IsaTabParser:
             try:
                 start_position = self._current_file.tell()
                 line = (
-                    self._current_file.readline()
-                    .decode("utf-8", "replace")
-                    .rstrip("\n")
+                    self._current_file.readline().rstrip("\n")
                 )
                 end_position = self._current_file.tell()
 
@@ -1173,7 +1168,7 @@ class IsaTabParser:
         investigation_title = True
         title = None
 
-        with open(investigation_file_name, 'r') as f:
+        with open(investigation_file_name, 'r', encoding='latin-1') as f:
             for line in f:
                 line = line.strip('\n')
                 if not identifier and \

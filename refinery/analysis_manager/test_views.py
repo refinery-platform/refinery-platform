@@ -109,7 +109,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase):
         response = analysis_status(request, self.analysis.uuid)
 
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "galaxyAnalysis": [],
                 "refineryImport": [],

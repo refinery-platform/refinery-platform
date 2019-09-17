@@ -337,7 +337,7 @@ class OwnableResource(BaseResource):
             attach_perms=True,
             with_group_users=False
         )
-        for user, permission in user_permissions.items():
+        for user, permission in list(user_permissions.items()):
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
         return None
@@ -525,7 +525,7 @@ class ManageableResource(models.Model):
         # ownership is determined by "add" permission
         group_permissions = get_groups_with_perms(self, attach_perms=True)
 
-        for group, permission in group_permissions.items():
+        for group, permission in list(group_permissions.items()):
             if "add_%s" % self._meta.verbose_name in permission:
                 return group.extendedgroup
 

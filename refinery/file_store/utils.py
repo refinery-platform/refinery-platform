@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import logging
 import os
 import shutil
@@ -74,7 +75,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         # TODO: remove this when get_directory_name() is removed in Django 2.0
         name = os.path.normpath(name)
         # create a hashed directory structure
-        hashcode = hash(name)
+        hashcode = int(hashlib.md5(name.encode('utf-8')).hexdigest(), 16)
         mask = 255  # bitmask
         # use the first and second bytes of the hash code represented as
         # zero-padded hex numbers as directory names
@@ -95,7 +96,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
 def copy_file_object(source, destination, progress_report=lambda _: None):
     """Copy a file object and update progress"""
     chunk_size = 10 * 1024 * 1024  # 10MB
-    for chunk in iter(lambda: source.read(chunk_size), ''):
+    for chunk in iter(lambda: source.read(chunk_size), b''):
         destination.write(chunk)
         progress_report(len(chunk))
     # ensure that all internal buffers are written to disk
@@ -163,7 +164,7 @@ def get_file_size(file_location):
         try:
             with contextlib.closing(urllib.request.urlopen(file_location,
                                                     timeout=30)) as response:
-                return int(response.info().getheader('Content-Length'))
+                return int(response.info().get('Content-Length'))
         except (EnvironmentError, TypeError):
             return UNKNOWN_FILE_SIZE
 

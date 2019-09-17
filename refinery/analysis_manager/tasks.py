@@ -87,7 +87,10 @@ def _check_galaxy_history_state(analysis_uuid):
         run_analysis.retry(countdown=RETRY_INTERVAL)
     else:
         # workaround to avoid moving the progress bar backward
-        if analysis_status.galaxy_history_progress < percent_complete:
+        if not analysis_status.galaxy_history_progress:
+            analysis_status.galaxy_history_progress = percent_complete
+            analysis_status.save()
+        elif analysis_status.galaxy_history_progress < percent_complete:
             analysis_status.galaxy_history_progress = percent_complete
             analysis_status.save()
         if percent_complete < 100:
@@ -477,7 +480,7 @@ def _get_galaxy_download_task_ids(analysis):
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, exc.message)
+        logger.error(error_msg, analysis.name, str(exc))
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
         return task_id_list

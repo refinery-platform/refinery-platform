@@ -7,21 +7,18 @@ class refinery::python (
   $django_root         = $refinery::params::django_root,
 ) inherits refinery::params {
 
-  # needed for python3.7 on ubuntu
-  apt::ppa { 'ppa:deadsnakes/ppa': }
 
   class { '::python':
-    version    => 'python3.7',
+    version    => 'python3.5',
     ensure     => 'latest',
     dev        => 'latest',
     gunicorn   => 'absent',
     pip        => 'latest',
-    virtualenv => 'latest',
-    require    => Apt::Ppa['ppa:deadsnakes/ppa']
+    virtualenv => 'present'
   }
 
-  # python3.7-dev needed for cffi (c function interface)
-  $base_dependencies = ['build-essential', 'libncurses5-dev', 'python3.7-dev']
+  # python3.5-dev needed for cffi (c function interface)
+  $base_dependencies = ['build-essential', 'libncurses5-dev', 'python3.5-dev', 'apache2-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
   $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev'] # pysam mod
   package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]:
@@ -50,11 +47,12 @@ class refinery::python (
     group  => $app_group,
   }
   ->
-  python::pyvenv { $pyenv:
-    version => '3.7',
+  python::virtualenv { $pyenv:
+    version => '3.5',
     ensure  => present,
     owner   => $app_user,
     group   => $app_group,
+    distribute => false,
     require => [
       Package[
         $base_dependencies,
@@ -71,7 +69,7 @@ class refinery::python (
     owner      => $app_user,
     group      => $app_group,
     # require metaparameter does not actually trigger the installation
-    subscribe  => Python::Pyvenv[$pyenv],
+    subscribe  => Python::Virtualenv[$pyenv],
   }
 
   if $deployment_platform == 'aws' {
@@ -80,7 +78,30 @@ class refinery::python (
       owner      => $app_user,
       group      => $app_group,
       # require metaparameter does not actually trigger the installation
-      subscribe  => Python::Pyvenv[$pyenv],
+      subscribe  => Python::Virtualenv[$pyenv],
     }
+  }
+
+  exec { 'get virtualenvwrapper':
+    command     => "python3 -m pip install virtualenvwrapper",
+    path        => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ],
+    user        => $app_user,
+    group       => $app_group,
+    require     => Python::Virtualenv[$pyenv],
+  }
+  ->
+  file_line { "virtualenvwrapper_config":
+    path        => "/home/${app_user}/.profile",
+    line        => "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3 && export PROJECT_HOME=/vagrant/refinery && export VIRTUALENVWRAPPER_VIRTUALENV=/usr/bin/virtualenv && export WORKON_HOME=/home/${app_user}/.pyenv/ && source ./.local/bin/virtualenvwrapper.sh",
+    require     => Python::Virtualenv[$pyenv],
+  }
+  ->
+  file { "virtualenvwrapper_project":
+    # workaround for setvirtualenvproject command not found
+    ensure  => file,
+    path    => "${pyenv}/.project",
+    content => "${django_root}",
+    owner   => $app_user,
+    group   => $app_group,
   }
 }

@@ -1,4 +1,4 @@
-from StringIO import StringIO
+from io import StringIO
 import logging
 import json
 import uuid
@@ -408,9 +408,9 @@ class UtilitiesTests(TestCase):
         facet_filter = {'Author': ['Vezza', 'McConnell'],
                         'TYPE': ['Raw Data File']}
         facet_field_query = create_facet_filter_query(facet_filter)
-        self.assertEqual(facet_field_query,
-                         [u'{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',
-                          u'{!tag=AUTHOR}Author:(Vezza OR McConnell)'])
+        self.assertEqual(set(facet_field_query),
+                         set(['{!tag=AUTHOR}Author:(Vezza OR McConnell)',
+                         '{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',]))
 
     def test_hide_fields_from_list(self):
         weighted_list = [{'solr_field': 'uuid'},
@@ -448,11 +448,11 @@ class UtilitiesTests(TestCase):
     def test_generate_solr_params_no_params_returns_obj(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(sorted(query.keys()), ['json', 'params'])
+        self.assertCountEqual(sorted(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_no_params_returns_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query['params'],
+        self.assertCountEqual(query['params'],
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -463,13 +463,13 @@ class UtilitiesTests(TestCase):
 
     def test_generate_solr_params_no_params_returns_json_facet(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query['json']['facet'].keys(),
+        self.assertCountEqual(list(query['json']['facet'].keys()),
                               ['Analysis', 'Cell Line', 'Cell Type',
                                'Group Name', 'Organism', 'Type'])
 
     def test_generate_solr_params_no_params_returns_json_fields(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
-        self.assertItemsEqual(query['json']['fields'],
+        self.assertCountEqual(query['json']['fields'],
                               ['Analysis', 'Cell Line', 'Cell Type',
                                'Character_Title', 'Group Name', 'Organism',
                                'REFINERY_DATAFILE_s', 'Specimen', 'Type'])
@@ -492,7 +492,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(query.keys(), ['json', 'params'])
+        self.assertCountEqual(list(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_assay_with_params_returns_params(self):
         parameter_dict = {'limit': 7, 'offset': 2,
@@ -502,7 +502,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(query['params'],
+        self.assertCountEqual(query['params'],
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -519,7 +519,7 @@ class UtilitiesTests(TestCase):
         parameter_qdict.update(parameter_dict)
         query = generate_solr_params_for_assay(parameter_qdict,
                                                self.valid_uuid)
-        self.assertItemsEqual(query['json']['facet'].keys(),
+        self.assertCountEqual(list(query['json']['facet'].keys()),
                               ['cats', 'dog', 'horse', 'mouse'])
 
     def test_generate_solr_params_params_returns_json_fields(self):
@@ -679,53 +679,53 @@ class UtilitiesTests(TestCase):
             formatted_response,
             {
                 'facet_field_counts': {
-                    u'REFINERY_SUBANALYSIS_16_82_s': [
-                        {'name': u'-1', 'count': 16}
+                    'REFINERY_SUBANALYSIS_16_82_s': [
+                        {'name': '-1', 'count': 16}
                     ],
-                    u'REFINERY_TYPE_16_82_s': [
-                        {'name': u'Array Data File', 'count': 14},
-                        {'name': u'Derived Array Data File', 'count': 2}
+                    'REFINERY_TYPE_16_82_s': [
+                        {'name': 'Array Data File', 'count': 14},
+                        {'name': 'Derived Array Data File', 'count': 2}
                     ],
-                    u'REFINERY_WORKFLOW_OUTPUT_16_82_s': [
-                        {'name': u'N/A', 'count': 16}
+                    'REFINERY_WORKFLOW_OUTPUT_16_82_s': [
+                        {'name': 'N/A', 'count': 16}
                     ],
-                    u'organism_Characteristics_16_82_s': [
-                        {'name': u'Danio', 'count': 16}
+                    'organism_Characteristics_16_82_s': [
+                        {'name': 'Danio', 'count': 16}
                     ]
                 },
                 'attributes': [
                     {
                         'attribute_type': 'Internal',
                         'display_name': 'Analysis Group',
-                        'file_ext': u's',
-                        'internal_name': u'REFINERY_SUBANALYSIS_16_82_s'
+                        'file_ext': 's',
+                        'internal_name': 'REFINERY_SUBANALYSIS_16_82_s'
                     },
                     {
                         'attribute_type': 'Internal',
                         'display_name': 'Output Type',
-                        'file_ext': u's',
-                        'internal_name': u'REFINERY_WORKFLOW_OUTPUT_16_82_s'
+                        'file_ext': 's',
+                        'internal_name': 'REFINERY_WORKFLOW_OUTPUT_16_82_s'
                     },
                     {
                         'attribute_type': 'Characteristics',
-                        'display_name': u'Organism',
-                        'file_ext': u's',
-                        'internal_name': u'organism_Characteristics_16_82_s'
+                        'display_name': 'Organism',
+                        'file_ext': 's',
+                        'internal_name': 'organism_Characteristics_16_82_s'
                     },
                     {
                         'attribute_type': 'Internal',
-                        'display_name': u'Type',
-                        'file_ext': u's',
-                        'internal_name': u'REFINERY_TYPE_16_82_s'
+                        'display_name': 'Type',
+                        'file_ext': 's',
+                        'internal_name': 'REFINERY_TYPE_16_82_s'
                     }
                 ],
                 'nodes_count': 1,
                 'nodes': [
                     {
-                        u'REFINERY_WORKFLOW_OUTPUT_16_82_s': u'N/A',
-                        u'organism_Characteristics_16_82_s': u'Danio',
-                        u'REFINERY_SUBANALYSIS_16_82_s': u'-1',
-                        u'REFINERY_TYPE_16_82_s': u'Array Data File'
+                        'REFINERY_WORKFLOW_OUTPUT_16_82_s': 'N/A',
+                        'organism_Characteristics_16_82_s': 'Danio',
+                        'REFINERY_SUBANALYSIS_16_82_s': '-1',
+                        'REFINERY_TYPE_16_82_s': 'Array Data File'
                     }
                 ]
             }
@@ -1130,7 +1130,7 @@ class UtilitiesTests(TestCase):
                                                 attribute_order.rank)
         self.assertEqual(response, 'Error: New rank == old rank')
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
-        self.assertItemsEqual(old_attribute_list, attribute_list)
+        self.assertCountEqual(old_attribute_list, attribute_list)
 
     @mock.patch("data_set_manager.utils.core.utils.build_absolute_url")
     def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
@@ -1143,7 +1143,7 @@ class UtilitiesTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             get_file_url_from_node_uuid("coffee")
             self.assertEqual("Couldn't fetch Node by UUID from: coffee",
-                             context.exception.message
+                             str(context.exception)
                              )
 
     def test_get_file_url_from_node_uuid_with_no_file(self):
@@ -1153,7 +1153,7 @@ class UtilitiesTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             get_file_url_from_node_uuid(self.node_b.uuid,
                                         require_valid_url=True)
-        self.assertIn("has no associated file url", context.exception.message)
+        self.assertIn("has no associated file url", str(context.exception))
 
     def test__create_solr_params_from_node_uuids(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]

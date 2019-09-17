@@ -17,7 +17,7 @@ class AnalysisStatusTests(AnalysisManagerTestBase):
         with self.assertRaises(ValueError) as context:
             self.analysis_status.set_galaxy_history_state("NOT A VALID STATE")
             self.assertEqual(
-                context.exception.message,
+                str(context.exception),
                 "Invalid Galaxy history state given"
             )
 
@@ -32,7 +32,7 @@ class AnalysisStatusTests(AnalysisManagerTestBase):
         with self.assertRaises(ValueError) as context:
             self.analysis_status.set_galaxy_import_state("NOT A VALID STATE")
             self.assertEqual(
-                context.exception.message,
+                str(context.exception),
                 "Invalid Galaxy history state given"
             )
 

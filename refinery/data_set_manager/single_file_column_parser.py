@@ -67,11 +67,14 @@ class SingleFileColumnParser:
         # metadata file object
         self.metadata_file = metadata_file
         self.metadata_file.seek(0)
+        metadata_read = self.metadata_file.read()
+        if type(metadata_read) == bytes:
+            metadata_read = metadata_read.decode('utf-8')
         try:
             # need to use splitlines() to avoid potential newline errors
             # http://madebyknight.com/handling-csv-uploads-in-django/
             self.metadata_reader = csv.reader(
-                self.metadata_file.read().splitlines(),
+                metadata_read.splitlines(),
                 dialect="excel-tab",
                 delimiter=self.delimiter)
         except csv.Error:

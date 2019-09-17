@@ -61,7 +61,7 @@ def analysis_cancel(request):
     # $http Angular service returns json format
     if request.method == 'POST':
         try:
-            uuid = json.loads(request.body)['uuid']
+            uuid = json.loads(request.body.decode())['uuid']
         except KeyError:
             return HttpResponseBadRequest()  # 400
         error_msg = "Cancellation failed for analysis '{}'".format(uuid)

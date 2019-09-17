@@ -65,21 +65,18 @@ class UserFileAPITests(APITestCase):
 
         mock_doc = {
             NodeIndex.DOWNLOAD_URL:
-                'fake-url',
-            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
-                'fake-filename',
-            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
-                'handles\u2013unicode'
+                "fake-url",
+            "filename_Characteristics" + NodeIndex.GENERIC_SUFFIX:
+                "fake-filename",
+            "organism_Factor_Value" + NodeIndex.GENERIC_SUFFIX:
+                "handles\\u2013unicode"
             # Just want to exercise "_Characteristics" and "_Factor_Value":
             # Doesn't matter if the names are backwards.
         }
+        response_dict = {"response": {"docs": [mock_doc]}}
         with mock.patch(
                 'user_files_manager.views.' + solr_mock_reference,
-                return_value=json.dumps({
-                    'response': {
-                        'docs': [mock_doc]
-                    }
-                })
+                return_value=bytes(str(json.dumps(response_dict)), encoding='utf-8')
         ):
             response = user_files_csv(request)
             self.assertEqual(
@@ -125,7 +122,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
                 'files/'
             )
         )
-        self.assertIn("All Files", response.content)
+        self.assertIn("All Files", str(response.content))
 
     @override_settings(USER_FILES_COLUMNS='name,fake')
     def test_csv(self):

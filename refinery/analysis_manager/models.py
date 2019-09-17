@@ -110,7 +110,6 @@ def get_task_group_state(task_group_id):
     """return a list containing states of all tasks given a task set ID"""
     task_group_state = []
     percent_done = 0
-
     taskset = TaskSetResult.restore(task_group_id)
     if not taskset:
         logger.error("TaskSet with UUID '%s' doesn't exist", task_group_id)

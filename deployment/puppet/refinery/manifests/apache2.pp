@@ -29,13 +29,21 @@ class refinery::apache2 (
     log_formats            => {
       aws-elb => '%{X-Forwarded-For}i %h %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"',
     },
+    mod_libs => {
+    'wsgi' => "mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
+    },
+    require => Class['refinery::python']
   }
 
   class { 'apache::mod::wsgi':
-    mod_path     => 'mod_wsgi.so',
-    package_name => 'libapache2-mod-wsgi',
+    mod_path     => "${pyenv}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
+    # this package is unused due to the re-jig above
+    # but needs to be specified, as per puppet's source code ¯\_(ツ)_/¯
+    package_name => 'libapache2-mod-wsgi-py3',
+    wsgi_python_home => "${pyenv}",
+    wsgi_python_path => "${django_root}",
+    require => Class['refinery::python']
   }
-
   # recommended for use with AWS ELB to avoid HTTP 408 errors
   class { 'apache::mod::reqtimeout':
     timeouts => [
@@ -132,7 +140,8 @@ class refinery::apache2 (
       'refinery' => {
         'user'        => $app_user,
         'group'       => $app_group,
-        'python-path' => "${django_root}:${pyenv}/lib/python2.7/site-packages",
+        'python-home' => "${pyenv}",
+        "python-path" => "${django_root}"
       }
     },
     wsgi_process_group      => 'refinery',

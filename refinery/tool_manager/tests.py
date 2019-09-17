@@ -68,7 +68,7 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
 from factory_boy.utils import create_dataset_with_necessary_models, \
     create_tool_with_necessary_models
 from file_store.models import FileStoreItem
-from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
+from .test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_dataset_provenance_1,
                                     galaxy_datasets_list,
                                     galaxy_datasets_list_same_output_names,
@@ -651,7 +651,7 @@ class ToolTests(ToolManagerTestBase):
         with self.assertRaises(NotImplementedError) as context:
             tool.launch()
 
-        self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
+        self.assertEqual(str(context.exception), tool.LAUNCH_WARNING)
 
     def test__get_owner_info_as_dict(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -1712,7 +1712,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
         self.assertIn(
             "There should be one creating job output name",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_that_tool_analysis_has_proper_ownership(self):
@@ -2226,7 +2226,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(type(self.post_response), HttpResponseBadRequest)
         self.assertEqual(Tool.objects.count(), 0)
         self.assertIn("DataSet matching query does not exist.",
-                      self.post_response.content)
+                      str(self.post_response.content))
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def _start_visualization(self, json_name, file_relationships,
@@ -2299,7 +2299,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             "Input Node limit of: {} reached".format(
                 constants.REFINERY_SOLR_DOC_LIMIT
             ),
-            context.exception.message
+            str(context.exception)
         )
 
     def test_visualization_tool_creation_with_custom_display_name(self):

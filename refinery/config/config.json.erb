@@ -4,7 +4,7 @@
     ["Refinery Admin", "<%= @admin || "admin@example.org" %>"]
   ],
   "ALLOWED_HOSTS": ["localhost", "127.0.0.1", "192.168.50.50"
-    <%= @site_url ? ', "' + @site_url +  '"' : "" %>
+    <%= @site_url ? ', "' + @site_url +  '"' : "" %>, "0.0.0.0"
     ],
   "BROKER_URL": "pyamqp://guest:guest@localhost:5672//",
   "CELERYD_MAX_TASKS_PER_CHILD": 100,

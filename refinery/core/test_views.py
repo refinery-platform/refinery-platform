@@ -2256,7 +2256,7 @@ class EventApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request).render()
         # Ensure that request made by "self.user" doesn't return Events from
         #  "another_user"
-        self.assertEqual(json.loads(get_response.content), [])
+        self.assertEqual(json.loads(get_response.content.decode()), [])
 
     def test_get_event_list(self):
         CuserMiddleware.set_user(self.user)
@@ -2429,7 +2429,7 @@ class ObtainAuthTokenValidSessionApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
-        self.assertEqual(json.loads(get_response.content),
+        self.assertEqual(json.loads(get_response.content.decode()),
                          {"token": self.user.auth_token.key})
 
     def test_get_without_valid_session(self):

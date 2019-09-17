@@ -7,7 +7,7 @@ import os
 from django.contrib.auth.hashers import make_password
 
 # The local package refinery/core/__init__.py
-import core     # Only used for its location
+import core  # Only used for its location
 
 core_path = os.path.dirname(os.path.abspath(core.__file__))
 
@@ -16,10 +16,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
 
 def main():
     with open(os.path.join(core_path, 'fixtures/superuser.json')) as j:
-	o = json.load(j)
+        o = json.load(j)
 
     admin_index = [index for (index, obj) in enumerate(o)
-      if obj['fields']['username'] == 'admin']
+                   if obj['fields']['username'] == 'admin']
     assert len(admin_index) == 1
     (admin_index,) = admin_index
 
@@ -27,7 +27,8 @@ def main():
 
     o[admin_index]['fields']['password'] = hashed_password
 
-    print json.dumps(o, indent=2)
+    print(json.dumps(o, indent=2))
+
 
 if __name__ == '__main__':
     main()

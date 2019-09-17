@@ -332,12 +332,12 @@ def download_file(url, target_path, file_size=1):
         # download and save the file
         localfilesize = 0
         blocksize = 8 * 2 ** 10    # 8 Kbytes
-        for buf in iter(lambda: response.raw.read(blocksize), ''):
+        for buf in iter(lambda: response.raw.read(blocksize), b''):
             localfilesize += len(buf)
             destination.write(buf)
             # check if we have a sane value for file size
             if remotefilesize > 0:
-                percent_done = localfilesize * 100. / remotefilesize
+                percent_done = localfilesize * 100 / remotefilesize
             else:
                 percent_done = 0
                 download_file.update_state(

@@ -122,7 +122,7 @@ class AnalysisUtilsTests(TestCase):
                     "workflow_uuid": "COFFEE"
                 }
             )
-            self.assertIn("Couldn't fetch Workflow", context.exception.message)
+            self.assertIn("Couldn't fetch Workflow", str(context.exception))
 
     def test_fetch_objects_required_for_analyses_bad_study(self):
         with self.assertRaises(RuntimeError) as context:
@@ -133,7 +133,7 @@ class AnalysisUtilsTests(TestCase):
                     "workflow_uuid": self.workflow.uuid
                 }
             )
-            self.assertIn("Couldn't fetch Study", context.exception.message)
+            self.assertIn("Couldn't fetch Study", str(context.exception))
 
     def test_fetch_objects_required_for_analyses_bad_user(self):
         with self.assertRaises(RuntimeError) as context:
@@ -144,4 +144,4 @@ class AnalysisUtilsTests(TestCase):
                     "workflow_uuid": self.workflow.uuid
                 }
             )
-            self.assertIn("Couldn't fetch User", context.exception.message)
+            self.assertIn("Couldn't fetch User", str(context.exception))

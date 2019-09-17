@@ -2,7 +2,7 @@ sudo: required
 
 language: python
 python:
-  - "3.7"
+  - "3.5"
 
 cache:
   directories:
@@ -17,6 +17,9 @@ addons:
       - postgresql-client-10
       - libgconf-2-4  # for Cypress
 
+before_install:
+  - sudo apt-get install apache2-dev
+
 install:
   - node --version
   - NODE_VERSION=10.16.0
@@ -28,7 +31,7 @@ install:
   - npm install -g npm@6.9.0
   - npm --version
 
-  - pip install -r requirements.txt --quiet
+  - pip install -r requirements.txt
 
 env:
   global:
@@ -62,6 +65,7 @@ before_script:
 
   # Required for cypress tests; TODO: Move to puppet.
   # TODO: Start up solr
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
   - python manage.py loaddata guest.json
   - python manage.py activate_user guest
   - python manage.py add_users_to_public_group
@@ -75,19 +79,18 @@ script:
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
   # - flake8 ..
+  - echo 'travis_fold:start:django-tests'
+  - coverage run manage.py test --failfast
+  - echo 'travis_fold:end:django-tests'
+
 
   - echo 'travis_fold:start:grunt'
   - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
 
-  - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test --failfast
-  - echo 'travis_fold:end:django-tests'
-
   - echo 'travis_fold:start:cypress'
   - pushd ui && node_modules/.bin/cypress run --record && popd
   - echo 'travis_fold:end:cypress'
-
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:
