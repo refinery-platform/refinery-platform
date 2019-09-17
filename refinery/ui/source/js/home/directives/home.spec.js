@@ -22,7 +22,7 @@
       $httpBackend
         .expectGET(
           settings.appRoot +
-          settings.refineryApiV2 + '/site_profiles/'
+          settings.refineryApiV2 + '/site_profiles/?current_site=True'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

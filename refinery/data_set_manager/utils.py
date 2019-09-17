@@ -723,7 +723,7 @@ def get_owner_from_assay(uuid):
     return data_set.get_owner()
 
 
-def format_solr_response(solr_response):
+def format_solr_response(solr_response, include_facet_count=True):
     # Returns a reformatted solr response
     solr_response_json = json.loads(solr_response)
 
@@ -734,13 +734,15 @@ def format_solr_response(solr_response):
     except KeyError:
         order_facet_fields = []
 
-    if solr_response_json.get('facets'):
+    if solr_response_json.get('facets') and include_facet_count != 'false':
         solr_response_json['facet_field_counts'] = create_facet_field_counts(
             solr_response_json.get('facets')
         )
-        del solr_response_json['facets']
     else:
         solr_response_json['facet_field_counts'] = {}
+
+    if solr_response_json.get('facets'):
+        del solr_response_json['facets']
 
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')
@@ -945,7 +947,17 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
                     "Node with uuid: {} has no associated file url"
                     .format(node_uuid)
                 )
-        return core.utils.get_absolute_url(url) if url else None
+        try:
+            return core.utils.build_absolute_url(url) if url else None
+        except ValueError as e:
+            logger.error('URL {} is not a valid relative url'.format(str(url)))
+            raise type(e)(e.message)
+        except RuntimeError as e:
+            logger.error('Could not build absolute URL for {}'.format(
+                    str(url)
+                )
+            )
+            raise type(e)(e.message)
 
 
 def fix_last_column(file):
