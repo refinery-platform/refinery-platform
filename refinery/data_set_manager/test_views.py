@@ -423,7 +423,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content,
-                         '"Requires attribute id or solr_field name."')
+                         b'"Requires attribute id or solr_field name."')
         self.client.logout()
 
     def test_put_invalid_login(self):
@@ -441,7 +441,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.content,
-                         '"Only owner may edit attribute order."')
+                         b'"Only owner may edit attribute order."')
         self.client.logout()
 
     def test_put_object_id_without_attribute_order(self):
@@ -459,7 +459,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content,
-                         '"Could not find attribute orders to update"')
+                         b'"Could not find attribute orders to update"')
         self.client.logout()
 
     def test_put_object_solr_without_attribute_order(self):
@@ -477,7 +477,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content,
-                         '"Could not find attribute orders to update"')
+                         b'"Could not find attribute orders to update"')
         self.client.logout()
 
 
