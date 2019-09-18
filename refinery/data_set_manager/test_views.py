@@ -6,6 +6,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.forms.models import model_to_dict
 from django.http import QueryDict
 from django.test import LiveServerTestCase, override_settings
@@ -28,7 +29,8 @@ from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .tests import MetadataImportTestBase
 from .views import (AddFileToNodeView, AssayAPIView, AssayAttributeAPIView,
-                    NodeViewSet, StudyAPIView)
+                    NodeViewSet, StudyAPIView,
+                    TakeOwnershipOfPublicDatasetView)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -810,14 +812,25 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
 
     def test_get_with_study_uuid_returns_file_uuid_field(self):
+        nodes = self.hg_19_data_set.get_nodes()
+        file_node = nodes.filter(
+            type=Node.RAW_DATA_FILE, name='s5_p42_E2_45min.fastq.gz'
+        )[0]
+        file_item_uuid = file_node.file_item.uuid
+
         get_request = self.factory.get(self.url_root,
                                        {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
-        first_node = get_response.data[0]
+        file_node_response = None
+        for node in get_response.data:
+            if file_node.uuid == node.get('uuid'):
+                file_node_response = node
+                break
+
         self.assertEqual(
-            first_node.get('file_uuid'),
-            Node.objects.get(uuid=first_node.get('uuid')).file_item.uuid
+            file_item_uuid,
+            file_node_response.get('file_uuid')
         )
 
     def test_get_with_study_uuid_returns_name_field(self):
@@ -1827,3 +1840,51 @@ class StudyViewAPIV2Tests(APIV2TestCase):
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('investigation'),
                          self.data_set.get_studies()[0].investigation.id)
+
+
+class TakeOwnershipOfPublicDatasetViewTest(APIV2TestCase):
+
+    def setUp(self, **kwargs):
+        super(TakeOwnershipOfPublicDatasetViewTest, self).setUp(
+            api_base_name="import/take_ownership/",
+            view=TakeOwnershipOfPublicDatasetView.as_view()
+        )
+        self.username_owner = 'owner'
+        self.password_owner = 'take_over'
+        self.user_owner = User.objects.create_user(
+            self.username_owner, 'user1@example.com', self.password_owner
+        )
+        self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.data_set.share(ExtendedGroup.objects.public_group())
+
+    def test_take_ownership_public_datafile_returns_url_in_cookies(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(
+            post_response.cookies.get('isa_tab_url').value,
+            'http://www.example.com/test.csv'
+        )
+
+    def test_take_ownership_returns_400_without_current_site(self):
+        Site.objects.all().delete()
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(post_response.status_code, 400)
+
+    @mock.patch("data_set_manager.views.build_absolute_url")
+    def test_take_ownership_returns_400_without_relative_url(self, mock_url):
+        def raise_error(file):
+            raise ValueError(str(file))
+        mock_url.side_effect = raise_error
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(post_response.status_code, 400)

@@ -116,19 +116,20 @@ def invalidate_cached_object(instance, is_test=False):
         return mc
 
 
-def get_absolute_url(string):
+def build_absolute_url(string):
     """Creates an absolute URL from a relative URL using the current Site
     domain and REFINERY_URL_SCHEME Django setting
     """
-    if not string or is_absolute_url(string):
+    if not string:
+        raise ValueError('Only relative urls allowed, not: {}'.format(string))
+    if is_absolute_url(string):
         return string
-
     try:
         current_site = Site.objects.get_current()
-    except Site.DoesNotExist:
+    except Site.DoesNotExist as e:
         logger.error("Can not construct a full URL: no Sites configured or "
                      "SITE_ID is invalid")
-        return None
+        raise RuntimeError(e.message)
 
     return "{}://{}{}".format(
         settings.REFINERY_URL_SCHEME, current_site.domain, string
