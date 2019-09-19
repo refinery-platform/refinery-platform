@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import stat
+import hashlib
 import urllib2
 import urlparse
 
@@ -74,7 +75,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         # TODO: remove this when get_directory_name() is removed in Django 2.0
         name = os.path.normpath(name)
         # create a hashed directory structure
-        hashcode = hash(name)
+        hashcode = int(hashlib.md5(name).hexdigest(), 16)
         mask = 255  # bitmask
         # use the first and second bytes of the hash code represented as
         # zero-padded hex numbers as directory names
