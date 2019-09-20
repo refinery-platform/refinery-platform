@@ -43,7 +43,6 @@ urlpatterns = [
         registration_views.ActivationView.as_view(),
         name='registration.views.activate'),
     url(r'^accounts/', include(registration_urls)),
-    url(r'^djangular/', include('djangular.urls')),
 
     url(r'', include('core.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
