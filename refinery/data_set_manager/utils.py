@@ -37,13 +37,6 @@ logger = logging.getLogger(__name__)
 MAX_BULK_LIST_SIZE = 75
 
 
-# make a list of values unique
-def uniquify(seq):
-    set = {}
-    map(set.__setitem__, seq, [])
-    return set.keys()
-
-
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment
 # graph follow the same sequence of node types
@@ -158,7 +151,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
         if current_id is None or current_id != node["id"]:
             # save current node
             if current_node is not None:
-                current_node['parents'] = uniquify(current_node['parents'])
+                current_node['parents'] = list(set(current_node['parents']))
                 nodes[current_id] = current_node
             # new node, start merging
             current_id = node['id']
@@ -186,7 +179,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
 
     # save last node
     if current_node is not None:
-        current_node['parents'] = uniquify(current_node['parents'])
+        current_node['parents'] = list(set(current_node['parents']))
         nodes[current_id] = current_node
 
     return nodes
