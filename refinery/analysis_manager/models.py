@@ -119,6 +119,8 @@ def get_task_group_state(task_group_id):
         str(os.environ.get('CELERY_LOADER')),
         str(os.environ.get('DJANGO_SETTINGS_MODULE'))
     )
+    from celery.app import default_app
+    logger.debug(str(default_app))
 
     taskset = TaskSetResult.restore(task_group_id)
     if not taskset:
