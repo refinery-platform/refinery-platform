@@ -114,8 +114,9 @@ def get_task_group_state(task_group_id):
     from celery._state import current_app, default_app
     logger.debug(
         str(current_app.backend), str(current_app.conf.CELERY_RESULT_BACKEND),
-        str(current_app.backend_cls), str(current_app._get_backend()), str(default_app),
-        str(current_app.loader_cls), str(os.environ.get('CELERY_LOADER')),
+        str(current_app.backend_cls), str(current_app._get_backend()),
+        str(default_app), str(current_app.loader_cls),
+        str(os.environ.get('CELERY_LOADER')),
         str(os.environ.get('DJANGO_SETTINGS_MODULE'))
     )
 
