@@ -116,7 +116,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',  # for admin app
-    'djangular.finders.NamespacedAngularAppDirectoriesFinder',
 )
 
 # Make sure to set this to a random string in production
@@ -189,7 +188,6 @@ INSTALLED_APPS = (
     'haystack',
     # NG: added for celery (task queue)
     'djcelery',  # django-celery
-    'djangular',
     'galaxy_connector',
     'analysis_manager',
     'file_store',
