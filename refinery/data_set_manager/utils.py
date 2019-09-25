@@ -654,7 +654,7 @@ def generate_filtered_facet_fields(attributes):
             if field.get('is_facet'):
                 facet_field.append(field.get('solr_field'))
 
-    weighted_facet_list.sort()
+    weighted_facet_list.sort(key=lambda x: x[0])
     for (rank, field) in weighted_facet_list:
         field_limit_list.append(field.get("solr_field"))
 
