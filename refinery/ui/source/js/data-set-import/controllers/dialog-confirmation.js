@@ -1,11 +1,13 @@
 'use strict';
 
 var ConfirmationDialogInstanceCtrl = function (
-  $scope, $uibModalInstance, config
+  $scope, $uibModalInstance, config, settings
 ) {
-  this.config = config;
+  var vm = this;
+  vm.config = config;
+  vm.instanceName = settings.djangoApp.refineryInstanceName;
 
-  this.ok = function () {
+  vm.ok = function () {
     $uibModalInstance.close();
   };
 };
@@ -13,5 +15,5 @@ var ConfirmationDialogInstanceCtrl = function (
 angular
   .module('refineryDataSetImport')
   .controller('ConfirmationDialogInstanceCtrl', [
-    '$scope', '$uibModalInstance', 'config', ConfirmationDialogInstanceCtrl
+    '$scope', '$uibModalInstance', 'config', 'settings', ConfirmationDialogInstanceCtrl
   ]);

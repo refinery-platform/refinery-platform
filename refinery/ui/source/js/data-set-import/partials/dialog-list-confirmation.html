@@ -4,7 +4,7 @@
 <div id="check_availability_overflow" class="modal-body" ng-if="modal.config.items.length">
   <p>
     The following files are listed in the <strong>Data File Column</strong>
-    of your metadata file, but have not yet been uploaded to Refinery.
+    of your metadata file, but have not yet been uploaded to {{ modal.instanceName }}.
   	<ul>
   		<li ng-repeat="item in modal.config.items track by $index">{{ item }}</li>
 	  </ul>
