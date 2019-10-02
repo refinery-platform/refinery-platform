@@ -1,5 +1,4 @@
 import logging
-import os
 
 from django.db import models
 from django.db.models.fields import CharField, PositiveSmallIntegerField
@@ -110,17 +109,6 @@ class AnalysisStatus(models.Model):
 def get_task_group_state(task_group_id):
     """return a list containing states of all tasks given a task set ID"""
     task_group_state = []
-    percent_done = 0
-    from celery._state import current_app, default_app
-    logger.debug(
-        (str(current_app.backend), str(current_app.conf.CELERY_RESULT_BACKEND),
-        str(current_app.backend_cls), str(current_app._get_backend()),
-        str(default_app), str(current_app.loader_cls),
-        str(os.environ.get('CELERY_LOADER')),
-        str(os.environ.get('DJANGO_SETTINGS_MODULE')))
-    )
-    from celery.app import default_app
-    logger.debug(str(default_app))
 
     taskset = TaskSetResult.restore(task_group_id)
     if not taskset:
