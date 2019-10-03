@@ -3,6 +3,7 @@ from data_set_manager.tasks import generate_bam_index
 from django.test import TestCase
 from file_store.models import FileType, FileStoreItem
 
+
 class BamFileIndexTest(TestCase):
 
     def setUp(self):
@@ -11,7 +12,7 @@ class BamFileIndexTest(TestCase):
         )
         self.file_store_item.save()
         self.folder = 'data_set_manager/test-data/'
-        self.test_bam_file =  self.folder + 'test.bam'
+        self.test_bam_file = self.folder + 'test.bam'
 
     def tearDown(self):
         os.remove(self.test_bam_file + '.bai')
