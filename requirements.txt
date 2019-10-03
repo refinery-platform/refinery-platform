@@ -2,7 +2,7 @@
 # https://github.com/celery/librabbitmq/issues/118#issuecomment-385461136
 # https://github.com/celery/librabbitmq/issues/119#issuecomment-388327748
 # http://docs.celeryproject.org/en/3.1/userguide/optimizing.html?highlight=pyamqp#librabbitmq-python-2-only
-amqp==2.5.1
+amqp==1.4.9
 bioblend==0.9.0
 boto3==1.4.4
 celery==3.1.26.post2
