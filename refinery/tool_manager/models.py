@@ -793,8 +793,11 @@ class WorkflowTool(Tool):
         """Create the AnalysisNodeConnection objects corresponding to the
         output Nodes (Derived Data) of a WorkflowTool launch
         """
-        exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
-        for galaxy_dataset in self._get_galaxy_history_dataset_list():
+        exposed_dataset_list = self._get_galaxy_history_dataset_list()
+        exposed_workflow_outputs = self._get_exposed_galaxy_datasets(
+            exposed_dataset_list=exposed_dataset_list
+        )
+        for galaxy_dataset in exposed_dataset_list:
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis, direction=OUTPUT_CONNECTION,
                 name=self._get_creating_job_output_name(galaxy_dataset),
@@ -1095,7 +1098,7 @@ class WorkflowTool(Tool):
         ]
         return retained_datasets
 
-    def _get_exposed_galaxy_datasets(self):
+    def _get_exposed_galaxy_datasets(self, exposed_dataset_list=None):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
@@ -1108,7 +1111,9 @@ class WorkflowTool(Tool):
         explicitly exposed
         """
         exposed_galaxy_datasets = []
-        for galaxy_dataset in self._get_galaxy_history_dataset_list():
+        if exposed_dataset_list is None:
+            exposed_dataset_list = self._get_galaxy_history_dataset_list()
+        for galaxy_dataset in exposed_dataset_list:
             creating_job = self._get_galaxy_dataset_job(galaxy_dataset)
 
             # `tool_id` corresponds to the descriptive name of a galaxy
