@@ -673,6 +673,8 @@ class WorkflowTool(Tool):
     REVERSE = "reverse"
     TOOL_ID = "tool_id"
     WORKFLOW_OUTPUTS = "workflow_outputs"
+    exposed_dataset_list = models.TextField(null=True, blank=True)
+    full_history_list = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name = "workflowtool"
@@ -794,9 +796,7 @@ class WorkflowTool(Tool):
         output Nodes (Derived Data) of a WorkflowTool launch
         """
         exposed_dataset_list = self._get_galaxy_history_dataset_list()
-        exposed_workflow_outputs = self._get_exposed_galaxy_datasets(
-            exposed_dataset_list=exposed_dataset_list
-        )
+        exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
         for galaxy_dataset in exposed_dataset_list:
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis, direction=OUTPUT_CONNECTION,
@@ -1085,20 +1085,25 @@ class WorkflowTool(Tool):
         Galaxy Workflow invocation corresponding to all tool outputs in the
         Galaxy Workflow editor.
         """
-        galaxy_dataset_list = (
-            self.galaxy_connection.histories.show_matching_datasets(
-                self.galaxy_workflow_history_id
+        if self.full_history_list is None or self.full_history_list == '':
+            galaxy_dataset_list = (
+                self.galaxy_connection.histories.show_matching_datasets(
+                    self.galaxy_workflow_history_id
+                )
             )
-        )
-        retained_datasets = [
-            self._update_galaxy_dataset_name(galaxy_dataset)
-            for galaxy_dataset in galaxy_dataset_list
-            if not galaxy_dataset["purged"] and
-            self._get_workflow_step(galaxy_dataset) > 0
-        ]
-        return retained_datasets
+            retained_datasets = [
+                self._update_galaxy_dataset_name(galaxy_dataset)
+                for galaxy_dataset in galaxy_dataset_list
+                if not galaxy_dataset["purged"] and
+                self._get_workflow_step(galaxy_dataset) > 0
+            ]
+            self.full_history_list = json.dumps(retained_datasets)
+            self.save()
+            return retained_datasets
+        else:
+            return json.loads(self.full_history_list)
 
-    def _get_exposed_galaxy_datasets(self, exposed_dataset_list=None):
+    def _get_exposed_galaxy_datasets(self):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
@@ -1110,31 +1115,35 @@ class WorkflowTool(Tool):
         outputs of the WorkflowTool's Galaxy Workflow that have been
         explicitly exposed
         """
-        exposed_galaxy_datasets = []
-        if exposed_dataset_list is None:
+        if self.exposed_dataset_list == '' or self.exposed_dataset_list is None:
+            exposed_galaxy_datasets = []
             exposed_dataset_list = self._get_galaxy_history_dataset_list()
-        for galaxy_dataset in exposed_dataset_list:
-            creating_job = self._get_galaxy_dataset_job(galaxy_dataset)
+            for galaxy_dataset in exposed_dataset_list:
+                creating_job = self._get_galaxy_dataset_job(galaxy_dataset)
 
-            # `tool_id` corresponds to the descriptive name of a galaxy
-            # tool. Not a UUID-like string like one may think
-            if "upload" not in creating_job["tool_id"]:
-                workflow_step_key = str(
-                    self._get_workflow_step(galaxy_dataset)
-                )
-                workflow_steps_dict = self._get_workflow_dict()["steps"]
-                creating_job_output_name = (
-                    self._get_creating_job_output_name(galaxy_dataset)
-                )
-                workflow_step_output_names = [
-                    workflow_output["output_name"] for workflow_output in
-                    workflow_steps_dict[workflow_step_key][
-                        self.WORKFLOW_OUTPUTS
+                # `tool_id` corresponds to the descriptive name of a galaxy
+                # tool. Not a UUID-like string like one may think
+                if "upload" not in creating_job["tool_id"]:
+                    workflow_step_key = str(
+                        self._get_workflow_step(galaxy_dataset)
+                    )
+                    workflow_steps_dict = self._get_workflow_dict()["steps"]
+                    creating_job_output_name = (
+                        self._get_creating_job_output_name(galaxy_dataset)
+                    )
+                    workflow_step_output_names = [
+                        workflow_output["output_name"] for workflow_output in
+                        workflow_steps_dict[workflow_step_key][
+                            self.WORKFLOW_OUTPUTS
+                        ]
                     ]
-                ]
-                if creating_job_output_name in workflow_step_output_names:
-                    exposed_galaxy_datasets.append(galaxy_dataset)
-        return exposed_galaxy_datasets
+                    if creating_job_output_name in workflow_step_output_names:
+                        exposed_galaxy_datasets.append(galaxy_dataset)
+            self.exposed_dataset_list = json.dumps(exposed_dataset_list)
+            self.save()
+            return exposed_galaxy_datasets
+        else:
+            return json.loads(self.exposed_dataset_list)
 
     def get_galaxy_dict(self):
         """
