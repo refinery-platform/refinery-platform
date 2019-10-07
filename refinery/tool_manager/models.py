@@ -1115,7 +1115,8 @@ class WorkflowTool(Tool):
         outputs of the WorkflowTool's Galaxy Workflow that have been
         explicitly exposed
         """
-        if self.exposed_dataset_list == '' or self.exposed_dataset_list is None:
+        if self.exposed_dataset_list == '' or \
+                self.exposed_dataset_list is None:
             exposed_galaxy_datasets = []
             exposed_dataset_list = self._get_galaxy_history_dataset_list()
             for galaxy_dataset in exposed_dataset_list:
