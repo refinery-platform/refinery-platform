@@ -1098,11 +1098,11 @@ class WorkflowTool(Tool):
                 if not galaxy_dataset["purged"] and
                 self._get_workflow_step(galaxy_dataset) > 0
             ]
-            self.full_history_list = json.dumps(retained_datasets)
+            self.full_history_list = str(retained_datasets)
             self.save()
             return retained_datasets
         else:
-            return json.loads(self.full_history_list)
+            return ast.literal_eval(self.full_history_list)
 
     def _get_exposed_galaxy_datasets(self, force_request=False):
         """
@@ -1141,11 +1141,11 @@ class WorkflowTool(Tool):
                     ]
                     if creating_job_output_name in workflow_step_output_names:
                         exposed_galaxy_datasets.append(galaxy_dataset)
-            self.exposed_dataset_list = json.dumps(exposed_dataset_list)
+            self.exposed_dataset_list = str(exposed_galaxy_datasets)
             self.save()
             return exposed_galaxy_datasets
         else:
-            return json.loads(self.exposed_dataset_list)
+            return ast.literal_eval(self.exposed_dataset_list)
 
     def get_galaxy_dict(self):
         """
