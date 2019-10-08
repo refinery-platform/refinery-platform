@@ -683,7 +683,8 @@ class DataSet(SharableResource):
     def get_file_nodes(self):
         return Node.objects.filter(
             study__in=self.get_investigation().study_set.all(),
-            file_item__isnull=False
+            file_item__isnull=False,
+            is_auxiliary_node=False
         )
 
     def get_file_count(self):
