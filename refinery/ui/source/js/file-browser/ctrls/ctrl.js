@@ -392,6 +392,7 @@
     function refreshAssayFiles () {
       paramService.fileParam.offset = vm.lastPage * vm.rowCount;
       paramService.fileParam.limit = vm.rowCount;
+      dataSetPropsService.refreshDataSet();
 
       var promise = $q.defer();
       fileBrowserFactory.getAssayFiles(paramService.fileParam).then(function () {
