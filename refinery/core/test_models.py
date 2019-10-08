@@ -80,6 +80,15 @@ class AnalysisDeletionTest(TestCase):
         self.assertGreater(total_dataset_nodes, 0)
         self.assertEqual(total_dataset_nodes, total_nodes)
 
+    def test_analysis_deletion_removes_related_aux_nodes(self):
+        aux_node = Node.objects.create(assay=self.dataset.get_latest_assay(),
+                                       study=self.dataset.get_latest_study(),
+                                       name='aux_node', is_auxiliary_node=True)
+        self.analysis.get_nodes()[0].add_child(aux_node)
+        self.assertEqual(self.analysis.get_auxiliary_nodes().count(), 1)
+        self.analysis.delete()
+        self.assertEqual(self.analysis.get_auxiliary_nodes().count(), 0)
+
     def test_analysis_bulk_deletion_removes_related_objects(self):
         # make a second Analysis
         make_analyses_with_single_dataset(1, self.user)
@@ -366,6 +375,14 @@ class AnalysisTests(TestCase):
                          self.analysis_node_connection_a.subanalysis)
         self.assertEqual(derived_data_file_node.workflow_output,
                          self.analysis_node_connection_a.name)
+
+    def test__get_auxiliary_nodes_returns_nodes(self):
+        aux_node = Node.objects.create(assay=self.assay, study=self.study,
+                                       name='aux_node', is_auxiliary_node=True)
+        self.node.add_child(aux_node)
+        analysis_aux_nodes_uuids = self.analysis.get_auxiliary_nodes()\
+            .values_list('uuid', flat=True)
+        self.assertIn(aux_node.uuid, analysis_aux_nodes_uuids)
 
     def test__get_input_nodes(self):
         analysis = self.analysis_with_node_analyzed_further
