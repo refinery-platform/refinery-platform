@@ -1079,13 +1079,14 @@ class WorkflowTool(Tool):
         )
 
     @handle_bioblend_exceptions
-    def _get_galaxy_history_dataset_list(self):
+    def _get_galaxy_history_dataset_list(self, force_request=False):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
         Galaxy Workflow invocation corresponding to all tool outputs in the
         Galaxy Workflow editor.
         """
-        if self.full_history_list is None or self.full_history_list == '':
+        if self.full_history_list is None or self.full_history_list == '' \
+                or force_request:
             galaxy_dataset_list = (
                 self.galaxy_connection.histories.show_matching_datasets(
                     self.galaxy_workflow_history_id
@@ -1103,7 +1104,7 @@ class WorkflowTool(Tool):
         else:
             return json.loads(self.full_history_list)
 
-    def _get_exposed_galaxy_datasets(self):
+    def _get_exposed_galaxy_datasets(self, force_request=False):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
@@ -1116,7 +1117,7 @@ class WorkflowTool(Tool):
         explicitly exposed
         """
         if self.exposed_dataset_list == '' or \
-                self.exposed_dataset_list is None:
+                self.exposed_dataset_list is None or force_request:
             exposed_galaxy_datasets = []
             exposed_dataset_list = self._get_galaxy_history_dataset_list()
             for galaxy_dataset in exposed_dataset_list:
