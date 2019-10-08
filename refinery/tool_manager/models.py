@@ -675,6 +675,7 @@ class WorkflowTool(Tool):
     WORKFLOW_OUTPUTS = "workflow_outputs"
     exposed_dataset_list = models.TextField(null=True, blank=True)
     full_history_list = models.TextField(null=True, blank=True)
+    invocation = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name = "workflowtool"
@@ -771,7 +772,7 @@ class WorkflowTool(Tool):
         self.set_analysis(analysis.uuid)
 
         workflow_dict = self._get_workflow_dict()
-        self.analysis.workflow_copy = workflow_dict
+        self.analysis.workflow_copy = json.dumps(workflow_dict)
         self.analysis.workflow_steps_num = len(workflow_dict["steps"].keys())
         self.analysis.set_owner(self.get_owner())
         self.analysis.save()
@@ -1180,10 +1181,19 @@ class WorkflowTool(Tool):
         """
         Fetch our Galaxy Workflow's invocation data.
         """
-        return self.galaxy_connection.workflows.show_invocation(
-            self.galaxy_workflow_history_id,
-            self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
-        )
+        # separate if-then assignment needed to avoid using the dict stored
+        # in self.invocation before .save() is called
+        if self.invocation == '' or self.invocation is None:
+            invocation = self.galaxy_connection.workflows.show_invocation(
+                self.galaxy_workflow_history_id,
+                self.get_galaxy_dict()
+                [self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
+            )
+            self.invocation = json.dumps(invocation)
+            self.save()
+        else:
+            invocation = json.loads(self.invocation)
+        return invocation
 
     @handle_bioblend_exceptions
     def _get_refinery_input_file_id(self, galaxy_dataset_dict):
@@ -1264,9 +1274,20 @@ class WorkflowTool(Tool):
 
     @handle_bioblend_exceptions
     def _get_workflow_dict(self):
-        return self.galaxy_connection.workflows.export_workflow_dict(
-            self.get_workflow_internal_id()
-        )
+        # separate if-then assignment needed to avoid using the dict stored
+        # in workflow_copy before .save() is called
+        if self.analysis.workflow_copy == '' \
+                or self.analysis.workflow_copy is None:
+            workflow_copy = \
+             self.galaxy_connection.workflows.export_workflow_dict(
+                self.get_workflow_internal_id()
+            )
+            self.analysis.workflow_copy = json.dumps(workflow_copy)
+            self.analysis.save()
+        else:
+            workflow_copy = json.loads(self.analysis.workflow_copy)
+        return workflow_copy
+
 
     def get_workflow_internal_id(self):
         return self.tool_definition.workflow.internal_id

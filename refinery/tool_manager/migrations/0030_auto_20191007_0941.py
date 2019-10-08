@@ -21,4 +21,9 @@ class Migration(migrations.Migration):
             name='full_history_list',
             field=models.TextField(null=True, blank=True),
         ),
+        migrations.AddField(
+            model_name='workflowtool',
+            name='invocation',
+            field=models.TextField(null=True, blank=True),
+        ),
     ]
