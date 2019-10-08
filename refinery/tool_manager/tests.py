@@ -1,5 +1,4 @@
 import StringIO
-import ast
 import json
 import logging
 import uuid

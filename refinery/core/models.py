@@ -5,7 +5,6 @@ Created on Feb 20, 2012
 '''
 from __future__ import absolute_import
 
-import ast
 from collections import defaultdict
 from datetime import datetime
 import json

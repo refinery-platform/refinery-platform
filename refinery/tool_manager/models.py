@@ -1279,15 +1279,14 @@ class WorkflowTool(Tool):
         if self.analysis.workflow_copy == '' \
                 or self.analysis.workflow_copy is None:
             workflow_copy = \
-             self.galaxy_connection.workflows.export_workflow_dict(
-                self.get_workflow_internal_id()
-            )
+                self.galaxy_connection.workflows.export_workflow_dict(
+                    self.get_workflow_internal_id()
+                )
             self.analysis.workflow_copy = json.dumps(workflow_copy)
             self.analysis.save()
         else:
             workflow_copy = json.loads(self.analysis.workflow_copy)
         return workflow_copy
-
 
     def get_workflow_internal_id(self):
         return self.tool_definition.workflow.internal_id
