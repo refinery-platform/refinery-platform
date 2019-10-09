@@ -647,8 +647,7 @@ class Node(models.Model):
             auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item
             )
-            from data_set_manager.tasks import generate_auxiliary_file
-            result = generate_auxiliary_file.delay(
+            result = data_set_manager.tasks.generate_auxiliary_file.delay(
                 auxiliary_node, self.file_item
             )
             auxiliary_file_store_item.import_task_id = result.task_id
