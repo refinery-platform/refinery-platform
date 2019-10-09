@@ -23,10 +23,6 @@ logger = logging.getLogger(__name__)
 
 class AssayClassTests(TestCase):
     def setUp(self):
-        self.username = 'coffee_tester'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-
         self.filestore_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.bam',
@@ -37,35 +33,22 @@ class AssayClassTests(TestCase):
                 'test_file.bed',
                 'Coffee is delicious!')
         )
-        self.filestore_item_2 = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.seg',
-                'Coffee is delicious!')
-        )
-        self.dataset = DataSet.objects.create()
-        # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
-        self.investigation_link = InvestigationLink.objects.create(
-            investigation=self.investigation,
-            data_set=self.dataset)
-
-        # Create Studys and Assays
         self.study = Study.objects.create(investigation=self.investigation)
         self.assay = Assay.objects.create(study=self.study)
 
-        self.node = Node.objects.create(assay=self.assay, study=self.study,
-                                        file_item=self.filestore_item)
-        self.node_2 = Node.objects.create(assay=self.assay, study=self.study,
-                                          file_item=self.filestore_item_2)
+        Node.objects.create(assay=self.assay, study=self.study,
+                            file_item=self.filestore_item)
+        Node.objects.create(assay=self.assay, study=self.study,
+                            file_item=self.filestore_item_1)
 
     def test_get_file_count(self):
         self.assertEqual(self.assay.get_file_count(), 2)
 
     def test_get_file_count_does_not_count_aux_nodes(self):
-        self.aux_node = Node.objects.create(assay=self.assay,
-                                            study=self.study,
-                                            is_auxiliary_node=True,
-                                            file_item=self.filestore_item_1)
+        Node.objects.create(assay=self.assay, study=self.study,
+                            is_auxiliary_node=True,
+                            file_item=self.filestore_item_1)
         self.assertEqual(self.assay.get_file_count(), 2)
 
 
