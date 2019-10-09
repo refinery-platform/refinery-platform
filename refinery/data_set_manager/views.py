@@ -904,6 +904,8 @@ class AssayFileAPIView(APIView):
             solr_response_json = format_solr_response(
                 solr_response, params.get('include_facet_count', True)
             )
+            solr_response_json['assay_nodes_count'] = Assay.objects\
+                .get(uuid=uuid).get_file_count()
 
             return Response(solr_response_json)
         else:
