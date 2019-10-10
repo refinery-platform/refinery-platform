@@ -419,9 +419,21 @@ def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
                      file_store_item_uuid, e)
         run_analysis.update_state(state=celery.states.FAILURE)
         return
+    file_store_url = file_store_item.get_datafile_url()
+    try:
+        file_url_absolute = core.utils.\
+                        build_absolute_url(file_store_url)
+    except ValueError:
+        logger.error('{} is not a relative URL'.format(str(file_store_url)))
+        run_analysis.update_state(state=celery.states.FAILURE)
+        return
+    except RuntimeError:
+        logger.error('Could not build URL for {}'.format(str(file_store_url)))
+        run_analysis.update_state(state=celery.states.FAILURE)
+        return
     library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
-        core.utils.get_absolute_url(file_store_item.get_datafile_url())
+        file_url_absolute
     )
     history_dataset_dict = tool.import_library_dataset_to_history(
         history_dict["id"],
@@ -456,38 +468,32 @@ def _get_galaxy_download_task_ids(analysis):
     """Get file import tasks for Galaxy analysis results"""
     logger.debug("Preparing to download analysis results from Galaxy")
     task_id_list = []
-
     # retrieving list of files to download for workflow
     tool = _get_workflow_tool(analysis.uuid)
     tool.create_analysis_output_node_connections()
-
     galaxy_instance = analysis.workflow.workflow_engine.instance
-
     try:
         download_list = tool.get_galaxy_dataset_download_list()
     except galaxy.client.ConnectionError as exc:
-        error_msg = (
+        error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
-        )
         logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
         return task_id_list
+
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_extension = results["type"]
             result_name = "{}.{}".format(results['name'], file_extension)
-
             # size of file defined by galaxy
             file_size = results['file_size']
-
             file_store_item = FileStoreItem(source=urlparse.urljoin(
                 galaxy_instance.base_url,
                 "datasets/{}/display?to_ext=txt".format(results['dataset_id'])
             ))
-
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
             if file_extension == 'html':
@@ -504,16 +510,13 @@ def _get_galaxy_download_task_ids(analysis):
                 file_store_item.filetype = extension.filetype
 
             file_store_item.save()
-
             # adding history files to django model
-            temp_file = AnalysisResult(analysis_uuid=analysis.uuid,
-                                       file_store_uuid=file_store_item.uuid,
-                                       file_name=result_name,
-                                       file_type=file_extension)
-            temp_file.save()
-            analysis.results.add(temp_file)
-            analysis.save()
-
+            analysis.results.add(
+                AnalysisResult.objects.create(
+                    analysis=analysis, file_store_uuid=file_store_item.uuid,
+                    file_name=result_name, file_type=file_extension
+                )
+            )
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:

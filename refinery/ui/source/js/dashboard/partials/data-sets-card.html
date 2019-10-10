@@ -6,7 +6,7 @@
         <a
           href="/files/"
           class="no-underline btn btn-sm">
-          <i class="fa fa-list"></i> List
+          <i class="fa fa-list"></i> Browse Files
         </a>
         <a
           ng-if="$ctrl.isLoggedIn"
@@ -196,23 +196,41 @@
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="top">
                   <i class="fa fa-user"></i>
-                </li>
-                <li ng-if="dataSet.public"
+               </li>
+               <li ng-if="dataSet.public"
                   class="indicator"
                   title="Data set is public"
                   refinery-tooltip
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="top">
                   <i class="fa fa-globe"></i>
-                </li>
-               <li class="indicator"
+               </li>
+               <li class="indicator p-l-1-4"
                   title="Modification Date"
                   refinery-tooltip
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="top">
                   <i class="fa fa-calendar-o"></i>
                   {{ dataSet.modification_date | utcToReadableDate}}
-                </li>
+               </li>
+               <li ng-if="dataSet.file_count > 0"
+                  class="indicator p-l-1-4"
+                  title="Data set's file count"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-list"></i>
+                  {{ dataSet.file_count }}
+               </li>
+               <li ng-if="dataSet.analyses.length > 0"
+                  class="indicator p-l-1-4"
+                  title="Data set's analyses"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-cogs"></i>
+                  {{ dataSet.analyses.length }}
+               </li>
                <li ng-if="dataSet.is_owner">
                  <span class="separator">&middot;</span>
                </li>

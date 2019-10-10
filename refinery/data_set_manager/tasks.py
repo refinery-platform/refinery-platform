@@ -5,12 +5,12 @@ import time
 from django.contrib.auth.models import User
 from django.db import transaction
 
+import botocore
 import celery
 from celery.task import task
 import pysam
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
 from file_store.tasks import FileImportTask
 
@@ -49,7 +49,13 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         return None  # TODO: make sure this is never happens
 
     dataset = None
-    investigation = Investigation.objects.get(uuid=investigation_uuid)
+    try:
+        investigation = Investigation.objects.get(uuid=investigation_uuid)
+    except (Investigation.DoesNotExist,
+            Investigation.MultipleObjectsReturned) as e:
+        logger.error(
+            'Did not get Investigation for uuid %s: %s',
+            investigation_uuid, e)
     if identifier is None:
         identifier = investigation.get_identifier()
     if title is None:
@@ -92,7 +98,6 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     dataset.file_size = dataset.get_file_size()
     dataset.file_count = dataset.get_file_count()
     dataset.save()
-    add_data_set_to_neo4j(dataset, user.id)
     return dataset.uuid
 
 
@@ -101,7 +106,14 @@ def annotate_nodes(investigation_uuid):
     """Adds all nodes in this investigation to the annotated nodes table for
     faster lookup
     """
-    investigation = Investigation.objects.get(uuid=investigation_uuid)
+    try:
+        investigation = Investigation.objects.get(uuid=investigation_uuid)
+    # will fail immediately after this if DNE or MOR
+    except (Investigation.DoesNotExist,
+            Investigation.MultipleObjectsReturned) as e:
+        logger.error(
+            'Did not get Investigation for uuid %s:  %s',
+            investigation_uuid, e)
 
     studies = investigation.study_set.all()
 
@@ -193,19 +205,32 @@ def parse_isatab(username, public, path, identity_id=None,
                         # 3. Finally we need to get the checksum so that we can
                         # compare that to our given file.
                         investigation = ds.get_investigation()
-                        fileStoreItem = FileStoreItem.objects.get(
-                            uuid=investigation.isarchive_file)
-                        if fileStoreItem:
-                            try:
-                                logger.info("Get file: %s", fileStoreItem)
-                                checksum = calculate_checksum(
-                                    fileStoreItem.datafile
-                                )
-                            except IOError as exc:
-                                logger.error(
-                                    "Original ISA-tab archive wasn't found. "
-                                    "Error: '%s'", exc
-                                )
+                        try:
+                            """isaarchive_file should be a uuid foreign key
+                            upon creation of either FileStoreItem or
+                            Investigation in isa_tab_parser.py"""
+                            file_store_item = FileStoreItem.objects.get(
+                                uuid=investigation.isarchive_file
+                            )
+                            logger.info("Get file: %s", file_store_item)
+                        # will fail later on when the .datafile is accessed
+                        except (FileStoreItem.DoesNotExist,
+                                FileStoreItem.MultipleObjectsReturned) as e:
+                            logger.error(
+                                'Did not get FileStoreItem for uuid %s',
+                                unicode(investigation.isarchive_file), e)
+
+                        try:
+                            checksum = calculate_checksum(
+                                file_store_item.datafile
+                            )
+                        except (EnvironmentError,
+                                botocore.exceptions.BotoCoreError,
+                                botocore.exceptions.ClientError) as exc:
+                            logger.error(
+                                "Original ISA-tab archive was not found: %s",
+                                exc
+                            )
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
         if checksum:
@@ -225,9 +250,22 @@ def parse_isatab(username, public, path, identity_id=None,
             path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
         if existing_data_set_uuid:
-            data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
-            data_set.update_with_revised_investigation(investigation)
-            return existing_data_set_uuid
+            try:
+                data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
+            except (DataSet.DoesNotExist,
+                    DataSet.MultipleObjectsReturned) as e:
+                logger.error('DataSet for uuid %s not fetched and thus not '
+                             'updated with revised investigation %s: %s',
+                             existing_data_set_uuid, unicode(investigation), e)
+                raise type(e)(
+                    'DataSet for uuid %s not fetched and thus not '
+                    'updated with revised investigation {}: {}'.format(
+                         existing_data_set_uuid, unicode(investigation)
+                    )
+                )
+            else:
+                data_set.update_with_revised_investigation(investigation)
+                return existing_data_set_uuid
 
         data_set_uuid = create_dataset(
             investigation.uuid, username, public=public
@@ -249,7 +287,6 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
     :type parent_node_file_store_item: FileStoreItem
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
-    auxiliary_file_store_item = auxiliary_node.get_file_store_item()
     try:
         datafile_path = parent_node_file_store_item.datafile.path
     except (NotImplementedError, ValueError):
@@ -261,19 +298,17 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
         # Here we are checking for the FileExtension of the ParentNode's
         # FileStoreItem because we will create auxiliary files based on what
         # said value is
-        if parent_node_file_store_item.get_extension().lower() == "bam":
-            generate_bam_index(auxiliary_file_store_item.uuid, datafile_path)
+        if parent_node_file_store_item.get_extension().lower() == 'bam':
+            generate_bam_index(auxiliary_node.file_item.uuid, datafile_path)
 
         generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
 
         logger.debug("Auxiliary file for %s generated in %s "
                      "seconds." % (datafile_path, time.time() - start_time))
-
     except Exception as e:
         logger.error(
             "Something went wrong while trying to generate the auxiliary file "
             "for %s. %s" % (datafile_path, e))
-
         generate_auxiliary_file.update_state(state=celery.states.FAILURE)
 
         raise celery.exceptions.Ignore()
@@ -321,7 +356,7 @@ def post_process_file_import(**kwargs):
     except KeyError:
         file_store_item_uuid = kwargs['args'][0]
     try:
-        node = Node.objects.get(file_uuid=file_store_item_uuid)
+        node = Node.objects.get(file_item__uuid=file_store_item_uuid)
     except Node.DoesNotExist as exc:
         logger.error("Could not retrieve Node with file UUID '%s': %s",
                      file_store_item_uuid, exc)

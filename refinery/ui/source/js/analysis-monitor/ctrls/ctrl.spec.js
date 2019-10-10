@@ -29,6 +29,7 @@ describe('Controller: AnalysisMonitorCtrl', function () {
     expect(ctrl.launchAnalysisFlag).toBeDefined();
     expect(ctrl.analysesLoadingFlag).toBeDefined();
     expect(ctrl.initializedFlag).toBeDefined();
+    expect(ctrl.loggedUserId).toEqual(undefined);
   });
 
   describe('Update Analyse Lists from Factory', function () {

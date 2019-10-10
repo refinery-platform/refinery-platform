@@ -22,15 +22,15 @@ from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
 
 from .utils import generate_solr_params_for_user
-from .views import UserFiles, user_files_csv
+from .views import UserFileAPIView, user_files_csv
 
 logger = logging.getLogger(__name__)
 
 
-class UserFilesAPITests(APITestCase):
+class UserFileAPITests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
-        self.view = UserFiles.as_view()
+        self.view = UserFileAPIView.as_view()
         self.url_root = '/api/v2/files/'
         self.user = get_anonymous_user()
 

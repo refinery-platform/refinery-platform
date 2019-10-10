@@ -11,7 +11,7 @@ from .serializers import FileStoreItemSerializer
 logger = logging.getLogger(__name__)
 
 
-class FileStoreItems(APIView):
+class FileStoreItemAPIView(APIView):
     """
     API endpoint that allows FileStoreItems to be viewed
     Returns filestore object

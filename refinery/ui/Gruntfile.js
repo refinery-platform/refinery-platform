@@ -398,7 +398,7 @@ module.exports = function (grunt) {
       compile: {
         PHANTOMJS_BIN: function () {
           var localPhantomJS =
-            'node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
+            'node_modules/.bin/phantomjs-prebuilt/lib/phantom/bin/phantomjs';
 
           // Look for a phantomjs binary of the VM by default when no `--host`
           // flag is passed to grunt
@@ -478,11 +478,7 @@ module.exports = function (grunt) {
               };
             }),
             [{
-              pattern: 'bower_components/angular-mocks/angular-mocks.js',
-              watched: false
-            }],
-            [{
-              pattern: './karma.lodash.noConflict.js',
+              pattern: 'node_modules/angular-mocks/angular-mocks.js',
               watched: false
             }],
             'node_modules/phantomjs-polyfill/bind-polyfill.js',
@@ -502,7 +498,7 @@ module.exports = function (grunt) {
         options: {
           paths: [
             '<%= cfg.basePath.ui.src %>/styles',
-            '<%= cfg.basePath.bower_components %>/bootstrap/less'
+            '<%= cfg.basePath.node_modules %>/bootstrap/less'
           ],
           plugins: lessPlugins
         },

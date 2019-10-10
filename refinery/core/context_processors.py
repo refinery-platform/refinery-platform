@@ -58,7 +58,6 @@ def extra_context(context):
         "REFINERY_BANNER_ANONYMOUS_ONLY":
             settings.REFINERY_BANNER_ANONYMOUS_ONLY,
         "REFINERY_TUTORIAL_STEPS": settings.REFINERY_TUTORIAL_STEPS,
-        "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS,
         "STATIC_URL": settings.STATIC_URL,
         "MEDIA_BUCKET": settings.MEDIA_BUCKET,
         "UPLOAD_BUCKET": settings.UPLOAD_BUCKET,

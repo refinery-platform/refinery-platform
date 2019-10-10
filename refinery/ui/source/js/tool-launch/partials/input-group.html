@@ -75,7 +75,7 @@
           <em>{{ inputFile.description }}</em>
         </div>
         <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-          <div
+          <div class="p-b-1-2"
             ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]">
             {{ node[$ctrl.attributes.Name] }}
           </div>

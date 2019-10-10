@@ -10,12 +10,10 @@
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
   <link rel="styleSheet" href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"/>
   <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
-  <link rel="stylesheet" href="{% static "vendor/spectrum/spectrum.css" %}" />
+  <link rel="stylesheet" href="{% static "vendor/spectrum-colorpicker/spectrum.css" %}" />
   <link rel="stylesheet" href="{% static "styles/provenance-visualization.css" %}" />
-  <link rel="stylesheet" type="text/css"
-    href="{% static "vendor/jquery-file-upload/css/jquery.fileupload.css" %}">
-  <link rel="stylesheet" type="text/css"
-    href="{% static "vendor/jquery-file-upload/css/jquery.fileupload-ui.css" %}">
+  <link rel="stylesheet" href="{% static "vendor/blueimp-file-upload/css/jquery.fileupload.css" %}">
+  <link rel="stylesheet" href="{% static "vendor/blueimp-file-upload/css/jquery.fileupload-ui.css" %}">
 
 {% endblock head_html %}
 
@@ -96,18 +94,10 @@
 
 {% block vendor_scripts %}
   <!-- provenance visualization -->
-  <script type="text/javascript" src="{% static "vendor/lodash/lodash.min.js" %}"></script>
-  <script type="text/javascript" src="{% static "vendor/graphlib/dist/graphlib.core.min.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/@dagrejs/graphlib/dist/graphlib.core.min.js" %}"></script>
   <script type="text/javascript" src="{% static "vendor/dagre/dist/dagre.core.min.js" %}"></script>
-  <script type="text/javascript" src="{% static "vendor/spectrum/spectrum.js" %}"></script>
-  <!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
-  <script src="{% static "vendor/jquery-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
-  <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
-  <script src="{% static "vendor/jquery-file-upload/js/jquery.iframe-transport.js" %}"></script>
-  <!-- The basic File Upload plugin -->
-  <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload.js" %}"></script>
-  <!-- The File Upload processing plugin -->
-  <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-process.js" %}"></script>
+  <script type="text/javascript" src="{% static "vendor/spectrum-colorpicker/spectrum.js" %}"></script>
+
   <!-- Calculate md5 -->
   <script src="{% static "vendor/spark-md5/spark-md5.min.js" %}"></script>
 

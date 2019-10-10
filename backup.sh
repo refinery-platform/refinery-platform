@@ -24,7 +24,6 @@ BACKUP_TEMP="/tmp/backups"
 REFINERY_BASE_DIR="/vagrant/refinery"
 CONFIG_DIR="config"
 CONFIG_FILE="config.json"
-NEO4J_DATA="/var/lib/neo4j/data/graph.db/"
 
 DEFAULT="\e[39m"
 DIM="\e[2m"
@@ -71,19 +70,6 @@ TIME_INTERMEDIATE_START=$(date +"%s")
 
 mkdir -p "$BACKUP_TEMP/$NOW/file_store"
 sudo rsync -az --partial "/vagrant/media/file_store/" "$BACKUP_TEMP/$NOW/file_store"
-
-TIME_INTERMEDIATE_END=$(date +"%s")
-TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))
-echo -e "copied! $DIM($(($TIME_INTERMEDIATE_DIFF / 60)) min and $(($TIME_INTERMEDIATE_DIFF % 60)) sec)$RESET"
-
-# Backup Neo4J
-echo -e "Neo4J graph db... \c"
-TIME_INTERMEDIATE_START=$(date +"%s")
-
-mkdir -p "$BACKUP_TEMP/$NOW/neo4j"
-sudo service neo4j-service stop
-sudo rsync -az --partial "$NEO4J_DATA" "$BACKUP_TEMP/$NOW/neo4j"
-sudo service neo4j-service start > /dev/null
 
 TIME_INTERMEDIATE_END=$(date +"%s")
 TIME_INTERMEDIATE_DIFF=$(($TIME_INTERMEDIATE_END-$TIME_INTERMEDIATE_START))

@@ -1,39 +1,32 @@
-'use strict';
+(function () {
+  'use strict';
 
-describe('DataSetImport.directive.isaTabImport: unit tests', function () {
-  var directiveEl;
-  var $scope;
+  describe('DataSetImport.directive.isaTabImport: unit tests', function () {
+    var directiveEl;
 
-  beforeEach(function () {
-    module('refineryApp');
-    module('refineryApp.templates');
-    module('refineryDataSetImport');
+    beforeEach(module('refineryApp'));
+    beforeEach(module('refineryDataSetImport'));
 
-    var $compile;
-    var $rootScope;
-
-    inject(function (
-      _$compile_,
-      _$rootScope_
+    beforeEach(inject(function (
+      $compile,
+      $rootScope,
+        $templateCache,
+        $window
     ) {
-      $compile = _$compile_;
-      $rootScope = _$rootScope_;
-    });
+      $templateCache.put(
+        $window.getStaticUrl('partials/data-set-import/partials/isa-tab-import.html'),
+        '<div id="isa-tab-import-form"></div>'
+      );
+      var scope = $rootScope.$new();
+      var template = '<rp-isa-tab-import import-option="import.option"></rp-isa-tab-import>';
+      directiveEl = $compile(template)(scope);
+      scope.$digest();
+    }));
 
-    $scope = $rootScope.$new();
-
-    directiveEl = $compile(
-      angular.element(
-        '<isa-tab-import import-option="import.option"></isa-tab-import>'
-      )
-    )($scope);
-
-    $scope.$digest();
-  });
-
-  describe('DOM', function () {
-    it('should replace custom element with template', function () {
-      expect(directiveEl.attr('id')).toBe('isa-tab-import-form');
+    describe('DOM', function () {
+      it('should replace custom element with template', function () {
+        expect(directiveEl.html()).toContain('isa-tab-import-form');
+      });
     });
   });
-});
+})();

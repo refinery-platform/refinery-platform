@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
             name='AnalysisResult',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('analysis_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
+                ('analysis_uuid', models.CharField(max_length=36, editable=False, blank=True)),
                 ('file_store_uuid', django_extensions.db.fields.UUIDField(max_length=36, editable=False, blank=True)),
                 ('file_name', models.TextField()),
                 ('file_type', models.TextField()),
@@ -186,7 +186,7 @@ class Migration(migrations.Migration):
             name='Invitation',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('token_uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('token_uuid', models.CharField(unique=True, max_length=36, editable=False, blank=True)),
                 ('group_id', models.IntegerField(null=True, blank=True)),
                 ('created', models.DateTimeField(null=True, editable=False)),
                 ('expires', models.DateTimeField(null=True, editable=False)),
@@ -331,7 +331,7 @@ class Migration(migrations.Migration):
             name='UserProfile',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
+                ('uuid', models.CharField(unique=True, max_length=36, editable=False, blank=True)),
                 ('affiliation', models.CharField(max_length=100, blank=True)),
                 ('login_count', models.IntegerField(default=0)),
                 ('catch_all_project', models.ForeignKey(blank=True, to='core.Project', null=True)),

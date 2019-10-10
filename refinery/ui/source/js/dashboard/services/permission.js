@@ -22,8 +22,8 @@
      * */
     vm.getPermissions = function (uuid) {
       return groupService.query({
-        dataSetUuid: uuid,
-        allPerms: 'True'
+        data_set_uuid: uuid,
+        all_perms: 'True'
       }).$promise
         .then(function (data) {
           var groups = [];

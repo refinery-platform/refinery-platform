@@ -1,6 +1,5 @@
 {
   "basePath": {
-    "bower_components": "bower_components",
     "djangoTemplates": "../templates",
     "docs": "docs",
     "ui": {
@@ -31,16 +30,16 @@
     "vendor": {
       "css": [
         "angular-ui-grid/ui-grid.min.css",
-        "fontawesome/css/font-awesome.min.css",
-        "intro-js/minified/introjs.min.css",
-        "jquery-file-upload/css/jquery.fileupload-ui.css",
-        "jquery-file-upload/css/jquery.fileupload.css",
+        "font-awesome/css/font-awesome.min.css",
+        "intro.js/minified/introjs.min.css",
+        "blueimp-file-upload/css/jquery.fileupload-ui.css",
+        "blueimp-file-upload/css/jquery.fileupload.css",
         "select2/select2.css",
-        "spectrum/spectrum.css",
+        "spectrum-colorpicker/spectrum.css",
         "ui-select/dist/select.min.css"
       ],
       "images": [
-        "jquery-file-upload/img/loading.gif",
+        "blueimp-file-upload/img/loading.gif",
         "select2/select2-spinner.gif",
         "select2/select2.png",
         "select2/select2x2.png"
@@ -48,14 +47,14 @@
       "js": [
         "jquery/dist/jquery.min.js",
         "angular/angular.min.js",
-        "select2/select2.min.js",
-        "bootstrap/dist/js/bootstrap.min.js",
+        "select2/select2.js",
+        "bootstrap/dist/js/bootstrap.js",
         "ui-select/dist/select.min.js",
         "angular-animate/angular-animate.min.js",
-        "angular-bootstrap/ui-bootstrap-tpls.min.js",
-        "angular-bootstrap/ui-bootstrap.min.js",
+        "angular-ui-bootstrap/dist/ui-bootstrap-tpls.js",
+        "angular-ui-bootstrap/dist/ui-bootstrap.js",
         "bootbox/bootbox.js",
-        "angular-intro-js/build/angular-intro.min.js",
+        "angular-intro.js/build/angular-intro.min.js",
         "angular-file-model/angular-file-model.js",
         "angular-resource/angular-resource.min.js",
         "angular-sanitize/angular-sanitize.min.js",
@@ -65,25 +64,24 @@
         "chart.js/dist/Chart.min.js",
         "d3/d3.min.js",
         "d3-tip/index.js",
-        "graphlib/dist/graphlib.core.min.js",
-        "intro-js/minified/intro.min.js",
+        "@dagrejs/graphlib/dist/graphlib.core.min.js",
+        "intro.js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
-        "filesize/lib/filesize.min.js",
+        "filesize/lib/filesize.js",
         "humanize/humanize.js",
-        "ng-file-upload/ng-file-upload.min.js",
-        "jquery-file-upload/js/jquery.fileupload-angular.js",
-        "jquery-file-upload/js/jquery.iframe-transport.js",
-        "jquery-file-upload/js/vendor/jquery.ui.widget.js",
-        "jquery-file-upload/js/jquery.fileupload.js",
-        "jquery-file-upload/js/jquery.fileupload-process.js",
-        "jquery-mousewheel/jquery.mousewheel.min.js",
-        "lodash/lodash.min.js",
-        "lodash-migrate/dist/lodash-migrate.min.js",
+        "ng-file-upload/dist/ng-file-upload.js",
+        "blueimp-file-upload/js/vendor/jquery.ui.widget.js",
+        "blueimp-file-upload/js/jquery.fileupload-angular.js",
+        "blueimp-file-upload/js/jquery.fileupload.js",
+        "blueimp-file-upload/js/jquery.iframe-transport.js",
+        "blueimp-file-upload/js/jquery.fileupload-process.js",
+        "jquery-mousewheel/jquery.mousewheel.js",
+        "lodash/lodash.js",
         "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.min.js",
-        "spectrum/spectrum.js",
+        "spectrum-colorpicker/spectrum.js",
         "svgxuse/svgxuse.min.js",
-        "aws-sdk-js/dist/aws-sdk.min.js",
+        "aws-sdk/dist/aws-sdk.js",
         "markdown/lib/markdown.js"
       ],
       "maps": [
@@ -92,22 +90,25 @@
         "angular-resource/angular-resource.min.js.map",
         "angular-sanitize/angular-sanitize.min.js.map",
         "angular-messages/angular-messages.min.js.map",
-        "angular-intro-js/build/angular-intro.min.js.map",
-        "fontawesome/css/font-awesome.css.map",
-        "jquery/dist/jquery.min.map"
+        "angular-intro.js/build/angular-intro.min.js.map",
+        "filesize/lib/filesize.min.js.map",
+        "jquery/dist/jquery.min.map",
+        "ui-select/dist/select.min.css.map",
+        "ui-select/dist/select.min.js.map"
+
       ],
       "font": [
         "angular-ui-grid/ui-grid.eot",
         "angular-ui-grid/ui-grid.svg",
         "angular-ui-grid/ui-grid.ttf",
         "angular-ui-grid/ui-grid.woff",
-        "fontawesome/fonts/fontawesome-webfont.eot",
-        "fontawesome/fonts/fontawesome-webfont.svg",
-        "fontawesome/fonts/fontawesome-webfont.ttf",
-        "fontawesome/fonts/fontawesome-webfont.woff",
-        "fontawesome/fonts/fontawesome-webfont.woff2"
+        "font-awesome/fonts/fontawesome-webfont.eot",
+        "font-awesome/fonts/fontawesome-webfont.svg",
+        "font-awesome/fonts/fontawesome-webfont.ttf",
+        "font-awesome/fonts/fontawesome-webfont.woff",
+        "font-awesome/fonts/fontawesome-webfont.woff2"
       ]
     }
   },
-  "vendorPath": "./bower_components"
+  "vendorPath": "./node_modules"
 }

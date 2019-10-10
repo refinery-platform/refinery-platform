@@ -1,4 +1,4 @@
-<div id="metadata-table-form">
+<div id="metadata-table-form" class="p-b-1 m-b-1">
   <div class="refinery-subheader m-t-1">
     <h1> Before You Get Started </h1>
   </div>
@@ -460,12 +460,12 @@
 
         <div>
           <div class="refinery-subheader m-t-1">
-             <h1>Complete Submission</h1>
+             <h1>Upload Data File</h1>
           </div>
           <div class="row m-t-1-4 m-b-1-4">
             <div class="col-sm-12 col-md-12 col-lg-12">
               <div class="m-t-1 m-b-1">
-                Does the <strong>Data File Column</strong> refer to local files?
+                Do you have files to upload now?
                 <label class="p-l-1-2">
                   <input
                     type="radio"
@@ -474,7 +474,7 @@
                     checked>
                   No
                 </label>
-                <label class="p-l-1-2">
+                <label class="p-l-1-2 p-r-1-2">
                   <input
                     type="radio"
                     ng-value="true"
@@ -492,11 +492,18 @@
                   popover-trigger="'outsideClick'"
                   popover-append-to-body="true"
                   tabindex="0">
-                      <i class="fa fa-question-circle info-icon icon-only"></i>
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
                   </a>
               </div>
               <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
-                <div class="p-b-1">
+                <div>
+                  <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
+                  <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
+                </div>
+                 <div class="p-t-1" ng-if="metadataTable.useS3">
+                  <rp-file-upload-command-line-button></rp-file-upload-command-line-button>
+                </div>
+                <div class="p-t-1">
                    <button
                       class="refinery-base btn btn-default btn-sm"
                       ng-click="metadataTable.checkFiles()"
@@ -504,78 +511,113 @@
                       Check Data Files
                     </button>
                     <a
-                    popover-placement="right"
-                    uib-popover="Use this button to check that you have
-                    successfully uploaded all of your data files."
-                    popover-title="Check Data Files"
-                    popover-trigger="'outsideClick'"
-                    popover-append-to-body="true"
-                    tabindex="0">
+                      class="p-l-1-2"
+                      popover-placement="right"
+                      uib-popover="Use this button to check that you have
+                      successfully uploaded all of your data files."
+                      popover-title="Check Data Files"
+                      popover-trigger="'outsideClick'"
+                      popover-append-to-body="true"
+                      tabindex="0">
                         <i class="fa fa-question-circle info-icon icon-only"></i>
                     </a>
-                  </div>
-                <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
-                <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
+                </div>
               </div>
             </div>
           </div>
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-12 col-md-12 col-lg-12">
+        </div>
+        <div class="refinery-subheader m-t-1">
+          <h1>Complete Submission</h1>
+        </div>
+        <div class="row m-t-1-4 m-b-1-4">
+          <div class="col-sm-12 col-md-12 col-lg-12">
+            <span ng-if="metadataTable.showFileUpload">
               <button
                 class="refinery-base btn btn-primary"
-                ng-click="metadataTable.confirmImport()"
                 ng-disabled="importMetadataTableForm.$invalid ||
                 metadataTable.fileStatus === 'queuing' ||
-                metadataTable.fileStatus === 'running'">
+                metadataTable.fileStatus === 'running'"
+                popover-placement="right"
+                uib-popover-template="'tabularimportconfirmationpopover.html'"
+                popover-title="If you have remote files, have they finished uploading? If not, please wait until they have before submitting."
+                popover-trigger="'outsideClick'"
+                popover-append-to-body="true">
                 Submit
               </button>
-              <span class="m-l-1">
-                <span class="text-warning"
-                  ng-if="metadataTable.fileStatus === 'queuing'">
-                  <i class="fa fa-warning" aria-hidden="true"></i>
-                  All data files have not been uploaded.
-                </span>
-                <span
-                  ng-messages="importMetadataTableForm.title.$error"
-                  role="alert"
-                  class="text-danger">
-                  <div ng-message="required">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Required: Enter a title.
-                  </div>
-                  <div ng-message="minlength">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Error: Title is too short.
-                  </div>
-                  <div ng-message="maxlength">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Error: Title is too long.
-                  </div>
-                </span>
-                <span
-                  ng-messages="importMetadataTableForm.source_column_index.$error"
-                  role="alert"
-                  class="text-danger">
-                  <div ng-message="required">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Required: Select a Sample Identifier.
-                  </div>
-                </span>
-                <span
-                  ng-messages="importMetadataTableForm.slug.$error"
-                  role="alert"
-                  class="text-danger">
-                  <div ng-message="pattern">
-                    <i class="fa fa-warning" aria-hidden="true"></i>
-                    Invalid URL shortcut, can only contain alphanumeric
-                    characters and "_".
-                  </div>
-                </span>
+            </span>
+            <span ng-if="!metadataTable.showFileUpload">
+              <button
+                class="refinery-base btn btn-primary"
+                ng-disabled="importMetadataTableForm.$invalid ||
+                metadataTable.fileStatus === 'queuing' ||
+                metadataTable.fileStatus === 'running'"
+                ng-click="metadataTable.confirmImport()">
+                Submit
+              </button>
+            </span>
+            <span class="m-l-1">
+              <span class="text-warning"
+                ng-if="metadataTable.fileStatus === 'queuing'">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                All data files have not been uploaded.
               </span>
-            </div>
+              <span class="text-warning p-1-2"
+                ng-if="metadataTable.showFileUpload && metadataTable.useS3">
+                <i class="fa fa-warning" aria-hidden="true"></i>
+                All data files (local and remote) must be uploaded before submitting.
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.title.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Enter a title.
+                </div>
+                <div ng-message="minlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too short.
+                </div>
+                <div ng-message="maxlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too long.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.source_column_index.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Select a Sample Identifier.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.slug.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="pattern">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Invalid URL shortcut, can only contain alphanumeric
+                  characters and "_".
+                </div>
+              </span>
+            </span>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <script type="text/ng-template" id="tabularimportconfirmationpopover.html">
+    <div class="full-width text-align-center">
+      <button class="btn btn-primary btn-sm m-r-1" ng-click="metadataTable.confirmImport()">
+        Confirm
+      </button>
+      <button
+        class="refinery-base btn btn-default btn-sm"
+        ng-click="metadataTable.closeSubmitPopover()">
+         Cancel
+      </button>
+    </div>
+  </script>
 </div>

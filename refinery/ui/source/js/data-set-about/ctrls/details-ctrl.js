@@ -53,8 +53,12 @@
     vm.userPerms = 'none';
 
     vm.cancel = function (fieldName) {
-      vm.editedDataSet[fieldName] = '';
-      vm.isCollapsed[fieldName] = true;
+      vm.editedDataSet[fieldName] = vm.dataSet[fieldName];
+      if (fieldName === 'accession') {
+        vm.isCollapsed.title = true;
+      } else {
+        vm.isCollapsed[fieldName] = true;
+      }
     };
 
     vm.importDataSet = function (dataSetUuid) {
@@ -79,10 +83,10 @@
           // initialize the edited dataset, avoids updating while user edits
           angular.copy(vm.dataSet, vm.editedDataSet);
           // grab meta-data info
-          if (dataSetAboutFactory.dataSet.isa_archive) {
-            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
-          } else if (dataSetAboutFactory.dataSet.pre_isa_archive) {
-            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
+          if (dataSetAboutFactory.dataSet.isa_archive_uuid) {
+            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive_uuid);
+          } else if (dataSetAboutFactory.dataSet.pre_isa_archive_uuid) {
+            vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive_uuid);
           }
         }, function (error) {
           $log.error(error);

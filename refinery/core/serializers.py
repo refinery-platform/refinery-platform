@@ -1,24 +1,45 @@
 import logging
 
 from django.conf import settings
+from django.utils import timezone
 from guardian.shortcuts import get_perms
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import (Analysis, DataSet, Event, ExtendedGroup, SiteProfile,
-                     SiteVideo, User, UserProfile, Workflow)
+from tool_manager.models import Tool
+
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
+                     SiteProfile, SiteVideo, User, UserProfile, Workflow)
 
 logger = logging.getLogger(__name__)
+
+
+class DateTimeWithTimeZone(serializers.DateTimeField):
+    '''Helper to override default UTC date time for local time.'''
+    def to_representation(self, utc_time):
+        local_time = timezone.localtime(utc_time)
+        return super(DateTimeWithTimeZone, self).to_representation(local_time)
 
 
 class AnalysisSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField()
     data_set_uuid = serializers.SerializerMethodField()
+    tool_display_name = serializers.SerializerMethodField()
+    time_end = DateTimeWithTimeZone()
+    time_start = DateTimeWithTimeZone()
 
     class Meta:
         model = Analysis
-        fields = ('name', 'owner', 'status', 'summary', 'time_start',
-                  'time_end', 'uuid', 'workflow', 'data_set_uuid')
+        fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
+                  'summary', 'time_start', 'time_end', 'tool_display_name',
+                  'uuid', 'workflow')
+
+    def get_tool_display_name(self, analysis):
+        try:
+            tool = Tool.objects.get(analysis_id=analysis.id)
+        except (Tool.DoesNotExist, Tool.MultipleObjectsReturned):
+            return analysis.name  # tool_display_name defaults to analysis name
+        return tool.display_name
 
     def get_owner(self, analysis):
         return UserSerializer(analysis.get_owner()).data
@@ -44,13 +65,15 @@ class DataSetSerializer(serializers.ModelSerializer):
     file_count = serializers.SerializerMethodField()
     analyses = serializers.SerializerMethodField()
     user_perms = serializers.SerializerMethodField()
+    version = serializers.SerializerMethodField()
 
     def get_analyses(self, data_set):
-        return [dict(uuid=analysis.uuid,
-                     name=analysis.name,
-                     status=analysis.status,
-                     owner=analysis.get_owner().profile.uuid)
-                for analysis in data_set.get_analyses()]
+        return [
+            dict(uuid=analysis.uuid, name=analysis.name,
+                 status=analysis.status,
+                 owner=str(analysis.get_owner().profile.uuid))
+            for analysis in data_set.get_analyses()
+        ]
 
     def get_is_owner(self, data_set):
         try:
@@ -93,11 +116,15 @@ class DataSetSerializer(serializers.ModelSerializer):
                 'read': 'read_dataset' in user_perms,
                 'read_meta': 'read_meta_dataset' in user_perms}
 
+    def get_version(self, data_set):
+        return data_set.get_version()
+
     class Meta:
         model = DataSet
-        fields = ('title', 'accession', 'analyses', 'summary', 'description',
-                  'slug', 'uuid', 'modification_date', 'id', 'is_owner',
-                  'owner', 'public', 'is_clean', 'file_count', 'user_perms')
+        fields = ('accession', 'analyses', 'creation_date', 'description',
+                  'file_count', 'id', 'is_clean', 'is_owner',
+                  'modification_date', 'owner', 'public', 'slug', 'summary',
+                  'title', 'uuid', 'user_perms', 'version')
 
     def partial_update(self, instance, validated_data):
         """
@@ -181,6 +208,12 @@ class ExtendedGroupSerializer(serializers.ModelSerializer):
         model = ExtendedGroup
         fields = ('can_edit', 'name', 'id', 'uuid', 'manager_group_uuid',
                   'member_list', 'perm_list')
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = ('created', 'expires', 'group_id', 'id', 'recipient_email')
 
 
 class SiteVideoSerializer(serializers.ModelSerializer):

@@ -36,7 +36,6 @@
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
-      solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
       staticUrl: '{{ STATIC_URL|escapejs }}',
@@ -219,38 +218,32 @@
 
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
-  <script src="{% static "vendor/bootstrap/dist/js/bootstrap.min.js" %}"></script>
+  <script src="{% static "vendor/bootstrap/dist/js/bootstrap.js" %}"></script>
   <script src="{% static "vendor/bootbox/bootbox.js" %}"></script>
-  <script src="{% static "vendor/intro-js/minified/intro.min.js" %}"></script>
+  <script src="{% static "vendor/intro.js/minified/intro.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
-  <script src="{% static "vendor/angular-intro-js/build/angular-intro.min.js" %}"></script>
+  <script src="{% static "vendor/angular-intro.js/build/angular-intro.min.js" %}"></script>
   <script src="{% static "vendor/angular-animate/angular-animate.min.js" %}"></script>
-  <script src="{% static "vendor/select2/select2.min.js" %}"></script>
+  <script src="{% static "vendor/select2/select2.js" %}"></script>
   <script src="{% static "vendor/ui-select/dist/select.min.js" %}"></script>
   <script src="{% static "vendor/angular-resource/angular-resource.min.js" %}"></script>
   <script src="{% static "vendor/angular-sanitize/angular-sanitize.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-router/release/angular-ui-router.min.js" %}"></script>
-  <script src="{% static "vendor/angular-bootstrap/ui-bootstrap.min.js" %}"></script>
-  <script src="{% static "vendor/angular-bootstrap/ui-bootstrap-tpls.min.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-bootstrap/dist/ui-bootstrap.js" %}"></script>
+  <script src="{% static "vendor/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js" %}"></script>
   <script src="{% static "vendor/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js" %}"></script>
   <script src="{% static "vendor/angular-file-model/angular-file-model.js" %}"></script>
   <script src="{% static "vendor/angular-messages/angular-messages.min.js" %}"></script>
-  <script src="{% static "vendor/filesize/lib/filesize.min.js" %}"></script>
-  <script src="{% static "vendor/lodash/lodash.min.js" %}"></script>
-  <script src="{% static "vendor/lodash-migrate/dist/lodash-migrate.min.js" %}"></script>
+  <script src="{% static "vendor/filesize/lib/filesize.js" %}"></script>
+  <script src="{% static "vendor/lodash/lodash.js" %}"></script>
   <script src="{% static "vendor/markdown/lib/markdown.js" %}"></script>
   <script src="{% static "vendor/chart.js/dist/Chart.min.js" %}"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
-  <script type="text/javascript">
-    // Assign lodash v3.9.3 to a special variable so it doesn't conflict with
-    // lodash v2 or other libraries like underscore.
-    window.lodashLatest = _.noConflict();
-  </script>
 
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/d3-tip/index.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>
-  <script src="{% static "vendor/aws-sdk-js/dist/aws-sdk.min.js" %}"></script>
+  <script src="{% static "vendor/aws-sdk/dist/aws-sdk.js" %}"></script>
   {% block vendor_scripts %}
   {% endblock %}
 
@@ -275,11 +268,16 @@
   <script src="{% static "js/user-file-browser.js" %}"></script>
   <script src="{% static "js/workflow.js" %}"></script>
 
-  <script src="{% static "vendor/ng-file-upload/ng-file-upload.min.js" %}"></script>
+  <script src="{% static "vendor/ng-file-upload/dist/ng-file-upload.js" %}"></script>
   <script src="{% static "vendor/angular-ui-grid/ui-grid.min.js" %}"></script>
   <script src="{% static "js/metadata-table-import.js" %}"></script>
-  <!-- The File Upload Angular JS module -->
-  <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-angular.js" %}"></script>
+  <!-- The File Upload module -->
+  <script src="{% static "vendor/blueimp-file-upload/js/vendor/jquery.ui.widget.js" %}"></script>
+  <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+  <script src="{% static "vendor/blueimp-file-upload/js/jquery.iframe-transport.js" %}"></script>
+  <script src="{% static "vendor/blueimp-file-upload/js/jquery.fileupload.js" %}"></script>
+  <script src="{% static "vendor/blueimp-file-upload/js/jquery.fileupload-angular.js" %}"></script>
+  <script src="{% static "vendor/blueimp-file-upload/js/jquery.fileupload-process.js" %}"></script>
   <script src="{% static "js/data-set-import.js" %}"></script>
 
   <!-- Fetch external SVGs referenced in <use> elements when the browser fails to do so -->

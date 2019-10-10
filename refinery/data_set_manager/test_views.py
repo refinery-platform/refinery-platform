@@ -6,6 +6,8 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
+from django.forms.models import model_to_dict
 from django.http import QueryDict
 from django.test import LiveServerTestCase, override_settings
 
@@ -26,8 +28,9 @@ from file_store.tasks import FileImportTask
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .tests import MetadataImportTestBase
-from .views import (AddFileToNodeView, Assays, AssaysAttributes, NodeViewSet,
-                    StudiesView)
+from .views import (AddFileToNodeView, AssayAPIView, AssayAttributeAPIView,
+                    NodeViewSet, StudyAPIView,
+                    TakeOwnershipOfPublicDatasetView)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -36,37 +39,28 @@ class AddFileToNodeViewTests(APITestCase):
     def setUp(self):
         self.username = 'guest_user'
         self.password = User.objects.make_random_password()
-        self.user = User.objects.create_user(self.username, 'user@fake.com',
+        self.user = User.objects.create_user(self.username, 'user@example.com',
                                              self.password)
-
         self.factory = APIRequestFactory()
         self.client = APIClient()
         self.url_root = '/api/v2/data_set_manager/add-file/'
         self.view = AddFileToNodeView.as_view()
         self.client.login(username=self.username, password=self.password)
-
-        # Create Datasets
         self.data_set = create_dataset_with_necessary_models(user=self.user)
         self.node = self.data_set.get_nodes()[0]
-
         self.post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': self.node.uuid},
-            format="json"
+            self.url_root, data={'node_uuid': self.node.uuid}, format='json'
         )
 
     def test_post_returns_404_invalid_uuid(self):
         post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': uuid.uuid4()},
-            format="json"
+            self.url_root, data={'node_uuid': uuid.uuid4()}, format='json'
         )
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 404)
 
     def test_post_returns_403_for_non_owners(self):
-        user_lm = User.objects.create_user('lab_member',
-                                           'member@fake.com',
+        user_lm = User.objects.create_user('lab_member', 'member@example.com',
                                            self.password)
         self.post_request.user = user_lm
         force_authenticate(self.post_request, user=user_lm)
@@ -80,23 +74,17 @@ class AddFileToNodeViewTests(APITestCase):
         self.assertEqual(post_response.status_code, 202)
 
     def test_post_returns_400_node_uuid_not_present(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root, data={}, format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 400)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="aws")
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='aws')
     def test_aws_post_returns_400_no_identity_id(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': uuid.uuid4()},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={'node_uuid': uuid.uuid4()},
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
@@ -104,185 +92,167 @@ class AddFileToNodeViewTests(APITestCase):
 
     @override_settings(REFINERY_DEPLOYMENT_PLATFORM="aws")
     def test_aws_post_returns_202_with_identity_id(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': uuid.uuid4()
-            },
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': uuid.uuid4()
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 202)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="not aws")
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='not aws')
     def test_non_aws_post_returns_400_if_identity_id(self):
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': uuid.uuid4()
-            },
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': uuid.uuid4()
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 400)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="aws",
-                       UPLOAD_BUCKET="test_bucket",
-                       REFINERY_DATA_IMPORT_DIR="/import/path",
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='aws',
+                       UPLOAD_BUCKET='test_bucket',
                        CELERY_ALWAYS_EAGER=True)
-    @mock.patch("data_set_manager.models.Node.update_solr_index")
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_aws_post_file_store_item_source_translated(self,
                                                         update_solr_mock):
-        file_store_item = self.node.get_file_store_item()
-        file_store_item.source = "{}/{}/test.txt".format(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.user.username
-        )
-        file_store_item.save()
-        post_request = self.factory.post(
-            self.url_root,
-            data={
-                'node_uuid': self.node.uuid,
-                'identity_id': "test_identity_id"
-            },
-            format="json"
-        )
+        self.node.file_item.source = \
+            's3://test_bucket/test_identity_id/test.txt'
+        self.node.file_item.save()
+        post_request = self.factory.post(self.url_root,
+                                         data={
+                                             'node_uuid': self.node.uuid,
+                                             'identity_id': 'test_identity_id'
+                                         },
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.get_file_store_item().source,
+        self.assertEqual(self.node.file_item.source,
                          's3://test_bucket/test_identity_id/test.txt')
         self.assertTrue(update_solr_mock.called)
 
-    @override_settings(REFINERY_DEPLOYMENT_PLATFORM="not aws",
-                       REFINERY_DATA_IMPORT_DIR="/import/path",
+    @override_settings(REFINERY_DEPLOYMENT_PLATFORM='not aws',
+                       REFINERY_DATA_IMPORT_DIR='/import/path',
                        CELERY_ALWAYS_EAGER=True)
-    @mock.patch("data_set_manager.models.Node.update_solr_index")
+    @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_non_aws_post_file_store_item_source_translated(self,
                                                             update_solr_mock):
-        file_store_item_source = "{}/{}/test.txt".format(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.user.username
+        file_store_item_source = '{}/{}/test.txt'.format(
+            settings.REFINERY_DATA_IMPORT_DIR, self.user.username
         )
-        file_store_item = self.node.get_file_store_item()
-        file_store_item.source = file_store_item_source
-        file_store_item.save()
+        self.node.file_item.source = file_store_item_source
+        self.node.file_item.save()
 
-        post_request = self.factory.post(
-            self.url_root,
-            data={'node_uuid': self.node.uuid},
-            format="json"
-        )
+        post_request = self.factory.post(self.url_root,
+                                         data={'node_uuid': self.node.uuid},
+                                         format='json')
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         self.view(post_request)
-        self.assertEqual(self.node.get_file_store_item().source,
-                         file_store_item_source)
+        self.assertEqual(self.node.file_item.source, file_store_item_source)
         self.assertTrue(update_solr_mock.called)
 
 
-class AssaysAPITests(APITestCase):
+class AssayAPIViewTests(APITestCase):
 
     def setUp(self):
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        self.assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
-        }
-        assay = Assay.objects.create(**self.assay)
-        self.assay['uuid'] = assay.uuid
-        self.assay['study'] = self.study.id
-        self.valid_uuid = assay.uuid
+        self.study = Study.objects.create(file_name='test_filename123.txt',
+                                          title='Study Title Test',
+                                          investigation=investigation)
+        self.assay = Assay.objects.create(
+            study=self.study, measurement='transcription factor binding site',
+            measurement_accession='http://www.example.org/test_id',
+            measurement_source='OBI', technology='nucleotide sequencing',
+            technology_accession='test info', technology_source='test source',
+            platform='Genome Analyzer II', file_name='test_assay_filename.txt'
+        )
+        # dictionary for checking response contents
+        self.assay_dict = model_to_dict(self.assay)
+        # model_to_dict() does not return fields that are not editable
+        self.assay_dict['uuid'] = str(self.assay.uuid)
+
+        self.valid_uuid = str(self.assay.uuid)
         self.url_root = '/api/v2/assays/'
-        self.view = Assays.as_view()
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
+        self.view = AssayAPIView.as_view()
+        self.unknown_uuid = str(uuid.uuid4())
+        self.invalid_uuid = "xxxxxxxx"
 
     def test_get_valid_uuid(self):
-        # valid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (
-            self.url_root, self.valid_uuid))
+        request = self.factory.get(self.url_root + '?uuid=' + self.valid_uuid)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data.keys(), self.assay.keys())
-        self.assertItemsEqual(response.data.values(), self.assay.values())
+        self.assertDictContainsSubset(response.data, self.assay_dict)
 
     def test_get_valid_study(self):
-        # valid_study_uuid
-        request = self.factory.get('%s/?study=%s' % (
-            self.url_root, self.study.uuid))
+        request = self.factory.get(self.url_root + '?study=' + self.study.uuid)
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data[0].keys(), self.assay.keys())
-        self.assertItemsEqual(response.data[0].values(), self.assay.values())
+        self.assertDictContainsSubset(response.data[0], self.assay_dict)
+
+    def test_get_unknown_uuid(self):
+        request = self.factory.get(
+            self.url_root + '?uuid=' + self.unknown_uuid
+        )
+        response = self.view(request, self.unknown_uuid)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_unknown_study_uuid(self):
+        request = self.factory.get(
+            self.url_root + '?study=' + self.unknown_uuid
+        )
+        response = self.view(request, self.unknown_uuid)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-                                                    self.invalid_uuid))
+        request = self.factory.get(
+            self.url_root + '?uuid=' + self.invalid_uuid
+        )
         response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_study_uuid(self):
-        # invalid_study_uuid
-        request = self.factory.get('%s/?study=%s' % (self.url_root,
-                                                     self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/?uuid=%s'
-                                   % (self.url_root, self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
 
 
-class AssaysAttributesAPITests(APITestCase):
+class AssayAttributeAPITests(APITestCase):
 
     def setUp(self):
-        self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
-        self.user2 = User.objects.create_user("guestName", '', 'test1234')
+        self.user1_username = 'ownerJane'
+        self.user1_password = 'test1234'
+        self.user2_username = 'guestName'
+        self.user2_password = 'test1234'
+        self.user1 = User.objects.create_user(
+            self.user1_username, '', self.user1_password
+        )
+        self.user2 = User.objects.create_user(
+            self.user2_username, '', self.user2_password
+        )
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
-        self.data_set = DataSet.objects.create(
-                title="Test DataSet")
+        self.data_set = DataSet.objects.create(title="Test DataSet")
         InvestigationLink.objects.create(data_set=self.data_set,
                                          investigation=investigation)
         self.data_set.set_owner(self.user1)
         study = Study.objects.create(file_name='test_filename123.txt',
                                      title='Study Title Test',
                                      investigation=investigation)
-
         assay = Assay.objects.create(
                 study=study,
                 measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
+                measurement_accession='http://www.example.org/testID',
                 measurement_source='OBI',
                 technology='nucleotide sequencing',
                 technology_accession='test info',
                 technology_source='test source',
                 platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt')
-
+                file_name='test_assay_filename.txt'
+        )
         self.attribute_order_array = [
             {
                 'study': study,
@@ -320,8 +290,8 @@ class AssaysAttributesAPITests(APITestCase):
                 'is_facet': True,
                 'is_active': True,
                 'is_internal': False
-            }]
-
+            }
+        ]
         self.attribute_order_response = [
             {
                 'study': study,
@@ -363,156 +333,166 @@ class AssaysAttributesAPITests(APITestCase):
                 'is_active': True,
                 'is_internal': False,
                 'display_name': 'Analysis'
-            }]
-
-        index = 0
-        for attribute in self.attribute_order_array:
-            response = AttributeOrder.objects.create(**attribute)
-            attribute['id'] = response.id
-            attribute['assay'] = response.assay.id
-            attribute['study'] = response.study.id
+            }
+        ]
+        for index in range(len(self.attribute_order_array)):
+            response = AttributeOrder.objects.create(
+                **self.attribute_order_array[index]
+            )
+            self.attribute_order_array[index]['id'] = response.id
+            self.attribute_order_array[index]['assay'] = response.assay.id
+            self.attribute_order_array[index]['study'] = response.study.id
             self.attribute_order_response[index]['id'] = response.id
             self.attribute_order_response[index]['assay'] = response.assay.id
             self.attribute_order_response[index]['study'] = response.study.id
-            index = index + 1
 
-        list.sort(self.attribute_order_response)
-        self.valid_uuid = assay.uuid
-        self.url_root = '/api/v2/assays'
-        self.view = AssaysAttributes.as_view()
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
+        self.valid_uuid = str(assay.uuid)
+        self.url_root = '/api/v2/assays/'
+        self.view = AssayAttributeAPIView.as_view()
+        self.unknown_uuid = str(uuid.uuid4())
+        self.invalid_uuid = 'xxxxxxxx'
 
     def test_get_valid_uuid(self):
-        # valid_uuid
-        uuid = self.valid_uuid
-        request = self.factory.get('%s/%s/attributes/' % (self.url_root, uuid))
-        response = self.view(request, uuid)
+        request = self.factory.get(
+            self.url_root + self.valid_uuid + '/attributes/'
+        )
+        response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
+        self.assertItemsEqual(self.attribute_order_response, response.data)
 
-        list.sort(response.data)
-
-        ind = 0
-        for attributes in response.data:
-            self.assertItemsEqual(
-                    self.attribute_order_response[ind].keys(),
-                    attributes.keys())
-            self.assertItemsEqual(
-                    self.attribute_order_response[ind].values(),
-                    attributes.values())
-            ind = ind + 1
+    def test_get_unknown_uuid(self):
+        request = self.factory.get(
+            self.url_root + self.unknown_uuid + '/attributes/'
+        )
+        response = self.view(request, self.unknown_uuid)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_invalid_uuid(self):
-        # invalid uuid
-        request = self.factory.get('%s/%s/attributes/' % (
-            self.url_root, self.invalid_uuid))
+        request = self.factory.get(
+            self.url_root + self.invalid_uuid + '/attributes/'
+        )
         response = self.view(request, self.invalid_uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
-
-    def test_get_invalid_form_uuid(self):
-        # invalid form uuid
-        request = self.factory.get('%s/%s/attributes/' % (
-            self.url_root, self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        response.render()
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.content, '{"detail":"Not found."}')
+        self.assertEqual(response.status_code, 400)
 
     def test_put_valid_uuid(self):
-        # valid_uuid
-        self.client.login(username='ownerJane', password='test1234')
         updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
                                'rank': 3,
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        id = self.attribute_order_array[2].get('id')
-        updated_attribute_2 = {'id': id,
+        updated_attribute_2 = {'id': self.attribute_order_array[2].get('id'),
                                'rank': 1,
                                'is_exposed': False,
                                'is_facet': False,
                                'is_active': False}
-        # Api client needs url to end / or it will redirect
-        # update with solr_title
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
         response = self.client.put(
-                '{0}/{1}/attributes/'.format(
-                        self.url_root, self.valid_uuid), updated_attribute_1)
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_1
+        )
         self.assertEqual(response.status_code, 202)
-        self.assertEqual(response.data.get('rank'), updated_attribute_1.get(
-                'rank'))
-        self.assertEqual(
-                response.data.get('is_exposed'),
-                updated_attribute_1.get('is_exposed'))
-        self.assertEqual(
-                response.data.get('is_facet'),
-                updated_attribute_1.get('is_facet'))
-
+        self.assertEqual(response.data.get('rank'),
+                         updated_attribute_1.get('rank'))
+        self.assertEqual(response.data.get('is_exposed'),
+                         updated_attribute_1.get('is_exposed'))
+        self.assertEqual(response.data.get('is_facet'),
+                         updated_attribute_1.get('is_facet'))
         # Update with attribute_order id
         response = self.client.put(
-                '{0}/{1}/attributes/'.format(
-                        self.url_root, self.valid_uuid), updated_attribute_2)
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_2
+        )
         self.assertEqual(response.status_code, 202)
         self.assertEqual(response.data.get('rank'),
                          updated_attribute_2.get('rank'))
-        self.assertEqual(
-                response.data.get('is_exposed'),
-                updated_attribute_2.get('is_exposed'))
-        self.assertEqual(
-                response.data.get('is_facet'),
-                updated_attribute_2.get('is_facet'))
+        self.assertEqual(response.data.get('is_exposed'),
+                         updated_attribute_2.get('is_exposed'))
+        self.assertEqual(response.data.get('is_facet'),
+                         updated_attribute_2.get('is_facet'))
         self.client.logout()
 
     def test_put_invalid_object(self):
-        # Invalid objects
         updated_attribute_3 = {'rank': '4',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False'}
-
-        self.client.login(username='ownerJane', password='test1234')
-        response = self.client.put('{0}/{1}/attributes/'
-                                   .format(self.url_root, self.valid_uuid),
-                                   updated_attribute_3)
-        response.render()
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_3
+        )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-                response.content, '"Requires attribute id or solr_field name."'
-                )
+        self.assertEqual(response.content,
+                         '"Requires attribute id or solr_field name."')
         self.client.logout()
 
     def test_put_invalid_login(self):
-        # Invalid Login
         updated_attribute_4 = {'solr_field': 'Cell Type',
                                'rank': '4',
                                'is_exposed': 'False',
                                'is_facet': 'False',
                                'is_active': 'False'}
 
-        self.client.login(username='guestName', password='test1234')
-        response = self.client.put('{0}/{1}/attributes/'
-                                   .format(self.url_root, self.valid_uuid),
-                                   updated_attribute_4)
+        self.client.login(username=self.user1.username,
+                          password=self.user1.password)
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_4
+        )
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(
-                response.content, '"Only owner may edit attribute order."'
-                )
+        self.assertEqual(response.content,
+                         '"Only owner may edit attribute order."')
+        self.client.logout()
+
+    def test_put_object_id_without_attribute_order(self):
+        updated_attribute_2 = {'id': self.attribute_order_array[2].get('id'),
+                               'rank': 1,
+                               'is_exposed': False,
+                               'is_facet': False,
+                               'is_active': False}
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
+        AttributeOrder.objects.all().delete()
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_2
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.content,
+                         '"Could not find attribute orders to update"')
+        self.client.logout()
+
+    def test_put_object_solr_without_attribute_order(self):
+        updated_attribute_1 = {'solr_field': 'Character_Title_6_3_s',
+                               'rank': 3,
+                               'is_exposed': False,
+                               'is_facet': False,
+                               'is_active': False}
+        self.client.login(username=self.user1_username,
+                          password=self.user1_password)
+        AttributeOrder.objects.all().delete()
+        response = self.client.put(
+            self.url_root + self.valid_uuid + '/attributes/',
+            updated_attribute_1
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.content,
+                         '"Could not find attribute orders to update"')
         self.client.logout()
 
 
-class AssaysFilesAPITests(APITestCase):
+class AssayFileAPITests(APITestCase):
 
     def setUp(self):
         self.user_owner = 'owner'
         self.user_guest = 'guest'
         self.fake_password = 'test1234'
         self.data_set = create_dataset_with_necessary_models()
-        self.user1 = User.objects.create_user(self.user_owner,
-                                              '',
+        self.user1 = User.objects.create_user(self.user_owner, '',
                                               self.fake_password)
-        self.user2 = User.objects.create_user(self.user_guest,
-                                              '',
+        self.user2 = User.objects.create_user(self.user_guest, '',
                                               self.fake_password)
         self.data_set.set_owner(self.user1)
         investigation = Investigation.objects.create()
@@ -520,81 +500,66 @@ class AssaysFilesAPITests(APITestCase):
             InvestigationLink.objects.create(investigation=investigation,
                                              data_set=self.data_set,
                                              version=1)
-
         study = Study.objects.create(file_name='test_filename123.txt',
                                      title='Study Title Test',
                                      investigation=investigation)
-
         assay = Assay.objects.create(
-                study=study,
-                measurement='transcription factor binding site',
-                measurement_accession='http://www.testurl.org/testID',
-                measurement_source='OBI',
-                technology='nucleotide sequencing',
-                technology_accession='test info',
-                technology_source='test source',
-                platform='Genome Analyzer II',
-                file_name='test_assay_filename.txt',
-                )
-        self.valid_uuid = assay.uuid
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.url = "/api/v2/assays/%s/files/"
+            study=study,
+            measurement='transcription factor binding site',
+            measurement_accession='http://www.example.org/testID',
+            measurement_source='OBI',
+            technology='nucleotide sequencing',
+            technology_accession='test info',
+            technology_source='test source',
+            platform='Genome Analyzer II',
+            file_name='test_assay_filename.txt',
+        )
+        self.valid_uuid = str(assay.uuid)
+        self.unknown_uuid = str(uuid.uuid4())
+        self.url = "/api/v2/assays/{}/files/"
         self.non_meta_attributes = ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
         self.client = APIClient()
 
     def tearDown(self):
         self.client.logout()
-        super(AssaysFilesAPITests, self).tearDown()
+        super(AssayFileAPITests, self).tearDown()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_owner_with_valid_params(self,
-                                              mock_format,
-                                              mock_search,
+    def test_get_from_owner_with_valid_params(self, mock_format, mock_search,
                                               mock_generate):
         self.client.login(username=self.user_owner,
                           password=self.fake_password)
         mock_format.return_value = {'status': 200}
-        uuid = self.valid_uuid
-        params = {
-            'limit': '0',
-            'data_set_uuid': self.data_set.uuid
-        }
-        response = self.client.get(self.url % uuid, params)
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
         qdict = QueryDict('', mutable=True)
         qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
+        mock_generate.assert_called_once_with(qdict, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
 
-    def test_get_from_owner_invalid_params(self):
+    def test_get_from_owner_unknown_uuid(self):
         self.client.login(username=self.user_owner,
                           password=self.fake_password)
-
-        uuid = self.valid_uuid
         params = {'limit': 0,
-                  'data_set_uuid': self.invalid_uuid}
-        response = self.client.get(self.url % uuid, params)
+                  'data_set_uuid': self.unknown_uuid}
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertEqual(response.status_code, 404)
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_no_perms(self,
-                                    mock_format,
-                                    mock_search,
+    def test_get_from_user_no_perms(self, mock_format, mock_search,
                                     mock_generate):
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-
-        uuid = self.valid_uuid
-        params = {
-            'limit': 0,
-            'data_set_uuid': self.data_set.uuid
-        }
-        response = self.client.get(self.url % uuid, params)
+        params = {'limit': 0,
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertFalse(mock_format.called)
         self.assertFalse(mock_search.called)
         self.assertFalse(mock_generate.called)
@@ -603,51 +568,41 @@ class AssaysFilesAPITests(APITestCase):
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_with_read_perms(self,
-                                           mock_format,
-                                           mock_search,
+    def test_get_from_user_with_read_perms(self, mock_format, mock_search,
                                            mock_generate):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_%s' % DataSet._meta.model_name,
-                    self.user2,
+        assign_perm('read_%s' % DataSet._meta.model_name, self.user2,
                     self.data_set)
-        uuid = self.valid_uuid
         params = {'limit': '0',
                   'data_set_uuid': self.data_set.uuid}
-        response = self.client.get(self.url % uuid, params)
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
         qdict = QueryDict('', mutable=True)
         qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
+        mock_generate.assert_called_once_with(qdict, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
     @mock.patch('data_set_manager.views.format_solr_response')
-    def test_get_from_user_with_read_meta_perms(self,
-                                                mock_format,
-                                                mock_search,
+    def test_get_from_user_with_read_meta_perms(self, mock_format, mock_search,
                                                 mock_generate):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_meta_%s' % DataSet._meta.model_name,
-                    self.user2,
+        assign_perm('read_meta_%s' % DataSet._meta.model_name, self.user2,
                     self.data_set)
-
-        uuid = self.valid_uuid
         params = {'limit': '0',
                   'data_set_uuid': self.data_set.uuid}
-        response = self.client.get(self.url % uuid, params)
+        response = self.client.get(self.url.format(self.valid_uuid), params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
         qdict = QueryDict('', mutable=True)
         qdict.update(params)
-        mock_generate.assert_called_once_with(qdict,
-                                              uuid,
+        mock_generate.assert_called_once_with(qdict, self.valid_uuid,
                                               self.non_meta_attributes)
         self.assertEqual(response.status_code, 200)
 
@@ -808,20 +763,22 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         self.assertEqual(get_response.status_code, 400)
 
     def test_get_with_incorrect_study_uuid_returns_404(self):
-        get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.hg_19_data_set.uuid})
+        get_request = self.factory.get(
+            self.url_root,
+            {'study_uuid': self.hg_19_data_set.uuid}
+        )
         get_response = self.get_list_view(get_request)
         self.assertEqual(get_response.status_code, 404)
 
     def test_get_with_study_uuid_returns_401(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_response = self.get_list_view(get_request)
         self.assertEqual(get_response.status_code, 401)
 
     def test_get_with_study_uuid_returns_study_nodes(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         self.assertEqual(len(get_response.data),
@@ -834,7 +791,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_children_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -845,7 +802,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_parents_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -855,41 +812,48 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
 
     def test_get_with_study_uuid_returns_file_uuid_field(self):
+        nodes = self.hg_19_data_set.get_nodes()
+        file_node = nodes.filter(
+            type=Node.RAW_DATA_FILE, name='s5_p42_E2_45min.fastq.gz'
+        )[0]
+        file_item_uuid = file_node.file_item.uuid
+
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
-        first_node = get_response.data[0]
+        file_node_response = None
+        for node in get_response.data:
+            if file_node.uuid == node.get('uuid'):
+                file_node_response = node
+                break
+
         self.assertEqual(
-            first_node.get('file_uuid'),
-            Node.objects.get(uuid=first_node.get('uuid')).file_uuid
+            file_item_uuid,
+            file_node_response.get('file_uuid')
         )
 
     def test_get_with_study_uuid_returns_name_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('name'),
-            Node.objects.get(uuid=first_node.get('uuid')).name
-        )
+        self.assertEqual(first_node.get('name'),
+                         Node.objects.get(uuid=first_node.get('uuid')).name)
 
     def test_get_with_study_uuid_returns_type_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('type'),
-            Node.objects.get(uuid=first_node.get('uuid')).type
-        )
+        self.assertEqual(first_node.get('type'),
+                         Node.objects.get(uuid=first_node.get('uuid')).type)
 
     def test_get_with_study_uuid_returns_genome_build_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -900,18 +864,16 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_species_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
-        self.assertEqual(
-            first_node.get('species'),
-            Node.objects.get(uuid=first_node.get('uuid')).species
-        )
+        self.assertEqual(first_node.get('species'),
+                         Node.objects.get(uuid=first_node.get('uuid')).species)
 
     def test_get_with_study_uuid_returns_is_annotation_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -922,7 +884,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_analysis_uuid_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -933,7 +895,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_is_auxiliary_node_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -944,7 +906,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_subanalysis_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -955,7 +917,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_workflow_output_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -966,7 +928,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_study_id_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -977,7 +939,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_get_with_study_uuid_returns_assay_id_field(self):
         get_request = self.factory.get(self.url_root,
-                                       {'studyUuid': self.study_uuid})
+                                       {'study_uuid': self.study_uuid})
         get_request.user = self.user
         get_response = self.get_list_view(get_request)
         first_node = get_response.data[0]
@@ -1071,20 +1033,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
     def test_patch_not_clean_400_status(self, mock_clean):
         mock_clean.return_value = False
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.patch_view(patch_request, self.node.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-
-    def test_patch_missing_file_store_item_400_status(self):
-        file_store_item = FileStoreItem.objects.get(uuid=self.node.file_uuid)
-        file_store_item.delete()
-
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
+            urljoin(self.url_root, self.node.uuid), {'file_uuid': ''}
         )
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1092,11 +1041,10 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_patch_non_owner_401_status(self):
         self.non_owner = User.objects.create_user('Random User',
-                                                  'rand_user@fake.com',
+                                                  'rand_user@example.com',
                                                   self.password)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"file_uuid": ''}
+            urljoin(self.url_root, self.node.uuid), {'file_uuid': ''}
         )
         force_authenticate(patch_request, user=self.non_owner)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1104,8 +1052,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 
     def test_patch_edit_field_405_status(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.node.uuid),
-            {"name": 'New Node Name'}
+            urljoin(self.url_root, self.node.uuid), {'name': 'New Node Name'}
         )
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, self.node.uuid)
@@ -1215,16 +1162,15 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )[0]
 
         annotated_node = AnnotatedNode.objects.filter(
-            node=file_node,
-            attribute_subtype='organism part'
+            node=file_node, attribute_subtype='organism part'
         )[0]
         new_value = 'cell'
         solr_name = '{}_{}_652_326_s'.format(annotated_node.attribute_subtype,
                                              annotated_node.attribute_type)
         patch_request = self.factory.patch(
             urljoin(self.url_root, file_node.uuid),
-            {"attribute_solr_name": solr_name,
-             "attribute_value": new_value}
+            {'attribute_solr_name': solr_name,
+             'attribute_value': new_value}
         )
         force_authenticate(patch_request, user=self.user)
         self.patch_view(patch_request, file_node.uuid)
@@ -1805,10 +1751,10 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
 
-class StudiesViewAPIV2Tests(APIV2TestCase):
+class StudyViewAPIV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
-        super(StudiesViewAPIV2Tests, self).setUp(api_base_name="studies/",
-                                                 view=StudiesView.as_view())
+        super(StudyViewAPIV2Tests, self).setUp(api_base_name="studies/",
+                                               view=StudyAPIView.as_view())
         self.data_set = create_dataset_with_necessary_models(user=self.user)
 
     def test_get_missing_data_set_uuid_returns_400(self):
@@ -1819,21 +1765,21 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_401_for_unauthorized_users(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 401)
 
     def test_get_returns_public_studies_for_anon(self):
         self.data_set.share(ExtendedGroup.objects.public_group())
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('uuid'),
                          self.data_set.get_studies()[0].uuid)
 
     def test_get_returns_studies_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('uuid'),
@@ -1841,7 +1787,7 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_title_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('title'),
@@ -1849,7 +1795,7 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_description_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('description'),
@@ -1857,7 +1803,7 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_submission_date_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('submission_date'),
@@ -1865,7 +1811,7 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_identifier_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('identifier'),
@@ -1873,7 +1819,7 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_release_date_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('release_date'),
@@ -1881,7 +1827,7 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_file_name_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('file_name'),
@@ -1889,8 +1835,56 @@ class StudiesViewAPIV2Tests(APIV2TestCase):
 
     def test_get_returns_investigation_id_field_for_data_set(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('investigation'),
                          self.data_set.get_studies()[0].investigation.id)
+
+
+class TakeOwnershipOfPublicDatasetViewTest(APIV2TestCase):
+
+    def setUp(self, **kwargs):
+        super(TakeOwnershipOfPublicDatasetViewTest, self).setUp(
+            api_base_name="import/take_ownership/",
+            view=TakeOwnershipOfPublicDatasetView.as_view()
+        )
+        self.username_owner = 'owner'
+        self.password_owner = 'take_over'
+        self.user_owner = User.objects.create_user(
+            self.username_owner, 'user1@example.com', self.password_owner
+        )
+        self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.data_set.share(ExtendedGroup.objects.public_group())
+
+    def test_take_ownership_public_datafile_returns_url_in_cookies(self):
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(
+            post_response.cookies.get('isa_tab_url').value,
+            'http://www.example.com/test.csv'
+        )
+
+    def test_take_ownership_returns_400_without_current_site(self):
+        Site.objects.all().delete()
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(post_response.status_code, 400)
+
+    @mock.patch("data_set_manager.views.build_absolute_url")
+    def test_take_ownership_returns_400_without_relative_url(self, mock_url):
+        def raise_error(file):
+            raise ValueError(str(file))
+        mock_url.side_effect = raise_error
+        post_request = self.factory.post(self.url_root,
+                                         {'data_set_uuid': self.data_set.uuid},
+                                         'json')
+        post_request.user = self.user_owner
+        post_response = self.view(post_request)
+        self.assertEqual(post_response.status_code, 400)

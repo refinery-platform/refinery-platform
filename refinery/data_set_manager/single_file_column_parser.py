@@ -36,6 +36,7 @@ class SingleFileColumnParser:
     file_column_index = last column
     file_permanent = files will be added to the file store permanently
     """
+
     def __init__(
         self,
         metadata_file,
@@ -93,7 +94,7 @@ class SingleFileColumnParser:
         # May be None. Negative values are allowed and are counted from the
         # last column of the file (-1 = last column)
         if auxiliary_file_column_index and auxiliary_file_column_index < 0:
-            self.auxiliary_file_column_index =\
+            self.auxiliary_file_column_index = \
                 self.num_columns + auxiliary_file_column_index
         else:
             self.auxiliary_file_column_index = auxiliary_file_column_index
@@ -234,7 +235,7 @@ class SingleFileColumnParser:
             file_node = Node.objects.create(
                 study=study, assay=assay,
                 name=row[self.file_column_index].strip(),
-                file_uuid=data_file_item.uuid, type=Node.RAW_DATA_FILE,
+                file_item=data_file_item, type=Node.RAW_DATA_FILE,
                 species=self._get_species(row),
                 genome_build=self._get_genome_build(row),
                 is_annotation=self._is_annotation(row))
@@ -406,9 +407,23 @@ def process_metadata_table(
     investigation.save()
 
     if existing_data_set_uuid:
-        data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
-        data_set.update_with_revised_investigation(investigation)
-        return existing_data_set_uuid
+        try:
+            data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error('DataSet for uuid %s not fetched and thus not '
+                         'updated with revised investigation %s: %s',
+                         existing_data_set_uuid, unicode(investigation), e)
+            raise type(e)(
+                'DataSet for uuid {} not fetched and thus not '
+                'updated with revised investigation {}'.format(
+                    existing_data_set_uuid, unicode(investigation)
+                )
+            )
+        else:
+            data_set.update_with_revised_investigation(investigation)
+            return existing_data_set_uuid
+
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
         dataset_name=title, public=is_public

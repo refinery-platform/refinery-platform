@@ -1,15 +1,20 @@
+from datetime import datetime
+from datetime import timedelta
 import json
 import random
 import string
+import uuid as uuid_lib
 from urlparse import urljoin
 
 from cuser.middleware import CuserMiddleware
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.http import Http404
 from django.test import Client, override_settings
 from django.test.testcases import TestCase
+from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
 
 from guardian.shortcuts import get_groups_with_perms
@@ -27,17 +32,17 @@ from factory_boy.django_model_factories import (
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                create_tool_with_necessary_models)
 
-from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
-                     SiteProfile, SiteStatistics, SiteVideo, Workflow,
-                     WorkflowEngine)
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
+                     InvestigationLink, Project, SiteProfile, SiteStatistics,
+                     SiteVideo, Workflow, WorkflowEngine)
 
 
 from .serializers import DataSetSerializer, UserSerializer
 
-from .views import (AnalysisViewSet, DataSetsViewSet, EventViewSet,
-                    GroupViewSet, GroupMemberAPIView,
-                    ObtainAuthTokenValidSession, SiteProfileViewSet,
-                    UserProfileViewSet, WorkflowViewSet, user)
+from .views import (AnalysisAPIView, DataSetViewSet, EventAPIView,
+                    GroupViewSet, InvitationViewSet,
+                    ObtainAuthTokenValidSession, SiteProfileAPIView,
+                    UserProfileAPIView, WorkflowViewSet, user)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -67,7 +72,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(DataSetApiV2Tests, self).setUp(
             api_base_name="datasets/",
-            view=DataSetsViewSet.as_view({'get': 'list'})
+            view=DataSetViewSet.as_view({'get': 'list'})
         )
 
         # Create Datasets
@@ -96,8 +101,8 @@ class DataSetApiV2Tests(APIV2TestCase):
             data=self.node_json,
             format="json"
         )
-        self.get_ds_view = DataSetsViewSet.as_view({'get': 'retrieve'})
-        self.patch_view = DataSetsViewSet.as_view({'patch': 'partial_update'})
+        self.get_ds_view = DataSetViewSet.as_view({'get': 'retrieve'})
+        self.patch_view = DataSetViewSet.as_view({'patch': 'partial_update'})
         self.options_response = self.view(self.options_request)
         self.user_2 = User.objects.create_user('jane_lab',
                                                'jane@example.com',
@@ -109,7 +114,7 @@ class DataSetApiV2Tests(APIV2TestCase):
                                                'john@example.com',
                                                'coffeecoffee')
         self.user_3_data_set = create_dataset_with_necessary_models(
-            user=self.user_3
+            is_isatab_based=True, user=self.user_3
         )
         self.user_2_data_set.share(ExtendedGroup.objects.public_group())
         self.user_3_data_set.share(ExtendedGroup.objects.public_group())
@@ -250,6 +255,46 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(get_ds_response.data.get('uuid'), self.data_set.uuid)
 
+    def test_get_data_set_returns_isa_archive_uuid(self):
+        investigation_link = \
+            self.user_3_data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+        isa_archive_uuid = file_store_item.uuid
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.user_3_data_set.uuid))
+        get_request.user = self.user_3
+        get_ds_response = self.get_ds_view(get_request,
+                                           self.user_3_data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('isa_archive_uuid'),
+                         isa_archive_uuid)
+
+    def test_get_data_set_returns_isa_archive_url(self):
+        investigation_link = \
+            self.user_3_data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+        isa_archive_url = file_store_item.get_datafile_url()
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.user_3_data_set.uuid))
+        get_request.user = self.user_3
+        get_ds_response = self.get_ds_view(get_request,
+                                           self.user_3_data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('isa_archive_url'),
+                         isa_archive_url)
+
+    def test_get_data_set_returns_pre_isa_archive_uuid(self):
+        investigation_link = self.data_set.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        file_store_item = investigation.get_file_store_item()
+        pre_isa_archive_uuid = file_store_item.uuid
+        get_request = self.factory.get(urljoin(self.url_root,
+                                               self.data_set.uuid))
+        get_request.user = self.user
+        get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
+        self.assertEqual(get_ds_response.data.get('pre_isa_archive_uuid'),
+                         pre_isa_archive_uuid)
+
     def test_get_data_set_returns_title(self):
         get_request = self.factory.get(urljoin(self.url_root,
                                                self.data_set.uuid))
@@ -313,7 +358,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_ds_response = self.get_ds_view(get_request, self.data_set.uuid)
         self.assertEqual(
             get_ds_response.data.get('owner').get('profile').get('uuid'),
-            self.user.profile.uuid
+            str(self.user.profile.uuid)
         )
 
     def test_get_data_set_returns_user_perms_for_owner(self):
@@ -337,7 +382,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(True, response_perms.get('read_meta'))
 
     def test_dataset_delete_successful(self):
-        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
+        delete_view = DataSetViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request1 = self.factory.delete(
@@ -366,7 +411,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 2)
 
     def test_dataset_delete_no_auth(self):
-        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
+        delete_view = DataSetViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         self.delete_request = self.factory.delete(
@@ -381,7 +426,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 4)
 
     def test_dataset_delete_not_found(self):
-        delete_view = DataSetsViewSet.as_view({'delete': 'destroy'})
+        delete_view = DataSetViewSet.as_view({'delete': 'destroy'})
         self.assertEqual(DataSet.objects.all().count(), 4)
 
         uuid = self.data_set.uuid
@@ -401,8 +446,8 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         self.assertEqual(DataSet.objects.all().count(), 3)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
+    @mock.patch('core.views.DataSetViewSet.update_group_perms')
+    @mock.patch('core.views.DataSetViewSet.send_transfer_notification_email')
     def test_dataset_patch_success_returns_202(self, mock_update, mock_email):
         new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
@@ -415,8 +460,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 202)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
+    @mock.patch('core.views.DataSetViewSet.update_group_perms')
+    @mock.patch('core.views.DataSetViewSet.send_transfer_notification_email')
     def test_dataset_patch_returns_updated_is_owner(self, mock_update,
                                                     mock_email):
         new_owner_email = 'new_owner@example.com'
@@ -441,8 +486,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_response = self.patch_view(patch_request, self.data_set.uuid)
         self.assertEqual(patch_response.status_code, 404)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
+    @mock.patch('core.views.DataSetViewSet.update_group_perms')
+    @mock.patch('core.views.DataSetViewSet.send_transfer_notification_email')
     def test_dataset_calls_current_mock_methods(self, mock_update, mock_email):
         new_owner_email = 'new_owner@example.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
@@ -456,7 +501,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertTrue(mock_update.called)
         self.assertTrue(mock_email.called)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms',
+    @mock.patch('core.views.DataSetViewSet.update_group_perms',
                 side_effect=RuntimeError)
     def test_dataset_patch_fails_and_rollback_owner(self, mock_update):
         new_owner_email = 'new_owner@example.com'
@@ -675,7 +720,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -689,7 +734,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -705,7 +750,7 @@ class DataSetApiV2Tests(APIV2TestCase):
                                              new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -728,7 +773,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
@@ -751,7 +796,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.data_set.share(group_non_union)
         group_non_union.user_set.add(self.user)
 
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
@@ -777,7 +822,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_union.user_set.add(self.user)
         group_union.user_set.add(new_owner)
 
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
@@ -799,7 +844,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_public = ExtendedGroup.objects.public_group()
         self.data_set.share(group_public)
 
-        view_set = DataSetsViewSet()
+        view_set = DataSetViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
@@ -864,6 +909,12 @@ class GroupApiV2Tests(APIV2TestCase):
         self.group_2.user_set.add(self.user)
         self.data_set.share(self.group)
         self.data_set.share(self.group_2)
+        self.public_group = ExtendedGroup.objects.public_group()
+        self.public_group.manager_group.user_set.add(self.user)
+        self.non_manager = User.objects.create_user('Non-manager',
+                                                    'non_manager@example.com',
+                                                    self.password)
+        self.group.user_set.add(self.non_manager)
 
     def test_delete_group_returns_403_for_non_managers(self):
         non_manager = User.objects.create_user('Non-owner',
@@ -911,11 +962,14 @@ class GroupApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
-        user_ids = [self.user.profile.uuid, new_user.profile.uuid]
-        self.assertEqual(len(get_response.data[0].get('member_list')), 2)
+        user_ids = [str(self.user.profile.uuid),
+                    str(new_user.profile.uuid),
+                    str(self.non_manager.profile.uuid)]
+        self.assertEqual(len(get_response.data[0].get('member_list')), 3)
         member_list = get_response.data[0].get('member_list')
         self.assertIn(member_list[0].get('profile').get('uuid'), user_ids)
         self.assertIn(member_list[1].get('profile').get('uuid'), user_ids)
+        self.assertIn(member_list[2].get('profile').get('uuid'), user_ids)
 
     def test_get_groups_no_params_has_can_edit_true(self):
         # remove user from public group for testing can_edit
@@ -943,19 +997,19 @@ class GroupApiV2Tests(APIV2TestCase):
 
     def test_get_groups_with_data_set_uuid_returns_403_for_anon(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 403)
 
     def test_get_groups_invalid_data_set_uuid_returns_404(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': 'xxx2'})
+                                       {'data_set_uuid': 'xxx2'})
         get_response = self.view(get_request)
         self.assertEqual(get_response.status_code, 404)
 
     def test_get_groups_with_data_set_uuid_returns_correct_groups(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), 2)
@@ -967,7 +1021,7 @@ class GroupApiV2Tests(APIV2TestCase):
         public_group = ExtendedGroup.objects.public_group()
         self.data_set.share(public_group)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), 3)
@@ -979,7 +1033,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_name_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.name, get_response.data[0].get('name'))
@@ -987,7 +1041,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_id_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.id, get_response.data[0].get('id'))
@@ -995,14 +1049,14 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_uuid(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         self.assertEqual(self.group.uuid, get_response.data[0].get('uuid'))
 
     def test_get_groups_with_data_set_uuid_has_can_edit_true(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('can_edit'), True)
@@ -1013,7 +1067,7 @@ class GroupApiV2Tests(APIV2TestCase):
                                             self.password)
         self.group.user_set.add(new_user)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('can_edit'), False)
@@ -1025,7 +1079,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.group.user_set.add(new_user)
         ExtendedGroup.objects.public_group().user_set.remove(new_user)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=new_user)
         get_response = self.view(get_request)
         self.assertEqual(get_response.data[0].get('manager_group_uuid'),
@@ -1034,7 +1088,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_has_correct_perms_field(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         get_request.user = self.user
         get_response = self.view(get_request)
         response_perms = get_response.data[0].get('perm_list')
@@ -1050,7 +1104,7 @@ class GroupApiV2Tests(APIV2TestCase):
                                                  self.password)
         self.group.user_set.add(self.new_user)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.new_user)
         get_response = self.view(get_request)
         # public group plus group one
@@ -1062,8 +1116,8 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_and_all_perms_returns_groups(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid,
-                                        'allPerms': True})
+                                       {'data_set_uuid': self.data_set.uuid,
+                                        'all_perms': True})
         get_request.user = self.user
         get_response = self.view(get_request)
         # public plus the two groups created in set-up
@@ -1072,8 +1126,8 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_get_groups_with_data_set_uuid_and_all_perms_returns_perms(self):
         self.data_set.unshare(self.group_2)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid,
-                                        'allPerms': True})
+                                       {'data_set_uuid': self.data_set.uuid,
+                                        'all_perms': True})
         get_request.user = self.user
         get_response = self.view(get_request)
 
@@ -1092,15 +1146,15 @@ class GroupApiV2Tests(APIV2TestCase):
         public_group = ExtendedGroup.objects.public_group()
         self.data_set.share(public_group)
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid,
-                                        'allPerms': True})
+                                       {'data_set_uuid': self.data_set.uuid,
+                                        'all_perms': True})
         get_response = self.view(get_request)
         self.assertEqual(get_response.data, [])
 
     def test_patch_groups_returns_status_code_200(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': True,
                            'read_meta': True},
@@ -1114,7 +1168,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_change_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': True,
                            'read_meta': True},
@@ -1129,7 +1183,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_read_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': False,
                            'read': False,
                            'read_meta': True},
@@ -1146,7 +1200,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_read_meta_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': False,
                            'read': False,
                            'read_meta': False},
@@ -1161,7 +1215,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_updates_based_on_highest_perm_field(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1184,7 +1238,7 @@ class GroupApiV2Tests(APIV2TestCase):
         self.group.user_set.add(self.non_owner)
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1198,7 +1252,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_invalid_data_set_uuid_returns_404(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.group.uuid),
-            {'dataSetUuid': 'xxxxxx',
+            {'data_set_uuid': 'xxxxxx',
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1212,7 +1266,7 @@ class GroupApiV2Tests(APIV2TestCase):
     def test_patch_groups_invalid_group_uuid_returns_404(self):
         patch_request = self.factory.patch(
             urljoin(self.url_root, 'xxxxx5'),
-            {'dataSetUuid': self.data_set.uuid,
+            {'data_set_uuid': self.data_set.uuid,
              'perm_list': {'change': True,
                            'read': False,
                            'read_meta': False},
@@ -1222,6 +1276,121 @@ class GroupApiV2Tests(APIV2TestCase):
         force_authenticate(patch_request, user=self.user)
         patch_response = self.patch_view(patch_request, 'xxxx5')
         self.assertEqual(patch_response.status_code, 404)
+
+    def test_patch_member_returns_403_for_non_self_and_manager(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.user.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 403)
+
+    def test_patch_member_returns_400_user_leaves_public_group(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.public_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.public_group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_returns_400_manager_removes_user_from_public(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.public_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.public_group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_returns_400_last_manager_demotes_self(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.user.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_returns_400_manager_leaves(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.user.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_member_leaves_group_success(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.user_set.all())
+
+    def test_patch_member_by_manager_removes_member(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.user_set.all())
+
+    def test_patch_member_by_manager_demotes_member(self):
+        self.group.manager_group.user_set.add(self.non_manager)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.manager_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request,
+                                         self.group.manager_group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.manager_group.user_set.all())
+
+    def test_patch_member_by_demoting_self(self):
+        self.group.manager_group.user_set.add(self.non_manager)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.manager_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request,
+                                         self.group.manager_group.uuid)
+        self.assertEqual(patch_response.status_code, 200)
+        self.assertNotIn(self.non_manager,
+                         self.group.manager_group.user_set.all())
+
+    def test_patch_group_member_returns_403_for_promoting_non_managers(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_request = self.patch_view(patch_request,
+                                        self.group.manager_group.uuid)
+        self.assertEqual(patch_request.status_code, 403)
+
+    def test_patch_member_promotes_for_user(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.group.manager_group.uuid),
+            {'user_id': self.non_manager.id}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_request = self.patch_view(patch_request,
+                                        self.group.manager_group.uuid)
+        self.assertEqual(patch_request.status_code, 200)
+        self.assertIn(self.non_manager,
+                      self.group.manager_group.user_set.all())
 
     def test_post_groups_returns_401_for_anon(self):
         post_request = self.factory.post(self.url_root, {'name': 'Group 231'})
@@ -1261,14 +1430,18 @@ class GroupApiV2Tests(APIV2TestCase):
         self.assertEqual(post_response.status_code, 400)
 
 
-class GroupMemberApiV2Tests(APIV2TestCase):
+class InvitationApiV2Tests(APIV2TestCase):
     def setUp(self):
-        self.group = ExtendedGroup.objects.create(name="Test Group")
-        super(GroupMemberApiV2Tests, self).setUp(
-            api_base_name='groups/' + self.group.uuid + '/members/',
-            view=GroupMemberAPIView.as_view()
+        super(InvitationApiV2Tests, self).setUp(
+            api_base_name="invitations/",
+            view=InvitationViewSet.as_view({'get': 'list'})
         )
-        self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.patch_view = InvitationViewSet.as_view(
+            {'patch': 'partial_update'}
+        )
+        self.post_view = InvitationViewSet.as_view({'post': 'create'})
+        self.delete_view = InvitationViewSet.as_view({'delete': 'destroy'})
+        self.group = ExtendedGroup.objects.create(name="Test Group")
         self.group.manager_group.user_set.add(self.user)
         self.group.user_set.add(self.user)
         self.public_group = ExtendedGroup.objects.public_group()
@@ -1277,138 +1450,124 @@ class GroupMemberApiV2Tests(APIV2TestCase):
                                                     'user@example.com',
                                                     self.password)
         self.group.user_set.add(self.non_manager)
+        self.non_member = User.objects.create_user('Non-member',
+                                                   'user2@example.com',
+                                                   self.password)
+        self.invite = Invitation(token_uuid=uuid_lib.uuid4(),
+                                 group_id=self.group.id)
+        self.time_duration = timedelta(days=settings.TOKEN_DURATION)
+        self.invite.expires = timezone.now() + self.time_duration
+        self.invite.sender = self.user
+        self.invite.recipient_email = self.non_manager.email
+        self.invite.save()
 
-    def test_delete_member_returns_403_for_non_self_and_manager(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.user.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.user.id)
-        self.assertEqual(delete_response.status_code, 403)
-
-    def test_delete_member_returns_400_user_leaves_public_group(self):
-        delete_request = self.factory.delete(
-            '/groups/' + self.public_group.uuid + '/members/' +
-            str(self.non_manager.id) + '/'
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.public_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 400)
-
-    def test_delete_member_returns_400_manager_removes_user_from_public(self):
-        delete_request = self.factory.delete(
-            '/groups/' + self.public_group.uuid + '/members/' +
-            str(self.non_manager.id) + '/'
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.public_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 400)
-
-    def test_delete_member_returns_400_last_manager_demotes_self(self):
-        delete_request = self.factory.delete(
-            '/groups/' + self.group.manager_group.uuid + '/members/' +
-            str(self.user.id) + '/'
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.user.id)
-        self.assertEqual(delete_response.status_code, 400)
-
-    def test_delete_member_returns_400_manager_leaves(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.user.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.user.id)
-        self.assertEqual(delete_response.status_code, 400)
-
-    def test_delete_member_leaves_group_success(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.user_set.all())
-
-    def test_delete_member_by_manager_removes_member(self):
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.user_set.all())
-
-    def test_delete_member_by_manager_demotes_member(self):
-        self.group.manager_group.user_set.add(self.non_manager)
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.user)
-        delete_response = self.view(delete_request,
-                                    self.group.manager_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.manager_group.user_set.all())
-
-    def test_delete_member_by_demoting_self(self):
-        self.group.manager_group.user_set.add(self.non_manager)
-        delete_request = self.factory.delete(
-            urljoin(self.url_root, str(self.non_manager.id) + '/')
-        )
-        force_authenticate(delete_request, user=self.non_manager)
-        delete_response = self.view(delete_request,
-                                    self.group.manager_group.uuid,
-                                    self.non_manager.id)
-        self.assertEqual(delete_response.status_code, 200)
-        self.assertNotIn(self.non_manager,
-                         self.group.manager_group.user_set.all())
-
-    def test_post_group_member_returns_403_for_non_managers(self):
-        post_request = self.factory.post(self.url_root,
-                                         {'userId': self.non_manager.id})
-        force_authenticate(post_request, user=self.non_manager)
-        post_request = self.view(post_request,
-                                 self.group.uuid)
-        self.assertEqual(post_request.status_code, 403)
-
-    def test_post_group_member_promotes_for_user(self):
+    def test_create_invites_returns_403_for_non_managers(self):
         post_request = self.factory.post(
-            '/groups/' + self.group.manager_group.uuid + '/members/',
-            {'userId': self.non_manager.id}
+            self.url_root,
+            {'group_uuid': self.group.uuid,
+             'recipient_email': self.non_member.email}
+        )
+        force_authenticate(post_request, user=self.non_manager)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 403)
+
+    def test_create_invites_returns_201_for_manager(self):
+        post_request = self.factory.post(
+            self.url_root,
+            {'group_uuid': self.group.uuid,
+             'recipient_email': self.non_member.email}
         )
         force_authenticate(post_request, user=self.user)
-        post_request = self.view(post_request,
-                                 self.group.manager_group.uuid)
-        self.assertEqual(post_request.status_code, 200)
-        self.assertIn(self.non_manager,
-                      self.group.manager_group.user_set.all())
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.status_code, 201)
+
+    def test_create_invites_returns_new_invite_object_for_manager(self):
+        post_request = self.factory.post(
+            self.url_root,
+            {'group_uuid': self.group.uuid,
+             'recipient_email': self.non_member.email}
+        )
+        force_authenticate(post_request, user=self.user)
+        post_response = self.post_view(post_request)
+        self.assertEqual(post_response.data.get('recipient_email'),
+                         self.non_member.email)
+
+    def test_delete_invites_returns_403_for_non_managers(self):
+        delete_request = self.factory.delete(
+            urljoin(self.url_root, str(self.invite.id))
+        )
+        force_authenticate(delete_request, user=self.non_manager)
+        delete_response = self.delete_view(delete_request, self.invite.id)
+        self.assertEqual(delete_response.status_code, 403)
+
+    def test_delete_invites_removes_invites_for_managers(self):
+        delete_request = self.factory.delete(
+            urljoin(self.url_root, str(self.invite.id))
+        )
+        force_authenticate(delete_request, user=self.user)
+        delete_response = self.delete_view(delete_request, self.invite.id)
+        self.assertEqual(delete_response.status_code, 200)
+        self.assertEqual(len(Invitation.objects.all()), 0)
+
+    def test_get_invites_returns_403_for_non_managers(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'group_uuid': self.group.uuid})
+        force_authenticate(get_request, user=self.non_manager)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.status_code, 403)
+
+    def test_get_invites_returns_invites_for_managers(self):
+        get_request = self.factory.get(self.url_root,
+                                       {'group_uuid': self.group.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(get_response.data[0].get('id'), self.invite.id)
+
+    def test_get_invites_deletes_expired_invites(self):
+        exp_invite = Invitation(token_uuid=uuid_lib.uuid4(),
+                                group_id=self.group.id)
+        exp_invite.expires = timezone.now()
+        exp_invite.sender = self.user
+        exp_invite.recipient_email = self.non_member.email
+        exp_invite.save()
+        get_request = self.factory.get(self.url_root,
+                                       {'group_uuid': self.group.uuid})
+        force_authenticate(get_request, user=self.user)
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 1)
+        self.assertEqual(get_response.data[0].get('id'), self.invite.id)
+
+    def test_patch_invites_returns_403_for_non_managers(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, str(self.invite.id)),
+            {'group_uuid': self.group.uuid},
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.non_manager)
+        patch_response = self.patch_view(patch_request, self.invite.id)
+        self.assertEqual(patch_response.status_code, 403)
+
+    def test_patch_invites_extends_expiration_for_managers(self):
+        previous_invite_expire = self.invite.expires
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, str(self.invite.id)),
+            {'group_uuid': self.group.uuid},
+            format='json'
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.patch_view(patch_request, self.invite.id)
+        # drf formatting to isoformat
+        isoformat = datetime.isoformat(previous_invite_expire)
+        drf_isoformat_previous_expire = isoformat[:-6] + 'Z'
+        self.assertGreater(patch_response.data.get('expires'),
+                           drf_isoformat_previous_expire)
 
 
 class AnalysisApiV2Tests(APIV2TestCase):
 
     def setUp(self):
-        super(AnalysisApiV2Tests, self).setUp(
-            api_base_name="analyses/",
-            view=AnalysisViewSet.as_view()
-        )
+        super(AnalysisApiV2Tests, self).setUp(api_base_name="analyses/",
+                                              view=AnalysisAPIView.as_view())
         self.project = Project.objects.create()
 
         self.galaxy_instance = GalaxyInstanceFactory()
@@ -1426,71 +1585,66 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
         # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
+        InvestigationLink.objects.create(data_set=self.data_set,
+                                         investigation=self.investigation,
+                                         version=1)
 
         # Create Studys and Assays
         self.study = Study.objects.create(investigation=self.investigation)
         self.assay = Assay.objects.create(study=self.study)
 
         # Create Analyses
-        self.analysis = Analysis.objects.create(
-            name='Coffee Analysis',
-            summary='coffee',
-            project=self.project,
-            data_set=self.data_set,
-            workflow=self.workflow,
-            time_start='2019-03-02T06:12:03.819446Z'
-        )
+        self.analysis = Analysis.objects.create(name='Coffee Analysis',
+                                                summary='coffee',
+                                                project=self.project,
+                                                data_set=self.data_set,
+                                                workflow=self.workflow,
+                                                time_start=timezone.now())
         self.analysis.set_owner(self.user)
 
-        self.analysis2 = Analysis.objects.create(
-            name='Coffee Analysis2',
-            summary='coffee2',
-            project=self.project,
-            data_set=self.data_set,
-            workflow=self.workflow,
-            time_start='2019-03-02T06:20:41.853987Z'
-        )
+        self.analysis2 = Analysis.objects.create(name='Coffee Analysis2',
+                                                 summary='coffee2',
+                                                 project=self.project,
+                                                 data_set=self.data_set,
+                                                 workflow=self.workflow,
+                                                 time_start=timezone.now())
         self.analysis2.set_owner(self.user)
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
 
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
+        self.node_json = json.dumps([
+            {
+                'uuid': 'cfb31cca-4f58-4ef0-b1e2-4469c804bf73',
+                'relative_file_store_item_url': None,
+                'parent_nodes': [],
+                'child_nodes': [
+                    '1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8'
+                ],
+                'auxiliary_nodes': [],
+                'is_auxiliary_node': False,
+                'file_extension': None,
+                'auxiliary_file_generation_task_state': None,
+                'ready_for_igv_detail_view': None
+            }
+        ])
 
         self.client.login(username=self.username, password=self.password)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.put_request = self.factory.put(self.url_root,
+                                            data=self.node_json,
+                                            format='json')
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.patch_request = self.factory.patch(self.url_root,
+                                                data=self.node_json,
+                                                format='json')
         self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.options_request = self.factory.options(self.url_root,
+                                                    data=self.node_json,
+                                                    format='json')
         self.options_response = self.view(self.options_request)
 
     def test_unallowed_http_verbs(self):
@@ -1498,9 +1652,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
         self.assertEqual(
             self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
+        self.assertEqual(self.options_response.data['detail'],
+                         'Method "OPTIONS" not allowed.')
 
     def test_get_analysis_returns_empty_list_for_no_public_data_sets(self):
         get_request = self.factory.get(self.url_root)
@@ -1542,14 +1695,14 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
     def test_get_analysis_with_data_set_uuid_returns_401(self):
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         get_response = self.view(get_request_with_ds)
         self.assertEqual(get_response.status_code, 401)
 
     def test_get_analysis_with_invalid_data_set_uuid_returns_404(self):
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': 'xxx5'}
+            self.url_root, {'data_set_uuid': 'xxx5'}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1557,7 +1710,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
     def test_get_analysis_with_data_set_uuid_returns_analyses(self):
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1569,7 +1722,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_names_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1578,7 +1731,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_status_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1588,7 +1741,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_summary_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1598,17 +1751,20 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_time_start_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
+        drf_isoformat = datetime.isoformat(
+            timezone.localtime(self.analysis.time_start)
+        )
         self.assertEqual(get_response.data[0].get('time_start'),
-                         self.analysis.time_start)
+                         drf_isoformat)
 
     def test_get_analysis_with_data_set_uuid_returns_time_end_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1618,7 +1774,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_uuid_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1627,7 +1783,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_workflow_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
@@ -1637,18 +1793,18 @@ class AnalysisApiV2Tests(APIV2TestCase):
     def test_get_analysis_with_data_set_uuid_returns_owner_field(self):
         self.analysis2.delete()
         get_request_with_ds = self.factory.get(
-            self.url_root, {'dataSetUuid': self.data_set.uuid}
+            self.url_root, {'data_set_uuid': self.data_set.uuid}
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
         self.assertEqual(
             get_response.data[0].get('owner').get('profile').get('uuid'),
-            self.analysis.get_owner().profile.uuid
+            str(self.analysis.get_owner().profile.uuid)
         )
 
     def test_get_analysis_with_data_set_uuid_returns_sorted_analyses(self):
         get_request = self.factory.get(self.url_root,
-                                       {'dataSetUuid': self.data_set.uuid})
+                                       {'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         # sorted in reverse time_start
@@ -1660,7 +1816,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root,
                                        {'limit': limit,
                                         'offset': 0,
-                                        'dataSetUuid': self.data_set.uuid})
+                                        'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(len(get_response.data), limit)
@@ -1669,7 +1825,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
         offset = 1
         get_request = self.factory.get(self.url_root,
                                        {'offset': offset,
-                                        'dataSetUuid': self.data_set.uuid})
+                                        'data_set_uuid': self.data_set.uuid})
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         # know the total length off analysis is 2
@@ -1719,25 +1875,17 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(Analysis.objects.all().count(), 2)
 
     def test_analysis_delete_not_found(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        uuid = self.analysis.uuid
-
         self.analysis.delete()
 
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
         self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
+           urljoin(self.url_root, self.analysis.uuid)
         )
         force_authenticate(self.delete_request, user=self.user)
 
         self.delete_response = self.view(self.delete_request,
-                                         uuid)
+                                         self.analysis.uuid)
 
         self.assertEqual(self.delete_response.status_code, 404)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
 
 
 class WorkflowApiV2Tests(APIV2TestCase):
@@ -1771,59 +1919,93 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(SiteProfileApiV2Tests, self).setUp(
             api_base_name="site_profiles",
-            view=SiteProfileViewSet.as_view()
+            view=SiteProfileAPIView.as_view()
         )
         self.current_site = Site.objects.get_current()
-        self.site_profile = SiteProfile.objects.create(
+        self.other_site = Site.objects.create(
+            domain='example.com', name='test'
+        )
+        self.site_profile_current = SiteProfile.objects.create(
             site=self.current_site,
             about_markdown='About the platform paragraph.',
             intro_markdown='The refinery platform intro paragraph.',
             twitter_username='Mock_twitter_name'
         )
+        self.site_profile_other = SiteProfile.objects.create(
+            site=self.other_site,
+            about_markdown='About the other platform paragraph.',
+            intro_markdown='The other platform intro paragraph.',
+            twitter_username='Mock_twitter_name'
+        )
         self.site_video_1 = SiteVideo.objects.create(
             caption="Dashboard video",
-            site_profile=self.site_profile,
+            site_profile=self.site_profile_current,
             source="YouTube",
             source_id="yt_5tc"
         )
         self.site_video_2 = SiteVideo.objects.create(
             caption="Analysis video",
-            site_profile=self.site_profile,
+            site_profile=self.site_profile_current,
             source="YouTube",
             source_id="yt_875"
         )
 
         username = password = "admin"
         self.admin_user = User.objects.create_superuser(username, '', password)
-        self.get_request = self.factory.get(self.url_root)
+        self.get_request_current_true = self.factory.get(
+            self.url_root + '?current_site=True'
+        )
+        self.get_request_current_false = self.factory.get(
+            self.url_root + '?current_site=false'
+        )
+        self.get_request_current_foo = self.factory.get(
+            self.url_root + '?current_site=foo'
+        )
+        self.get_request_no_params = self.factory.get(self.url_root)
 
-    def test_get_returns_404_status_for_missing_site_profiles(self):
+    def test_get_returns_404_status_for_missing_current_site_profile(self):
         SiteProfile.objects.all().delete()
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.status_code, 404)
 
-    def test_get_returns_200_status_for_anon_user(self):
-        get_response = self.view(self.get_request)
+    def test_get_returns_empty_list_for_no_params_no_profiles(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_no_params)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(len(get_response.data), 0)
+
+    def test_get_returns_list_for_no_params(self):
+        get_response = self.view(self.get_request_no_params)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertGreater(len(get_response.data), 0)
+
+    def test_get_returns_400_status_for_current_foo(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_current_foo)
         self.assertEqual(get_response.status_code, 200)
 
-    def test_get_returns_site_profile(self):
-        get_response = self.view(self.get_request)
+    def test_get_current_profile_returns_200_status_for_anon_user(self):
+        get_response = self.view(self.get_request_current_true)
+        self.assertEqual(get_response.status_code, 200)
+
+    def test_get_current_profile_returns_site_profile(self):
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('site'), self.current_site.id)
 
     def test_get_returns_site_markdown_fields(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('about_markdown'),
-                         self.site_profile.about_markdown)
+                         self.site_profile_current.about_markdown)
         self.assertEqual(get_response.data.get('intro_markdown'),
-                         self.site_profile.intro_markdown)
+                         self.site_profile_current.intro_markdown)
 
     def test_get_returns_twitter_username(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('twitter_username'),
-                         self.site_profile.twitter_username)
+                         self.site_profile_current.twitter_username)
 
     def test_get_returns_site_videos(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         response_videos = [video.get('source_id') for video in
                            get_response.data.get('site_videos')]
         self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
@@ -1882,21 +2064,21 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def test_patch_updates_site_videos_lists_add(self):
         site_video_1_data = {
             "caption": self.site_video_1.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_1.source,
             "source_id": self.site_video_1.source_id,
             "id": self.site_video_1.id
         }
         site_video_2_data = {
             "caption": self.site_video_2.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_2.source,
             "source_id": self.site_video_2.source_id,
             "id": self.site_video_2.id
         }
         site_video_3_data = {
             "caption": "Video caption three.",
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": "youtube",
             "source_id": "yt_349v"
         }
@@ -1908,14 +2090,14 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.admin_user
         patch_response = self.view(patch_request)
-        self.site_profile.refresh_from_db()
-        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+        self.site_profile_current.refresh_from_db()
+        self.assertEqual(len(self.site_profile_current.sitevideo_set.all()),
                          len(patch_response.data.get('site_videos')))
 
     def test_patch_updates_site_videos_lists_removal(self):
         site_video_2_data = {
             "caption": self.site_video_2.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_2.source,
             "source_id": self.site_video_2.source_id,
             "id": self.site_video_2.id,
@@ -1926,15 +2108,15 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.admin_user
         patch_response = self.view(patch_request)
-        self.site_profile.refresh_from_db()
-        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+        self.site_profile_current.refresh_from_db()
+        self.assertEqual(len(self.site_profile_current.sitevideo_set.all()),
                          len(patch_response.data.get('site_videos')))
 
     def test_patch_updates_site_videos_lists_updates_video_caption(self):
         new_caption = 'New analysis video caption.'
         site_video_1_data = {
             "caption": new_caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_1.source,
             "source_id": self.site_video_1.source_id,
             "id": self.site_video_1.id
@@ -1981,7 +2163,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
     def setUp(self, **kwargs):
         super(UserProfileApiV2Tests, self).setUp(
             api_base_name="user_profiles/",
-            view=UserProfileViewSet.as_view()
+            view=UserProfileAPIView.as_view()
         )
         self.user_lm = User.objects.create_user('lab_member',
                                                 'member@example.com',
@@ -1993,7 +2175,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_success_status(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2003,7 +2185,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_success_group_id(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2014,7 +2196,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_success_updates_profile(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2025,7 +2207,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_unauthorized_for_anon_user(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.lab_group.id}
         )
         patch_response = self.view(patch_request, self.user_lm.profile.uuid)
@@ -2033,7 +2215,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_bad_request_for_invalid_group(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": 0}
         )
         patch_request.user = self.user_lm
@@ -2043,7 +2225,7 @@ class UserProfileApiV2Tests(APIV2TestCase):
 
     def test_patch_primary_group_returns_bad_request_for_non_member(self):
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.user_lm.profile.uuid),
+            urljoin(self.url_root, str(self.user_lm.profile.uuid)),
             {"primary_group": self.non_lab_group.id}
         )
         patch_request.user = self.user_lm
@@ -2058,7 +2240,7 @@ class EventApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(EventApiV2Tests, self).setUp(
             api_base_name="events/",
-            view=EventViewSet.as_view()
+            view=EventAPIView.as_view()
         )
 
     def test_get_event_list_provides_access_control_between_users(self):

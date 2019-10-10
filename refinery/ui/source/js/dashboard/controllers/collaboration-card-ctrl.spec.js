@@ -12,7 +12,7 @@
     beforeEach(inject(function (
       $controller,
       groupInviteService,
-      groupMemberService,
+      groupService,
       $q,
       $rootScope
     ) {

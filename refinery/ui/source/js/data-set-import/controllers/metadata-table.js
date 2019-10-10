@@ -274,7 +274,17 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
 };
 
+/**
+ * @name closeSubmitPopover
+ * @desc  View method to which closes the popover trigger by outsideClick
+ * @memberOf IsaTabImportCtrl.closeSubmitPopover
+**/
+MetadataTableImportCtrl.prototype.closeSubmitPopover = function () {
+  angular.element('body').click();
+};
+
 MetadataTableImportCtrl.prototype.confirmImport = function () {
+  this.closeSubmitPopover();
   var self = this;
   if (self.isMetaDataRevision) {
     var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });

@@ -28,7 +28,7 @@ def generate_solr_params_for_user(params, user_id):
      """
     try:
         user = User.objects.get(id=user_id)
-    except:
+    except (User.DoesNotExist, User.MultipleObjectsReturned):
         try:  # catches when guardian anon user is not created
             user = User.get_anonymous()
         except User.DoesNotExist:
@@ -36,12 +36,10 @@ def generate_solr_params_for_user(params, user_id):
 
     # will update to allow users to view read_meta datasets then we can
     # update to use get_resources_for_user method in core/utils
-    datasets = get_objects_for_user(user,
-                                    'core.read_dataset',
+    datasets = get_objects_for_user(user, 'core.read_dataset',
                                     accept_global_perms=accept_global_perms(
                                         'dataset'
                                     ))
-
     assay_uuids = []
     for dataset in datasets:
         investigation_link = dataset.get_latest_investigation_link()
@@ -59,6 +57,5 @@ def generate_solr_params_for_user(params, user_id):
             study_id__in=study_ids
         ).values_list('uuid', flat=True)
 
-    return generate_solr_params(params,
-                                assay_uuids=assay_uuids,
+    return generate_solr_params(params, assay_uuids=assay_uuids,
                                 facets_from_config=True)

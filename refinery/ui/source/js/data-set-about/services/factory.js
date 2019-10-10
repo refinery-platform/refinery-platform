@@ -4,7 +4,6 @@ function dataSetAboutFactory (
   assayService,
   dataSetV2Service,
   fileStoreItemService,
-  groupMemberService,
   studyService
 ) {
   var assays = [];
@@ -45,7 +44,7 @@ function dataSetAboutFactory (
   // Get Studies associated with a data set
   var getStudies = function (dataSetUuid) {
     var params = {
-      dataSetUuid: dataSetUuid
+      data_set_uuid: dataSetUuid
     };
     var study = studyService.query(params);
     study.$promise.then(function (response) {
@@ -87,7 +86,6 @@ angular
     'assayService',
     'dataSetV2Service',
     'fileStoreItemService',
-    'groupMemberService',
     'studyService',
     dataSetAboutFactory
   ]
