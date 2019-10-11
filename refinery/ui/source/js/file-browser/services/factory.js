@@ -42,7 +42,7 @@
     var assayFiles = [];
     var assayAttributes = [];
     var assayAttributeOrder = [];
-    var assayFilesTotalItems = {};
+    var assayFilesTotal = { assayFilterFilesCount: 0, assayFilesCount: 0 };
     var customColumnNames = [];
     var csrfToken = $window.csrf_token;
     var attributesNameKey = {}; // links internal_name with display_name
@@ -52,7 +52,7 @@
       assayAttributes: assayAttributes,
       assayAttributeOrder: assayAttributeOrder,
       assayFiles: assayFiles,
-      assayFilesTotalItems: assayFilesTotalItems,
+      assayFilesTotal: assayFilesTotal,
       attributesNameKey: attributesNameKey,
       customColumnNames: customColumnNames,
       createColumnDefs: createColumnDefs,
@@ -218,10 +218,11 @@
           attributesNameKey[assayAttributes[ind].display_name] = assayAttributes[ind].internal_name;
         }
         angular.copy(response.nodes, additionalAssayFiles);
-        assayFilesTotalItems.count = response.nodes_count;
+        assayFilesTotal.assayFilterFilesCount = response.nodes_count;
+        assayFilesTotal.assayFilesCount = response.assay_nodes_count;
 
         // Not concat data when under minimun file order, replace assay files
-        if (assayFilesTotalItems.count < maxFileRequest || params.offset === 0) {
+        if (assayFilesTotal.assayFilterFilesCount < maxFileRequest || params.offset === 0) {
           angular.copy(additionalAssayFiles, assayFiles);
         } else if (scrollDirection === 'up') {
           angular.copy(additionalAssayFiles.concat(assayFiles), assayFiles);
