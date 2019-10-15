@@ -19,8 +19,7 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
-from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, copy_s3_object,
-                    delete_s3_object, move_file)
+from .utils import (SymlinkedFileSystemStorage, move_file)
 
 logger = logging.getLogger(__name__)
 

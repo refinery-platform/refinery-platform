@@ -475,9 +475,9 @@ def _get_galaxy_download_task_ids(analysis):
     try:
         download_list = tool_manager.models.AnalysisNodeConnection.\
             objects.filter(
-            is_refinery_file=True, analysis=analysis,
-            direction=OUTPUT_CONNECTION
-        )
+                is_refinery_file=True, analysis=analysis,
+                direction=OUTPUT_CONNECTION
+            )
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"

@@ -378,4 +378,3 @@ class RenameS3FileTask(celery.Task):
             )
             file_store_item.datafile.name = new_file_store_name
             file_store_item.save()
-
