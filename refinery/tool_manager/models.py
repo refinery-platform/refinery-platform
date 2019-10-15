@@ -796,7 +796,7 @@ class WorkflowTool(Tool):
         """
         exposed_dataset_list = self._get_galaxy_history_dataset_list()
         exposed_workflow_outputs = self._get_exposed_galaxy_datasets(
-            force_request=False, exposed_dataset_list = exposed_dataset_list
+            exposed_dataset_list = exposed_dataset_list
         )
         for galaxy_dataset in exposed_dataset_list:
             AnalysisNodeConnection.objects.create(
@@ -1083,7 +1083,7 @@ class WorkflowTool(Tool):
         )
 
     @handle_bioblend_exceptions
-    def _get_galaxy_history_dataset_list(self, force_request=False):
+    def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
         Galaxy Workflow invocation corresponding to all tool outputs in the
@@ -1102,8 +1102,7 @@ class WorkflowTool(Tool):
         ]
         return retained_datasets
 
-    def _get_exposed_galaxy_datasets(self, force_request=False,
-                                     exposed_dataset_list=None):
+    def _get_exposed_galaxy_datasets(self, exposed_dataset_list=None):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
