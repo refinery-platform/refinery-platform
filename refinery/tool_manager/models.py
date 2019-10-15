@@ -796,7 +796,7 @@ class WorkflowTool(Tool):
         """
         exposed_dataset_list = self._get_galaxy_history_dataset_list()
         exposed_workflow_outputs = self._get_exposed_galaxy_datasets(
-            exposed_dataset_list = exposed_dataset_list
+            exposed_dataset_list=exposed_dataset_list
         )
         for galaxy_dataset in exposed_dataset_list:
             AnalysisNodeConnection.objects.create(
