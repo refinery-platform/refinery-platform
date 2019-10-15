@@ -14,7 +14,7 @@ from celery.task import Task, task
 from celery.task.sets import TaskSet
 
 import core
-from core.models import Analysis, AnalysisResult, Workflow
+from core.models import Analysis, AnalysisResult, Workflow, OUTPUT_CONNECTION
 from file_store.models import FileStoreItem, FileExtension
 from file_store.tasks import FileImportTask
 import tool_manager
