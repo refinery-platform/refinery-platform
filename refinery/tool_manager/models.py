@@ -1053,6 +1053,15 @@ class WorkflowTool(Tool):
             galaxy_dataset for galaxy_dataset in history_file_list
             if galaxy_dataset["dataset_id"] in exposed_galaxy_dataset_ids
         ]
+
+        exposed_galaxy_dataset_ids = [
+            {
+                "name": galaxy_dataset["name"],
+                "url": galaxy_dataset["url"],
+                "type": galaxy_dataset.get("file_ext"),
+                "dataset_id": galaxy_dataset.get("id")
+            } for galaxy_dataset in exposed_galaxy_dataset_ids
+        ]
         assert len(retained_download_list) >= 1, \
             "There should be at least one dataset to download from Galaxy."
         return retained_download_list
