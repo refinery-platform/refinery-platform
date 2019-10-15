@@ -473,7 +473,11 @@ def _get_galaxy_download_task_ids(analysis):
     tool.create_analysis_output_node_connections()
     galaxy_instance = analysis.workflow.workflow_engine.instance
     try:
-        download_list = tool.get_galaxy_dataset_download_list()
+        download_list = tool_manager.models.AnalysisNodeConnection.\
+            objects.filter(
+            is_refinery_file=True, analysis=analysis,
+            direction=OUTPUT_CONNECTION
+        )
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
