@@ -1042,29 +1042,12 @@ class WorkflowTool(Tool):
         user-defined `workflow_output`.
         """
         exposed_galaxy_datasets = self._get_exposed_galaxy_datasets()
-        exposed_galaxy_dataset_ids = [
-            galaxy_dataset["id"] for galaxy_dataset in exposed_galaxy_datasets
-        ]
-
-        history_file_list = self.galaxy_instance.get_history_file_list(
-            self.analysis.history_id
-        )
-        retained_download_list = [
-            galaxy_dataset for galaxy_dataset in history_file_list
-            if galaxy_dataset["dataset_id"] in exposed_galaxy_dataset_ids
-        ]
-
-        exposed_galaxy_dataset_ids = [
-            {
-                "name": galaxy_dataset["name"],
-                "url": galaxy_dataset["url"],
-                "type": galaxy_dataset.get("file_ext"),
-                "dataset_id": galaxy_dataset.get("id")
-            } for galaxy_dataset in exposed_galaxy_dataset_ids
-        ]
-        assert len(retained_download_list) >= 1, \
+        for dataset in exposed_galaxy_datasets:
+            dataset['type'] = dataset['file_ext']
+            dataset['dataset_id'] = dataset['id']
+        assert len(exposed_galaxy_datasets) >= 1, \
             "There should be at least one dataset to download from Galaxy."
-        return retained_download_list
+        return exposed_galaxy_datasets
 
     @handle_bioblend_exceptions
     def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
