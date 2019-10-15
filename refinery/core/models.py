@@ -1729,6 +1729,12 @@ class AnalysisNodeConnection(models.Model):
                                            default=False)
     galaxy_dataset_name = models.CharField(null=True, blank=True,
                                            max_length=250)
+    # state from galaxy
+    state = models.CharField(null=True, blank=True, max_length=100)
+    # size of the file
+    file_size = models.IntegerField(null=True, blank=True)
+    # galaxy dataset id
+    dataset_id = models.CharField(null=True, blank=True, max_length=100)
 
     def __unicode__(self):
         return "{}: {}_{} ({}) {}".format(
