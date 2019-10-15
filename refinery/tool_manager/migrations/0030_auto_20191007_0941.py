@@ -13,17 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='workflowtool',
-            name='exposed_dataset_list',
-            field=models.TextField(null=True, blank=True),
-        ),
-        migrations.AddField(
-            model_name='workflowtool',
-            name='full_history_list',
-            field=models.TextField(null=True, blank=True),
-        ),
-        migrations.AddField(
-            model_name='workflowtool',
             name='invocation',
             field=models.TextField(null=True, blank=True),
-        ),
+        )
     ]
