@@ -1128,7 +1128,9 @@ class WorkflowTool(Tool):
                 )
                 workflow_steps_dict = self._get_workflow_dict()["steps"]
                 creating_job_output_name = (
-                    self._get_creating_job_output_name(galaxy_dataset)
+                    self._get_creating_job_output_name(
+                        galaxy_dataset, creating_job
+                    )
                 )
                 workflow_step_output_names = [
                     workflow_output["output_name"] for workflow_output in
@@ -1293,19 +1295,21 @@ class WorkflowTool(Tool):
         # `input` step i.e. `0`
         return self.INPUT_STEP_NUMBER
 
-    def _get_creating_job_output_name(self, galaxy_dataset_dict):
+    def _get_creating_job_output_name(self, galaxy_dataset_dict,
+                                      creating_job=None):
         """
         Retrieve the specified output name from the creating Galaxy Job that
         corresponds to a Galaxy Dataset
         :param galaxy_dataset_dict: dict containing information about a
         Galaxy Dataset.
-
+        :param creating_job: an optional argument to prevent repeat request
         This is useful if there are any post-job-actions in place to do
         renaming of said output dataset.
 
         :return: The proper output name of our galaxy dataset
         """
-        creating_job = self._get_galaxy_dataset_job(galaxy_dataset_dict)
+        if creating_job is None:
+            creating_job = self._get_galaxy_dataset_job(galaxy_dataset_dict)
         creating_job_outputs = creating_job["outputs"]
         workflow_step_output_name = [
             output_name for output_name in creating_job_outputs.keys()
