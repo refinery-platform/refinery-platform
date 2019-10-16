@@ -1551,10 +1551,10 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_attach_derived_nodes_to_dataset_dsc(self):
         self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_b,
-                                      galaxy_job_a, galaxy_job_a,
-                                      galaxy_job_a, galaxy_job_b,
-                                      galaxy_job_b, galaxy_job_a,
-                                      galaxy_job_b]
+                                          galaxy_job_a, galaxy_job_a,
+                                          galaxy_job_a, galaxy_job_b,
+                                          galaxy_job_b, galaxy_job_a,
+                                          galaxy_job_b]
         self._get_galaxy_download_task_ids_wrapper(
             tool_is_data_set_collection_based=True
         )
