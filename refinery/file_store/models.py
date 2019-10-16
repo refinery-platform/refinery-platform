@@ -19,7 +19,8 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
-from .utils import (SymlinkedFileSystemStorage, move_file)
+from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, copy_s3_object,
+                    delete_s3_object, move_file)
 
 logger = logging.getLogger(__name__)
 
@@ -167,13 +168,23 @@ class FileStoreItem(models.Model):
         Note: new name may not be the same as the requested name in case of
         conflict with an existing file or S3 object
         """
-        from .tasks import RenameS3FileTask
         if self.datafile:
             logger.debug("Renaming datafile '%s' to '%s'",
                          self.datafile.name, new_name)
             if settings.REFINERY_S3_USER_DATA:
-                args = (new_name, self, )
-                RenameS3FileTask().subtask(args)
+                storage = S3MediaStorage()
+                new_file_store_name = storage.get_name(new_name)
+                try:
+                    copy_s3_object(storage.bucket_name, self.datafile.name,
+                                   storage.bucket_name, new_file_store_name)
+                except (botocore.exceptions.BotoCoreError,
+                        botocore.exceptions.ClientError) as exc:
+                    logger.error("Renaming datafile '%s' failed: %s",
+                                 self.datafile.name, exc)
+                else:
+                    delete_s3_object(storage.bucket_name, self.datafile.name)
+                    self.datafile.name = new_file_store_name
+                    self.save()
             else:
                 storage = SymlinkedFileSystemStorage()
                 new_file_store_name = storage.get_name(new_name)
