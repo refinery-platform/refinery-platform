@@ -355,26 +355,3 @@ def download_file(url, target_path, file_size=1):
 
     response.close()
     logger.debug("Finished downloading")
-
-
-class RenameS3FileTask(celery.Task):
-
-    soft_time_limit = 3600  # 1 hour
-
-    def run(self, new_name, file_store_item_uuid):
-        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
-        storage = S3MediaStorage()
-        new_file_store_name = storage.get_name(new_name)
-        try:
-            copy_s3_object(storage.bucket_name, file_store_item.datafile.name,
-                           storage.bucket_name, new_file_store_name)
-        except (botocore.exceptions.BotoCoreError,
-                botocore.exceptions.ClientError) as exc:
-            logger.error("Renaming datafile '%s' failed: %s",
-                         file_store_item.datafile.name, exc)
-        else:
-            delete_s3_object(
-                storage.bucket_name, file_store_item.datafile.name
-            )
-            file_store_item.datafile.name = new_file_store_name
-            file_store_item.save()
