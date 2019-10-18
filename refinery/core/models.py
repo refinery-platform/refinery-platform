@@ -1440,17 +1440,28 @@ class Analysis(OwnableResource):
 
     def _prepare_annotated_nodes(self, node_uuids):
         """
-        Wrapper method to ensure that `rename_results` is called before
-        index_annotated_nodes_selection.
-
-        If `rename_results` isn't executed before
-        `index_annotated_nodes_selection` we end up indexing incorrect
-        information.
+        Wrapper method to ensure that auxiliary nodes are generated before
+        indexing annotated nodes
 
         Call order is ensured through:
         core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
         """
-        self.rename_results()
+        for result in self.results.all():
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming analysis result '%s': %s",
+                             result, exc)
+                break
+            try:
+                node = Node.objects.get(file_item=item)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+                logger.error("Error retrieving Node with file UUID '%s': %s",
+                             item.uuid, exc)
+            else:
+                if node.is_derived():
+                    node.run_generate_auxiliary_node_task()
         index_annotated_nodes_selection(node_uuids)
 
     def _get_output_connection_to_analysis_result_mapping(self):
