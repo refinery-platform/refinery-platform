@@ -53,7 +53,7 @@ from data_set_manager.models import (Assay, Investigation, Node,
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import FileStoreItem, FileType
+from file_store.models import FileStoreItem
 from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
 import tool_manager
