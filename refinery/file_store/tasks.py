@@ -27,7 +27,7 @@ class FileImportTask(celery.Task):
 
     soft_time_limit = 3600  # 1 hour
 
-    def run(self, item_uuid, target_name=None):
+    def run(self, item_uuid):
         """Download or copy data file for FileStoreItem specified by UUID
         Fail the task in case of errors (http://stackoverflow.com/a/33143545)
         """
@@ -69,16 +69,14 @@ class FileImportTask(celery.Task):
                 elif item.source.startswith('s3://'):
                     file_store_name = self.import_s3_to_s3(item.source)
                 else:
-                    file_store_name = self.import_url_to_s3(item.source,
-                                                            target_name)
+                    file_store_name = self.import_url_to_s3(item.source)
             else:
                 if os.path.isabs(item.source):
                     file_store_name = self.import_path_to_path(item.source)
                 elif item.source.startswith('s3://'):
                     file_store_name = self.import_s3_to_path(item.source)
                 else:
-                    file_store_name = self.import_url_to_path(item.source,
-                                                              target_name)
+                    file_store_name = self.import_url_to_path(item.source)
         except (RuntimeError, celery.exceptions.SoftTimeLimitExceeded) as exc:
             logger.error("File import failed: %s", exc)
             self.update_state(state=celery.states.FAILURE,
@@ -211,14 +209,13 @@ class FileImportTask(celery.Task):
 
         return file_store_name
 
-    def import_url_to_path(self, source_url, target_name=None):
+    def import_url_to_path(self, source_url):
         """Import file from URL into REFINERY_FILE_STORE_ROOT"""
         # move the file from temp dir into file store dir
         storage = SymlinkedFileSystemStorage()
         # remove query string from URL before extracting file name
-        if target_name is None:
-            target_name = os.path.basename(urlparse.urlparse(source_url).path)
-        file_store_name = storage.get_name(target_name)
+        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        file_store_name = storage.get_name(source_file_name)
         file_store_path = storage.path(file_store_name)
 
         logger.debug("Transferring from '%s' to '%s'",
@@ -240,13 +237,12 @@ class FileImportTask(celery.Task):
 
         return file_store_name
 
-    def import_url_to_s3(self, source_url, target_name=None):
+    def import_url_to_s3(self, source_url):
         """Download file from URL and upload to MEDIA_BUCKET"""
         storage = S3MediaStorage()
         # remove query string from URL before extracting file name
-        if target_name is None:
-            target_name = os.path.basename(urlparse.urlparse(source_url).path)
-        file_store_name = storage.get_name(target_name)
+        source_file_name = os.path.basename(urlparse.urlparse(source_url).path)
+        file_store_name = storage.get_name(source_file_name)
 
         logger.debug("Transferring from '%s' to 's3://%s/%s'",
                      source_url, settings.MEDIA_BUCKET, file_store_name)

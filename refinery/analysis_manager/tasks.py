@@ -496,7 +496,6 @@ def _get_galaxy_download_task_ids(analysis):
             ))
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
-            (root, ext) = os.path.splitext(result_name)
             if file_extension == 'html':
                 file_extension = 'zip'
             # assign file type manually since it cannot be inferred from source
@@ -509,7 +508,6 @@ def _get_galaxy_download_task_ids(analysis):
                             file_extension, exc)
             else:
                 file_store_item.filetype = extension.filetype
-                result_name = '{}.{}'.format(root, file_extension)
 
             file_store_item.save()
             # adding history files to django model
@@ -523,8 +521,6 @@ def _get_galaxy_download_task_ids(analysis):
             # only download files if size is greater than 1
             if file_size > 0:
                 task_id = FileImportTask().subtask((file_store_item.uuid,))
-                task_id = FileImportTask().subtask((file_store_item.uuid,
-                                                    result_name,))
                 task_id_list.append(task_id)
 
-        return task_id_list
+    return task_id_list
