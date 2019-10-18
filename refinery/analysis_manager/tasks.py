@@ -520,7 +520,8 @@ def _get_galaxy_download_task_ids(analysis):
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
-                task_id = FileImportTask().subtask((file_store_item.uuid,))
+                task_id = FileImportTask().subtask((file_store_item.uuid,
+                                                    result_name,))
                 task_id_list.append(task_id)
 
     return task_id_list
