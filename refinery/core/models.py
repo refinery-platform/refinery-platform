@@ -1346,43 +1346,6 @@ class Analysis(OwnableResource):
                 "'%s' with UUID '%s'",
                 self.get_status(), user.email, name, self.uuid)
 
-    def rename_results(self):
-        """Rename files in file_store after download"""
-        logger.debug("Renaming analysis results")
-        # rename file_store items to new name updated from galaxy file_ids
-        for result in self.results.all():
-            try:
-                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error("Error renaming analysis result '%s': %s",
-                             result, exc)
-                break
-
-            # workaround for FastQC reports downloaded from Galaxy as zip
-            # archives
-            (root, ext) = os.path.splitext(result.file_name)
-            if ext == '.html':
-                try:
-                    zipfile = FileType.objects.get(name='ZIP')
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Error renaming HTML to zip: %s", exc)
-                else:
-                    if item.filetype == zipfile:
-                        item.rename_datafile(''.join([root, '.zip']))
-            else:
-                item.rename_datafile(result.file_name)
-
-            try:
-                node = Node.objects.get(file_item=item)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-                logger.error("Error retrieving Node with file UUID '%s': %s",
-                             item.uuid, exc)
-            else:
-                if node.is_derived():
-                    node.run_generate_auxiliary_node_task()
-
     def attach_derived_nodes_to_dataset(self):
         graph_with_data_transformation_nodes = (
             self._create_data_transformation_nodes(
