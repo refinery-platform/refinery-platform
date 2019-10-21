@@ -478,7 +478,7 @@ def _get_galaxy_download_task_ids(analysis):
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_extension = results['file_ext']
-            result_name = "{}".format(results['name'])
+            result_name = "{}.{}".format(results['name'], file_extension)
             # size of file defined by galaxy
             file_size = results['file_size']
             file_store_item = FileStoreItem(source=urlparse.urljoin(
