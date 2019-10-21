@@ -30,10 +30,10 @@
     </div>
     <p>
     {% for member in group.user_set.all %}
-      {% if member.profile and member.get_full_name  %}
+      {% if member.is_active and member.profile and member.get_full_name  %}
         <a href="{% url 'user' member.profile.uuid %}">{{ member.get_full_name }}</a>
         &nbsp;(Last login: {{ member.last_login|naturaltime }})<br/>
-      {% elif member.get_full_name %}
+      {% elif member.is_active and member.get_full_name %}
         {{ member.get_full_name }}
         &nbsp;(Last login: {{ member.last_login|naturaltime }})<br/>
       {% endif %}
