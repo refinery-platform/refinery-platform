@@ -1188,7 +1188,7 @@ class WorkflowTool(Tool):
         """
         # separate if-then assignment needed to avoid using the dict stored
         # in self.invocation before .save() is called
-        if self.invocation == '' or self.invocation is None:
+        if self.invocation == '':
             invocation = self.galaxy_connection.workflows.show_invocation(
                 self.galaxy_workflow_history_id,
                 self.get_galaxy_dict()
