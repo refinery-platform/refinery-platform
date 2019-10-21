@@ -476,14 +476,14 @@ def _get_galaxy_download_task_ids(analysis):
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
-        if results.state == 'ok':
-            file_extension = results.filetype
-            result_name = "{}".format(results.filename)
+        if results['state'] == 'ok':
+            file_extension = results['file_ext']
+            result_name = "{}".format(results['name'])
             # size of file defined by galaxy
-            file_size = results.file_size
+            file_size = results['file_size']
             file_store_item = FileStoreItem(source=urlparse.urljoin(
                 galaxy_instance.base_url,
-                "datasets/{}/display?to_ext=txt".format(results.dataset_id)
+                "datasets/{}/display?to_ext=txt".format(results['id'])
             ))
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
