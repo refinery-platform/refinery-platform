@@ -673,7 +673,7 @@ class WorkflowTool(Tool):
     REVERSE = "reverse"
     TOOL_ID = "tool_id"
     WORKFLOW_OUTPUTS = "workflow_outputs"
-    invocation = models.TextField(null=True, blank=True)
+    invocation = models.TextField(blank=True)
 
     class Meta:
         verbose_name = "workflowtool"
@@ -798,6 +798,10 @@ class WorkflowTool(Tool):
         exposed_workflow_outputs = self._get_exposed_galaxy_datasets(
             exposed_dataset_list=exposed_dataset_list
         )
+        connection_dataset_list = []
+        connection_dataset_list_fields = [
+            'file_ext', 'name', 'state', 'file_size', 'id'
+        ]
         for galaxy_dataset in exposed_dataset_list:
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis, direction=OUTPUT_CONNECTION,
@@ -812,6 +816,13 @@ class WorkflowTool(Tool):
                 file_size=galaxy_dataset['file_size'],
                 dataset_id=galaxy_dataset['id']
             )
+            connection_dataset_list += [
+                {
+                    field: galaxy_dataset[field]
+                    for field in connection_dataset_list_fields
+                }
+            ]
+        return connection_dataset_list
 
     def _create_collection_description(self):
         """
@@ -1288,7 +1299,7 @@ class WorkflowTool(Tool):
     def _get_workflow_step(self, galaxy_dataset_dict):
         for step in self._get_galaxy_workflow_invocation()["steps"]:
             if step["job_id"] == galaxy_dataset_dict[self.CREATING_JOB]:
-                    return step["order_index"]
+                return step["order_index"]
 
         # If we reach this point and have no workflow_steps, this means that
         #  the galaxy dataset in question corresponds to an `upload` or

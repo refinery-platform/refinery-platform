@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='workflowtool',
             name='invocation',
-            field=models.TextField(null=True, blank=True),
+            field=models.TextField(blank=True),
         )
     ]

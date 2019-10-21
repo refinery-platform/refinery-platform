@@ -14,7 +14,7 @@ from celery.task import Task, task
 from celery.task.sets import TaskSet
 
 import core
-from core.models import Analysis, AnalysisResult, Workflow, OUTPUT_CONNECTION
+from core.models import Analysis, AnalysisResult, Workflow
 from file_store.models import FileStoreItem, FileExtension
 from file_store.tasks import FileImportTask
 import tool_manager
@@ -470,21 +470,8 @@ def _get_galaxy_download_task_ids(analysis):
     task_id_list = []
     # retrieving list of files to download for workflow
     tool = _get_workflow_tool(analysis.uuid)
-    tool.create_analysis_output_node_connections()
+    download_list = tool.create_analysis_output_node_connections()
     galaxy_instance = analysis.workflow.workflow_engine.instance
-    try:
-        download_list = tool_manager.models.AnalysisNodeConnection.\
-            objects.filter(
-                is_refinery_file=True, analysis=analysis,
-                direction=OUTPUT_CONNECTION
-            )
-    except galaxy.client.ConnectionError as exc:
-        error_msg = \
-            "Error downloading Galaxy history files for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, exc.message)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.galaxy_cleanup()
-        return task_id_list
 
     # Iterating through files in current galaxy history
     for results in download_list:
