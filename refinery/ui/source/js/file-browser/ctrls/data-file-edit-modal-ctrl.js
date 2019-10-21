@@ -70,7 +70,7 @@
       }, function () {
         vm.isLoading = false;
         vm.alertType = 'danger';
-        vm.responseMessage = 'Error deleted file.';
+        vm.responseMessage = 'Error deleting file.';
       });
     }
 

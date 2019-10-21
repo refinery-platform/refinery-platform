@@ -1,6 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
-import uuid
+import uuid as uuid_lib
 
 from django.conf import settings
 from django.utils import timezone
@@ -144,7 +144,7 @@ class InvitationSerializerTests(TestCase):
         self.group.user_set.add(self.user)
         self.public_group = ExtendedGroup.objects.public_group()
         self.public_group.manager_group.user_set.add(self.user)
-        self.invite = Invitation(token_uuid=uuid.uuid1(),
+        self.invite = Invitation(token_uuid=uuid_lib.uuid4(),
                                  group_id=self.group.id)
         self.time_duration = timedelta(days=settings.TOKEN_DURATION)
         self.invite.expires = timezone.now() + self.time_duration

@@ -62,8 +62,12 @@
       'col-lg-10 col-md-10 col-sm-9': FBCtrl.collapsedToolPanel}"
       id="main-area">
       <div class="refinery-subheader grid_data_set_total">
-        <h3 class="p-l-1">
-          {{ FBCtrl.assayFilesTotal }} files
+        <span class="p-l-1"
+          ng-if="FBCtrl.currentTypes.length == 1 && FBCtrl.currentTypes[0] == 'LIST'">
+          <rp-select-all-button></rp-select-all-button>
+        </span>
+        <h3 class="p-r-1">
+          {{ FBCtrl.assayFilterFilesTotal }} of {{ FBCtrl.assayFilesTotal }} files
         </h3>
         <rp-download-csv-button
           total-files="FBCtrl.assayFilesTotal"

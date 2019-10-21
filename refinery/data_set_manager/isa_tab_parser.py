@@ -325,29 +325,20 @@ class IsaTabParser:
                     header_components[0] in Node.FILES and
                     node_name is not ""):
                 # create the nodes for the data file in this row
-                file_path = self.file_source_translator(node_name)
-                file_store_item = FileStoreItem.objects.create(
-                    source=file_path
+                node.file_item = FileStoreItem.objects.create(
+                    source=self.file_source_translator(node_name)
                 )
-                if file_store_item:
-                    node.file_uuid = file_store_item.uuid
-                    node.save()
-                else:
-                    raise ParserException(
-                        "Unable to add {} to file store as a temporary file."
-                        .format(file_path)
-                    )
+                node.save()
             if is_new:
                 logger.info("New node %s created", str(node))
             else:
                 logger.info("Node %s retrieved", str(node))
         else:
             if len(node_name) > 0:
-                node = Node.objects.create(
-                    study=self._current_study,
-                    assay=self._current_assay,
-                    type=header_components[0],
-                    name=node_name)
+                node = Node.objects.create(study=self._current_study,
+                                           assay=self._current_assay,
+                                           type=header_components[0],
+                                           name=node_name)
             else:
                 # do not create empty nodes!
                 node = None

@@ -24,7 +24,8 @@
       expect(factory.assayFiles).toEqual([]);
       expect(factory.assayAttributes).toEqual([]);
       expect(factory.assayAttributeOrder).toEqual([]);
-      expect(factory.assayFilesTotalItems).toEqual({});
+      expect(factory.assayFilesTotal.assayFilterFilesCount).toEqual(0);
+      expect(factory.assayFilesTotal.assayFilesCount).toEqual(0);
       expect(factory.customColumnNames).toEqual([]);
     });
 

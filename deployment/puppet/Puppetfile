@@ -1,6 +1,6 @@
 forge "https://forgeapi.puppetlabs.com"
 
-mod 'puppet/nodejs', '2.1.0'
+mod 'puppet/nodejs', '7.0.1'
 mod 'puppet/python', '3.0.1'
 mod 'puppet/rabbitmq', '9.0.0'
 mod 'puppetlabs-apache', '5.0.0'

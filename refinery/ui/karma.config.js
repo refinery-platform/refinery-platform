@@ -12,7 +12,7 @@ module.exports = function(config) {
 
     client: {
       // Set to `true` if `console.log()` should be captured.
-      captureConsole: false
+      captureConsole: true
     },
 
     // frameworks to use
@@ -25,8 +25,7 @@ module.exports = function(config) {
 
 
     // list of files to exclude
-    exclude: [
-    ],
+    exclude: [],
 
 
     // preprocess matching files before serving them to the browser
@@ -52,14 +51,7 @@ module.exports = function(config) {
     coverageReporter: {
       // common output directory
       dir : 'coverage/',
-      reporters: [
-        // reporters not supporting the `file` property
-        { type: 'html', subdir: 'html' },
-        { type: 'lcov', subdir: 'lcov' },
-        // reporters supporting the `file` property, use `subdir` to directly
-        // output them in the `dir` directory
-        { type: 'cobertura', subdir: '.', file: 'cobertura.xml' },
-      ]
+      type : 'html',
     },
 
 

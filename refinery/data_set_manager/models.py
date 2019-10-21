@@ -6,6 +6,7 @@ Created on May 10, 2012
 import os
 from datetime import datetime
 import logging
+import uuid as uuid_lib
 
 from django.conf import settings
 from django.db import models
@@ -218,26 +219,20 @@ class Investigation(NodeCollection):
 
     def get_file_store_items(self, exclude_metadata_file=False,
                              local_only=False):
-        """
-        Returns a list of all data files associated with an Investigation
+        """Returns a list of all data files associated with an Investigation
         :param exclude_metadata_file: <Boolean> Whether or not to exclude
         the metadata file used to create the Investigation from the resulting
         list
         :param local_only:  <Boolean> Whether or not to only include
         FileStoreItems that have been imported into Refinery
         """
-        file_store_item_uuids = [
-            node.file_uuid for node in Node.objects.filter(
-                study=self.get_study()
-            )
-            if node.file_uuid
+        file_store_items = [
+            node.file_item for node in Node.objects.filter(
+                study=self.get_study(), file_item__isnull=False
+            ).select_related('file_item')
         ]
-        file_store_items = list(
-            FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
-        )
         if not exclude_metadata_file:
             file_store_items.append(self.get_file_store_item())
-
         return (
             [f for f in file_store_items if f.datafile] if local_only
             else file_store_items
@@ -350,7 +345,8 @@ class Factor(models.Model):
 
 class Assay(models.Model):
     """Study Assay (ISA-Tab Spec 4.1.3.5)"""
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                            unique=True)
     study = models.ForeignKey(Study)
     measurement = models.TextField(blank=True, null=True)
     measurement_accession = models.TextField(blank=True, null=True)
@@ -374,6 +370,13 @@ class Assay(models.Model):
 
         retstr += "File: %s" % unicode(self.file_name)
         return retstr
+
+    def get_file_count(self):
+        return Node.objects.filter(
+            assay=self,
+            file_item__isnull=False,
+            is_auxiliary_node=False
+        ).count()
 
 
 class Protocol(models.Model):
@@ -498,14 +501,15 @@ class Node(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
     assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    children = models.ManyToManyField(
-        "self", symmetrical=False, related_name="parents_set")
-    parents = models.ManyToManyField(
-        "self", symmetrical=False, related_name="children_set")
+    children = models.ManyToManyField('self', symmetrical=False,
+                                      related_name='parents_set')
+    parents = models.ManyToManyField('self', symmetrical=False,
+                                     related_name='children_set')
     type = models.TextField(db_index=True)
     name = models.TextField(db_index=True)
     # only used for nodes representing files
-    file_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
+    file_item = models.ForeignKey(FileStoreItem, null=True, default=None,
+                                  on_delete=models.SET_NULL)
     # Refinery internal "attributes" (exported as comment attributes)
     genome_build = models.TextField(db_index=True, null=True)
     species = models.IntegerField(db_index=True, null=True)
@@ -569,20 +573,7 @@ class Node(models.Model):
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def get_file_store_item(self):
-        """
-        Returns the FileStoreItem associated with a given Node or None if
-        there isn't one
-        """
-        if self.file_uuid:
-            try:
-                return FileStoreItem.objects.get(uuid=self.file_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(e)
-        return None
-
-    def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
+    def _create_and_associate_auxiliary_node(self, filestore_item):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -591,13 +582,10 @@ class Node(models.Model):
             and do not re-add it as a child
             """
             node = Node.objects.get_or_create(
-                study=self.study,
-                assay=self.assay,
+                study=self.study, assay=self.assay,
                 name="auxiliary Node for: {}".format(self.name),
-                is_auxiliary_node=True,
-                file_uuid=filestore_item_uuid
+                is_auxiliary_node=True, file_item=filestore_item
             )
-
             # get_or_create() returns a tuple:
             # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
@@ -638,22 +626,6 @@ class Node(models.Model):
 
         return aux_nodes
 
-    def get_relative_file_store_item_url(self):
-        """
-        Return relative path to a Node's FileStoreItem's
-        datafile if one exists, otherwise return None
-        """
-        try:
-            file_store_item = FileStoreItem.objects.get(
-                uuid=self.file_uuid
-            )
-            return file_store_item.get_datafile_url()
-
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return None
-
     def run_generate_auxiliary_node_task(self):
         """This method is initiated after a task_success signal is returned
         from the file import task.
@@ -669,37 +641,31 @@ class Node(models.Model):
         # Check if the Django setting to generate auxiliary file has been
         # set to run when FileStoreItems are imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
-
-        file_store_item = self.get_file_store_item()
-
         # Check if we pass the logic to generate aux. Files/Nodes
-        if (file_store_item and file_store_item.filetype and
-                file_store_item.filetype.used_for_visualization and
-                file_store_item.datafile and
+        if (self.file_item and self.file_item.filetype and
+                self.file_item.filetype.used_for_visualization and
+                self.file_item.datafile and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
-                "on_file_import"):
+                'on_file_import'):
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
             auxiliary_file_store_item = FileStoreItem.objects.create()
 
             auxiliary_node = self._create_and_associate_auxiliary_node(
-                auxiliary_file_store_item.uuid
+                auxiliary_file_store_item
             )
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                auxiliary_node, file_store_item
+                auxiliary_node, self.file_item
             )
             auxiliary_file_store_item.import_task_id = result.task_id
             auxiliary_file_store_item.save()
 
     def get_auxiliary_file_generation_task_state(self):
-        """
-        Return the generate_auxiliary_file task state for a given auxiliary
-        Node.
-
-        Return None if a regular Node
+        """Return the generate_auxiliary_file task state for a given auxiliary
+        Node or None if a regular Node
         """
         if self.is_auxiliary_node:
-            return AsyncResult(self.get_file_store_item().import_task_id).state
+            return AsyncResult(self.file_item.import_task_id).state
         else:
             return None
 
@@ -711,20 +677,13 @@ class Node(models.Model):
 
 @receiver(pre_delete, sender=Node)
 def _node_delete(sender, instance, *args, **kwargs):
-    """
-    Removes a Node's related objects upon deletion being triggered.
+    """Removes a Node's related objects upon deletion being triggered
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
-
-    # remove a Node's FileStoreItem upon deletion, if one exists
-    file_store_item = instance.get_file_store_item()
-    if file_store_item is not None:
-        file_store_item.delete()
-
+    if instance.file_item:
+        instance.file_item.delete()
     delete_analysis_index(instance)
 
 

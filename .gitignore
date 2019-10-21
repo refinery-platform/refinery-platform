@@ -51,7 +51,6 @@ codekit-config.json
 /refinery/config/config.json
 /refinery/ui/production/
 /refinery/ui/development/
-/refinery/ui/bower_components/
 /refinery/ui/node_modules/
 /refinery/ui/.tmp/
 /refinery/ui/coverage/

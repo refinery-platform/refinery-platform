@@ -74,7 +74,8 @@
     vm.analysisFilter = assayFiltersService.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;
-    vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+    vm.assayFilterFilesTotal = fileBrowserFactory.assayFilesTotal.assayFilterFilesCount;
+    vm.assayFilesTotal = fileBrowserFactory.assayFilesTotal.assayFilesCount;
     // objs used by ui to generate filters
     vm.attributeFilter = assayFiltersService.attributeFilter;
     // variable supporting ui-grid dynamic scrolling
@@ -128,6 +129,7 @@
     vm.refreshAssayFiles = refreshAssayFiles;
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
+    vm.tool = toolService.selectedTool;
     vm.sortChanged = sortChanged;
     vm.toggleEditMode = toggleEditMode;
     vm.toggleToolPanel = toggleToolPanel;
@@ -391,6 +393,7 @@
     function refreshAssayFiles () {
       paramService.fileParam.offset = vm.lastPage * vm.rowCount;
       paramService.fileParam.limit = vm.rowCount;
+      dataSetPropsService.refreshDataSet();
 
       var promise = $q.defer();
       fileBrowserFactory.getAssayFiles(paramService.fileParam).then(function () {
@@ -399,12 +402,13 @@
         // Grabbing 100 files per request, keeping max of 300 at a time
         // Ui-grid rows generated from assay files
         vm.gridOptions.data = fileBrowserFactory.assayFiles;
-        vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+        vm.assayFilterFilesTotal = fileBrowserFactory.assayFilesTotal.assayFilterFilesCount;
+        vm.assayFilesTotal = fileBrowserFactory.assayFilesTotal.assayFilesCount;
         // turns off infinite scroll for data sets < 100 files
-        if (vm.assayFilesTotal < maxFileRequest && vm.gridApi) {
+        if (vm.assayFilterFilesTotal < maxFileRequest && vm.gridApi) {
           vm.gridApi.infiniteScroll.setScrollDirections(false, false);
         }
-        vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
+        vm.totalPages = Math.floor(vm.assayFilterFilesTotal / vm.rowCount);
         vm.assayAttributes = fileBrowserFactory.assayAttributes;
         vm.attributeFilter = assayFiltersService.attributeFilter;
         vm.analysisFilter = assayFiltersService.analysisFilter;
@@ -516,11 +520,13 @@
     function checkAndUpdateGridData () {
       fileBrowserFactory.getAssayFiles(paramService.fileParam)
         .then(function () {
-          if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
-            if (vm.assayFilesTotal < maxFileRequest) {
+          if (vm.assayFilterFilesTotal !== fileBrowserFactory
+            .assayFilesTotal.assayFilterFilesCount) {
+            if (vm.assayFilterFilesTotal < maxFileRequest) {
               vm.gridOptions.data = fileBrowserFactory.assayFiles;
             }
-            vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
+            vm.assayFilterFilesTotal = fileBrowserFactory.assayFilesTotal.assayFilterFilesCount;
+            vm.assayFilesTotal = fileBrowserFactory.assayFilesTotal.assayFilesCount;
           }
         });
     }
@@ -591,6 +597,7 @@
       },
       function () {
         vm.currentTypes = fileService.currentTypes;
+        vm.tool = toolService.selectedTool;
         if (fileBrowserFactory.customColumnNames.length > 0) {
           toggleToolColumn();
         }
@@ -617,10 +624,10 @@
     );
 
     $scope.$watch(function () {
-      return vm.assayFilesTotal;
+      return vm.assayFilterFilesTotal;
     }, function () {
       // turn off infinite scrolling when file list is short
-      if (vm.assayFilesTotal <= maxFileRequest) {
+      if (vm.assayFilterFilesTotal <= maxFileRequest && typeof vm.gridApi !== 'undefined') {
         vm.gridApi.infiniteScroll.setScrollDirections(false, false);
       }
     });

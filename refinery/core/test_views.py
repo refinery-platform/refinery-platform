@@ -3,7 +3,7 @@ from datetime import timedelta
 import json
 import random
 import string
-import uuid
+import uuid as uuid_lib
 from urlparse import urljoin
 
 from cuser.middleware import CuserMiddleware
@@ -1453,7 +1453,7 @@ class InvitationApiV2Tests(APIV2TestCase):
         self.non_member = User.objects.create_user('Non-member',
                                                    'user2@example.com',
                                                    self.password)
-        self.invite = Invitation(token_uuid=uuid.uuid1(),
+        self.invite = Invitation(token_uuid=uuid_lib.uuid4(),
                                  group_id=self.group.id)
         self.time_duration = timedelta(days=settings.TOKEN_DURATION)
         self.invite.expires = timezone.now() + self.time_duration
@@ -1524,7 +1524,7 @@ class InvitationApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data[0].get('id'), self.invite.id)
 
     def test_get_invites_deletes_expired_invites(self):
-        exp_invite = Invitation(token_uuid=uuid.uuid1(),
+        exp_invite = Invitation(token_uuid=uuid_lib.uuid4(),
                                 group_id=self.group.id)
         exp_invite.expires = timezone.now()
         exp_invite.sender = self.user
@@ -1566,10 +1566,8 @@ class InvitationApiV2Tests(APIV2TestCase):
 class AnalysisApiV2Tests(APIV2TestCase):
 
     def setUp(self):
-        super(AnalysisApiV2Tests, self).setUp(
-            api_base_name="analyses/",
-            view=AnalysisAPIView.as_view()
-        )
+        super(AnalysisApiV2Tests, self).setUp(api_base_name="analyses/",
+                                              view=AnalysisAPIView.as_view())
         self.project = Project.objects.create()
 
         self.galaxy_instance = GalaxyInstanceFactory()
@@ -1596,65 +1594,57 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assay = Assay.objects.create(study=self.study)
 
         # Create Analyses
-        self.analysis = Analysis.objects.create(
-            name='Coffee Analysis',
-            summary='coffee',
-            project=self.project,
-            data_set=self.data_set,
-            workflow=self.workflow,
-            time_start=timezone.now()
-        )
+        self.analysis = Analysis.objects.create(name='Coffee Analysis',
+                                                summary='coffee',
+                                                project=self.project,
+                                                data_set=self.data_set,
+                                                workflow=self.workflow,
+                                                time_start=timezone.now())
         self.analysis.set_owner(self.user)
 
-        self.analysis2 = Analysis.objects.create(
-            name='Coffee Analysis2',
-            summary='coffee2',
-            project=self.project,
-            data_set=self.data_set,
-            workflow=self.workflow,
-            time_start=timezone.now()
-        )
+        self.analysis2 = Analysis.objects.create(name='Coffee Analysis2',
+                                                 summary='coffee2',
+                                                 project=self.project,
+                                                 data_set=self.data_set,
+                                                 workflow=self.workflow,
+                                                 time_start=timezone.now())
         self.analysis2.set_owner(self.user)
 
         # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
 
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
+        self.node_json = json.dumps([
+            {
+                'uuid': 'cfb31cca-4f58-4ef0-b1e2-4469c804bf73',
+                'relative_file_store_item_url': None,
+                'parent_nodes': [],
+                'child_nodes': [
+                    '1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8'
+                ],
+                'auxiliary_nodes': [],
+                'is_auxiliary_node': False,
+                'file_extension': None,
+                'auxiliary_file_generation_task_state': None,
+                'ready_for_igv_detail_view': None
+            }
+        ])
 
         self.client.login(username=self.username, password=self.password)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.put_request = self.factory.put(self.url_root,
+                                            data=self.node_json,
+                                            format='json')
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.patch_request = self.factory.patch(self.url_root,
+                                                data=self.node_json,
+                                                format='json')
         self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.options_request = self.factory.options(self.url_root,
+                                                    data=self.node_json,
+                                                    format='json')
         self.options_response = self.view(self.options_request)
 
     def test_unallowed_http_verbs(self):
@@ -1662,9 +1652,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
         self.assertEqual(
             self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
+        self.assertEqual(self.options_response.data['detail'],
+                         'Method "OPTIONS" not allowed.')
 
     def test_get_analysis_returns_empty_list_for_no_public_data_sets(self):
         get_request = self.factory.get(self.url_root)
@@ -1886,25 +1875,17 @@ class AnalysisApiV2Tests(APIV2TestCase):
         self.assertEqual(Analysis.objects.all().count(), 2)
 
     def test_analysis_delete_not_found(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        uuid = self.analysis.uuid
-
         self.analysis.delete()
 
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
         self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
+           urljoin(self.url_root, self.analysis.uuid)
         )
         force_authenticate(self.delete_request, user=self.user)
 
         self.delete_response = self.view(self.delete_request,
-                                         uuid)
+                                         self.analysis.uuid)
 
         self.assertEqual(self.delete_response.status_code, 404)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
 
 
 class WorkflowApiV2Tests(APIV2TestCase):
@@ -1941,56 +1922,90 @@ class SiteProfileApiV2Tests(APIV2TestCase):
             view=SiteProfileAPIView.as_view()
         )
         self.current_site = Site.objects.get_current()
-        self.site_profile = SiteProfile.objects.create(
+        self.other_site = Site.objects.create(
+            domain='example.com', name='test'
+        )
+        self.site_profile_current = SiteProfile.objects.create(
             site=self.current_site,
             about_markdown='About the platform paragraph.',
             intro_markdown='The refinery platform intro paragraph.',
             twitter_username='Mock_twitter_name'
         )
+        self.site_profile_other = SiteProfile.objects.create(
+            site=self.other_site,
+            about_markdown='About the other platform paragraph.',
+            intro_markdown='The other platform intro paragraph.',
+            twitter_username='Mock_twitter_name'
+        )
         self.site_video_1 = SiteVideo.objects.create(
             caption="Dashboard video",
-            site_profile=self.site_profile,
+            site_profile=self.site_profile_current,
             source="YouTube",
             source_id="yt_5tc"
         )
         self.site_video_2 = SiteVideo.objects.create(
             caption="Analysis video",
-            site_profile=self.site_profile,
+            site_profile=self.site_profile_current,
             source="YouTube",
             source_id="yt_875"
         )
 
         username = password = "admin"
         self.admin_user = User.objects.create_superuser(username, '', password)
-        self.get_request = self.factory.get(self.url_root)
+        self.get_request_current_true = self.factory.get(
+            self.url_root + '?current_site=True'
+        )
+        self.get_request_current_false = self.factory.get(
+            self.url_root + '?current_site=false'
+        )
+        self.get_request_current_foo = self.factory.get(
+            self.url_root + '?current_site=foo'
+        )
+        self.get_request_no_params = self.factory.get(self.url_root)
 
-    def test_get_returns_404_status_for_missing_site_profiles(self):
+    def test_get_returns_404_status_for_missing_current_site_profile(self):
         SiteProfile.objects.all().delete()
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.status_code, 404)
 
-    def test_get_returns_200_status_for_anon_user(self):
-        get_response = self.view(self.get_request)
+    def test_get_returns_empty_list_for_no_params_no_profiles(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_no_params)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(len(get_response.data), 0)
+
+    def test_get_returns_list_for_no_params(self):
+        get_response = self.view(self.get_request_no_params)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertGreater(len(get_response.data), 0)
+
+    def test_get_returns_400_status_for_current_foo(self):
+        SiteProfile.objects.all().delete()
+        get_response = self.view(self.get_request_current_foo)
         self.assertEqual(get_response.status_code, 200)
 
-    def test_get_returns_site_profile(self):
-        get_response = self.view(self.get_request)
+    def test_get_current_profile_returns_200_status_for_anon_user(self):
+        get_response = self.view(self.get_request_current_true)
+        self.assertEqual(get_response.status_code, 200)
+
+    def test_get_current_profile_returns_site_profile(self):
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('site'), self.current_site.id)
 
     def test_get_returns_site_markdown_fields(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('about_markdown'),
-                         self.site_profile.about_markdown)
+                         self.site_profile_current.about_markdown)
         self.assertEqual(get_response.data.get('intro_markdown'),
-                         self.site_profile.intro_markdown)
+                         self.site_profile_current.intro_markdown)
 
     def test_get_returns_twitter_username(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         self.assertEqual(get_response.data.get('twitter_username'),
-                         self.site_profile.twitter_username)
+                         self.site_profile_current.twitter_username)
 
     def test_get_returns_site_videos(self):
-        get_response = self.view(self.get_request)
+        get_response = self.view(self.get_request_current_true)
         response_videos = [video.get('source_id') for video in
                            get_response.data.get('site_videos')]
         self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
@@ -2049,21 +2064,21 @@ class SiteProfileApiV2Tests(APIV2TestCase):
     def test_patch_updates_site_videos_lists_add(self):
         site_video_1_data = {
             "caption": self.site_video_1.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_1.source,
             "source_id": self.site_video_1.source_id,
             "id": self.site_video_1.id
         }
         site_video_2_data = {
             "caption": self.site_video_2.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_2.source,
             "source_id": self.site_video_2.source_id,
             "id": self.site_video_2.id
         }
         site_video_3_data = {
             "caption": "Video caption three.",
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": "youtube",
             "source_id": "yt_349v"
         }
@@ -2075,14 +2090,14 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.admin_user
         patch_response = self.view(patch_request)
-        self.site_profile.refresh_from_db()
-        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+        self.site_profile_current.refresh_from_db()
+        self.assertEqual(len(self.site_profile_current.sitevideo_set.all()),
                          len(patch_response.data.get('site_videos')))
 
     def test_patch_updates_site_videos_lists_removal(self):
         site_video_2_data = {
             "caption": self.site_video_2.caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_2.source,
             "source_id": self.site_video_2.source_id,
             "id": self.site_video_2.id,
@@ -2093,15 +2108,15 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         )
         patch_request.user = self.admin_user
         patch_response = self.view(patch_request)
-        self.site_profile.refresh_from_db()
-        self.assertEqual(len(self.site_profile.sitevideo_set.all()),
+        self.site_profile_current.refresh_from_db()
+        self.assertEqual(len(self.site_profile_current.sitevideo_set.all()),
                          len(patch_response.data.get('site_videos')))
 
     def test_patch_updates_site_videos_lists_updates_video_caption(self):
         new_caption = 'New analysis video caption.'
         site_video_1_data = {
             "caption": new_caption,
-            "site_profile": self.site_profile.id,
+            "site_profile": self.site_profile_current.id,
             "source": self.site_video_1.source,
             "source_id": self.site_video_1.source_id,
             "id": self.site_video_1.id

@@ -33,6 +33,7 @@ from django.forms import ValidationError
 from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
 from bioblend import galaxy
@@ -95,12 +96,22 @@ class UserProfile(models.Model):
                " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_data_upload_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).data_upload_tutorial_viewed
+        try:
+            return Tutorials.objects.get(
+                user_profile=self).data_upload_tutorial_viewed
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get Tutorial for UserProfile %s: %s',
+                         unicode(self), exc)
 
     def has_viewed_collaboration_tut(self):
-        return Tutorials.objects.get(
-            user_profile=self).collaboration_tutorial_viewed
+        try:
+            return Tutorials.objects.get(
+                user_profile=self).collaboration_tutorial_viewed
+        except (Tutorials.DoesNotExist,
+                Tutorials.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get Tutorial for UserProfile %s: %s',
+                         unicode(self), exc)
 
 
 def get_user_import_dir(user):
@@ -363,11 +374,16 @@ class SharableResource(OwnableResource):
 
     def get_owner(self):
         owner = None
-
         content_type_id = ContentType.objects.get_for_model(self).id
-        permission_id = Permission.objects.filter(
-            codename='share_%s' % self._meta.verbose_name
-        )[0].id
+        codename = 'share_%s' % self._meta.verbose_name
+        try:
+            permission_id = Permission.objects.filter(
+                codename=codename
+            )[0].id
+        except IndexError:
+            logger.error('No Permission objects returned for codename %s',
+                         codename)
+            return owner
 
         perms = UserObjectPermission.objects.filter(
             content_type_id=content_type_id,
@@ -378,8 +394,9 @@ class SharableResource(OwnableResource):
         if perms.count() > 0:
             try:
                 owner = User.objects.get(id=perms[0].user_id)
-            except User.DoesNotExist:
-                pass
+            except (User.DoesNotExist, User.MultipleObjectsReturned) as exc:
+                logger.error("Error finding user with owner perms %s: %s",
+                             unicode(perms[0]), exc)
 
         return owner
 
@@ -420,27 +437,33 @@ class SharableResource(OwnableResource):
 
         for group_object, permission_list in permissions.items():
             group = {}
-            group["group"] = ExtendedGroup.objects.get(id=group_object.id)
-            group["uuid"] = group["group"].uuid
-            group["id"] = group["group"].id
-            group["change"] = False
-            group["read"] = False
-            if self._meta.verbose_name == 'dataset':
-                group["read_meta"] = False
+            try:
+                group["group"] = ExtendedGroup.objects.get(id=group_object.id)
+            except (ExtendedGroup.DoesNotExist,
+                    ExtendedGroup.MultipleObjectsReturned) as exc:
+                logger.error('Failed to get ExtendedGroup for Group %s: %s',
+                             unicode(group_object), exc)
+            else:
+                group["uuid"] = group["group"].uuid
+                group["id"] = group["group"].id
+                group["change"] = False
+                group["read"] = False
+                if self._meta.verbose_name == 'dataset':
+                    group["read_meta"] = False
 
-            for permission in permission_list:
-                if permission.startswith("change"):
-                    group["change"] = True
-                elif permission.startswith("read_meta"):
-                    group["read_meta"] = True
-                elif permission.startswith("read"):
-                    group["read"] = True
+                for permission in permission_list:
+                    if permission.startswith("change"):
+                        group["change"] = True
+                    elif permission.startswith("read_meta"):
+                        group["read_meta"] = True
+                    elif permission.startswith("read"):
+                        group["read"] = True
 
-            if group["change"] and readonly:
-                continue
-            if group["read"] and changeonly:
-                continue
-            groups.append(group)
+                if group["change"] and readonly:
+                    continue
+                if group["read"] and changeonly:
+                    continue
+                groups.append(group)
 
         return groups
 
@@ -657,27 +680,21 @@ class DataSet(SharableResource):
     def get_assays(self, version=None):
         return Assay.objects.filter(study=self.get_studies(version))
 
+    def get_file_nodes(self):
+        return Node.objects.filter(
+            study__in=self.get_investigation().study_set.all(),
+            file_item__isnull=False,
+            is_auxiliary_node=False
+        )
+
     def get_file_count(self):
         """Returns the number of files in the data set"""
-        investigation = self.get_investigation()
-        file_count = 0
-
-        for study in investigation.study_set.all():
-            file_count += (
-                Node.objects
-                .filter(study=study.id, file_uuid__isnull=False)
-                .count()
-            )
-        return file_count
+        return self.get_file_nodes().count()
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
-        investigation = self.get_investigation()
-        file_uuids = Node.objects.filter(
-            study__in=investigation.study_set.all(), file_uuid__isnull=False
-        ).values_list('file_uuid', flat=True)
-        file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
-        return sum([item.get_file_size() for item in file_items])
+        return sum([node.file_item.get_file_size() for node
+                    in self.get_file_nodes().select_related('file_item')])
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -829,13 +846,10 @@ class DataSet(SharableResource):
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
-    """
-    Removes a DataSet's related objects upon deletion being triggered.
+    """Removes a DataSet's related objects upon deletion being triggered
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
     with transaction.atomic():
         for investigation_link in instance.get_investigation_links():
@@ -877,7 +891,16 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        try:
+            return NodeCollection.objects.get(uuid=self.investigation.uuid)
+        # this will error out downstream on the signal's use of it when None is
+        # returned
+        except (NodeCollection.DoesNotExist,
+                NodeCollection.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get NodeCollection for '
+                         'Investigation %s: %s',
+                         unicode(self.investigation), exc)
+            return None
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):
@@ -1003,31 +1026,6 @@ class Project(SharableResource):
         )
 
 
-class AnalysisResult(models.Model):
-    analysis_uuid = UUIDField(auto=False)
-    file_store_uuid = UUIDField(auto=False)
-    file_name = models.TextField()
-    file_type = models.TextField()
-
-    # many to many to nodes uuid
-
-    # associated tdf file
-    # ## TODO ### ?galaxy_id?
-    # add reference to file_store models
-    # foreign key into analysis
-    # analysis = models.ForeignKey('Analysis')
-
-    def __unicode__(self):
-        return str(self.file_name) + " <-> " + self.analysis_uuid
-
-    class Meta:
-        verbose_name = "analysis result"
-        verbose_name_plural = "analysis results"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-        )
-
-
 class Analysis(OwnableResource):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
@@ -1040,7 +1038,7 @@ class Analysis(OwnableResource):
         (RUNNING_STATUS, "Analysis is running"),
         (INITIALIZED_STATUS, "Analysis was initialized"),
     )
-    project = models.ForeignKey(Project, related_name="analyses")
+    project = models.ForeignKey(Project, related_name='analyses')
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
@@ -1048,7 +1046,6 @@ class Analysis(OwnableResource):
     history_id = models.TextField(blank=True, null=True)
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    results = models.ManyToManyField(AnalysisResult, blank=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS,
@@ -1056,16 +1053,6 @@ class Analysis(OwnableResource):
     status_detail = models.TextField(blank=True, null=True)
     # indicates if a user requested cancellation of this analysis
     canceled = models.BooleanField(default=False)
-    # possibly replace results
-    # output_nodes = models.ManyToManyField(Nodes, blank=True)
-    # protocol = i.e. protocol node created when the analysis is created
-
-    def __str__(self):
-        return "{} - {} - {}".format(
-            self.name,
-            self.get_owner_username(),
-            self.summary
-        )
 
     class Meta:
         verbose_name = "analysis"
@@ -1074,6 +1061,10 @@ class Analysis(OwnableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
         ordering = ['-time_end', '-time_start']
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.name, self.get_owner_username(),
+                                     self.summary)
 
     def get_expanded_workflow_graph(self):
         return tool_manager.utils.create_expanded_workflow_graph(
@@ -1138,20 +1129,25 @@ class Analysis(OwnableResource):
     def get_status(self):
         return self.status
 
+    def get_auxiliary_nodes(self):
+        # Return queryset of related auxiliary_nodes
+        analysis_nodes = self.get_nodes()
+        aux_nodes = Node.objects.none()
+        for node in analysis_nodes:
+            aux_nodes = aux_nodes | node.children.filter(
+                is_auxiliary_node=True
+            )
+        return aux_nodes
+
     def get_nodes(self):
         return Node.objects.filter(analysis_uuid=self.uuid)
-
-    def get_analysis_results(self):
-        return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
 
     @skip_if_test_run
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
-
-        # solr.optimize() Tells Solr to streamline the number of segments
-        # used, essentially a defragmentation/ garbage collection
-        # operation.
+        # solr.optimize() tells Solr to streamline the number of segments
+        # used, essentially a defragmentation/ garbage collection operation
         try:
             solr.optimize()
         except Exception as e:
@@ -1354,7 +1350,7 @@ class Analysis(OwnableResource):
         """Rename files in file_store after download"""
         logger.debug("Renaming analysis results")
         # rename file_store items to new name updated from galaxy file_ids
-        for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
+        for result in self.results.all():
             try:
                 item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
             except (FileStoreItem.DoesNotExist,
@@ -1379,10 +1375,10 @@ class Analysis(OwnableResource):
                 item.rename_datafile(result.file_name)
 
             try:
-                node = Node.objects.get(file_uuid=item.uuid)
+                node = Node.objects.get(file_item=item)
             except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
                 logger.error("Error retrieving Node with file UUID '%s': %s",
-                             exc)
+                             item.uuid, exc)
             else:
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
@@ -1402,31 +1398,29 @@ class Analysis(OwnableResource):
         self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
-        analysis_results = AnalysisResult.objects.filter(
-            analysis_uuid=self.uuid)
-
-        if analysis_results.count() == 0:
+        if self.results.all().count() == 0:
             logger.error("No results for download '%s' ('%s')",
                          self.name, self.uuid)
             return
 
-        for analysis_result in analysis_results:
-            item = FileStoreItem.objects.get(
-                uuid=analysis_result.file_store_uuid)
-            if item:
+        for analysis_result in self.results.all():
+            try:
+                item = FileStoreItem.objects.get(
+                    uuid=analysis_result.file_store_uuid
+                )
                 download = Download.objects.create(name=self.name,
                                                    data_set=self.data_set,
                                                    file_store_item=item)
                 download.set_owner(self.get_owner())
-            else:
-                logger.warning(
-                    "No file found for '%s' in download '%s' ('%s')",
-                    analysis_result.file_store_uuid, self.name, self.uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error('Failed to get FileStoreItem for '
+                             'AnalysisResult %s: %s',
+                             unicode(analysis_result), exc)
 
     def terminate_file_import_tasks(self):
-        """
-        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
-        and trys to terminate their file import tasks if possible
+        """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
+        and requests termination of the corresponding file import tasks
         """
         workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
         if workflow_tool is not None:
@@ -1460,9 +1454,8 @@ class Analysis(OwnableResource):
         index_annotated_nodes_selection(node_uuids)
 
     def _get_output_connection_to_analysis_result_mapping(self):
-        """
-        Create and return a dict mapping each "output" type
-        AnalysisNodeConnection to it's respective analysis result.
+        """Create and return a dict mapping each "output" type
+        AnalysisNodeConnection to it's respective analysis result
 
         This is especially useful when we run into the edge-case described
         here: https://github.com/
@@ -1489,8 +1482,7 @@ class Analysis(OwnableResource):
             for index, output_connection in enumerate(output_connections):
                 analysis_result = None
                 if output_connection.is_refinery_file:
-                    analysis_result = AnalysisResult.objects.filter(
-                        analysis_uuid=self.uuid,
+                    analysis_result = self.results.filter(
                         file_name=output_connection.filename
                     )[index]
                 output_connections_to_analysis_results.append(
@@ -1498,8 +1490,8 @@ class Analysis(OwnableResource):
                 )
         return output_connections_to_analysis_results
 
-    def _create_derived_data_file_node(self, study,
-                                       assay, analysis_node_connection):
+    def _create_derived_data_file_node(self, study, assay,
+                                       analysis_node_connection):
         return Node.objects.create(
             study=study,
             assay=assay,
@@ -1521,8 +1513,7 @@ class Analysis(OwnableResource):
                 )]
 
     def get_input_file_store_items(self):
-        return [node.get_file_store_item()
-                for node in self._get_input_nodes()]
+        return [node.file_item for node in self._get_input_nodes()]
 
     def get_input_node_study(self):
         return self._get_input_nodes()[0].study
@@ -1532,7 +1523,6 @@ class Analysis(OwnableResource):
 
     def _create_data_transformation_nodes(self, graph):
         """create data transformation nodes for all Tool nodes"""
-
         data_transformation_nodes = [
             graph.node[node_id] for node_id in graph.nodes()
             if graph.node[node_id]['type'] == "tool"
@@ -1572,41 +1562,36 @@ class Analysis(OwnableResource):
     def _create_derived_data_file_nodes(self, graph):
         """create derived data file nodes for all entries and connect to data
             transformation nodes"""
-        output_connection_to_analysis_result_mapping = (
-            self._get_output_connection_to_analysis_result_mapping()
-        )
         for output_connection, analysis_result in \
-                output_connection_to_analysis_result_mapping:
+                self._get_output_connection_to_analysis_result_mapping():
             derived_data_file_node = self._create_derived_data_file_node(
-                self.get_input_node_study(),
-                self.get_input_node_assay(),
+                self.get_input_node_study(), self.get_input_node_assay(),
                 output_connection
             )
             if output_connection.is_refinery_file:
                 # retrieve uuid of corresponding output file if exists
-                logger.info(
-                    "Results for '%s' and %s: %s",
-                    self.uuid,
-                    output_connection,
-                    analysis_result
-                )
-                derived_data_file_node.file_uuid = (
-                    analysis_result.file_store_uuid
-                )
+                logger.info("Results for '%s' and %s: %s", self.uuid,
+                            output_connection, analysis_result)
+                try:
+                    derived_data_file_node.file_item = \
+                        FileStoreItem.objects.get(
+                            uuid=analysis_result.file_store_uuid
+                        )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as exc:
+                    logger.error('Failed to get FileStoreItem for '
+                                 'AnalysisResult %s: %s',
+                                 unicode(analysis_result), exc)
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
-                    output_connection,
-                    analysis_result.file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid
+                    output_connection, analysis_result.file_store_uuid,
+                    derived_data_file_node.name, derived_data_file_node.uuid
                 )
             output_connection.node = derived_data_file_node
             output_connection.save()
 
             self._link_derived_data_file_node_to_data_transformation_node(
-                graph,
-                output_connection,
-                derived_data_file_node
+                graph, output_connection, derived_data_file_node
             )
 
     def _link_derived_data_file_node_to_data_transformation_node(
@@ -1684,20 +1669,35 @@ class Analysis(OwnableResource):
         ]
 
 
+@python_2_unicode_compatible
+class AnalysisResult(models.Model):
+    analysis = models.ForeignKey(Analysis, related_name='results')
+    file_store_uuid = UUIDField(auto=False)
+    file_name = models.TextField()
+    file_type = models.TextField()
+
+    class Meta:
+        verbose_name = "analysis result"
+        verbose_name_plural = "analysis results"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    def __str__(self):
+        return str(self.file_name) + " <-> " + self.analysis.uuid
+
+
 @receiver(pre_delete, sender=Analysis)
 def _analysis_delete(sender, instance, *args, **kwargs):
-    """
-    Removes an Analyses's related objects upon deletion being triggered.
+    """Removes an Analyses's related objects
     Having these extra checks is favored within a signal so that this logic
-    is picked up on bulk deletes as well.
-
-    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
-    #overriding-model-methods
+    is picked up on bulk deletes as well
+    https://docs.djangoproject.com/en/1.8/topics/db/models/#overriding-model-methods
     """
     with transaction.atomic():
         instance.cancel()
-        # Delete associated AnalysisResults
-        instance.get_analysis_results().delete()
+        # Delete children aux_nodes Associated w/ the Analysis
+        instance.get_auxiliary_nodes().delete()
         # Delete Nodes Associated w/ the Analysis
         instance.get_nodes().delete()
 
@@ -1791,7 +1791,10 @@ class ExtendedGroupManager(models.Manager):
             return ExtendedGroup.objects.get(
                 id=settings.REFINERY_PUBLIC_GROUP_ID
             )
-        except:
+        except (ExtendedGroup.DoesNotExist,
+                ExtendedGroup.MultipleObjectsReturned) as exc:
+            logger.error('Failed to get ExtendedGroup for Refinery ID %s: %s',
+                         str(settings.REFINERY_PUBLIC_GROUP_ID), exc)
             return None
 
 
@@ -1838,7 +1841,8 @@ class ExtendedGroup(Group):
     def get_managed_group(self):
         try:
             return (self.managed_group.all()[0])
-        except:
+        # out of bounds exception
+        except IndexError:
             return None
 
     def is_user_a_group_manager(self, user):
@@ -1867,7 +1871,8 @@ post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
 class Invitation(models.Model):
-    token_uuid = UUIDField(unique=True, auto=True)
+    token_uuid = models.UUIDField(default=uuid_lib.uuid4, editable=False,
+                                  unique=True)
     group_id = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(editable=False, null=True)
     expires = models.DateTimeField(editable=False, null=True)
@@ -1875,7 +1880,7 @@ class Invitation(models.Model):
     recipient_email = models.CharField(max_length=250, null=True)
 
     def __unicode__(self):
-        return self.token_uuid + ' | ' + str(self.group_id)
+        return str(self.token_uuid) + ' | ' + str(self.group_id)
 
     def save(self, *arg, **kwargs):
         if not self.id:

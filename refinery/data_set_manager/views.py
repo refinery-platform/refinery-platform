@@ -33,9 +33,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
-from core.utils import get_absolute_url, get_data_set_for_view_set
+from core.utils import build_absolute_url, get_data_set_for_view_set
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import FileStoreItem, generate_file_source_translator
+from file_store.models import generate_file_source_translator
 from file_store.tasks import FileImportTask, download_file
 from file_store.utils import parse_s3_url
 
@@ -140,12 +140,41 @@ class TakeOwnershipOfPublicDatasetView(View):
         if request.user.has_perm('core.read_dataset', data_set) \
                 or 'read_dataset' in get_perms(public_group, data_set):
             investigation = data_set.get_investigation()
-            full_isa_tab_url = get_absolute_url(
-                investigation.get_file_store_item().get_datafile_url()
-            )
-            response = HttpResponseRedirect(
-                get_absolute_url(reverse('process_isa_tab', args=['ajax']))
-            )
+            file_url = investigation.get_file_store_item().get_datafile_url()
+            try:
+                full_isa_tab_url = build_absolute_url(file_url)
+            except ValueError:
+                logger.error('URL {} is not a relative url'.format(
+                        str(file_url)
+                    )
+                )
+                return HttpResponseBadRequest('No file url found for '
+                                              'investigation of DataSet')
+            except RuntimeError as e:
+                logger.error('Could not build URL for {}'.format(
+                        str(file_url)
+                    )
+                )
+                return HttpResponseBadRequest('Could not build URL for {}'.
+                                              format(str(file_url)))
+            relative_isa_tab_url = reverse('process_isa_tab', args=['ajax'])
+            try:
+                isa_tab_url = build_absolute_url(relative_isa_tab_url)
+            except ValueError:
+                logger.error(
+                    '{} is not relative url'.format(str(relative_isa_tab_url))
+                )
+                return HttpResponseBadRequest('Could not set isa_tab_url '
+                                              ' cookie due to bad redirect')
+            except RuntimeError as e:
+                logger.error('No Current Site found')
+                logger.error('Could not build URL for {}'.format(
+                        str(relative_isa_tab_url)
+                    )
+                )
+                return HttpResponseBadRequest('Could not build URL for {}'.
+                                              format(str(file_url)))
+            response = HttpResponseRedirect(isa_tab_url)
             # set cookie
             response.set_cookie('isa_tab_url', full_isa_tab_url)
             return response
@@ -759,7 +788,6 @@ class AssayAPIView(APIView):
 
     ...
     """
-
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
@@ -768,24 +796,23 @@ class AssayAPIView(APIView):
 
     def get_query_set(self, study_uuid):
         try:
-            study_obj = Study.objects.get(
-                uuid=study_uuid)
-            return Assay.objects.filter(study=study_obj)
-        except (Study.DoesNotExist,
-                Study.MultipleObjectsReturned):
+            study_obj = Study.objects.get(uuid=study_uuid)
+        except (Study.DoesNotExist, Study.MultipleObjectsReturned):
             raise Http404
+        return Assay.objects.filter(study=study_obj)
 
     def get(self, request, format=None):
         if request.query_params.get('uuid'):
-            assay = self.get_object(request.query_params.get('uuid'))
+            try:
+                assay = self.get_object(request.query_params.get('uuid'))
+            except ValueError:
+                return HttpResponseBadRequest()
             serializer = AssaySerializer(assay)
             return Response(serializer.data)
         elif request.query_params.get('study'):
             assays = self.get_query_set(request.query_params.get('study'))
             serializer = AssaySerializer(assays, many=True)
             return Response(serializer.data)
-        else:
-            raise Http404
 
 
 class AssayFileAPIView(APIView):
@@ -849,6 +876,11 @@ class AssayFileAPIView(APIView):
               paramType: query
     ...
     """
+    def get_object(self, uuid):
+        try:
+            return Assay.objects.get(uuid=uuid)
+        except (Assay.DoesNotExist, Assay.MultipleObjectsReturned):
+            raise Http404
 
     def get(self, request, uuid, format=None):
 
@@ -874,7 +906,11 @@ class AssayFileAPIView(APIView):
                 return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
             solr_response = search_solr(solr_params, 'data_set_manager')
-            solr_response_json = format_solr_response(solr_response)
+            solr_response_json = format_solr_response(
+                solr_response, params.get('include_facet_count', True)
+            )
+            solr_response_json['assay_nodes_count'] = self.get_object(uuid)\
+                .get_file_count()
 
             return Response(solr_response_json)
         else:
@@ -946,7 +982,6 @@ class AssayAttributeAPIView(APIView):
               paramType: form
     ...
     """
-
     def get_objects(self, uuid):
         attributes = AttributeOrder.objects.filter(assay__uuid=uuid)
         if len(attributes):
@@ -955,19 +990,22 @@ class AssayAttributeAPIView(APIView):
             raise Http404
 
     def get(self, request, uuid, format=None):
-        attribute_order = self.get_objects(uuid).exclude(
-            solr_field__in=[NodeIndex.DOWNLOAD_URL, NodeIndex.DATAFILE]
-        )
+        try:
+            attribute_order = self.get_objects(uuid).exclude(
+                solr_field__in=[NodeIndex.DOWNLOAD_URL, NodeIndex.DATAFILE]
+            )
+        except ValueError:
+            return HttpResponseBadRequest()
+
         serializer = AttributeOrderSerializer(attribute_order, many=True)
         owner = get_owner_from_assay(uuid)
-        request_user = request.user
+        attributes = []
 
         # add a display name to the attribute object
-        if owner == request_user:
+        if owner == request.user:
             attributes = serializer.data
         # for non-owners, hide non-exposed attributes
         else:
-            attributes = []
             for attribute in serializer.data:
                 if attribute.get('is_exposed'):
                     attributes.append(attribute)
@@ -978,11 +1016,11 @@ class AssayAttributeAPIView(APIView):
                 del attributes[ind]
             else:
                 attributes[ind]['display_name'] = customize_attribute_response(
-                    [attributes[ind].get('solr_field')])[0].get(
-                    'display_name')
+                    [attributes[ind].get('solr_field')]
+                )[0].get('display_name')
 
         # for non-owners need to reorder the ranks
-        if owner != request_user:
+        if owner != request.user:
             for ind in range(0, len(attributes)):
                 attributes[ind]['rank'] = ind + 1
 
@@ -998,11 +1036,54 @@ class AssayAttributeAPIView(APIView):
             new_rank = request.data.get('rank', None)
 
             if id:
-                attribute_order = AttributeOrder.objects.get(
-                    assay__uuid=uuid, id=id)
+                try:
+                    attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, id=id
+                    )
+                except AttributeOrder.DoesNotExist as e:
+                    logger.error(
+                        "Couldn't fetch AttributeOrder "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(id), e
+                    )
+                    return Response(
+                        'Could not find attribute orders to update',
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                except AttributeOrder.MultipleObjectsReturned as e:
+                    logger.error(
+                        "Too many AttributeOrder objects "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(id), e
+                    )
+                    return Response(
+                        'Too many attribute orders found for assay',
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             elif solr_field:
-                attribute_order = AttributeOrder.objects.get(
-                    assay__uuid=uuid, solr_field=solr_field)
+                try:
+                    attribute_order = AttributeOrder.objects.get(
+                        assay__uuid=uuid, solr_field=solr_field)
+                except AttributeOrder.DoesNotExist as e:
+                    logger.error(
+                        "Couldn't fetch AttributeOrder "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(solr_field), e
+                    )
+                    return Response(
+                        'Could not find attribute orders to update',
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                except AttributeOrder.MultipleObjectsReturned as e:
+                    logger.error(
+                        "Too many AttributeOrder objects "
+                        "for id %s and assay %s: %s",
+                        str(uuid), str(solr_field), e
+                    )
+                    return Response(
+                        'Too many attribute orders found for assay',
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             else:
                 return Response(
                     'Requires attribute id or solr_field name.',
@@ -1071,15 +1152,13 @@ class AddFileToNodeView(APIView):
         if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        file_store_item = node.get_file_store_item()
-        if (file_store_item and not file_store_item.datafile and
-                file_store_item.source.startswith(
+        if (node.file_item and not node.file_item.datafile and
+                node.file_item.source.startswith(
                     (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
             logger.debug("Adding file to Node '%s'", node)
-
-            file_store_item.source = os.path.basename(file_store_item.source)
-            file_store_item.save()
+            node.file_item.source = os.path.basename(node.file_item.source)
+            node.file_item.save()
 
             if identity_id:
                 file_source_translator = generate_file_source_translator(
@@ -1089,19 +1168,17 @@ class AddFileToNodeView(APIView):
                 file_source_translator = generate_file_source_translator(
                     username=request.user.username
                 )
-            translated_datafile_source = file_source_translator(
-                file_store_item.source
+            node.file_item.source = file_source_translator(
+                node.file_item.source
             )
-            file_store_item.source = translated_datafile_source
-
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new file import task when called below.
             # We then have to update its Node's Solr index entry, so the
             # updated file import status is available in the UI.
-            file_store_item.import_task_id = ""
-            file_store_item.save()
+            node.file_item.import_task_id = ""
+            node.file_item.save()
             node.update_solr_index()
-            FileImportTask().delay(file_store_item.uuid)
+            FileImportTask().delay(node.file_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 
@@ -1240,40 +1317,24 @@ class NodeViewSet(viewsets.ViewSet):
 
     def partial_update(self, request, uuid):
         node = self.get_object(uuid)
-        new_file_uuid = request.data.get('file_uuid')
         solr_name = request.data.get('attribute_solr_name')
         attribute_value = request.data.get('attribute_value')
         data_set = node.study.get_dataset()
 
         if not data_set.is_clean():
-            return Response(
-                'Files cannot be removed once an analysis or visualization '
-                'has ran on a data set ',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response('Files cannot be removed once an analysis or '
+                            'visualization has ran on a data set ',
+                            status=status.HTTP_400_BAD_REQUEST)
 
         if not data_set.get_owner() == request.user:
             return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        # to remove the data file, we need to delete it and update index,
-        #  the file store item uuid should remain
-        if new_file_uuid == '':
-            try:
-                file_store_item = FileStoreItem.objects.get(
-                    uuid=node.file_uuid
-                )
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(e)
-                return Response('Missing file store item.',
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                file_store_item.delete_datafile()
-
+        # to remove the data file, we need to delete it and update index
+        if request.data.get('file_uuid') == '':
+            node.file_item.delete_datafile()
             node.update_solr_index()
-            return Response(
-                NodeSerializer(node).data, status=status.HTTP_200_OK
-            )
+            return Response(NodeSerializer(node).data,
+                            status=status.HTTP_200_OK)
         # derived node can have multiple attribute sources
         elif solr_name and attribute_value and not node.is_derived():
             # splits solr name into type and subtype
@@ -1281,8 +1342,9 @@ class NodeViewSet(viewsets.ViewSet):
                 'attribute_type'
             )
             if attribute_type not in Attribute.editable_types:
-                return HttpResponseBadRequest('Attribute is not an '
-                                              'editable type')
+                return HttpResponseBadRequest(
+                    'Attribute is not an editable type'
+                )
             # from annotated node, we can grab source attribute
             annotated_node = get_first_annotated_node_from_solr_name(
                 solr_name, node

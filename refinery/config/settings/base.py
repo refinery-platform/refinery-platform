@@ -116,7 +116,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',  # for admin app
-    'djangular.finders.NamespacedAngularAppDirectoriesFinder',
 )
 
 # Make sure to set this to a random string in production
@@ -189,7 +188,6 @@ INSTALLED_APPS = (
     'haystack',
     # NG: added for celery (task queue)
     'djcelery',  # django-celery
-    'djangular',
     'galaxy_connector',
     'analysis_manager',
     'file_store',
@@ -401,8 +399,8 @@ HAYSTACK_CONNECTIONS = {
 REFINERY_CSS = ["styles/refinery-style-bootstrap.css",
                 "styles/refinery-style-bootstrap-responsive.css",
                 "styles/refinery-style.css",
-                "vendor/fontawesome/css/font-awesome.min.css",
-                "vendor/intro-js/minified/introjs.min.css"]
+                "vendor/font-awesome/css/font-awesome.min.css",
+                "vendor/intro.js/minified/introjs.min.css"]
 
 # set height of navigation bar (e.g. to fit a logo)
 REFINERY_INNER_NAVBAR_HEIGHT = get_setting("REFINERY_INNER_NAVBAR_HEIGHT")
