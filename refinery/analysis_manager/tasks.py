@@ -470,10 +470,8 @@ def _get_galaxy_download_task_ids(analysis):
     task_id_list = []
     # retrieving list of files to download for workflow
     tool = _get_workflow_tool(analysis.uuid)
-    tool.create_analysis_output_node_connections()
-    galaxy_instance = analysis.workflow.workflow_engine.instance
     try:
-        download_list = tool.get_galaxy_dataset_download_list()
+        download_list = tool.create_analysis_output_node_connections()
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
@@ -481,18 +479,19 @@ def _get_galaxy_download_task_ids(analysis):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
         return task_id_list
+    galaxy_instance = analysis.workflow.workflow_engine.instance
 
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
         if results['state'] == 'ok':
-            file_extension = results["type"]
+            file_extension = results['file_ext']
             result_name = "{}.{}".format(results['name'], file_extension)
             # size of file defined by galaxy
             file_size = results['file_size']
             file_store_item = FileStoreItem(source=urlparse.urljoin(
                 galaxy_instance.base_url,
-                "datasets/{}/display?to_ext=txt".format(results['dataset_id'])
+                "datasets/{}/display?to_ext=txt".format(results['id'])
             ))
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
