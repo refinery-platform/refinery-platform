@@ -1,4 +1,5 @@
 import StringIO
+import ast
 import json
 import logging
 import uuid
@@ -1699,7 +1700,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(self.tool.get_owner(), self.user)
         self.assertTrue(self.tool.is_workflow())
         self.assertEqual(
-            json.loads(self.tool.analysis.workflow_copy),
+            ast.literal_eval(self.tool.analysis.workflow_copy),
             galaxy_workflow_dict
         )
         self.assertEqual(
