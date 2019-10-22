@@ -76,7 +76,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         # TODO: remove this when get_directory_name() is removed in Django 2.0
         name = os.path.normpath(name)
         # create a hashed directory structure
-        hashcode = int(hashlib.md5(name.encode('utf-8')).hexdigest(), 16)
+        hashcode = hashlib.md5(name.encode('utf-8')).hexdigest()
         dir1 = hashcode[0:2]
         dir2 = hashcode[2:4]
         # remove leading '-' characters to make file management easier
