@@ -408,7 +408,7 @@ class UtilitiesTests(TestCase):
         facet_filter = {'Author': ['Vezza', 'McConnell'],
                         'TYPE': ['Raw Data File']}
         true_facet_query = ['{!tag=AUTHOR}Author:(Vezza OR McConnell)',
-                            '{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',]
+                            '{!tag=TYPE}TYPE:(Raw\\ Data\\ File)']
         facet_field_query = create_facet_filter_query(facet_filter)
         self.assertEqual(set(facet_field_query),
                          set(true_facet_query))
