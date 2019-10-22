@@ -77,12 +77,8 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         name = os.path.normpath(name)
         # create a hashed directory structure
         hashcode = int(hashlib.md5(name.encode('utf-8')).hexdigest(), 16)
-        mask = 255  # bitmask
-        # use the first and second bytes of the hash code represented as
-        # zero-padded hex numbers as directory names
-        # provides 256 * 256 = 65,536 of possible directory combinations
-        dir1 = "{:0>2x}".format(hashcode & mask)
-        dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
+        dir1 = hashcode[0:2]
+        dir2 = hashcode[2:4]
         # remove leading '-' characters to make file management easier
         # limit file name length to 255 to make "fully portable" in POSIX
         name = os.path.join(dir1, dir2, name.lstrip('-')[-255:])
