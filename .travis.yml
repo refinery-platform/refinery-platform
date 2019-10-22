@@ -75,14 +75,14 @@ script:
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
   - flake8 ..
-  - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test --failfast
-  - echo 'travis_fold:end:django-tests'
-
 
   - echo 'travis_fold:start:grunt'
   - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
+
+  - echo 'travis_fold:start:django-tests'
+  - coverage run manage.py test --failfast
+  - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'
   - pushd ui && node_modules/.bin/cypress run --record && popd
