@@ -11,7 +11,7 @@ class refinery::python (
   class { '::python':
     version    => 'python3.5',
     ensure     => 'latest',
-    dev        => 'latest',
+    dev        => 'present',
     gunicorn   => 'absent',
     pip        => 'latest',
     virtualenv => 'present'
