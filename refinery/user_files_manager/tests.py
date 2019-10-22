@@ -76,7 +76,7 @@ class UserFileAPITests(APITestCase):
         response_dict = {"response": {"docs": [mock_doc]}}
         with mock.patch(
                 'user_files_manager.views.' + solr_mock_reference,
-                return_value=bytes(str(json.dumps(response_dict)),
+                return_value=bytes(json.dumps(response_dict),
                                    encoding='utf-8')
         ):
             response = user_files_csv(request)

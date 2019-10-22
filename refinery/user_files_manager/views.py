@@ -82,11 +82,11 @@ def _get_solr(params, user_id):
         params,
         user_id=user_id)
     if solr_params is None:
-        return bytes(str(dumps({
+        return bytes(dumps({
             'responseHeader': {},
             'response': {
                 'docs': []
             }
-        })), encoding='utf-8')
+        }), encoding='utf-8')
 
     return search_solr(solr_params, 'data_set_manager')
