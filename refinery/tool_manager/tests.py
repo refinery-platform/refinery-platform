@@ -1528,14 +1528,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.show_dataset_provenance_side_effect * 3
         )
 
-        self.tool.create_analysis_output_node_connections()
+        download_ids = self.tool.create_analysis_output_node_connections()
         download_list = self._get_galaxy_download_list_wrapper(
             datasets_have_same_names=datasets_have_same_names
         )
 
         mock.patch(
             "tool_manager.models.WorkflowTool."
-            "create_analysis_output_node_connections"
+            "create_analysis_output_node_connections",
+            return_value=download_ids
         ).start()
         mock.patch(
             "tool_manager.models.WorkflowTool"

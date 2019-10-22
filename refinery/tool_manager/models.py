@@ -810,11 +810,7 @@ class WorkflowTool(Tool):
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
-                is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
-                galaxy_dataset_name=galaxy_dataset["name"],
-                state=galaxy_dataset['state'],
-                file_size=galaxy_dataset['file_size'],
-                dataset_id=galaxy_dataset['id']
+                is_refinery_file=galaxy_dataset in exposed_workflow_outputs
             )
             connection_dataset_list += [
                 {
