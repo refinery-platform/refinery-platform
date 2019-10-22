@@ -470,7 +470,15 @@ def _get_galaxy_download_task_ids(analysis):
     task_id_list = []
     # retrieving list of files to download for workflow
     tool = _get_workflow_tool(analysis.uuid)
-    download_list = tool.create_analysis_output_node_connections()
+    try:
+        download_list = tool.create_analysis_output_node_connections()
+    except galaxy.client.ConnectionError as exc:
+        error_msg = \
+            "Error downloading Galaxy history files for analysis '%s': %s"
+        logger.error(error_msg, analysis.name, exc.message)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.galaxy_cleanup()
+        return task_id_list
     galaxy_instance = analysis.workflow.workflow_engine.instance
 
     # Iterating through files in current galaxy history
