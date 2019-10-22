@@ -21,9 +21,7 @@ class refinery::python (
   $base_dependencies = ['build-essential', 'libncurses5-dev', 'python3.5-dev', 'apache2-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
   $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev'] # pysam mod
-  package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]:
-    require => Class['apt::update']
-  }
+  package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]: }
 
   # for psycopg2 module
   package { 'libpq5':

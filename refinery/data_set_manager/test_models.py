@@ -25,12 +25,12 @@ class AssayClassTests(TestCase):
     def setUp(self):
         self.filestore_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
-                b'test_file.bam',
+                'test_file.bam',
                 b'Coffee is delicious!')
         )
         self.filestore_item_1 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
-                b'test_file.bed',
+                'test_file.bed',
                 b'Coffee is delicious!')
         )
         self.investigation = Investigation.objects.create()
