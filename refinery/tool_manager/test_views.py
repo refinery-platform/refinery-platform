@@ -139,10 +139,12 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         for tool_definition in self.get_response.data:
             for parameter in tool_definition[ToolDefinition.PARAMETERS]:
                 if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
-                    self.assertIn("galaxy_workflow_step", list(parameter.keys()))
+                    self.assertIn("galaxy_workflow_step",
+                                  list(parameter.keys()))
                 elif (tool_definition["tool_type"] ==
                       ToolDefinition.VISUALIZATION):
-                    self.assertNotIn("galaxy_workflow_step", list(parameter.keys()))
+                    self.assertNotIn("galaxy_workflow_step",
+                                     list(parameter.keys()))
 
     def test_request_from_owned_dataset_shows_all_tool_defs(self):
         self.assertNotEqual(len(self.get_response.data), 0)

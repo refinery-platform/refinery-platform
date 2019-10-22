@@ -407,10 +407,11 @@ class UtilitiesTests(TestCase):
     def test_create_facet_filter_query(self):
         facet_filter = {'Author': ['Vezza', 'McConnell'],
                         'TYPE': ['Raw Data File']}
+        true_facet_query = ['{!tag=AUTHOR}Author:(Vezza OR McConnell)',
+                            '{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',]
         facet_field_query = create_facet_filter_query(facet_filter)
         self.assertEqual(set(facet_field_query),
-                         set(['{!tag=AUTHOR}Author:(Vezza OR McConnell)',
-                         '{!tag=TYPE}TYPE:(Raw\\ Data\\ File)',]))
+                         set(true_facet_query))
 
     def test_hide_fields_from_list(self):
         weighted_list = [{'solr_field': 'uuid'},

@@ -46,18 +46,18 @@ from factory_boy.utils import create_dataset_with_necessary_models, \
     create_tool_with_necessary_models
 from file_store.models import FileStoreItem
 from .test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
-                                    galaxy_dataset_provenance_1,
-                                    galaxy_datasets_list,
-                                    galaxy_datasets_list_same_output_names,
-                                    galaxy_history_contents,
-                                    galaxy_history_contents_same_names,
-                                    galaxy_job_a, galaxy_job_b,
-                                    galaxy_tool_data, galaxy_workflow_dict,
-                                    galaxy_workflow_dict_collection,
-                                    galaxy_workflow_invocation,
-                                    galaxy_workflow_invocation_data,
-                                    history_dataset_dict, history_dict,
-                                    library_dataset_dict, library_dict)
+                                     galaxy_dataset_provenance_1,
+                                     galaxy_datasets_list,
+                                     galaxy_datasets_list_same_output_names,
+                                     galaxy_history_contents,
+                                     galaxy_history_contents_same_names,
+                                     galaxy_job_a, galaxy_job_b,
+                                     galaxy_tool_data, galaxy_workflow_dict,
+                                     galaxy_workflow_dict_collection,
+                                     galaxy_workflow_invocation,
+                                     galaxy_workflow_invocation_data,
+                                     history_dataset_dict, history_dict,
+                                     library_dataset_dict, library_dict)
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from .models import (GalaxyParameter, Parameter,

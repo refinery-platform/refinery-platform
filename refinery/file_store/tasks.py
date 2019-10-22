@@ -222,11 +222,11 @@ class FileImportTask(celery.Task):
         file_store_path = storage.path(file_store_name)
 
         logger.debug("Transferring from '%s' to '%s'",
-                        source_url, file_store_path)
+                     source_url, file_store_path)
         make_dir(os.path.dirname(file_store_path))
         try:
             with contextlib.closing(urllib.request.urlopen(source_url,
-                                                    timeout=30)) as response, \
+                                    timeout=30)) as response, \
                     open(file_store_path, 'wb') as destination:
                 copy_file_object(response, destination,
                                  ProgressPercentage(source_url,
