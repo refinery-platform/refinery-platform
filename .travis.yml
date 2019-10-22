@@ -62,7 +62,6 @@ before_script:
 
   # Required for cypress tests; TODO: Move to puppet.
   # TODO: Start up solr
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)
   - python manage.py loaddata guest.json
   - python manage.py activate_user guest
   - python manage.py add_users_to_public_group
