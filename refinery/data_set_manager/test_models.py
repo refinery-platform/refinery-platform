@@ -21,6 +21,37 @@ TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 logger = logging.getLogger(__name__)
 
 
+class AssayClassTests(TestCase):
+    def setUp(self):
+        self.filestore_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.bam',
+                'Coffee is delicious!')
+        )
+        self.filestore_item_1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.bed',
+                'Coffee is delicious!')
+        )
+        self.investigation = Investigation.objects.create()
+        self.study = Study.objects.create(investigation=self.investigation)
+        self.assay = Assay.objects.create(study=self.study)
+
+        Node.objects.create(assay=self.assay, study=self.study,
+                            file_item=self.filestore_item)
+        Node.objects.create(assay=self.assay, study=self.study,
+                            file_item=self.filestore_item_1)
+
+    def test_get_file_count(self):
+        self.assertEqual(self.assay.get_file_count(), 2)
+
+    def test_get_file_count_does_not_count_aux_nodes(self):
+        Node.objects.create(assay=self.assay, study=self.study,
+                            is_auxiliary_node=True,
+                            file_item=self.filestore_item_1)
+        self.assertEqual(self.assay.get_file_count(), 2)
+
+
 class NodeClassMethodTests(TestCase):
     def setUp(self):
         self.username = 'coffee_tester'

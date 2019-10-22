@@ -683,7 +683,8 @@ class DataSet(SharableResource):
     def get_file_nodes(self):
         return Node.objects.filter(
             study__in=self.get_investigation().study_set.all(),
-            file_item__isnull=False
+            file_item__isnull=False,
+            is_auxiliary_node=False
         )
 
     def get_file_count(self):
@@ -1127,6 +1128,16 @@ class Analysis(OwnableResource):
 
     def get_status(self):
         return self.status
+
+    def get_auxiliary_nodes(self):
+        # Return queryset of related auxiliary_nodes
+        analysis_nodes = self.get_nodes()
+        aux_nodes = Node.objects.none()
+        for node in analysis_nodes:
+            aux_nodes = aux_nodes | node.children.filter(
+                is_auxiliary_node=True
+            )
+        return aux_nodes
 
     def get_nodes(self):
         return Node.objects.filter(analysis_uuid=self.uuid)
@@ -1685,6 +1696,8 @@ def _analysis_delete(sender, instance, *args, **kwargs):
     """
     with transaction.atomic():
         instance.cancel()
+        # Delete children aux_nodes Associated w/ the Analysis
+        instance.get_auxiliary_nodes().delete()
         # Delete Nodes Associated w/ the Analysis
         instance.get_nodes().delete()
 

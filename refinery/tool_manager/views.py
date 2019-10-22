@@ -117,7 +117,9 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
                     tool.launch()
-                    serializer = ToolSerializer(tool)
+                    serializer = ToolSerializer(
+                        tool, context={'request': request}
+                    )
             except Exception as e:
                 logger.error(e)
                 return HttpResponseBadRequest(e)
@@ -183,7 +185,9 @@ class ToolsViewSet(ToolManagerViewSetBase):
                                           "currently running")
         try:
             visualization_tool.launch()
-            serializer = ToolSerializer(visualization_tool)
+            serializer = ToolSerializer(
+                visualization_tool, context={'request': request}
+            )
             return JsonResponse(serializer.data)
         except Exception as e:
             logger.error(e)
