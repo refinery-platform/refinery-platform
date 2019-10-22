@@ -8,7 +8,7 @@ class refinery::apache2 (
   $django_root         = $refinery::params::django_root,
   $media_root          = $refinery::params::media_root,
   $conf_mode           = $refinery::params::conf_mode,
-  $pyenv               = $refinery::params::pyenv,
+  $virtualenv          = $refinery::params::virtualenv,
 ) inherits refinery::params {
 
   # must be set to the ELB IdleTimeout value in the CloudFormation template
@@ -36,11 +36,11 @@ class refinery::apache2 (
   }
 
   class { 'apache::mod::wsgi':
-    mod_path     => "${pyenv}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
+    mod_path     => "${virtualenv}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
     # this package is unused due to the re-jig above
     # but needs to be specified, as per puppet's source code ¯\_(ツ)_/¯
     package_name => 'libapache2-mod-wsgi-py3',
-    wsgi_python_home => "${pyenv}",
+    wsgi_python_home => "${virtualenv}",
     wsgi_python_path => "${django_root}",
     require => Class['refinery::python']
   }
@@ -140,7 +140,7 @@ class refinery::apache2 (
       'refinery' => {
         'user'        => $app_user,
         'group'       => $app_group,
-        'python-home' => "${pyenv}",
+        'python-home' => "${virtualenv}",
         "python-path" => "${django_root}"
       }
     },

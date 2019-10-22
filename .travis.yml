@@ -31,7 +31,7 @@ install:
   - npm install -g npm@6.9.0
   - npm --version
 
-  - pip install -r requirements.txt
+  - pip install -r requirements.txt --quiet
 
 env:
   global:
@@ -78,7 +78,7 @@ script:
 
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
-  # - flake8 ..
+  - flake8 ..
   - echo 'travis_fold:start:django-tests'
   - coverage run manage.py test --failfast
   - echo 'travis_fold:end:django-tests'
@@ -91,6 +91,7 @@ script:
   - echo 'travis_fold:start:cypress'
   - pushd ui && node_modules/.bin/cypress run --record && popd
   - echo 'travis_fold:end:cypress'
+
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:

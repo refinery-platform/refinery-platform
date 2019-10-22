@@ -4,7 +4,7 @@ class refinery::ui (
   $ui_app_root            = $refinery::params::ui_app_root,
   $app_user               = $refinery::params::app_user,
   $app_group              = $refinery::params::app_group,
-  $pyenv                  = $refinery::params::pyenv,
+  $virtualenv             = $refinery::params::virtualenv,
   $django_root            = $refinery::params::django_root,
   $django_settings_module = $refinery::params::django_settings_module,
 ) inherits refinery::params {
@@ -69,7 +69,7 @@ class refinery::ui (
   }
   ->
   exec { 'collectstatic':
-    command     => "${pyenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py collectstatic --clear --noinput",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,

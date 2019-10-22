@@ -4,7 +4,7 @@ class refinery (
   $project_root           = $refinery::params::project_root,
   $django_root            = $refinery::params::django_root,
   $django_settings_module = $refinery::params::django_settings_module,
-  $pyenv                  = $refinery::params::pyenv,
+  $virtualenv             = $refinery::params::virtualenv,
   $docker_host            = $refinery::params::docker_host,
 ) inherits refinery::params {
   sysctl::configuration { 'vm.swappiness': value => '10' }  # for better performance
@@ -66,7 +66,7 @@ class refinery (
   }
   ->
   exec { 'supervisord':
-    command     => "${pyenv}/bin/supervisord",
+    command     => "${virtualenv}/bin/supervisord",
     environment => [
       "DJANGO_SETTINGS_MODULE=${django_settings_module}",
       "DOCKER_HOST=${docker_host}"

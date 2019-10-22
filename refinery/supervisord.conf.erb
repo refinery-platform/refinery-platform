@@ -23,7 +23,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [program:celery-w1]
 ; minimum of four processes required to avoid problems with monitoring tasks
 command = python %(here)s/manage.py celery worker -n w1@%%h -c 4 -Q celery -E
-environment = PATH="<%= @pyenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celery-w1.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -38,7 +38,7 @@ priority = 995
 [program:celery-w2]
 ; limits concurrency of file imports to one to avoid overloading system IO
 command = python %(here)s/manage.py celery worker -n w2@%%h -c 1 -Q file_import -E
-environment = PATH="<%= @pyenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celery-w2.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -55,7 +55,7 @@ priority = 995
 
 [program:celerycam]
 command = python %(here)s/manage.py celerycam
-environment = PATH="<%= @pyenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celerycam.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -67,7 +67,7 @@ priority= 993
 
 [program:celery-beat]
 command = python %(here)s/manage.py celery beat
-environment = PATH="<%= @pyenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celery-beat.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4
@@ -79,7 +79,7 @@ priority= 997
 
 [program:runserver]
 command = python %(here)s/manage.py runserver 0.0.0.0:8000 --noreload
-environment = PATH="<%= @pyenv %>/bin"
+environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/refinery.log
 stdout_logfile_maxbytes = 5MB
 stdout_logfile_backups = 4

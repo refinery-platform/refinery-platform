@@ -8,10 +8,10 @@ refinery_virtualenv_name=refinery-platform
 
 # deployment hosts
 dev_host=refinery-dev.example.org
-test_host=18.232.141.200
+test_host=refinery-test.example.org
 prod_host=refinery-prod.example.org
 
 # codebase branches to be used for deployment to corresponding hosts
 dev_branch=develop
-test_branch=ilan-gold/python3.6-update
+test_branch=release-X.Y.Z
 prod_branch=master

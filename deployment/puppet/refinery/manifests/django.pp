@@ -9,7 +9,7 @@ class refinery::django (
   $django_admin_password  = $refinery::params::django_admin_password,
   $site_name              = $refinery::params::site_name,
   $site_url               = $refinery::params::site_url,
-  $pyenv                  = $refinery::params::pyenv,
+  $virtualenv             = $refinery::params::virtualenv,
 ) inherits refinery::params {
   file { [$media_root, $file_store_root]:
     ensure  => directory,
@@ -30,7 +30,7 @@ class refinery::django (
     }
 
     exec { 'activate_guest_user':
-      command     => "${pyenv}/bin/python ${django_root}/manage.py activate_user guest",
+      command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
       environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
       user        => $app_user,
       group       => $app_group,
@@ -52,7 +52,7 @@ class refinery::django (
   }
   ->
   exec { 'migrate':
-    command     => "${pyenv}/bin/python ${django_root}/manage.py migrate --noinput --fake-initial",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput --fake-initial",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
@@ -64,28 +64,28 @@ class refinery::django (
   }
   ->
   exec { 'create_superuser':
-    command     => "${pyenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata superuser.json",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
   }
   ->
   exec { 'create_guest_user':
-    command     => "${pyenv}/bin/python ${django_root}/manage.py loaddata guest.json",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py loaddata guest.json",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
   }
   ->
   exec { 'add_users_to_public_group':
-    command     => "${pyenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
   }
   ->
   exec { 'set_up_refinery_site_name':
-    command     => "${pyenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py set_up_site_name '${site_name}' '${site_url}'",
     environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
     user        => $app_user,
     group       => $app_group,
@@ -93,7 +93,7 @@ class refinery::django (
 
   if $deployment_platform == 'aws' {
     exec { 'generate_superuser_json':
-      command     => "${pyenv}/bin/python ${project_root}/deployment/bin/generate-superuser > ${django_root}/core/fixtures/superuser.json.new",
+      command     => "${virtualenv}/bin/python ${project_root}/deployment/bin/generate-superuser > ${django_root}/core/fixtures/superuser.json.new",
       environment => [
         "PYTHONPATH=${django_root}",
         "DJANGO_SETTINGS_MODULE=${django_settings_module}",
