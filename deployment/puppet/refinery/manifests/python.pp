@@ -46,12 +46,12 @@ class refinery::python (
   }
   ->
   python::virtualenv { $virtualenv:
-    version => '3.5',
-    ensure  => present,
-    owner   => $app_user,
-    group   => $app_group,
+    version    => '3.5',
+    ensure     => present,
+    owner      => $app_user,
+    group      => $app_group,
     distribute => false,
-    require => [
+    require    => [
       Package[
         $base_dependencies,
         $crypto_dependencies,
