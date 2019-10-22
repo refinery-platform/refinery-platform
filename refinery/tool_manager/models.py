@@ -1046,29 +1046,6 @@ class WorkflowTool(Tool):
         )
 
     @handle_bioblend_exceptions
-    def get_galaxy_dataset_download_list(self):
-        """
-        Return a list of dicts containing information about Galaxy Datasets
-        in our Workflow invocation's history if said Datasets correspond to a
-        user-defined `workflow_output`.
-        """
-        exposed_galaxy_datasets = self._get_exposed_galaxy_datasets()
-        exposed_galaxy_dataset_ids = [
-            galaxy_dataset["id"] for galaxy_dataset in exposed_galaxy_datasets
-        ]
-
-        history_file_list = self.galaxy_instance.get_history_file_list(
-            self.analysis.history_id
-        )
-        retained_download_list = [
-            galaxy_dataset for galaxy_dataset in history_file_list
-            if galaxy_dataset["dataset_id"] in exposed_galaxy_dataset_ids
-        ]
-        assert len(retained_download_list) >= 1, \
-            "There should be at least one dataset to download from Galaxy."
-        return retained_download_list
-
-    @handle_bioblend_exceptions
     def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
         return self.galaxy_connection.jobs.show_job(
             galaxy_dataset_dict[self.CREATING_JOB]

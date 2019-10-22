@@ -1489,18 +1489,6 @@ class WorkflowToolTests(ToolManagerTestBase):
                              WorkflowTool.INPUT_DATASET)
             self.assertFalse(analysis_node_connections[index].is_refinery_file)
 
-    def _get_galaxy_download_list_wrapper(self,
-                                          datasets_have_same_names=False):
-        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_b]
-        if datasets_have_same_names:
-            self.show_dataset_mock.side_effect = (
-                galaxy_datasets_list_same_output_names
-            )
-        else:
-            self.show_dataset_mock.side_effect = galaxy_datasets_list
-
-        return self.tool.get_galaxy_dataset_download_list()
-
     def _get_galaxy_download_task_ids_wrapper(
         self,
         datasets_have_same_names=False,
@@ -1529,19 +1517,11 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
         download_ids = self.tool.create_analysis_output_node_connections()
-        download_list = self._get_galaxy_download_list_wrapper(
-            datasets_have_same_names=datasets_have_same_names
-        )
 
         mock.patch(
             "tool_manager.models.WorkflowTool."
             "create_analysis_output_node_connections",
             return_value=download_ids
-        ).start()
-        mock.patch(
-            "tool_manager.models.WorkflowTool"
-            ".get_galaxy_dataset_download_list",
-            return_value=download_list
         ).start()
 
         return _get_galaxy_download_task_ids(self.tool.analysis)
@@ -1666,19 +1646,6 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertIsNone(self.tool.analysis.library_id)
         self.tool.create_galaxy_library()
         self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
-
-    def test_get_galaxy_dataset_download_list(self):
-        self.galaxy_datasets_list_mock.start()
-        self.show_job_mock.side_effect = [galaxy_job_a,
-                                          galaxy_job_b,
-                                          galaxy_job_a]
-        self.show_dataset_mock.side_effect = galaxy_datasets_list
-
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.assertEqual(
-            len(self.tool.get_galaxy_dataset_download_list()),
-            2
-        )
 
     def test__get_creating_job_output_name(self):
         self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_b]
