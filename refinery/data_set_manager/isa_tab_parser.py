@@ -863,7 +863,7 @@ class IsaTabParser:
     def _parse_investigation_file(self, file_name):
 
         self._current_file_name = file_name
-        self._current_file = open(file_name, 'r' ,
+        self._current_file = open(file_name, 'r',
                                   newline='', encoding='latin-1')
 
         section_title = None

@@ -1764,7 +1764,8 @@ def get_shared_groups(user1, user2, include_public_group=False):
     shared_groups = list(set(user1.groups.all()) & set(user2.groups.all()))
 
     if not include_public_group:
-        return [eg for eg in [g.extendedgroup for g in shared_groups] if eg != ExtendedGroup.objects.public_group()]
+        return [eg for eg in [g.extendedgroup for g in shared_groups]
+                if eg != ExtendedGroup.objects.public_group()]
 
     return [g.extendedgroup for g in shared_groups]
 

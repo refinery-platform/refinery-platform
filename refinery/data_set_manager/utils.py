@@ -37,12 +37,12 @@ logger = logging.getLogger(__name__)
 MAX_BULK_LIST_SIZE = 75
 
 
-
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment
 # graph follow the same sequence of node types
 def get_node_types(study_uuid, assay_uuid=None, files_only=False,
                    filter_set=None):
+
     """filter_set is a set of node types, e.g. ["Sample Name", "Source Name"].
     Sets defined in Node (e.g. Node.ASSAYS, Node.FILES) can be applied. The
     method will only return node types included in filter_set unless filter_set
@@ -682,7 +682,9 @@ def search_solr(encoded_params, core):
             response_obj = json.loads(full_response.content.decode())
         except ValueError:
             raise RuntimeError(
-                'Expected Solr JSON, not: {}'.format(str(full_response.content))
+                'Expected Solr JSON, not: {}'.format(
+                    str(full_response.content)
+                )
             )
         try:
             raise RuntimeError('Solr error: {}\nin context: {}'.format(

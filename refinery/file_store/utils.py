@@ -4,7 +4,8 @@ import logging
 import os
 import shutil
 import stat
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
 import urllib.parse
 
 from django.conf import settings

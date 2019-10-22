@@ -185,7 +185,8 @@ class InvestigationTests(IsaTabTestBase):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
 
     def test_get_datafile_names(self):
-        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') as isatab:
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') \
+                as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(
@@ -196,14 +197,16 @@ class InvestigationTests(IsaTabTestBase):
         )
 
     def test_get_datafile_names_local_only(self):
-        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') as isatab:
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') \
+                as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(investigation.get_datafile_names(local_only=True),
                          ['rfc-test.zip'])
 
     def test_get_datafile_names_exclude_metadata_file(self):
-        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') as isatab:
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') \
+                as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(investigation.get_datafile_names(
@@ -213,20 +216,23 @@ class InvestigationTests(IsaTabTestBase):
              'rfc94.txt'])
 
     def test_get_file_store_items(self):
-        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') as isatab:
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') \
+                as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(len(investigation.get_file_store_items()), 10)
 
     def test_get_file_store_items_exclude_metadata_file(self):
-        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') as isatab:
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') \
+                as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(len(investigation.get_file_store_items(
             exclude_metadata_file=True)), 9)
 
     def test_get_file_store_items_local_only(self):
-        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') as isatab:
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip"), 'rb') \
+                as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(len(investigation.get_file_store_items(

@@ -1318,7 +1318,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in ["rfc94.txt", "rfc134.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
 
         investigation = DataSet.objects.last().get_investigation()
@@ -1337,7 +1338,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         )
 
     def test_post_bad_isa_tab_file(self):
-        with open(self.get_test_file_path('HideLabBrokenA.zip'), 'rb') as bad_isa:
+        with open(self.get_test_file_path('HideLabBrokenA.zip'), 'rb') \
+                as bad_isa:
             self.post_isa_tab(isa_tab_file=bad_isa)
         self.unsuccessful_import_assertions()
 
@@ -1347,7 +1349,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
@@ -1355,7 +1358,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
 
-        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         self.assertTrue(
             AnnotatedNode.objects.filter(attribute_value="EDITED")
@@ -1367,11 +1371,13 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
-        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
@@ -1407,7 +1413,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
@@ -1415,7 +1422,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names_for_revision:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
@@ -1449,7 +1457,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
@@ -1468,10 +1477,12 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_updates_dataset_title(self):
-        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
-        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
 
         revised_data_set = DataSet.objects.last()
@@ -1480,7 +1491,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(self.get_test_file_path('rfc-test.zip'), 'rb') as isa_tab_file:
+        with open(self.get_test_file_path('rfc-test.zip'), 'rb') \
+                as isa_tab_file:
             response = self.post_isa_tab(
                 isa_tab_file=isa_tab_file, data_set_uuid=data_set.uuid
             )
@@ -1496,7 +1508,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
     def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
         data_set = create_dataset_with_necessary_models()
         metadata_file_name = 'rfc-test-local.zip'
-        with open(self.get_test_file_path(metadata_file_name), 'rb') as isa_tab:
+        with open(self.get_test_file_path(metadata_file_name), 'rb') \
+                as isa_tab:
             response = self.post_isa_tab(isa_tab_file=isa_tab,
                                          data_set_uuid=data_set.uuid)
             self.assertEqual(response.status_code, 403)

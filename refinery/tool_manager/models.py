@@ -770,7 +770,9 @@ class WorkflowTool(Tool):
 
         workflow_dict = self._get_workflow_dict()
         self.analysis.workflow_copy = workflow_dict
-        self.analysis.workflow_steps_num = len(list(workflow_dict["steps"].keys()))
+        self.analysis.workflow_steps_num = len(
+            list(workflow_dict["steps"].keys())
+        )
         self.analysis.set_owner(self.get_owner())
         self.analysis.save()
 

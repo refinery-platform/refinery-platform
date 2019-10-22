@@ -5,15 +5,8 @@ import logging
 from urllib.parse import urljoin
 import uuid
 
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.core.management import CommandError, call_command
-from django.http import HttpResponseBadRequest
-from django.test import TestCase, override_settings
-
 import bioblend
 import celery
-import mock
 from bioblend.galaxy.dataset_collections import (CollectionElement,
                                                  HistoryDatasetElement)
 from bioblend.galaxy.histories import HistoryClient
@@ -26,23 +19,7 @@ from django.core.management import call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase, override_settings
 from django_docker_engine.docker_utils import DockerClientWrapper
-from guardian.shortcuts import assign_perm, remove_perm
 import mock
-from rest_framework.test import (APIRequestFactory, APITestCase,
-                                 force_authenticate)
-from .test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
-                                    galaxy_dataset_provenance_1,
-                                    galaxy_datasets_list,
-                                    galaxy_datasets_list_same_output_names,
-                                    galaxy_history_contents,
-                                    galaxy_history_contents_same_names,
-                                    galaxy_job_a, galaxy_job_b,
-                                    galaxy_tool_data, galaxy_workflow_dict,
-                                    galaxy_workflow_dict_collection,
-                                    galaxy_workflow_invocation,
-                                    galaxy_workflow_invocation_data,
-                                    history_dataset_dict, history_dict,
-                                    library_dataset_dict, library_dict)
 from guardian.shortcuts import assign_perm
 from rest_framework.test import (APIRequestFactory, force_authenticate)
 
