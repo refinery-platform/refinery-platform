@@ -32,8 +32,8 @@ class refinery::apache2 (
   }
 
   class { 'apache::mod::wsgi':
-    mod_path     => 'mod_wsgi.so',
-    package_name => 'libapache2-mod-wsgi-py3',
+    mod_path         => 'mod_wsgi.so',
+    package_name     => 'libapache2-mod-wsgi-py3',
     wsgi_python_home => "${virtualenv}",
     wsgi_python_path => "${django_root}",
   }
