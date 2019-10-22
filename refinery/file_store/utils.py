@@ -1,9 +1,9 @@
 import contextlib
-import hashlib
 import logging
 import os
 import shutil
 import stat
+import hashlib
 import urllib.request
 import urllib.error
 import urllib.parse
