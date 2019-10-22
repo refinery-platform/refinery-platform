@@ -883,6 +883,11 @@ class AssayFileAPIView(APIView):
               paramType: query
     ...
     """
+    def get_object(self, uuid):
+        try:
+            return Assay.objects.get(uuid=uuid)
+        except (Assay.DoesNotExist, Assay.MultipleObjectsReturned):
+            raise Http404
 
     def get(self, request, uuid, format=None):
 
@@ -911,6 +916,8 @@ class AssayFileAPIView(APIView):
             solr_response_json = format_solr_response(
                 solr_response, params.get('include_facet_count', True)
             )
+            solr_response_json['assay_nodes_count'] = self.get_object(uuid)\
+                .get_file_count()
 
             return Response(solr_response_json)
         else:

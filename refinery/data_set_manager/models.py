@@ -371,6 +371,13 @@ class Assay(models.Model):
         retstr += "File: %s" % str(self.file_name)
         return retstr
 
+    def get_file_count(self):
+        return Node.objects.filter(
+            assay=self,
+            file_item__isnull=False,
+            is_auxiliary_node=False
+        ).count()
+
 
 class Protocol(models.Model):
     """Study Protocol (ISA-Tab Spec 4.1.3.6)"""
