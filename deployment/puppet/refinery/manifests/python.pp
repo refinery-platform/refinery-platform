@@ -40,7 +40,7 @@ class refinery::python (
     ensure => $refinery::postgresql::package_version,
   }
 
-  file { "/home/${app_user}/.virtualenv":
+  file { "/home/${app_user}/.virtualenvs":
     # workaround for parent directory /home/vagrant/.virtualenv does not exist error
     ensure => directory,
     owner  => $app_user,
