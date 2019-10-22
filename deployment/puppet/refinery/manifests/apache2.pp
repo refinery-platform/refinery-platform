@@ -29,7 +29,6 @@ class refinery::apache2 (
     log_formats            => {
       aws-elb => '%{X-Forwarded-For}i %h %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"',
     },
-    require => Class['refinery::python']
   }
 
   class { 'apache::mod::wsgi':
