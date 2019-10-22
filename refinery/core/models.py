@@ -5,6 +5,7 @@ Created on Feb 20, 2012
 '''
 from __future__ import absolute_import
 
+import ast
 from collections import defaultdict
 from datetime import datetime
 import json
@@ -1066,7 +1067,7 @@ class Analysis(OwnableResource):
 
     def get_expanded_workflow_graph(self):
         return tool_manager.utils.create_expanded_workflow_graph(
-            json.loads(self.workflow_copy)
+            ast.literal_eval(self.workflow_copy)
         )
 
     def has_nodes_used_in_downstream_analyses(self):

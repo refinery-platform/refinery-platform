@@ -770,7 +770,7 @@ class WorkflowTool(Tool):
         self.set_analysis(analysis.uuid)
 
         workflow_dict = self._get_workflow_dict()
-        self.analysis.workflow_copy = json.dumps(workflow_dict)
+        self.analysis.workflow_copy = workflow_dict
         self.analysis.workflow_steps_num = len(workflow_dict["steps"].keys())
         self.analysis.set_owner(self.get_owner())
         self.analysis.save()
@@ -1261,10 +1261,10 @@ class WorkflowTool(Tool):
                 self.galaxy_connection.workflows.export_workflow_dict(
                     self.get_workflow_internal_id()
                 )
-            self.analysis.workflow_copy = json.dumps(workflow_copy)
+            self.analysis.workflow_copy = workflow_copy
             self.analysis.save()
         else:
-            workflow_copy = json.loads(self.analysis.workflow_copy)
+            workflow_copy = ast.literal_eval(self.analysis.workflow_copy)
         return workflow_copy
 
     def get_workflow_internal_id(self):
