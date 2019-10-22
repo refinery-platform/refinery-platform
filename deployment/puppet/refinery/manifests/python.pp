@@ -41,7 +41,7 @@ class refinery::python (
   }
 
   file { "/home/${app_user}/.virtualenvs":
-    # workaround for parent directory /home/vagrant/.virtualenv does not exist error
+    # workaround for parent directory /home/vagrant/.virtualenvs does not exist error
     ensure => directory,
     owner  => $app_user,
     group  => $app_group,
