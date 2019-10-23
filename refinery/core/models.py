@@ -1067,9 +1067,10 @@ class Analysis(OwnableResource):
                                      self.summary)
 
     def get_expanded_workflow_graph(self):
-        return tool_manager.utils.create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy)
-        )
+        workflow_copy = self.workflow_copy
+        if type(workflow_copy) in [str, unicode]:
+            workflow_copy = ast.literal_eval(workflow_copy)
+        return tool_manager.utils.create_expanded_workflow_graph(workflow_copy)
 
     def has_nodes_used_in_downstream_analyses(self):
         """
