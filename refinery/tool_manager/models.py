@@ -487,7 +487,7 @@ class VisualizationTool(Tool):
     """
     API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
-    AUXILIARY_FILE = "auxiliary_file"
+    AUXILIARY_FILE_LIST = "auxiliary_file_list"
     INPUT_NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
     ALL_NODE_INFORMATION = "all_node_info"

@@ -102,6 +102,14 @@ class NodeClassMethodTests(TestCase):
 
         # Check inverse relationship:
         self.assertEqual(self.node.uuid, self.another_node.get_parents()[0])
+        auxiliary_node = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            is_auxiliary_node=True
+        )
+        self.node.add_child(auxiliary_node)
+        self.assertEqual(self.node.get_children(auxiliary_filter=True),
+                         [auxiliary_node.uuid])
 
     def test_get_parents(self):
         self.assertEqual(self.another_node.get_parents(), [])
