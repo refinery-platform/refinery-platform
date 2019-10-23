@@ -664,9 +664,7 @@ class Node(models.Model):
             result = data_set_manager.tasks.generate_auxiliary_file.subtask(
                 (auxiliary_node, self.file_item,)
             )
-            auxiliary_file_store_item.import_task_id = result
-            auxiliary_file_store_item.save()
-            return result.task_id
+            return result
 
     def get_auxiliary_file_generation_task_state(self):
         """Return the generate_auxiliary_file task state for a given auxiliary
