@@ -598,11 +598,18 @@ class Node(models.Model):
                 self.add_child(node_object)
                 return node_object
 
-    def get_children(self):
+    def get_children(self, auxiliary_filter=None):
         """
         Return a list of child Node's uuids for a given Node
         """
-        return [child.uuid for child in self.children.all()]
+        if auxiliary_filter is None:
+            return [child.uuid for child in self.children.all()]
+        else:
+            return [
+                child.uuid for child in self.children.filter(
+                    is_auxiliary_node=auxiliary_filter
+                )
+            ]
 
     def get_parents(self):
         """

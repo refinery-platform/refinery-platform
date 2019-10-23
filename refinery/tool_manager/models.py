@@ -487,6 +487,7 @@ class VisualizationTool(Tool):
     """
     API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
+    AUXILIARY_FILE = "auxiliary_file"
     INPUT_NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
     ALL_NODE_INFORMATION = "all_node_info"
@@ -553,7 +554,13 @@ class VisualizationTool(Tool):
                 self.FILE_URL: get_file_url_from_node_uuid(
                     node["uuid"],
                     require_valid_url=require_valid_urls
-                )
+                ),
+                self.AUXILIARY_FILE_LIST: [
+                    get_file_url_from_node_uuid(
+                        child_uuid, require_valid_url=require_valid_urls
+                    ) for child_uuid in Node.objects.get(uuid=node["uuid"]).
+                    get_children(auxiliary_filter=True)
+                ]
             }
             for node in solr_response_json["nodes"]
         }
