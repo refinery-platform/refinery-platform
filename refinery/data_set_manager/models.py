@@ -661,11 +661,12 @@ class Node(models.Model):
             auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item
             )
-            result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                auxiliary_node, self.file_item
+            result = data_set_manager.tasks.generate_auxiliary_file.subtask(
+                (auxiliary_node, self.file_item,)
             )
             auxiliary_file_store_item.import_task_id = result.task_id
             auxiliary_file_store_item.save()
+            return result.task_id
 
     def get_auxiliary_file_generation_task_state(self):
         """Return the generate_auxiliary_file task state for a given auxiliary

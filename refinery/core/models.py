@@ -1358,7 +1358,8 @@ class Analysis(OwnableResource):
             )
         )
         self._create_derived_data_file_nodes(graph_with_input_nodes_linked)
-        self._create_annotated_nodes()
+        auxiliary_file_import_ids = self._create_annotated_nodes()
+        return auxiliary_file_import_ids
 
     def attach_outputs_downloads(self):
         if self.results.all().count() == 0:
@@ -1409,6 +1410,7 @@ class Analysis(OwnableResource):
         Call order is ensured through:
         core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
         """
+        auxiliary_file_import_ids = []
         for result in self.results.all():
             try:
                 item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
@@ -1424,8 +1426,10 @@ class Analysis(OwnableResource):
                              item.uuid, exc)
             else:
                 if node.is_derived():
-                    node.run_generate_auxiliary_node_task()
+                    id = node.run_generate_auxiliary_node_task()
+                    auxiliary_file_import_ids += [id]
         index_annotated_nodes_selection(node_uuids)
+        return auxiliary_file_import_ids
 
     def _get_output_connection_to_analysis_result_mapping(self):
         """Create and return a dict mapping each "output" type
@@ -1627,7 +1631,8 @@ class Analysis(OwnableResource):
             self.get_input_node_study().uuid,
             self.get_input_node_assay().uuid
         )
-        self._prepare_annotated_nodes(node_uuids)
+        auxiliary_file_import_ids = self._prepare_annotated_nodes(node_uuids)
+        return auxiliary_file_import_ids
 
     def get_refinery_import_task_signatures(self):
         """Create and return a list of file import task signatures for the

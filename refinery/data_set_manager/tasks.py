@@ -308,6 +308,7 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
 
         logger.debug("Importing file for %s" % datafile_path)
         FileImportTask().apply(auxiliary_node.file_item.uuid)
+
     except Exception as e:
         logger.error(
             "Something went wrong while trying to generate the auxiliary file "
