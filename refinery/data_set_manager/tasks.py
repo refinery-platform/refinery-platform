@@ -1,18 +1,20 @@
 from datetime import date
 import logging
+import os
 import time
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 
-import botocore
 import celery
 from celery.task import task
 import pysam
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from file_store.models import FileExtension, generate_file_source_translator
-from file_store.tasks import FileImportTask
+from file_store.tasks import FileImportTask, download_s3_object
+from file_store.utils import parse_s3_url
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -287,8 +289,13 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
     :type parent_node_file_store_item: FileStoreItem
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
+    datafile = parent_node_file_store_item.datafile
+
     try:
-        datafile_path = parent_node_file_store_item.datafile.path
+        if not settings.REFINERY_S3_USER_DATA:
+            datafile_path = datafile.path
+        else:
+            datafile_path = datafile.source
     except (NotImplementedError, ValueError):
         datafile_path = None
     try:
@@ -336,13 +343,23 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # fail if we can't get what we want.
     bam_index_file_extension = FileExtension.objects.get(name="bai").name
     auxiliary_file_store_item = FileStoreItem.objects.get(
-        uuid=auxiliary_file_store_item_uuid)
+        uuid=auxiliary_file_store_item_uuid
+    )
 
     # Leverage pysam library to generate bam index file
     # FIXME: This should be refactored once we don't have a need for
     # Standalone IGV because this is creating a bam_index file in the same
     # directory as it's bam file
-    pysam.index(bytes(datafile_path))
+    if settings.REFINERY_S3_USER_DATA:
+        bucket, key = parse_s3_url(datafile_path)
+        temp_file = os.path.join(settings.LOCAL_TEMP_STORAGE, key)
+        with open(temp_file, 'wb') as destination:
+            download_s3_object(bucket, key, destination)
+        pysam.index(bytes(temp_file))
+        datafile_path = temp_file
+        os.remove(temp_file)
+    else:
+        pysam.index(bytes(datafile_path))
 
     # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
