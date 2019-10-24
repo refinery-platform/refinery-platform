@@ -354,7 +354,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
         key = datafile_path
         bucket = settings.MEDIA_BUCKET
         temp_file = os.path.join(settings.LOCAL_TEMP_STORAGE, key)
-        os.mkdir(os.path.abspath(os.path.join(temp_file, os.pardir)))
+        os.makedirs(os.path.abspath(os.path.join(temp_file, os.pardir)))
         with open(temp_file, 'wb') as destination:
             download_s3_object(bucket, key, destination)
         pysam.index(bytes(temp_file))
