@@ -665,6 +665,8 @@ class Node(models.Model):
                 (auxiliary_node, self.file_item,)
             )
             return result
+        else:
+            return None
 
     def get_auxiliary_file_generation_task_state(self):
         """Return the generate_auxiliary_file task state for a given auxiliary
