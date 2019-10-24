@@ -666,7 +666,8 @@ class Node(models.Model):
                 (auxiliary_node, self.file_item,)
             )
             file_import = FileImportTask().subtask(
-                args=(auxiliary_node.file_item.uuid, None)
+                (auxiliary_node.file_item.uuid, None,),
+                immutable=True
             )
             generate_and_import = chain(generate, file_import)
             return generate_and_import

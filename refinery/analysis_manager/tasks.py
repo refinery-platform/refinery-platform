@@ -84,15 +84,17 @@ def _check_galaxy_history_state(analysis_uuid):
         analysis_status.set_galaxy_history_state(
             AnalysisStatus.UNKNOWN
         )
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
     else:
         # workaround to avoid moving the progress bar backward
         if analysis_status.galaxy_history_progress < percent_complete:
             analysis_status.galaxy_history_progress = percent_complete
             analysis_status.save()
-        if percent_complete < 100:
+        import time
+        while analysis.galaxy_progress() < 100:
             analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
+            time.sleep(20)
+            # run_analysis.retry(countdown=RETRY_INTERVAL)
         else:
             analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
 
@@ -148,20 +150,21 @@ def _attach_workflow_outputs(analysis_uuid):
     analysis_status = _get_analysis_status(analysis_uuid)
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
         if not analysis_status.auxiliary_file_task_group_id:
-            auxiliary_file_import_ids = \
+            auxiliary_file_tasks_signatures = \
                 analysis.attach_derived_nodes_to_dataset()
             logger.info(
                 "Starting downloading of results from Galaxy for analysis "
                 "'%s'", analysis)
             auxiliary_file_tasks = TaskSet(
-                tasks=auxiliary_file_import_ids
+                tasks=
+                auxiliary_file_tasks_signatures
             ).apply_async()
             auxiliary_file_tasks.save()
             analysis_status.auxiliary_file_task_group_id = (
                 auxiliary_file_tasks.taskset_id
             )
             analysis_status.save()
-            run_analysis.retry(countdown=RETRY_INTERVAL)
+            # run_analysis.retry(countdown=RETRY_INTERVAL)
         # check if analysis results have finished downloading from Galaxy
         auxiliary_file_tasks = get_taskset_result(
             analysis_status.auxiliary_file_task_group_id
@@ -169,7 +172,7 @@ def _attach_workflow_outputs(analysis_uuid):
         if not auxiliary_file_tasks.ready():
             logger.debug("Auxiliary file generation running for analysis '%s'",
                          analysis)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
+            # run_analysis.retry(countdown=RETRY_INTERVAL)
         elif not auxiliary_file_tasks.successful():
             error_msg = ("Analysis '{}' failed while generating "
                          "auxiliary file".format(analysis))
@@ -232,7 +235,7 @@ def _galaxy_file_export(analysis_uuid):
             galaxy_export_taskset.taskset_id
         )
         analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # check if analysis results have finished downloading from Galaxy
     galaxy_export_taskset = get_taskset_result(
@@ -240,7 +243,7 @@ def _galaxy_file_export(analysis_uuid):
     )
     if not galaxy_export_taskset.ready():
         logger.debug("Results download pending for analysis '%s'", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
     # all tasks must have succeeded or failed
     elif not galaxy_export_taskset.successful():
         error_msg = ("Analysis '{}' failed while downloading results "
@@ -299,7 +302,7 @@ def _refinery_file_import(analysis_uuid):
         analysis_status.refinery_import_task_group_id = \
             refinery_import_taskset.taskset_id
         analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # check if all files were successfully imported into Refinery
     refinery_import_taskset = get_taskset_result(
@@ -308,7 +311,7 @@ def _refinery_file_import(analysis_uuid):
     if not refinery_import_taskset.ready():
         logger.debug("Input file import pending for analysis '%s'",
                      analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
 
     elif not refinery_import_taskset.successful():
         error_msg = "Analysis '{}' failed during file import".format(
@@ -370,7 +373,7 @@ def _run_galaxy_file_import(analysis_uuid):
             galaxy_file_import_taskset.taskset_id
         )
         analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # Check if data files were successfully imported into Galaxy
     galaxy_file_import_taskset = get_taskset_result(
@@ -378,7 +381,7 @@ def _run_galaxy_file_import(analysis_uuid):
     )
     if not galaxy_file_import_taskset.ready():
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
     elif not galaxy_file_import_taskset.successful():
         error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
         logger.error(error_msg)
@@ -422,7 +425,7 @@ def _run_galaxy_workflow(analysis_uuid):
             galaxy_workflow_taskset.taskset_id
         )
         analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # Check on the status of the running galaxy workflow
     galaxy_workflow_taskset = get_taskset_result(
@@ -430,7 +433,7 @@ def _run_galaxy_workflow(analysis_uuid):
     )
     if not galaxy_workflow_taskset.ready():
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        # run_analysis.retry(countdown=RETRY_INTERVAL)
 
     elif not galaxy_workflow_taskset.successful():
         error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
