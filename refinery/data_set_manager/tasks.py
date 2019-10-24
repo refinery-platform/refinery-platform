@@ -289,11 +289,13 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
     :type parent_node_file_store_item: FileStoreItem
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
+    datafile = parent_node_file_store_item.datafile
+
     try:
         if not settings.REFINERY_S3_USER_DATA:
-            datafile_path = parent_node_file_store_item.datafile.path
+            datafile_path = datafile.path
         else:
-            datafile_path = parent_node_file_store_item.source
+            datafile_path = datafile.name
     except (NotImplementedError, ValueError):
         datafile_path = None
     try:
@@ -349,7 +351,8 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # Standalone IGV because this is creating a bam_index file in the same
     # directory as it's bam file
     if settings.REFINERY_S3_USER_DATA:
-        bucket, key = parse_s3_url(datafile_path)
+        key = datafile_path
+        bucket = settings.MEDIA_BUCKET
         temp_file = os.path.join(settings.LOCAL_TEMP_STORAGE, key)
         with open(temp_file, 'wb') as destination:
             download_s3_object(bucket, key, destination)
