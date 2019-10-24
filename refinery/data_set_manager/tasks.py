@@ -289,13 +289,11 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
     :type parent_node_file_store_item: FileStoreItem
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
-    datafile = parent_node_file_store_item.datafile
-
     try:
         if not settings.REFINERY_S3_USER_DATA:
-            datafile_path = datafile.path
+            datafile_path = parent_node_file_store_item.datafile.path
         else:
-            datafile_path = datafile.source
+            datafile_path = parent_node_file_store_item.source
     except (NotImplementedError, ValueError):
         datafile_path = None
     try:
