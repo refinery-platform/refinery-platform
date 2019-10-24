@@ -662,13 +662,11 @@ class Node(models.Model):
             auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item
             )
-            from data_set_manager import tasks
             generate = data_set_manager.tasks.generate_auxiliary_file.subtask(
                 (auxiliary_node, self.file_item,)
             )
             file_import = FileImportTask().subtask(
-                item_uuid = auxiliary_node.file_item.uuid,
-                target_name=None
+                args=(auxiliary_node.file_item.uuid, None)
             )
             generate_and_import = chain(generate, file_import)
             return generate_and_import
