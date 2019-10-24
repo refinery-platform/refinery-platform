@@ -14,7 +14,6 @@ import pysam
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from file_store.models import FileExtension, generate_file_source_translator
 from file_store.tasks import FileImportTask, download_s3_object
-from file_store.utils import parse_s3_url
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -312,9 +311,6 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
 
         logger.debug("Auxiliary file for %s generated in %s "
                      "seconds." % (datafile_path, time.time() - start_time))
-
-        logger.debug("Importing file for %s" % datafile_path)
-        FileImportTask().apply(auxiliary_node.file_item.uuid)
 
     except Exception as e:
         logger.error(

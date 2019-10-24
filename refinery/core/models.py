@@ -1633,8 +1633,8 @@ class Analysis(OwnableResource):
             self.get_input_node_study().uuid,
             self.get_input_node_assay().uuid
         )
-        auxiliary_file_import_tasks = self._prepare_annotated_nodes(node_uuids)
-        return auxiliary_file_import_tasks
+        auxiliary_file_tasks = self._prepare_annotated_nodes(node_uuids)
+        return auxiliary_file_tasks
 
     def get_refinery_import_task_signatures(self):
         """Create and return a list of file import task signatures for the
