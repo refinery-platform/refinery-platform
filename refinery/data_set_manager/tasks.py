@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 
+import botocore
 import celery
 from celery.task import task
 import pysam
