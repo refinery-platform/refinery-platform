@@ -151,7 +151,7 @@ def _attach_workflow_outputs(analysis_uuid):
             auxiliary_file_tasks_signatures = \
                 analysis.attach_derived_nodes_to_dataset()
             logger.info(
-                "Starting downloading of results from Galaxy for analysis "
+                "Starting auxiliary file generation and import for analysis "
                 "'%s'", analysis)
             auxiliary_file_tasks = TaskSet(
                 tasks=auxiliary_file_tasks_signatures
@@ -167,8 +167,8 @@ def _attach_workflow_outputs(analysis_uuid):
             analysis_status.auxiliary_file_task_group_id
         )
         if not auxiliary_file_tasks.ready():
-            logger.debug("Auxiliary file generation running for analysis '%s'",
-                         analysis)
+            logger.debug("Auxiliary file import and generation "
+                         "running for analysis '%s'", analysis)
             run_analysis.retry(countdown=RETRY_INTERVAL)
         elif not auxiliary_file_tasks.successful():
             error_msg = ("Analysis '{}' failed while generating "
