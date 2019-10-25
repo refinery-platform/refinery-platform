@@ -84,7 +84,6 @@ class FileImportTask(celery.Task):
             self.update_state(state=celery.states.FAILURE,
                               meta='Failed to import file')
             raise celery.exceptions.Ignore()
-
         item.datafile.name = file_store_name
         item.save()
         logger.info("Imported FileStoreItem with UUID '%s'", item_uuid)

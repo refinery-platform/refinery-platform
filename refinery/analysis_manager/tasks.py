@@ -154,8 +154,7 @@ def _attach_workflow_outputs(analysis_uuid):
                 "Starting downloading of results from Galaxy for analysis "
                 "'%s'", analysis)
             auxiliary_file_tasks = TaskSet(
-                tasks=
-                auxiliary_file_tasks_signatures
+                tasks=auxiliary_file_tasks_signatures
             ).apply_async()
             auxiliary_file_tasks.save()
             analysis_status.auxiliary_file_task_group_id = (
