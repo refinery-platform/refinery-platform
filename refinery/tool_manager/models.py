@@ -1255,7 +1255,8 @@ class WorkflowTool(Tool):
     def _get_workflow_dict(self):
         # separate if-then assignment needed to avoid using the dict stored
         # in workflow_copy before .save() is called
-        if self.analysis.workflow_copy == '' \
+        self.analysis.refresh_from_db(fields=['workflow_copy'])
+        if self.analysis.workflow_copy == u'' \
                 or self.analysis.workflow_copy is None:
             workflow_copy = \
                 self.galaxy_connection.workflows.export_workflow_dict(
