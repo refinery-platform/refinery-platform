@@ -27,7 +27,6 @@ STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 if REFINERY_S3_USER_DATA:
     DEFAULT_FILE_STORAGE = 'file_store.utils.S3MediaStorage'
     MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(MEDIA_BUCKET)
-    LOCAL_TEMP_STORAGE = os.path.join(BASE_DIR, 'temp')
 
 COGNITO_IDENTITY_POOL_ID = get_setting('COGNITO_IDENTITY_POOL_ID')
 

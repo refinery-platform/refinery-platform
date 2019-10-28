@@ -21,6 +21,8 @@ tutorial_settings_file_path = os.path.join(
     BASE_DIR, 'refinery/config/tutorial_steps.json'
 )
 
+LOCAL_TEMP_STORAGE = os.path.join(BASE_DIR, 'temp')
+
 # load config.json
 try:
     with open(local_settings_file_path, 'r') as f:
