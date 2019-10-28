@@ -11,6 +11,7 @@ import botocore
 import celery
 from celery.task import task
 import pysam
+import tempfile
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from file_store.models import FileExtension, generate_file_source_translator
@@ -350,7 +351,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     if settings.REFINERY_S3_USER_DATA:
         key = datafile_path
         bucket = settings.MEDIA_BUCKET
-        temp_file = os.path.join(settings.LOCAL_TEMP_STORAGE, key)
+        temp_file = os.path.join(tempfile.gettempdir(), key)
         os.makedirs(os.path.abspath(os.path.join(temp_file, os.pardir)))
         with open(temp_file, 'wb') as destination:
             download_s3_object(bucket, key, destination)
