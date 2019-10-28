@@ -584,7 +584,7 @@
     function extractWorkflows (analysesData) {
       analysesData.forEach(function (a) {
         /* Prepare for json format. */
-        workflowData.set(a.workflow__uuid, JSON.parse(a.workflow_json));
+        workflowData.set(a.workflow__uuid,a.workflow_json);
       });
     }
 

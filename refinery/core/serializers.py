@@ -27,12 +27,14 @@ class AnalysisSerializer(serializers.ModelSerializer):
     tool_display_name = serializers.SerializerMethodField()
     time_end = DateTimeWithTimeZone()
     time_start = DateTimeWithTimeZone()
+    creation_date = serializers.SerializerMethodField()
+    workflow_json = serializers.SerializerMethodField()
 
     class Meta:
         model = Analysis
         fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
                   'summary', 'time_start', 'time_end', 'tool_display_name',
-                  'uuid', 'workflow')
+                  'uuid', 'workflow', 'workflow_json', 'creation_date')
 
     def get_tool_display_name(self, analysis):
         try:
@@ -46,6 +48,14 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     def get_data_set_uuid(self, analysis):
         return analysis.data_set.uuid
+
+    def get_creation_date(self, analysis):
+        return analysis.time_start
+
+    def get_workflow_json(self, analysis):
+        analysis.refresh_from_db()
+        import ast
+        return ast.literal_eval(analysis.workflow_copy)
 
 
 class DataSetSerializer(serializers.ModelSerializer):
