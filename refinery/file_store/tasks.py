@@ -65,20 +65,30 @@ class FileImportTask(celery.Task):
         try:
             if settings.REFINERY_S3_USER_DATA:
                 if os.path.isabs(item.source):
-                    file_store_name = self.import_path_to_s3(item.source)
+                    file_store_name = self.import_path_to_s3(
+                        item.source, target_name=target_name
+                    )
                 elif item.source.startswith('s3://'):
-                    file_store_name = self.import_s3_to_s3(item.source)
+                    file_store_name = self.import_s3_to_s3(
+                        item.source, target_name=target_name
+                    )
                 else:
-                    file_store_name = self.import_url_to_s3(item.source,
-                                                            target_name)
+                    file_store_name = self.import_url_to_s3(
+                        item.source, target_name=target_name
+                    )
             else:
                 if os.path.isabs(item.source):
-                    file_store_name = self.import_path_to_path(item.source)
+                    file_store_name = self.import_path_to_path(
+                        item.source, target_name=target_name
+                    )
                 elif item.source.startswith('s3://'):
-                    file_store_name = self.import_s3_to_path(item.source)
+                    file_store_name = self.import_s3_to_path(
+                        item.source, target_name=target_name
+                    )
                 else:
-                    file_store_name = self.import_url_to_path(item.source,
-                                                              target_name)
+                    file_store_name = self.import_url_to_path(
+                        item.source, target_name=target_name
+                    )
         except (RuntimeError, celery.exceptions.SoftTimeLimitExceeded) as exc:
             logger.error("File import failed: %s", exc)
             self.update_state(state=celery.states.FAILURE,
@@ -89,12 +99,14 @@ class FileImportTask(celery.Task):
         item.save()
         logger.info("Imported FileStoreItem with UUID '%s'", item_uuid)
 
-    def import_path_to_path(self, source_path, symlink=True):
+    def import_path_to_path(self, source_path, symlink=True, target_name=None):
         """Import file from an absolute file system path into
         REFINERY_FILE_STORE_ROOT
         """
         storage = SymlinkedFileSystemStorage()
-        file_store_name = storage.get_name(os.path.basename(source_path))
+        if target_name is None:
+            target_name = os.path.basename(source_path)
+        file_store_name = storage.get_name(target_name)
         file_store_path = storage.path(file_store_name)
 
         logger.debug("Transferring from '%s' to '%s'",
@@ -124,10 +136,12 @@ class FileImportTask(celery.Task):
 
         return file_store_name
 
-    def import_path_to_s3(self, source_path):
+    def import_path_to_s3(self, source_path, target_name=None):
         """Import file from an absolute file system path into MEDIA_BUCKET"""
         storage = S3MediaStorage()
-        file_store_name = storage.get_name(os.path.basename(source_path))
+        if target_name is None:
+            target_name = os.path.basename(source_path)
+        file_store_name = storage.get_name(target_name)
 
         logger.debug("Transferring from '%s' to 's3://%s/%s'",
                      source_path, settings.MEDIA_BUCKET, file_store_name)
@@ -149,11 +163,13 @@ class FileImportTask(celery.Task):
 
         return file_store_name
 
-    def import_s3_to_path(self, source_url):
+    def import_s3_to_path(self, source_url, target_name=None):
         """Import S3 object from s3:// URL into REFINERY_FILE_STORE_ROOT"""
         source_bucket, source_key = parse_s3_url(source_url)
         storage = SymlinkedFileSystemStorage()
-        file_store_name = storage.get_name(os.path.basename(source_key))
+        if target_name is None:
+            target_name = os.path.basename(source_key)
+        file_store_name = storage.get_name(target_name)
         file_store_path = storage.path(file_store_name)
 
         logger.debug("Transferring from '%s' to '%s'",
@@ -180,12 +196,13 @@ class FileImportTask(celery.Task):
 
         return file_store_name
 
-    def import_s3_to_s3(self, source_url):
+    def import_s3_to_s3(self, source_url, target_name=None):
         """Transfer S3 object from UPLOAD_BUCKET to MEDIA_BUCKET"""
         source_bucket, source_key = parse_s3_url(source_url)
         storage = S3MediaStorage()
-        file_store_name = storage.get_name(os.path.basename(source_key))
-
+        if target_name is None:
+            target_name = os.path.basename(source_key)
+        file_store_name = storage.get_name(target_name)
         logger.debug("Transferring from 's3://%s/%s' to 's3://%s/%s'",
                      source_bucket, source_key, settings.MEDIA_BUCKET,
                      file_store_name)
