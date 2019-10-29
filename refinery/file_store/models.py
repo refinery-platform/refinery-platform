@@ -19,8 +19,6 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
-from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, copy_s3_object,
-                    delete_s3_object, move_file)
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +160,6 @@ class FileStoreItem(models.Model):
                 logger.error("Error deleting file '%s': %s", file_name, exc)
             else:
                 logger.info("Deleted datafile '%s'", file_name)
-
 
     def get_datafile_url(self):
         """Returns relative or absolute URL of the datafile depending on file
