@@ -64,15 +64,15 @@ class SymlinkedFileSystemStorageTest(SimpleTestCase):
     @mock.patch('file_store.utils.FileSystemStorage.get_available_name')
     def test_file_name_format(self, mock_get_available_name):
         self.storage.get_available_name('test.fastq')
-        mock_get_available_name.assert_called_with('2f/e3/test.fastq')
+        mock_get_available_name.assert_called_with('9f/d3/test.fastq')
 
     @mock.patch('file_store.utils.FileSystemStorage.get_available_name')
     def test_leading_dash_removal(self, mock_get_available_name):
         self.storage.get_available_name('--test.fastq')
-        mock_get_available_name.assert_called_with('7b/20/test.fastq')
+        mock_get_available_name.assert_called_with('2f/a4/test.fastq')
 
     @mock.patch('file_store.utils.FileSystemStorage.get_available_name')
     def test_max_name_length(self, mock_get_available_name):
         name = ''.join('a' for _ in range(256))
         self.storage.get_available_name(name)
-        mock_get_available_name.assert_called_with('80/4c/' + name[-255:])
+        mock_get_available_name.assert_called_with('81/10/' + name[-255:])

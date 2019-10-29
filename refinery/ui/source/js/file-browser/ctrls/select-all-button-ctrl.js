@@ -126,7 +126,7 @@
     **/
     function updateSelection () {
       var assayFiles = fileBrowserFactory.assayFiles;
-      var totalAssayCount = fileBrowserFactory.assayFilesTotalItems.count;
+      var totalAssayCount = fileBrowserFactory.assayFilesTotal.assayFilterFilesCount;
       var selectionGroup = getSelectionGroup();
 
       // current assay files is larger than 100 need to use API for full list
