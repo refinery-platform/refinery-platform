@@ -30,7 +30,9 @@
     ) {
       dataSetService = dataSetPropsService;
       fileFactory = fileBrowserFactory;
-      fileFactory.assayFilesTotalItems = angular.copy({ count: mockNodeCount });
+      fileFactory.assayFilesTotal = angular.copy(
+        { assayFilterFilesCount: mockNodeCount }
+      );
       dataSetService.dataSet = angular.copy({ file_count: mockNodeCount });
       maxFileCount = fileBrowserSettings.maxFileRequest;
       mockInputTypeUuid = mockParamsFactory.generateUuid();
@@ -80,7 +82,7 @@
 
       it('updateSelection calls on mock service when isAllSelected', function () {
         ctrl.isAllSelected = true;
-        fileFactory.assayFilesTotalItems.count = maxFileCount + 1;
+        fileFactory.assayFilesTotal.assayFilterFilesCount = maxFileCount + 1;
         dataSetService.dataSet.file_count = maxFileCount + 1;
         ctrl.updateSelection();
         expect(mockAssayService).toHaveBeenCalled();
@@ -88,7 +90,7 @@
 
       it('updateSelection calls on mock service when !isAllSelected', function () {
         ctrl.isAllSelected = false;
-        fileFactory.assayFilesTotalItems.count = maxFileCount + 1;
+        fileFactory.assayFilesTotal.assayFilterFilesCount = maxFileCount + 1;
         dataSetService.dataSet.file_count = maxFileCount + 1;
         ctrl.updateSelection();
         expect(mockAssayService).toHaveBeenCalled();
