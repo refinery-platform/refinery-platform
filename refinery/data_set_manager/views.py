@@ -1280,10 +1280,9 @@ class NodeViewSet(viewsets.ViewSet):
 
         return Response(
             NodeSerializer(
-                study.node_set.filter(is_auxiliary_node=False),many=True
+                study.node_set.filter(is_auxiliary_node=False), many=True
             ).data
         )
-
 
     def retrieve(self, request, uuid):
         # filter nodes by attributes' info

@@ -1,3 +1,4 @@
+import ast
 import logging
 
 from django.conf import settings
@@ -10,7 +11,6 @@ from tool_manager.models import Tool
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
                      SiteProfile, SiteVideo, User, UserProfile, Workflow)
-
 logger = logging.getLogger(__name__)
 
 
@@ -54,9 +54,7 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     def get_workflow_json(self, analysis):
         analysis.refresh_from_db()
-        import ast
         return ast.literal_eval(analysis.workflow_copy)
-
 
 class DataSetSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(
