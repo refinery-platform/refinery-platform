@@ -41,7 +41,7 @@
     "@dagrejs/graphlib": "2.1.4",
     "humanize": "0.0.9",
     "intro.js": "2.4.0",
-    "jquery": "2.1.1",
+    "jquery": "3.4.1",
     "blueimp-file-upload": "9.34.0",
     "jquery-mousewheel": "3.1.13",
     "lodash": "4.17.15",
