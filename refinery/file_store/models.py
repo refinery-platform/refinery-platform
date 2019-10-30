@@ -19,8 +19,6 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
-from .utils import (S3MediaStorage, SymlinkedFileSystemStorage, copy_s3_object,
-                    delete_s3_object, move_file)
 
 logger = logging.getLogger(__name__)
 
@@ -162,48 +160,6 @@ class FileStoreItem(models.Model):
                 logger.error("Error deleting file '%s': %s", file_name, exc)
             else:
                 logger.info("Deleted datafile '%s'", file_name)
-
-    def rename_datafile(self, new_name):
-        """Change name of the data file
-        Note: new name may not be the same as the requested name in case of
-        conflict with an existing file or S3 object
-        """
-        if self.datafile:
-            logger.debug("Renaming datafile '%s' to '%s'",
-                         self.datafile.name, new_name)
-            if settings.REFINERY_S3_USER_DATA:
-                storage = S3MediaStorage()
-                new_file_store_name = storage.get_name(new_name)
-                try:
-                    copy_s3_object(storage.bucket_name, self.datafile.name,
-                                   storage.bucket_name, new_file_store_name)
-                except (botocore.exceptions.BotoCoreError,
-                        botocore.exceptions.ClientError) as exc:
-                    logger.error("Renaming datafile '%s' failed: %s",
-                                 self.datafile.name, exc)
-                else:
-                    delete_s3_object(storage.bucket_name, self.datafile.name)
-                    self.datafile.name = new_file_store_name
-                    self.save()
-            else:
-                storage = SymlinkedFileSystemStorage()
-                new_file_store_name = storage.get_name(new_name)
-                new_file_store_path = storage.path(new_file_store_name)
-                try:
-                    move_file(self.datafile.path, new_file_store_path)
-                except RuntimeError as exc:
-                    logger.error("Renaming datafile '%s' failed: %s",
-                                 self.datafile.name, exc)
-                else:
-                    self.datafile.name = new_file_store_name
-                    self.save()
-            logger.info("Renamed datafile '%s' to '%s'",
-                        self.datafile.name, new_name)
-        else:
-            logger.error(
-                "Error renaming datafile of FileStoreItem with UUID '%s': "
-                "datafile is not available", self.uuid
-            )
 
     def get_datafile_url(self):
         """Returns relative or absolute URL of the datafile depending on file

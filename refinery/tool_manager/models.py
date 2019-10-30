@@ -1262,6 +1262,7 @@ class WorkflowTool(Tool):
     def _get_workflow_dict(self):
         # separate if-then assignment needed to avoid using the dict stored
         # in workflow_copy before .save() is called
+        self.analysis.refresh_from_db(fields=['workflow_copy'])
         if self.analysis.workflow_copy == u'' \
                 or self.analysis.workflow_copy is None:
             workflow_copy = \
@@ -1271,10 +1272,7 @@ class WorkflowTool(Tool):
             self.analysis.workflow_copy = workflow_copy
             self.analysis.save()
         else:
-            if type(self.analysis.workflow_copy) in [str, unicode]:
-                workflow_copy = ast.literal_eval(self.analysis.workflow_copy)
-            else:
-                workflow_copy = self.analysis.workflow_copy
+            workflow_copy = ast.literal_eval(self.analysis.workflow_copy)
         return workflow_copy
 
     def get_workflow_internal_id(self):
