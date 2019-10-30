@@ -235,7 +235,7 @@ class FileImportTask(celery.Task):
         storage = SymlinkedFileSystemStorage()
         # remove query string from URL before extracting file name
         if target_name is None:
-            target_name = os.path.basename(urlparse.urlparse(source_url).path)
+            target_name = os.path.basename(urllib.parse(source_url).path)
         file_store_name = storage.get_name(target_name)
         file_store_path = storage.path(file_store_name)
 
@@ -263,7 +263,7 @@ class FileImportTask(celery.Task):
         storage = S3MediaStorage()
         # remove query string from URL before extracting file name
         if target_name is None:
-            target_name = os.path.basename(urlparse.urlparse(source_url).path)
+            target_name = os.path.basename(urllib.parse(source_url).path)
         file_store_name = storage.get_name(target_name)
 
         logger.debug("Transferring from '%s' to 's3://%s/%s'",
