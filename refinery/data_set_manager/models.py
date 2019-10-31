@@ -500,7 +500,7 @@ class Node(models.Model):
         DATA_TRANSFORMATION}
     # Currently we only need to create an auxiliary file for bam, but WIG
     # needs an index file as well
-    AUXILIARY_FILES_NEEDED_FOR_VISAULIZAITON = ['bam']
+    AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION = ['bam']
 
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
@@ -659,7 +659,7 @@ class Node(models.Model):
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 'on_file_import' and
                 self.file_item.get_extension().lower() in
-                self.AUXILIARY_FILES_NEEDED_FOR_VISAULIZAITON):
+                self.AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION):
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
             auxiliary_file_store_item = FileStoreItem.objects.create()
