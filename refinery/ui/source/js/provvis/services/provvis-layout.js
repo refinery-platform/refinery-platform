@@ -292,31 +292,30 @@
       delta = 0;
 
       var looseSAn = [];
-      if(bclgNodes[0].length > 0) {
-        /* Reorder most left layer based on the second most left layer. */
-        bclgNodes[0][0].children.values().forEach(function (san, j) {
-          /* Only one column does exist in this view. */
-          san.x = 0;
-          san.y = j * cell.height;
-          accCoords = 0;
-          degree = 0;
+      /* Reorder most left layer based on the second most left layer. */
+      bclgNodes[0][0].children.values().forEach(function (san, j) {
+        /* Only one column does exist in this view. */
+        san.x = 0;
+        san.y = j * cell.height;
+        accCoords = 0;
+        degree = 0;
 
-          /* Accumulate san y-coord as well as an y-coord for each pred.
-           * Take analysis, subanalysis and workflow coordinates into account. */
-          san.succs.values().forEach(function (ssan) {
-            ssan.inputs.values().forEach(function (ni) {
-              if (
-                  ni.preds.values().some(function (pni) {
-                    return pni.parent === san;
-                  })
-              ) {
-                /* Prioritize subanalysis ordering over workflow node ordering. */
-                accCoords += ssan.parent.y + ssan.y +
-                    ((ssan.y / cell.height) / 10) + ni.y;
-                degree++;
-              }
-            });
+        /* Accumulate san y-coord as well as an y-coord for each pred.
+         * Take analysis, subanalysis and workflow coordinates into account. */
+        san.succs.values().forEach(function (ssan) {
+          ssan.inputs.values().forEach(function (ni) {
+            if (
+                ni.preds.values().some(function (pni) {
+                  return pni.parent === san;
+                })
+            ) {
+              /* Prioritize subanalysis ordering over workflow node ordering. */
+              accCoords += ssan.parent.y + ssan.y +
+                  ((ssan.y / cell.height) / 10) + ni.y;
+              degree++;
+            }
           });
+        });
 
           /* Avoid zero division. */
           if (degree !== 0) {
@@ -338,7 +337,6 @@
           /* Push into array to reorder afterwards. */
           colList.push(san);
         });
-      }
 
       /* Sort and reorder subanalysis nodes. */
       colList.sort(function (a, b) {
