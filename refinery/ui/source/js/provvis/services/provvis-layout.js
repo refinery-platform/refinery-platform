@@ -292,7 +292,7 @@
       delta = 0;
 
       var looseSAn = [];
-      if(bclgNodes[0][0].length > 0) {
+      if(bclgNodes[0].length > 0) {
         /* Reorder most left layer based on the second most left layer. */
         bclgNodes[0][0].children.values().forEach(function (san, j) {
           /* Only one column does exist in this view. */
