@@ -813,12 +813,13 @@ class WorkflowTool(Tool):
                 is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
                 galaxy_dataset_name=galaxy_dataset['name']
             )
-            connection_dataset_list += [
-                {
-                    field: galaxy_dataset[field]
-                    for field in connection_dataset_list_fields
-                }
-            ]
+            if galaxy_dataset in exposed_workflow_outputs:
+                connection_dataset_list += [
+                    {
+                        field: galaxy_dataset[field]
+                        for field in connection_dataset_list_fields
+                    }
+                ]
         return connection_dataset_list
 
     def _create_collection_description(self):
