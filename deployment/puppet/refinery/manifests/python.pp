@@ -50,7 +50,6 @@ class refinery::python (
     ensure     => present,
     owner      => $app_user,
     group      => $app_group,
-    distribute => false,
     require    => [
       Package[
         $base_dependencies,
@@ -90,7 +89,7 @@ class refinery::python (
   ->
   file_line { "virtualenvwrapper_config":
     path        => "/home/${app_user}/.profile",
-    line        => "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3 && export PROJECT_HOME=/vagrant/refinery && export VIRTUALENVWRAPPER_VIRTUALENV=/usr/bin/virtualenv && export WORKON_HOME=/home/${app_user}/.virtualenv/ && source ./.local/bin/virtualenvwrapper.sh",
+    line        => "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3 && export PROJECT_HOME=/vagrant/refinery && export WORKON_HOME=/home/${app_user}/.virtualenvs/ && source ./.local/bin/virtualenvwrapper.sh",
     require     => Python::Virtualenv[$virtualenv],
   }
   ->
