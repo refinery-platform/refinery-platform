@@ -498,6 +498,9 @@ class Node(models.Model):
     TYPES = ASSAYS | FILES | {
         SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION,
         DATA_TRANSFORMATION}
+    # Currently we only need to create an auxiliary file for bam, but WIG
+    # needs an index file as well
+    AUXILIARY_FILES_NEEDED_FOR_VISAULIZAITON = ['bam']
 
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
@@ -654,7 +657,9 @@ class Node(models.Model):
                 self.file_item.filetype.used_for_visualization and
                 self.file_item.datafile and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
-                'on_file_import'):
+                'on_file_import' and
+                self.file_item.get_extension().lower() in
+                self.AUXILIARY_FILES_NEEDED_FOR_VISAULIZAITON):
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
             auxiliary_file_store_item = FileStoreItem.objects.create()
@@ -672,6 +677,7 @@ class Node(models.Model):
             generate_and_import = chain(generate, file_import)
             return generate_and_import
         else:
+            logger.debug("No auxiliary Node needs be generated")
             return None
 
     def get_auxiliary_file_generation_task_state(self):
