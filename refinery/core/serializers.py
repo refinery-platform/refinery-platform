@@ -54,7 +54,10 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     def get_workflow_json(self, analysis):
         analysis.refresh_from_db()
-        return ast.literal_eval(analysis.workflow_copy)
+        if analysis.workflow_copy is not None:
+            return ast.literal_eval(analysis.workflow_copy)
+        else:
+            return {}
 
 
 class DataSetSerializer(serializers.ModelSerializer):
