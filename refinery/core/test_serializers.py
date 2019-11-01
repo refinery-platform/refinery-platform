@@ -58,8 +58,6 @@ class AnalysisSerializerTests(TestCase):
             workflow=self.workflow,
             time_start=timezone.now()
         )
-        # needed for workflow_copy
-        self.analysis.refresh_from_db()
         self.analysis.set_owner(self.user)
         self.serializer = AnalysisSerializer(self.analysis)
 
