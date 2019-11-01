@@ -9,6 +9,7 @@ from django.conf import settings
 
 from bioblend import galaxy
 import celery
+from celery import utils as celery_utils
 from celery import shared_task
 from celery.result import TaskSetResult
 from celery.task import Task
@@ -22,8 +23,8 @@ import tool_manager
 
 from .models import AnalysisStatus
 
-logger = celery.utils.log.get_task_logger(__name__)
-logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
+logger = celery_utils.log.get_task_logger(__name__)
+logger.setLevel(celery_utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 RETRY_INTERVAL = 5  # seconds
 

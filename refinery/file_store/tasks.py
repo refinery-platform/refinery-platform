@@ -5,11 +5,13 @@ import tempfile
 import threading
 import urllib2
 import urlparse
+import sys
 
 from django.conf import settings
 
 import botocore
 import celery
+from celery import utils as celery_utils
 import requests
 
 from .models import FileStoreItem
@@ -19,8 +21,8 @@ from .utils import (S3MediaStorage, SymlinkedFileSystemStorage,
                     make_dir, move_file, parse_s3_url, symlink_file,
                     upload_file_object)
 
-logger = celery.utils.log.get_task_logger(__name__)
-logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
+logger = celery_utils.log.get_task_logger(__name__)
+logger.setLevel(celery_utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 
 
 class FileImportTask(celery.Task):
