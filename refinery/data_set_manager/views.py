@@ -1280,7 +1280,7 @@ class NodeViewSet(viewsets.ViewSet):
 
         return Response(
             NodeSerializer(
-                study.node_set.all(), many=True
+                study.node_set.filter(is_auxiliary_node=False), many=True
             ).data
         )
 
