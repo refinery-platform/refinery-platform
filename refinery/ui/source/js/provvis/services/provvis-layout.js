@@ -292,6 +292,7 @@
       delta = 0;
 
       var looseSAn = [];
+
       /* Reorder most left layer based on the second most left layer. */
       bclgNodes[0][0].children.values().forEach(function (san, j) {
         /* Only one column does exist in this view. */
@@ -305,38 +306,38 @@
         san.succs.values().forEach(function (ssan) {
           ssan.inputs.values().forEach(function (ni) {
             if (
-                ni.preds.values().some(function (pni) {
-                  return pni.parent === san;
-                })
+              ni.preds.values().some(function (pni) {
+                return pni.parent === san;
+              })
             ) {
               /* Prioritize subanalysis ordering over workflow node ordering. */
               accCoords += ssan.parent.y + ssan.y +
-                  ((ssan.y / cell.height) / 10) + ni.y;
+              ((ssan.y / cell.height) / 10) + ni.y;
               degree++;
             }
           });
         });
 
-          /* Avoid zero division. */
-          if (degree !== 0) {
-            /* If any subanalysis within the analysis has the same barycenter value,
-             * increase it by a small value. */
-            if (usedCoords.indexOf(accCoords / degree) === -1) {
-              san.l.bcOrder = accCoords / degree;
-              usedCoords.push(accCoords / degree);
-            } else {
-              delta += 0.01;
-              san.l.bcOrder = accCoords / degree + delta;
-              usedCoords.push(accCoords / degree + delta);
-            }
+        /* Avoid zero division. */
+        if (degree !== 0) {
+          /* If any subanalysis within the analysis has the same barycenter value,
+           * increase it by a small value. */
+          if (usedCoords.indexOf(accCoords / degree) === -1) {
+            san.l.bcOrder = accCoords / degree;
+            usedCoords.push(accCoords / degree);
           } else {
-            san.l.bcOrder = 0;
-            looseSAn.push(san);
+            delta += 0.01;
+            san.l.bcOrder = accCoords / degree + delta;
+            usedCoords.push(accCoords / degree + delta);
           }
+        } else {
+          san.l.bcOrder = 0;
+          looseSAn.push(san);
+        }
 
-          /* Push into array to reorder afterwards. */
-          colList.push(san);
-        });
+        /* Push into array to reorder afterwards. */
+        colList.push(san);
+      });
 
       /* Sort and reorder subanalysis nodes. */
       colList.sort(function (a, b) {
