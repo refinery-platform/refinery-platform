@@ -8,8 +8,6 @@ from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.dev')
 
-from django.conf import settings
-
 app = app_creator('config')
 app.config_from_object(settings)
 app.autodiscover_tasks(settings.INSTALLED_APPS)
