@@ -22,7 +22,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:celery-w1]
 ; minimum of four processes required to avoid problems with monitoring tasks
-command = celery worker -n w1@%%h -c 4 -Q celery -E -app=config.celery_app
+command = celery worker -n w1@%%h -c 4 -Q celery -E --app=config.celery_app
 environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celery-w1.log
 stdout_logfile_maxbytes = 5MB
@@ -37,7 +37,7 @@ priority = 995
 
 [program:celery-w2]
 ; limits concurrency of file imports to one to avoid overloading system IO
-command = celery worker -n w2@%%h -c 1 -Q file_import -E  -app=config.celery_app
+command = celery worker -n w2@%%h -c 1 -Q file_import -E --app=config.celery_app
 environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celery-w2.log
 stdout_logfile_maxbytes = 5MB
