@@ -8,7 +8,7 @@ import sys
 
 from django.core.management.base import BaseCommand, CommandError
 
-from celery.task.sets import Group
+from celery import group
 
 from ...tasks import parse_isatab
 
@@ -118,7 +118,7 @@ class Command(BaseCommand):
             )
             s_tasks.append(sub_task)
 
-        job = Group(tasks=s_tasks)
+        job = group(tasks=s_tasks)
         result = job.apply_async()
 
         task_num = 1

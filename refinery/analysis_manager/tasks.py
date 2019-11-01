@@ -12,7 +12,7 @@ import celery
 from celery import shared_task
 from celery.result import GroupResult
 from celery.task import Task
-from celery.task.sets import Group
+from celery import group
 
 import core
 from core.models import Analysis, AnalysisResult, Workflow
@@ -186,7 +186,7 @@ def _galaxy_file_export(analysis_uuid):
         logger.info(
             "Starting downloading of results from Galaxy for analysis "
             "'%s'", analysis)
-        galaxy_export_group = Group(
+        galaxy_export_group = group(
             tasks=galaxy_export_tasks
         ).apply_async()
         galaxy_export_group.save()
@@ -254,7 +254,7 @@ def _refinery_file_import(analysis_uuid):
         analysis.set_status(Analysis.RUNNING_STATUS)
         logger.info("Starting input file import tasks for analysis '%s'",
                     analysis)
-        refinery_import_group = Group(
+        refinery_import_group = group(
             tasks=analysis.get_refinery_import_task_signatures()
         ).apply_async()
         refinery_import_group.save()
@@ -322,7 +322,7 @@ def _run_galaxy_file_import(analysis_uuid):
 
         galaxy_import_tasks = tool.get_galaxy_import_tasks()
 
-        galaxy_file_import_group = Group(
+        galaxy_file_import_group = group(
             tasks=galaxy_import_tasks
         ).apply_async()
 
@@ -374,7 +374,7 @@ def _run_galaxy_workflow(analysis_uuid):
             _invoke_galaxy_workflow.subtask((analysis_uuid,))
         ]
 
-        galaxy_workflow_group = Group(
+        galaxy_workflow_group = group(
             tasks=galaxy_workflow_tasks
         ).apply_async()
 
