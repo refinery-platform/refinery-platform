@@ -53,7 +53,7 @@ from data_set_manager.models import (Assay, Investigation, Node,
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import FileStoreItem, FileType
+from file_store.models import FileStoreItem
 from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
 import tool_manager
@@ -1067,9 +1067,9 @@ class Analysis(OwnableResource):
                                      self.summary)
 
     def get_expanded_workflow_graph(self):
-        return tool_manager.utils.create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy)
-        )
+        self.refresh_from_db(fields=['workflow_copy'])
+        workflow_copy = ast.literal_eval(self.workflow_copy)
+        return tool_manager.utils.create_expanded_workflow_graph(workflow_copy)
 
     def has_nodes_used_in_downstream_analyses(self):
         """
@@ -1128,6 +1128,16 @@ class Analysis(OwnableResource):
 
     def get_status(self):
         return self.status
+
+    def get_auxiliary_nodes(self):
+        # Return queryset of related auxiliary_nodes
+        analysis_nodes = self.get_nodes()
+        aux_nodes = Node.objects.none()
+        for node in analysis_nodes:
+            aux_nodes = aux_nodes | node.children.filter(
+                is_auxiliary_node=True
+            )
+        return aux_nodes
 
     def get_nodes(self):
         return Node.objects.filter(analysis_uuid=self.uuid)
@@ -1336,43 +1346,6 @@ class Analysis(OwnableResource):
                 "'%s' with UUID '%s'",
                 self.get_status(), user.email, name, self.uuid)
 
-    def rename_results(self):
-        """Rename files in file_store after download"""
-        logger.debug("Renaming analysis results")
-        # rename file_store items to new name updated from galaxy file_ids
-        for result in self.results.all():
-            try:
-                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error("Error renaming analysis result '%s': %s",
-                             result, exc)
-                break
-
-            # workaround for FastQC reports downloaded from Galaxy as zip
-            # archives
-            (root, ext) = os.path.splitext(result.file_name)
-            if ext == '.html':
-                try:
-                    zipfile = FileType.objects.get(name='ZIP')
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Error renaming HTML to zip: %s", exc)
-                else:
-                    if item.filetype == zipfile:
-                        item.rename_datafile(''.join([root, '.zip']))
-            else:
-                item.rename_datafile(result.file_name)
-
-            try:
-                node = Node.objects.get(file_item=item)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-                logger.error("Error retrieving Node with file UUID '%s': %s",
-                             item.uuid, exc)
-            else:
-                if node.is_derived():
-                    node.run_generate_auxiliary_node_task()
-
     def attach_derived_nodes_to_dataset(self):
         graph_with_data_transformation_nodes = (
             self._create_data_transformation_nodes(
@@ -1430,17 +1403,28 @@ class Analysis(OwnableResource):
 
     def _prepare_annotated_nodes(self, node_uuids):
         """
-        Wrapper method to ensure that `rename_results` is called before
-        index_annotated_nodes_selection.
-
-        If `rename_results` isn't executed before
-        `index_annotated_nodes_selection` we end up indexing incorrect
-        information.
+        Wrapper method to ensure that auxiliary nodes are generated before
+        indexing annotated nodes
 
         Call order is ensured through:
         core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
         """
-        self.rename_results()
+        for result in self.results.all():
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming analysis result '%s': %s",
+                             result, exc)
+                break
+            try:
+                node = Node.objects.get(file_item=item)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+                logger.error("Error retrieving Node with file UUID '%s': %s",
+                             item.uuid, exc)
+            else:
+                if node.is_derived():
+                    node.run_generate_auxiliary_node_task()
         index_annotated_nodes_selection(node_uuids)
 
     def _get_output_connection_to_analysis_result_mapping(self):
@@ -1686,6 +1670,8 @@ def _analysis_delete(sender, instance, *args, **kwargs):
     """
     with transaction.atomic():
         instance.cancel()
+        # Delete children aux_nodes Associated w/ the Analysis
+        instance.get_auxiliary_nodes().delete()
         # Delete Nodes Associated w/ the Analysis
         instance.get_nodes().delete()
 
