@@ -23,7 +23,7 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
+from analysis_manager.tasks import (_galaxy_file_import, get_group_result,
                                     run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
 import constants
@@ -1401,7 +1401,7 @@ class WorkflowTool(Tool):
         analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
         galaxy_dict = self.get_galaxy_dict()
 
-        galaxy_to_refinery_mapping_list = get_taskset_result(
+        galaxy_to_refinery_mapping_list = get_group_result(
             analysis_status.galaxy_import_task_group_id
         ).join()
 

@@ -135,15 +135,15 @@ class ToolManagerMocks(TestCase):
         ).start()
 
         # analysis_manager mocks
-        self.analysis_manager_taskset_result_mock = mock.patch(
-            "analysis_manager.tasks.get_taskset_result",
-            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
+        self.analysis_manager_group_result_mock = mock.patch(
+            "analysis_manager.tasks.get_group_result",
+            return_value=celery.result.GroupResult(str(uuid.uuid4()))
         ).start()
 
         # tool_manager mocks
-        self.get_taskset_result_mock = mock.patch(
-            "tool_manager.models.get_taskset_result",
-            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
+        self.get_group_result_mock = mock.patch(
+            "tool_manager.models.get_group_result",
+            return_value=celery.result.GroupResult(str(uuid.uuid4()))
         ).start()
         self.create_history_mock = mock.patch.object(
             WorkflowTool, "create_galaxy_history", return_value=history_dict
@@ -512,12 +512,12 @@ class ToolManagerTestBase(ToolManagerMocks):
             )
 
         with mock.patch.object(
-                celery.result.TaskSetResult, 'join',
+                celery.result.GroupResult, 'join',
                 return_value=galaxy_to_refinery_mapping_list
         ) as join_mock:
             self.tool.update_file_relationships_with_galaxy_history_data()
         self.assertTrue(join_mock.called)
-        self.assertTrue(self.get_taskset_result_mock.called)
+        self.assertTrue(self.get_group_result_mock.called)
 
         self.collection_description = (
             self.tool._create_collection_description()
@@ -1734,9 +1734,9 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             self.tool
         )
 
-    @mock.patch.object(celery.result.TaskSetResult, "successful",
+    @mock.patch.object(celery.result.GroupResult, "successful",
                        return_value=True)
-    @mock.patch.object(celery.result.TaskSetResult, "ready",
+    @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=True)
     @mock.patch.object(run_analysis, "retry", side_effect=None)
     def test_get_refinery_import_task_signatures_gets_called_during_import(
@@ -1842,8 +1842,8 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             galaxy_workflow_invocation
         )
 
-    @mock.patch("celery.task.sets.TaskSet.apply_async")
-    @mock.patch.object(celery.result.TaskSetResult, "ready",
+    @mock.patch("celery.task.sets.Group.apply_async")
+    @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=False)
     @mock.patch.object(AnalysisStatus, "set_galaxy_import_task_group_id")
     @mock.patch.object(run_analysis, "retry")
@@ -1882,14 +1882,14 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
 
         self.assertTrue(apply_async_mock.called)
         self.assertTrue(ready_mock.called)
-        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertTrue(self.analysis_manager_group_result_mock.called)
         self.assertTrue(set_galaxy_import_task_group_id_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertEqual(retry_mock.call_count, 2)
 
-    @mock.patch.object(celery.result.TaskSetResult, "ready",
+    @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=True)
-    @mock.patch.object(celery.result.TaskSetResult, "successful",
+    @mock.patch.object(celery.result.GroupResult, "successful",
                        return_value=False)
     @mock.patch.object(Analysis, "send_email")
     @mock.patch.object(Analysis, "galaxy_cleanup")
@@ -1923,15 +1923,15 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertTrue(ready_mock.called)
         self.assertTrue(successful_mock.called)
-        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertTrue(self.analysis_manager_group_result_mock.called)
         self.assertEqual(
-            self.analysis_manager_taskset_result_mock.call_count, 2)
+            self.analysis_manager_group_result_mock.call_count, 2)
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
-    @mock.patch.object(celery.result.TaskSetResult, "ready",
+    @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=True)
-    @mock.patch.object(celery.result.TaskSetResult, "successful",
+    @mock.patch.object(celery.result.GroupResult, "successful",
                        return_value=True)
     def test__run_galaxy_file_import_success(
             self,
@@ -1953,14 +1953,14 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertTrue(ready_mock.called)
         self.assertTrue(successful_mock.called)
-        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertTrue(self.analysis_manager_group_result_mock.called)
         self.assertEqual(
-            self.analysis_manager_taskset_result_mock.call_count,
+            self.analysis_manager_group_result_mock.call_count,
             1
         )
 
-    @mock.patch("celery.task.sets.TaskSet.apply_async")
-    @mock.patch.object(celery.result.TaskSetResult, "ready",
+    @mock.patch("celery.task.sets.Group.apply_async")
+    @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=False)
     @mock.patch.object(AnalysisStatus, "set_galaxy_workflow_task_group_id")
     @mock.patch.object(run_analysis, "retry")
@@ -1988,14 +1988,14 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
                          AnalysisStatus.PROGRESS)
         self.assertTrue(apply_async_mock.called)
         self.assertTrue(ready_mock.called)
-        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertTrue(self.analysis_manager_group_result_mock.called)
         self.assertTrue(set_galaxy_workflow_task_group_id_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertEqual(retry_mock.call_count, 2)
 
-    @mock.patch.object(celery.result.TaskSetResult, "ready",
+    @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=True)
-    @mock.patch.object(celery.result.TaskSetResult, "successful",
+    @mock.patch.object(celery.result.GroupResult, "successful",
                        return_value=False)
     @mock.patch.object(Analysis, "send_email")
     @mock.patch.object(Analysis, "galaxy_cleanup")
@@ -2030,9 +2030,9 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
 
         self.assertTrue(ready_mock.called)
         self.assertTrue(successful_mock.called)
-        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertTrue(self.analysis_manager_group_result_mock.called)
         self.assertEqual(
-            self.analysis_manager_taskset_result_mock.call_count, 2)
+            self.analysis_manager_group_result_mock.call_count, 2)
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 

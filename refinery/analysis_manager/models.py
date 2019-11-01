@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.fields import CharField, PositiveSmallIntegerField
 
 import celery
-from celery.result import TaskSetResult
+from celery.result import GroupResult
 
 logger = logging.getLogger(__name__)
 
@@ -111,12 +111,12 @@ def get_task_group_state(task_group_id):
     task_group_state = []
     percent_done = 0
 
-    taskset = TaskSetResult.restore(task_group_id)
-    if not taskset:
-        logger.error("TaskSet with UUID '%s' doesn't exist", task_group_id)
+    group = GroupResult.restore(task_group_id)
+    if not group:
+        logger.error("Group with UUID '%s' doesn't exist", task_group_id)
         return task_group_state
 
-    for task in taskset.results:
+    for task in group.results:
         # AsyncResult.info does not contain task state after task has finished
         if task.state == celery.states.SUCCESS:
             percent_done = 100

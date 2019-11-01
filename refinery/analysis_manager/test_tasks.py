@@ -30,14 +30,14 @@ class AnalysisRunTests(AnalysisManagerTestBase):
             self.assertTrue(terminate_mock.called)
 
     @mock.patch.object(Analysis, "galaxy_progress", side_effect=RuntimeError)
-    @mock.patch("analysis_manager.tasks.get_taskset_result")
+    @mock.patch("analysis_manager.tasks.get_group_result")
     @mock.patch("core.models.Analysis.send_email")
     @mock.patch("core.models.Analysis.galaxy_cleanup")
     def test__check_galaxy_history_state_with_runtime_error(
             self,
             galaxy_cleanup_mock,
             send_email_mock,
-            get_taskset_result_mock,
+            get_group_result_mock,
             galaxy_progress_mock
     ):
         _check_galaxy_history_state(self.analysis.uuid)
@@ -54,7 +54,7 @@ class AnalysisRunTests(AnalysisManagerTestBase):
         self.assertEqual(analysis.status, Analysis.FAILURE_STATUS)
 
         self.assertTrue(galaxy_progress_mock.called)
-        self.assertTrue(get_taskset_result_mock.called)
+        self.assertTrue(get_group_result_mock.called)
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
