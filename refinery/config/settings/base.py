@@ -318,6 +318,7 @@ CELERYBEAT_SCHEDULE = {
         }
     },
 }
+CELERY_RESULT_BACKEND = 'cache+memcached://127.0.0.1:11211/'
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 # keep chunked uploads outside the file_store directory
