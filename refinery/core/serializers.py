@@ -56,6 +56,7 @@ class AnalysisSerializer(serializers.ModelSerializer):
         analysis.refresh_from_db()
         return ast.literal_eval(analysis.workflow_copy)
 
+
 class DataSetSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(
             max_length=250,
