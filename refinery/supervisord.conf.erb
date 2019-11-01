@@ -54,7 +54,7 @@ killasgroup = true
 priority = 995
 
 [program:celerycam]
-command = python %(here)s/manage.py celerycam
+command = celerycam
 environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celerycam.log
 stdout_logfile_maxbytes = 5MB
@@ -66,7 +66,7 @@ startsecs = 3
 priority= 993
 
 [program:celery-beat]
-command = python %(here)s/manage.py celery beat
+command = celery beat
 environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celery-beat.log
 stdout_logfile_maxbytes = 5MB
