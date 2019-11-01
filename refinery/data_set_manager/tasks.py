@@ -7,7 +7,7 @@ from django.db import transaction
 
 import botocore
 import celery
-from celery.task import task
+from celery import shared_task
 import pysam
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
@@ -22,7 +22,7 @@ from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
 logger = logging.getLogger(__name__)
 
 
-@task()
+@shared_task()
 def create_dataset(investigation_uuid, username, identifier=None, title=None,
                    dataset_name=None, slug=None, public=False):
     """creates (or updates) a dataset with the given investigation and user and
@@ -101,7 +101,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     return dataset.uuid
 
 
-@task()
+@shared_task()
 def annotate_nodes(investigation_uuid):
     """Adds all nodes in this investigation to the annotated nodes table for
     faster lookup
@@ -142,7 +142,7 @@ def annotate_nodes(investigation_uuid):
             initialize_attribute_order(study, assay)
 
 
-@task()
+@shared_task()
 def parse_isatab(username, public, path, identity_id=None,
                  additional_raw_data_file_extension=None, isa_archive=None,
                  pre_isa_archive=None, file_base_path=None, overwrite=False,
@@ -273,7 +273,7 @@ def parse_isatab(username, public, path, identity_id=None,
         return data_set_uuid
 
 
-@task()
+@shared_task()
 def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
     """Task that will generate an auxiliary file for visualization purposes
     with specific file generation tasks going on for different FileTypes
