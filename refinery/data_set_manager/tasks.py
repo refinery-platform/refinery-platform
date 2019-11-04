@@ -277,21 +277,20 @@ def parse_isatab(username, public, path, identity_id=None,
 
 
 @task(soft_time_limit=3600)
-def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
+def generate_auxiliary_file(parent_node_uuid):
     """Task that will generate an auxiliary file for visualization purposes
     with specific file generation tasks going on for different FileTypes
     flagged as: `used_for_visualization`.
-    :param auxiliary_node: a Node instance
-    :type auxiliary_node: Node
-    :param datafile_path: relative path to datafile used to generate aux file
-    :type datafile_path: String
-    :param parent_node_file_store_item: FileStoreItem associated with the
-    parent Node
-    :type parent_node_file_store_item: FileStoreItem
+    :param parent_node: the parent Node uuid
+    :type parent_node_file_store_item: Node
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
-    datafile = parent_node_file_store_item.datafile
-
+    parent_node = Node.objects.get(uuid=parent_node_uuid)
+    datafile = parent_node.file_item.datafile
+    auxiliary_file_store_item = FileStoreItem.objects.create()
+    auxiliary_node = parent_node.create_and_associate_auxiliary_node(
+        auxiliary_file_store_item
+    )
     try:
         if not settings.REFINERY_S3_USER_DATA:
             datafile_path = datafile.path
@@ -306,13 +305,14 @@ def generate_auxiliary_file(auxiliary_node, parent_node_file_store_item):
         # Here we are checking for the FileExtension of the ParentNode's
         # FileStoreItem because we will create auxiliary files based on what
         # said value is
-        if parent_node_file_store_item.get_extension().lower() == 'bam':
+        if parent_node.file_item.get_extension().lower() == 'bam':
             generate_bam_index(auxiliary_node.file_item.uuid, datafile_path)
 
         generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
 
         logger.debug("Auxiliary file for %s generated in %s "
                      "seconds." % (datafile_path, time.time() - start_time))
+        return auxiliary_file_store_item.uuid
 
     except Exception as e:
         logger.error(

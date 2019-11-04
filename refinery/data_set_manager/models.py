@@ -577,7 +577,7 @@ class Node(models.Model):
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def _create_and_associate_auxiliary_node(self, filestore_item):
+    def create_and_associate_auxiliary_node(self, filestore_item):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -656,18 +656,11 @@ class Node(models.Model):
         logger.debug("Checking if some auxiliary Node should be generated")
         # Create an empty FileStoreItem (we do the datafile association
         # within the generate_auxiliary_file task
-        auxiliary_file_store_item = FileStoreItem.objects.create()
 
-        auxiliary_node = self._create_and_associate_auxiliary_node(
-            auxiliary_file_store_item
-        )
         generate = data_set_manager.tasks.generate_auxiliary_file.subtask(
-            (auxiliary_node, self.file_item,)
+            (self.uuid,)
         )
-        file_import = FileImportTask().subtask(
-            (auxiliary_node.file_item.uuid, None,),
-            immutable=True
-        )
+        file_import = FileImportTask().subtask()
         return chain(generate, file_import)
 
     def get_auxiliary_file_generation_task_state(self):
