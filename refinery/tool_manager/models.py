@@ -557,9 +557,9 @@ class VisualizationTool(Tool):
                 ),
                 self.AUXILIARY_FILE_LIST: [
                     get_file_url_from_node_uuid(
-                        child_uuid, require_valid_url=require_valid_urls
-                    ) for child_uuid in Node.objects.get(uuid=node["uuid"]).
-                    get_children(auxiliary_filter=True)
+                        child.uuid, require_valid_url=require_valid_urls
+                    ) for child in Node.objects.get(uuid=node["uuid"]).
+                    get_auxiliary_nodes()
                 ]
             }
             for node in solr_response_json["nodes"]

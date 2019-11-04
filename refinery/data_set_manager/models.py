@@ -602,18 +602,11 @@ class Node(models.Model):
                 self.add_child(node_object)
                 return node_object
 
-    def get_children(self, auxiliary_filter=None):
+    def get_children(self):
         """
         Return a list of child Node's uuids for a given Node
         """
-        if auxiliary_filter is None:
-            return [child.uuid for child in self.children.all()]
-        else:
-            return [
-                child.uuid for child in self.children.filter(
-                    is_auxiliary_node=auxiliary_filter
-                )
-            ]
+        return [child.uuid for child in self.children.all()]
 
     def get_parents(self):
         """
@@ -637,6 +630,15 @@ class Node(models.Model):
 
         return aux_nodes
 
+    def is_auxiliary_node_needed(self):
+        return self.file_item and self.file_item.filetype and \
+                self.file_item.filetype.used_for_visualization and \
+                self.file_item.datafile and \
+                settings.REFINERY_AUXILIARY_FILE_GENERATION == \
+                'on_file_import' and \
+                self.file_item.get_extension().lower() in \
+                self.AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION
+
     def run_generate_auxiliary_node_task(self):
         """This method is initiated after a task_success signal is returned
         from the file import task.
@@ -652,33 +654,21 @@ class Node(models.Model):
         # Check if the Django setting to generate auxiliary file has been
         # set to run when FileStoreItems are imported into Refinery
         logger.debug("Checking if some auxiliary Node should be generated")
-        # Check if we pass the logic to generate aux. Files/Nodes
-        if (self.file_item and self.file_item.filetype and
-                self.file_item.filetype.used_for_visualization and
-                self.file_item.datafile and
-                settings.REFINERY_AUXILIARY_FILE_GENERATION ==
-                'on_file_import' and
-                self.file_item.get_extension().lower() in
-                self.AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION):
-            # Create an empty FileStoreItem (we do the datafile association
-            # within the generate_auxiliary_file task
-            auxiliary_file_store_item = FileStoreItem.objects.create()
+        # Create an empty FileStoreItem (we do the datafile association
+        # within the generate_auxiliary_file task
+        auxiliary_file_store_item = FileStoreItem.objects.create()
 
-            auxiliary_node = self._create_and_associate_auxiliary_node(
-                auxiliary_file_store_item
-            )
-            generate = data_set_manager.tasks.generate_auxiliary_file.subtask(
-                (auxiliary_node, self.file_item,)
-            )
-            file_import = FileImportTask().subtask(
-                (auxiliary_node.file_item.uuid, None,),
-                immutable=True
-            )
-            generate_and_import = chain(generate, file_import)
-            return generate_and_import
-        else:
-            logger.debug("No auxiliary Node needs be generated")
-            return None
+        auxiliary_node = self._create_and_associate_auxiliary_node(
+            auxiliary_file_store_item
+        )
+        generate = data_set_manager.tasks.generate_auxiliary_file.subtask(
+            (auxiliary_node, self.file_item,)
+        )
+        file_import = FileImportTask().subtask(
+            (auxiliary_node.file_item.uuid, None,),
+            immutable=True
+        )
+        return chain(generate, file_import)
 
     def get_auxiliary_file_generation_task_state(self):
         """Return the generate_auxiliary_file task state for a given auxiliary

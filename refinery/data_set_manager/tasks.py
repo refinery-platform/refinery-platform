@@ -389,7 +389,8 @@ def post_process_file_import(**kwargs):
         logger.info("Updated Solr index with file import state for Node '%s'",
                     node.uuid)
         if kwargs['state'] == celery.states.SUCCESS:
-            node.run_generate_auxiliary_node_task()
+            if node.is_auxiliary_node_needed():
+                node.run_generate_auxiliary_node_task()
 
 
 @celery.signals.worker_init.connect

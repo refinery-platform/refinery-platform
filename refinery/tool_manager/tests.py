@@ -720,8 +720,8 @@ class VisualizationToolTests(ToolManagerTestBase):
             node.uuid: {
                 'file_url': self.node.file_item.get_datafile_url(),
                 'auxiliary_file_list': [
-                    child_uuid for child_uuid in
-                    self.node.get_children(auxiliary_filter=True)
+                    child.uuid for child in
+                    self.node.get_auxiliary_nodes()
                 ],
                 VisualizationTool.NODE_SOLR_INFO: {
                     'uuid': node.uuid,
@@ -1763,6 +1763,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     @mock.patch("{}._check_galaxy_history_state".format(tasks_mock))
     @mock.patch("{}._galaxy_file_export".format(tasks_mock))
     @mock.patch("{}._attach_workflow_outputs".format(tasks_mock))
+    @mock.patch("{}._finalize_analysis".format(tasks_mock))
     def test_appropriate_methods_are_called_for_analysis_run(
             self,
             attach_workflow_outputs_mock,
@@ -1770,7 +1771,8 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             check_galaxy_history_state_mock,
             run_galaxy_workflow_mock,
             run_galaxy_file_import_mock,
-            refinery_file_import_mock
+            refinery_file_import_mock,
+            finalize_analysis_mock
     ):
         self.create_tool(ToolDefinition.WORKFLOW)
         run_analysis(self.tool.analysis.uuid)
@@ -1781,6 +1783,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(check_galaxy_history_state_mock.called)
         self.assertTrue(galaxy_file_export_mock.called)
         self.assertTrue(attach_workflow_outputs_mock.called)
+        self.assertTrue(finalize_analysis_mock.called)
 
     def test__galaxy_file_import_ceases_to_set_file_relationships_galaxy(self):
         self.create_tool(ToolDefinition.WORKFLOW)

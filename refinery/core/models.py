@@ -1358,8 +1358,7 @@ class Analysis(OwnableResource):
             )
         )
         self._create_derived_data_file_nodes(graph_with_input_nodes_linked)
-        auxiliary_file_import_tasks = self._create_annotated_nodes()
-        return auxiliary_file_import_tasks
+        return self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
         if self.results.all().count() == 0:
@@ -1425,10 +1424,10 @@ class Analysis(OwnableResource):
                 logger.error("Error retrieving Node with file UUID '%s': %s",
                              item.uuid, exc)
             else:
-                if node.is_derived():
-                    subtask = node.run_generate_auxiliary_node_task()
-                    if subtask is not None:
-                        auxiliary_file_tasks += [subtask]
+                if node.is_derived() and node.is_auxiliary_node_needed():
+                    auxiliary_file_tasks += [
+                        node.run_generate_auxiliary_node_task()
+                    ]
         index_annotated_nodes_selection(node_uuids)
         return auxiliary_file_tasks
 
@@ -1632,8 +1631,7 @@ class Analysis(OwnableResource):
             self.get_input_node_study().uuid,
             self.get_input_node_assay().uuid
         )
-        auxiliary_file_tasks = self._prepare_annotated_nodes(node_uuids)
-        return auxiliary_file_tasks
+        return self._prepare_annotated_nodes(node_uuids)
 
     def get_refinery_import_task_signatures(self):
         """Create and return a list of file import task signatures for the
