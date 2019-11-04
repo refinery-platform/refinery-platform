@@ -1986,7 +1986,7 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'site': site.domain,
                     'registered_user_email': self.user.email,
                     'registered_user_username': self.user.username,
-                    'registered_user_full_name': "{} {}".format(
+                    'registered_user_full_name': u"{} {}".format(
                         self.user.first_name, self.user.last_name),
                     'registered_user_affiliation':
                         self.user.profile.affiliation
