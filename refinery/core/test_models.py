@@ -1282,7 +1282,8 @@ class UserProfileTest(TestCase):
         self.userprofile.user.save()
         self.assertEqual(
             unicode(self.userprofile),
-            u"élan göld (" + self.userprofile.affiliation + u"): " + self.user.email
+            u"élan göld (" + self.userprofile.affiliation + u"): "
+            + self.user.email
         )
 
 
