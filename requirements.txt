@@ -29,6 +29,7 @@ flower==0.9.1
 jsonschema==2.6.0
 Markdown==2.2.1
 mock==2.0.0
+mod_wsgi==4.6.7
 git+git://github.com/lunant/mockcache@master
 ndg-httpsclient==0.3.2
 networkx==1.7
