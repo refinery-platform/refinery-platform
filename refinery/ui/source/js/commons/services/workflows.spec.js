@@ -21,7 +21,7 @@ describe('Common.service.workflows: unit tests', function () {
       settings = $injector.get('settings');
       $httpBackend = $injector.get('$httpBackend');
       $rootScope = $injector.get('$rootScope');
-      service = $injector.get('dataSetV2Service');
+      service = $injector.get('workflowServce');
     });
   });
 
