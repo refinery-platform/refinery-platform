@@ -133,7 +133,8 @@ resource "aws_instance" "app_server" {
   subnet_id              = "${var.subnet_id}"
   iam_instance_profile   = "${aws_iam_instance_profile.app_server.name}"
   root_block_device {
-    volume_type = "gp2"
+    volume_type = "gp2",
+    volume_size = 12
   }
   ebs_block_device {
     delete_on_termination = false

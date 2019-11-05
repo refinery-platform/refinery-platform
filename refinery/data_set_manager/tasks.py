@@ -277,7 +277,7 @@ def parse_isatab(username, public, path, identity_id=None,
         return data_set_uuid
 
 
-@task(soft_time_limit=3600)
+@task(soft_time_limit=180)
 def generate_auxiliary_file(parent_node_uuid):
     """Task that will generate an auxiliary file for visualization purposes
     with specific file generation tasks going on for different FileTypes

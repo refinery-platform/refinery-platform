@@ -313,7 +313,10 @@ CELERYD_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
                           '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
-CELERY_ROUTES = {"file_store.tasks.FileImportTask": {"queue": "file_import"}}
+CELERY_ROUTES = {
+    "file_store.tasks.FileImportTask": {"queue": "file_import"},
+    "data_set_manager.tasks.generate_auxiliary_file": {"queue": "file_import"}
+}
 CELERY_ACCEPT_CONTENT = ['pickle']
 CELERYD_TASK_SOFT_TIME_LIMIT = 60  # seconds
 CELERYBEAT_SCHEDULE = {
