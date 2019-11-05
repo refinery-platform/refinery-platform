@@ -10,14 +10,15 @@
     .module('refineryProvvis')
     .factory('provvisInitService', provvisInitService);
 
-  provvisInitService.$inject = ['$', '_', '$log', '$window', 'provvisDeclService'];
+  provvisInitService.$inject = ['$', '_', '$log', '$window', 'provvisDeclService', 'workflowService'];
 
   function provvisInitService (
     $,
     _,
     $log,
     $window,
-    provvisDeclService
+    provvisDeclService,
+    workflowService
   ) {
     var provvisDecl = provvisDeclService;
 
@@ -584,7 +585,13 @@
     function extractWorkflows (analysesData) {
       analysesData.forEach(function (a) {
         /* Prepare for json format. */
-        workflowData.set(a.workflow__uuid, a.workflow_json);
+        var workflowParams = {
+          uuid: a.workflow__uuid
+        };
+        var workflowPromise = workflowService.query(workflowParams).$promise;
+        workflowPromise.then(function(response){
+          workflowData.set(a.workflow__uuid, response);
+        })
       });
     }
 

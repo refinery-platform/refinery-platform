@@ -1,102 +1,56 @@
-(function () {
-  'use strict';
+'use strict';
 
-  describe('Common.service.tools: unit tests', function () {
-    var httpBackend;
-    var fakeResponse = { data: 'success' };
-    var mocker;
-    var refinerySettings;
-    var rootScope;
-    var service;
+describe('Common.service.workflows: unit tests', function () {
+  var $httpBackend;
+  var $rootScope;
+  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var service;
+  var settings;
 
-    beforeEach(module('refineryApp'));
-    beforeEach(inject(function (
-      $httpBackend,
-      mockParamsFactory,
-      $rootScope,
-      settings,
-      toolsService
-    ) {
-      refinerySettings = settings;
-      httpBackend = $httpBackend;
-      mocker = mockParamsFactory;
-      rootScope = $rootScope;
-      service = toolsService;
-    }));
+  var fakeResponse = {
+    status: '201',
+    workflow: {
+      name: 'foo'
+    }
+  };
 
-    describe('Service', function () {
-      it('should be defined', function () {
-        expect(service).toBeDefined();
-      });
+  beforeEach(function () {
+    module('refineryApp');
 
-      it('should be a method', function () {
-        expect(typeof service).toEqual('function');
-      });
-
-      it('should return a resolving promise', function () {
-        var getParams = {
-          uuid: mocker.generateUuid()
-        };
-
-        httpBackend
-          .expectGET(
-            refinerySettings.appRoot +
-            refinerySettings.refineryApiV2 +
-            '/workflows/',
-          getParams
-        ).respond(200, fakeResponse);
-
-        var promise = service.save(getParams).$promise;
-        expect(typeof promise.then).toEqual('function');
-      });
-
-      it('should return a success status', function () {
-        var getParams = {
-          uuid: mocker.generateUuid()
-        };
-
-        httpBackend
-          .expectGET(
-            refinerySettings.appRoot +
-            refinerySettings.refineryApiV2 +
-            '/workflows/',
-          getParams
-        ).respond(200, fakeResponse);
-
-        var results;
-        service.save(getParams).$promise
-          .then(function (response) {
-            results = response;
-          });
-        httpBackend.flush();
-        rootScope.$digest();
-        expect(results.data).toEqual(fakeResponse.data);
-      });
-
-      it('should return a failed status', function () {
-        var getParams = {
-          uuid: ''
-        };
-
-        fakeResponse.data = 'Failed, missing uuid';
-
-        httpBackend
-          .expectGET(
-            refinerySettings.appRoot +
-            refinerySettings.refineryApiV2 +
-            '/workflows/',
-          getParams
-        ).respond(400, fakeResponse);
-
-        var results;
-        service.save(getParams).$promise
-          .catch(function (response) {
-            results = response;
-          });
-        httpBackend.flush();
-        rootScope.$digest();
-        expect(results.data.data).toEqual(fakeResponse.data);
-      });
+    inject(function ($injector) {
+      settings = $injector.get('settings');
+      $httpBackend = $injector.get('$httpBackend');
+      $rootScope = $injector.get('$rootScope');
+      service = $injector.get('dataSetV2Service');
     });
   });
-})();
+
+  describe('Service', function () {
+    it('should be defined', function () {
+      expect(service).toBeDefined();
+    });
+
+    it('should be a method', function () {
+      expect(typeof service).toEqual('function');
+    });
+
+    it('query for workflow should return a resolving promise', function () {
+      $httpBackend
+        .expectGET(
+          settings.appRoot +
+          settings.refineryApiV2 +
+          '/workflows/' + fakeUuid + '/'
+      ).respond(200, fakeResponse);
+
+      var results;
+      var promise = service.query({ uuid: fakeUuid }).$promise
+        .then(function (response) {
+          results = response;
+        });
+      expect(typeof promise.then).toEqual('function');
+      $httpBackend.flush();
+      $rootScope.$digest();
+      expect(results.data.workflow.name).toEqual(fakeResponse.workflow.name);
+    });
+  });
+});

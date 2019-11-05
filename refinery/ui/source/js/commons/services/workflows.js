@@ -8,14 +8,12 @@
 
   function workflowService ($resource, settings) {
     var workflows = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/workflows/',
-      {},
+      settings.appRoot + settings.refineryApiV2 + '/workflows/:uuid/',
       {
-       /* retrieve: Get the workflow:
-            @params: uuid (req)
-            type: string
-       */
-        save: {
+        uuid: '@uuid'
+      },
+      {
+        query: {
           method: 'GET',
           isArray: false
         }
