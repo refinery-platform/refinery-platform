@@ -139,7 +139,7 @@ class refinery::apache2 (
         'user'        => $app_user,
         'group'       => $app_group,
         'python-home' => "${virtualenv}",
-        "python-path" => "${django_root}"
+        'python-path' => "${django_root}"
       }
     },
     wsgi_process_group      => 'refinery',
