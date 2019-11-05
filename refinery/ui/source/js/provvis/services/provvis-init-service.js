@@ -137,7 +137,7 @@
       var initTime = {
         start: a.time_start,
         end: a.time_end,
-        created: a.creation_date
+        created: a.time_start
       };
 
       if (initTime.start.length === 19) {
