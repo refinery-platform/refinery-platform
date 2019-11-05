@@ -48,7 +48,7 @@ router = DefaultRouter()
 router.register(r'data_sets', views.DataSetViewSet, 'data_sets')
 router.register(r'groups', views.GroupViewSet, 'groups')
 router.register(r'invitations', views.InvitationViewSet, 'invitations')
-router.register(r'workflows', views.WorkflowViewSet)
+router.register(r'workflows', views.WorkflowViewSet, 'workflow')
 
 core_api_urls = router.urls + [
     url(r'^analyses/$', views.AnalysisAPIView.as_view()),

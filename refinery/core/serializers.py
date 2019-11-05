@@ -305,7 +305,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'id', 'last_name', 'profile', 'username')
 
 
-class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
+class WorkflowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Workflow
