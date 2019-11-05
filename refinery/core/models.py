@@ -92,8 +92,8 @@ class UserProfile(models.Model):
     login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
-        return self.user.first_name + " " + self.user.last_name + \
-               " (" + self.affiliation + "): " + self.user.email
+        return self.user.first_name + u" " + self.user.last_name + \
+               u" (" + self.affiliation + u"): " + self.user.email
 
     def has_viewed_data_upload_tut(self):
         try:

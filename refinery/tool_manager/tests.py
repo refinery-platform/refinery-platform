@@ -638,7 +638,7 @@ class ToolTests(ToolManagerTestBase):
             self.get_response.data[0]["owner"],
             {
                 "username": self.user.username,
-                "full_name": "{} {}".format(self.user.first_name,
+                "full_name": u"{} {}".format(self.user.first_name,
                                             self.user.last_name),
                 "user_profile_uuid": str(self.user.profile.uuid)
             }
