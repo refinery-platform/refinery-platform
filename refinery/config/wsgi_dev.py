@@ -1,11 +1,8 @@
 import os
-import sys
-print(sys.path)
+
 from django.core.wsgi import get_wsgi_application
 
 # Set env vars to be made available to the wsgi application here
 os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.dev'
-
-
 
 application = get_wsgi_application()

@@ -1279,10 +1279,11 @@ class UserProfileTest(TestCase):
         self.userprofile.user.first_name = 'élan'
         self.userprofile.user.last_name = 'göld'
         self.userprofile.user.save()
-        self.assertEqual(unicode(self.userprofile),
-                         u"élan göld (" + self.affiliation + u"): "
-                         + self.user.email
-                         )
+        self.assertEqual(
+            unicode(self.userprofile),
+            u"élan göld (" + self.affiliation + u"): " + self.user.email
+        )
+
 
 class UserTutorialsTest(TestCase):
     """
