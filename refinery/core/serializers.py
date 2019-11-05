@@ -1,4 +1,3 @@
-import ast
 import logging
 
 from django.conf import settings
@@ -28,13 +27,12 @@ class AnalysisSerializer(serializers.ModelSerializer):
     time_end = DateTimeWithTimeZone()
     time_start = DateTimeWithTimeZone()
     creation_date = serializers.SerializerMethodField()
-    workflow_json = serializers.SerializerMethodField()
 
     class Meta:
         model = Analysis
         fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
                   'summary', 'time_start', 'time_end', 'tool_display_name',
-                  'uuid', 'workflow', 'workflow_json', 'creation_date')
+                  'uuid', 'workflow', 'creation_date')
 
     def get_tool_display_name(self, analysis):
         try:
@@ -51,13 +49,6 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     def get_creation_date(self, analysis):
         return analysis.time_start
-
-    def get_workflow_json(self, analysis):
-        analysis.refresh_from_db()
-        if analysis.workflow_copy is not None and analysis.workflow_copy != '':
-            return ast.literal_eval(analysis.workflow_copy)
-        else:
-            return {}
 
 
 class DataSetSerializer(serializers.ModelSerializer):
@@ -315,9 +306,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
-    instance = serializers.HyperlinkedIdentityField(
-        view_name='workflow-detail')
-    workflow_engine = serializers.StringRelatedField()
 
     class Meta:
         model = Workflow
