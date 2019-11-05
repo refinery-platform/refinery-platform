@@ -299,29 +299,29 @@ def generate_auxiliary_file(parent_node_uuid):
             datafile_path = datafile.name
     except (NotImplementedError, ValueError):
         datafile_path = None
-    try:
-        start_time = time.time()
-        logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
+    
+    start_time = time.time()
+    logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
 
-        # Here we are checking for the FileExtension of the ParentNode's
-        # FileStoreItem because we will create auxiliary files based on what
-        # said value is
-        if parent_node.file_item.get_extension().lower() == 'bam':
+    # Here we are checking for the FileExtension of the ParentNode's
+    # FileStoreItem because we will create auxiliary files based on what
+    # said value is
+    if parent_node.file_item.get_extension().lower() == 'bam':
+        try:
             generate_bam_index(auxiliary_node.file_item.uuid, datafile_path)
+        except Exception as e:
+            logger.error(
+              "Something went wrong while trying to generate the auxiliary file "
+              "for %s. %s" % (datafile_path, e))
+            generate_auxiliary_file.update_state(state=celery.states.FAILURE)
 
-        generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
+            raise celery.exceptions.Ignore()
+        else:
+            generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
 
-        logger.debug("Auxiliary file for %s generated in %s "
+            logger.debug("Auxiliary file for %s generated in %s "
                      "seconds." % (datafile_path, time.time() - start_time))
-        return auxiliary_file_store_item.uuid
-
-    except Exception as e:
-        logger.error(
-            "Something went wrong while trying to generate the auxiliary file "
-            "for %s. %s" % (datafile_path, e))
-        generate_auxiliary_file.update_state(state=celery.states.FAILURE)
-
-        raise celery.exceptions.Ignore()
+            return auxiliary_file_store_item.uuid
 
 
 def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
