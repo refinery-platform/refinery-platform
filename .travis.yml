@@ -17,6 +17,9 @@ addons:
       - postgresql-client-10
       - libgconf-2-4  # for Cypress
 
+before_install:
+  - sudo apt-get install apache2-dev
+
 install:
   - node --version
   - NODE_VERSION=10.16.0

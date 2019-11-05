@@ -32,6 +32,7 @@ class refinery::apache2 (
     mod_libs => {
     'wsgi' => "mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
     },
+    require => Class['refinery::python']
   }
 
   class { 'apache::mod::wsgi':
