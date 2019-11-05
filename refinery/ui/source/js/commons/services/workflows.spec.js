@@ -50,7 +50,7 @@ describe('Common.service.workflows: unit tests', function () {
       expect(typeof promise.then).toEqual('function');
       $httpBackend.flush();
       $rootScope.$digest();
-      expect(results.data.workflow.name).toEqual(fakeResponse.workflow.name);
+      expect(results.workflow.name).toEqual(fakeResponse.workflow.name);
     });
   });
 });
