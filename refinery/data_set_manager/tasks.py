@@ -14,9 +14,9 @@ import pysam
 import tempfile
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from file_store.models import FileExtension, generate_file_source_translator
-from file_store.tasks import FileImportTask, download_s3_object, \
-                                copy_file_object
+from file_store.models import generate_file_source_translator
+from file_store.tasks import FileImportTask, download_s3_object
+from file_store.utils import delete_file
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -287,88 +287,61 @@ def generate_auxiliary_file(parent_node_uuid):
     """
     generate_auxiliary_file.update_state(state=celery.states.STARTED)
     parent_node = Node.objects.get(uuid=parent_node_uuid)
-    datafile = parent_node.file_item.datafile
     auxiliary_file_store_item = FileStoreItem.objects.create()
-    auxiliary_node = parent_node.create_and_associate_auxiliary_node(
-        auxiliary_file_store_item
-    )
+    parent_node.create_and_associate_auxiliary_node(auxiliary_file_store_item)
     try:
         if not settings.REFINERY_S3_USER_DATA:
-            datafile_path = datafile.path
+            datafile_path = parent_node.file_item.datafile.path
         else:
-            datafile_path = datafile.name
-    except (NotImplementedError, ValueError):
-        datafile_path = None
-    
+            datafile_path = parent_node.file_item.datafile.name
+    except ValueError:
+        logger.error("No datafile for %s", parent_node.file_item)
+        return auxiliary_file_store_item.uuid
+
     start_time = time.time()
     logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
 
-    # Here we are checking for the FileExtension of the ParentNode's
-    # FileStoreItem because we will create auxiliary files based on what
-    # said value is
     if parent_node.file_item.get_extension().lower() == 'bam':
         try:
-            generate_bam_index(auxiliary_node.file_item.uuid, datafile_path)
-        except Exception as e:
-            logger.error(
-              "Something went wrong while trying to generate the auxiliary file "
-              "for %s. %s" % (datafile_path, e))
+            auxiliary_file_path = generate_bam_index(datafile_path)
+        except RuntimeError as exc:
+            logger.error("Error while generating auxiliary file for %s: %s",
+                         datafile_path, exc)
             generate_auxiliary_file.update_state(state=celery.states.FAILURE)
-
             raise celery.exceptions.Ignore()
-        else:
-            generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
+    else:  # this should never occur
+        auxiliary_file_path = ''
 
-            logger.debug("Auxiliary file for %s generated in %s "
-                     "seconds." % (datafile_path, time.time() - start_time))
-            return auxiliary_file_store_item.uuid
+    generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
+    logger.debug("Auxiliary file for %s generated in %s seconds",
+                 datafile_path, time.time() - start_time)
+    auxiliary_file_store_item.source = auxiliary_file_path
+    auxiliary_file_store_item.save()
+    return auxiliary_file_store_item.uuid
 
 
-def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
-    """
-    Generate a bam_index file and associate it with the auxiliary
-    FileStoreItem from our generate_auxiliary_file task
-    :param auxiliary_file_store_item_uuid: uuid of FileStoreItem to generate
-    auxiliary file for
-    :type auxiliary_file_store_item_uuid: string
-    :param datafile_path: Full path on disk to the datafile that we want to
-    generate a bam index file for
-    :type datafile_path: string
-    """
-
-    # Try and fetch the bam_index FileExtension
-    # NOTE: that we are not handling the normal errors for an orm.get()s below
-    # because we want the task from which this function is called within to
-    # fail if we can't get what we want.
-    bam_index_file_extension = FileExtension.objects.get(name="bai").name
-    auxiliary_file_store_item = FileStoreItem.objects.get(
-        uuid=auxiliary_file_store_item_uuid
-    )
+def generate_bam_index(bam_file_path):
+    """Generate a BAM index file given an absolute BAM file path"""
+    temp_dir = tempfile.mkdtemp()
+    bam_file_name = os.path.basename(bam_file_path)
+    bam_index_file_path = os.path.join(temp_dir, bam_file_name + '.bai')
 
     if settings.REFINERY_S3_USER_DATA:
-        key = datafile_path
-        bucket = settings.MEDIA_BUCKET
-        temp_file = os.path.join(tempfile.gettempdir(), key)
-        os.makedirs(os.path.abspath(os.path.join(temp_file, os.pardir)))
-        with open(temp_file, 'wb') as destination:
-            download_s3_object(bucket, key, destination)
-        pysam.index(bytes(temp_file))
-        datafile_path = temp_file
-        os.remove(temp_file)
+        temp_bam_file_path = os.path.join(temp_dir, bam_file_name)
+        try:
+            with open(temp_bam_file_path, 'wb') as tmp:
+                download_s3_object(settings.MEDIA_BUCKET, bam_file_path, tmp)
+        except (EnvironmentError, botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError) as exc:
+            raise RuntimeError(exc)
+        else:
+            pysam.index(temp_bam_file_path, bam_index_file_path)
+        finally:
+            delete_file(temp_bam_file_path)
     else:
-        temp_file = os.path.join(tempfile.gettempdir(), datafile_path)
-        os.makedirs(os.path.abspath(os.path.join(temp_file, os.pardir)))
-        with open(temp_file, 'wb') as destination, \
-                open(datafile_path, 'rb') as source:
-            copy_file_object(source, destination)
-        pysam.index(bytes(temp_file))
-        datafile_path = temp_file
-        os.remove(temp_file)
+        pysam.index(bam_file_path, bam_index_file_path)
 
-    # Map source field of FileStoreItem to path of newly created bam index file
-    auxiliary_file_store_item.source = "{}.{}".format(
-        datafile_path, bam_index_file_extension)
-    auxiliary_file_store_item.save()
+    return bam_index_file_path
 
 
 def post_process_file_import(**kwargs):
