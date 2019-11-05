@@ -15,7 +15,8 @@ import tempfile
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from file_store.models import FileExtension, generate_file_source_translator
-from file_store.tasks import FileImportTask, download_s3_object
+from file_store.tasks import FileImportTask, download_s3_object, \
+                                copy_file_object
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
@@ -359,7 +360,14 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
         datafile_path = temp_file
         os.remove(temp_file)
     else:
-        pysam.index(bytes(datafile_path))
+        temp_file = os.path.join(tempfile.gettempdir(), datafile_path)
+        os.makedirs(os.path.abspath(os.path.join(temp_file, os.pardir)))
+        with open(temp_file, 'wb') as destination, \
+                open(datafile_path, 'rb') as source:
+            copy_file_object(source, destination)
+        pysam.index(bytes(temp_file))
+        datafile_path = temp_file
+        os.remove(temp_file)
 
     # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
