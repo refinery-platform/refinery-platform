@@ -345,10 +345,6 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
         uuid=auxiliary_file_store_item_uuid
     )
 
-    # Leverage pysam library to generate bam index file
-    # FIXME: This should be refactored once we don't have a need for
-    # Standalone IGV because this is creating a bam_index file in the same
-    # directory as it's bam file
     if settings.REFINERY_S3_USER_DATA:
         key = datafile_path
         bucket = settings.MEDIA_BUCKET
