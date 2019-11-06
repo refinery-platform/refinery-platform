@@ -63,7 +63,7 @@ class NodeIndexTests(APITestCase):
             (
                 re.sub(r'\d+', '#', key),
                 re.sub(r'\d+', '#', value) if
-                type(value) in (str, str) and
+                type(value) == str and
                 key != 'REFINERY_DOWNLOAD_URL_s' and
                 'uuid' not in key
                 else value
