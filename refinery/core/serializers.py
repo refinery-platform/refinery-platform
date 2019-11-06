@@ -32,7 +32,7 @@ class AnalysisSerializer(serializers.ModelSerializer):
         model = Analysis
         fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
                   'summary', 'time_start', 'time_end', 'tool_display_name',
-                  'uuid', 'workflow', 'workflow__uuid')
+                  'uuid', 'workflow__uuid')
 
     def get_tool_display_name(self, analysis):
         try:
