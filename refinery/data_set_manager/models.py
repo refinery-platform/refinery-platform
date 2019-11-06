@@ -642,7 +642,9 @@ class Node(models.Model):
     def generate_auxiliary_node_task(self):
         """This method is initiated after a task_success signal is returned
         from the file import task.  It generates the tasks for creating an
-        auxiliary file and importing it into refinery
+        auxiliary file and importing it into refinery.  Use
+        is_auxiliary_node_needed() to check if this should be run before
+        running it.
         """
 
         generate = data_set_manager.tasks.generate_auxiliary_file.subtask(

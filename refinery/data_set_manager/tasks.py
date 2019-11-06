@@ -296,7 +296,8 @@ def generate_auxiliary_file(parent_node_uuid):
             datafile_path = parent_node.file_item.datafile.name
     except ValueError:
         logger.error("No datafile for %s", parent_node.file_item)
-        return auxiliary_file_store_item.uuid
+        generate_auxiliary_file.update_state(state=celery.states.FAILURE)
+        raise celery.exceptions.Ignore()
 
     start_time = time.time()
     logger.debug("Starting auxiliary file gen. for %s" % datafile_path)
@@ -310,7 +311,10 @@ def generate_auxiliary_file(parent_node_uuid):
             generate_auxiliary_file.update_state(state=celery.states.FAILURE)
             raise celery.exceptions.Ignore()
     else:  # this should never occur
-        auxiliary_file_path = ''
+        logger.error("Parent node file: %s has improper extension",
+                     datafile_path)
+        generate_auxiliary_file.update_state(state=celery.states.FAILURE)
+        raise celery.exceptions.Ignore()
 
     generate_auxiliary_file.update_state(state=celery.states.SUCCESS)
     logger.debug("Auxiliary file for %s generated in %s seconds",
@@ -367,8 +371,7 @@ def post_process_file_import(**kwargs):
                     node.uuid)
         if kwargs['state'] == celery.states.SUCCESS and \
                 node.is_auxiliary_node_needed():
-            auxiliary_task = node.generate_auxiliary_node_task()
-            auxiliary_task.delay()
+            node.generate_auxiliary_node_task().delay()
 
 
 @celery.signals.worker_init.connect
