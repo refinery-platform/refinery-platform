@@ -1787,8 +1787,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
         )
         force_authenticate(get_request_with_ds, user=self.user)
         get_response = self.view(get_request_with_ds)
-        self.assertEqual(get_response.data[0].get('workflow'),
-                         self.analysis.workflow.id)
+        self.assertEqual(get_response.data[0].get('workflow__uuid'),
+                         self.analysis.workflow.uuid)
 
     def test_get_analysis_with_data_set_uuid_returns_owner_field(self):
         self.analysis2.delete()
