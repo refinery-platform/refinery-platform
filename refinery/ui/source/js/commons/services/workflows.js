@@ -1,3 +1,11 @@
+/**
+ * Workflow V2 Service
+ * @namespace workflowService
+ * @desc Service responsible for fetching a Django REST framework serialized
+ * workflow object
+ * @memberOf refineryApp
+ */
+
 (function () {
   'use strict';
   angular
