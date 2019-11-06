@@ -1253,8 +1253,8 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         parameters_dict = self.tool._create_workflow_parameters_dict()
         parameters_dict_with_uuids = {}
-        for key in list(parameters_dict.keys()):
-            for k in list(parameters_dict[key].keys()):
+        for key in parameters_dict.keys():
+            for k in parameters_dict[key].keys():
                 parameters_dict_with_uuids[
                     str(GalaxyParameter.objects.get(name=k).uuid)
                 ] = str(parameters_dict[key][k])
@@ -1705,7 +1705,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertEqual(
             self.tool.analysis.workflow_steps_num,
-            len(list(galaxy_workflow_dict["steps"].keys()))
+            len(galaxy_workflow_dict["steps"].keys())
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):

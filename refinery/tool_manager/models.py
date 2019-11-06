@@ -771,9 +771,7 @@ class WorkflowTool(Tool):
 
         workflow_dict = self._get_workflow_dict()
         self.analysis.workflow_copy = workflow_dict
-        self.analysis.workflow_steps_num = len(
-            list(workflow_dict["steps"].keys())
-        )
+        self.analysis.workflow_steps_num = len(workflow_dict["steps"].keys())
         self.analysis.set_owner(self.get_owner())
         self.analysis.save()
 
@@ -1196,7 +1194,7 @@ class WorkflowTool(Tool):
             self._get_galaxy_dataset_provenance(galaxy_dataset_dict)["job_id"]
         )["inputs"]
 
-        for key in list(job_inputs.keys()):
+        for key in job_inputs.keys():
             galaxy_dataset = job_inputs[key]
             galaxy_dataset_provenance = self._get_galaxy_dataset_provenance(
                 galaxy_dataset
@@ -1300,7 +1298,7 @@ class WorkflowTool(Tool):
             creating_job = self._get_galaxy_dataset_job(galaxy_dataset_dict)
         creating_job_outputs = creating_job["outputs"]
         workflow_step_output_name = [
-            output_name for output_name in list(creating_job_outputs.keys())
+            output_name for output_name in creating_job_outputs.keys()
             if creating_job_outputs[output_name]["uuid"] ==
             galaxy_dataset_dict["uuid"]
         ]
@@ -1471,7 +1469,7 @@ class WorkflowTool(Tool):
             rename_dataset_key = (
                 "RenameDatasetAction{}".format(galaxy_dataset_dict["name"])
             )
-            if rename_dataset_key in list(post_job_actions.keys()):
+            if rename_dataset_key in post_job_actions.keys():
                 galaxy_dataset_dict["name"] = (
                     post_job_actions[
                         rename_dataset_key
