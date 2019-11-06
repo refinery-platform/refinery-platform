@@ -1842,7 +1842,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             galaxy_workflow_invocation
         )
 
-    @mock.patch("celery.task.sets.group.apply_async")
+    @mock.patch("celery.group.apply_async")
     @mock.patch.object(celery.result.GroupResult, "ready",
                        return_value=False)
     @mock.patch.object(AnalysisStatus, "set_galaxy_import_task_group_id")
