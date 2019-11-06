@@ -367,7 +367,8 @@ def post_process_file_import(**kwargs):
                     node.uuid)
         if kwargs['state'] == celery.states.SUCCESS and \
                 node.is_auxiliary_node_needed():
-            node.run_generate_auxiliary_node_task()
+            auxiliary_task = node.generate_auxiliary_node_task()
+            auxiliary_task.delay()
 
 
 @celery.signals.worker_init.connect

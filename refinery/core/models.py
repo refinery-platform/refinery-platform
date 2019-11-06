@@ -1426,7 +1426,7 @@ class Analysis(OwnableResource):
             else:
                 if node.is_derived() and node.is_auxiliary_node_needed():
                     auxiliary_file_tasks += [
-                        node.run_generate_auxiliary_node_task()
+                        node.generate_auxiliary_node_task()
                     ]
         index_annotated_nodes_selection(node_uuids)
         return auxiliary_file_tasks

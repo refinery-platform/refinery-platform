@@ -639,7 +639,7 @@ class Node(models.Model):
                 self.file_item.get_extension().lower() in \
                 self.AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION
 
-    def run_generate_auxiliary_node_task(self):
+    def generate_auxiliary_node_task(self):
         """This method is initiated after a task_success signal is returned
         from the file import task.
 
