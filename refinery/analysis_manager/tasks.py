@@ -74,10 +74,10 @@ def _check_galaxy_history_state(analysis_uuid):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
         get_group_result(
-            analysis_status.refinery_import_task_group_id
+            str(analysis_status.refinery_import_task_group_id)
         ).delete()
         get_group_result(
-            analysis_status.galaxy_import_task_group_id
+            str(analysis_status.galaxy_import_task_group_id)
         ).delete()
         analysis.galaxy_cleanup()
         return
@@ -161,9 +161,9 @@ def _attach_workflow_outputs(analysis_uuid):
     logger.info("Analysis '%s' finished successfully", analysis)
     analysis.galaxy_cleanup()
 
-    get_group_result(analysis_status.refinery_import_task_group_id).delete()
-    get_group_result(analysis_status.galaxy_import_task_group_id).delete()
-    get_group_result(analysis_status.galaxy_export_task_group_id).delete()
+    get_group_result(str(analysis_status.refinery_import_task_group_id)).delete()
+    get_group_result(str(analysis_status.galaxy_import_task_group_id)).delete()
+    get_group_result(str(analysis_status.galaxy_export_task_group_id)).delete()
 
     # Update file count and file size of the corresponding data set
     analysis.data_set.file_count = analysis.data_set.get_file_count()
@@ -198,7 +198,7 @@ def _galaxy_file_export(analysis_uuid):
 
     # check if analysis results have finished downloading from Galaxy
     galaxy_export_group = get_group_result(
-        analysis_status.galaxy_export_task_group_id
+        str(analysis_status.galaxy_export_task_group_id)
     )
     if not galaxy_export_group.ready():
         logger.debug("Results download pending for analysis '%s'", analysis)
@@ -212,10 +212,10 @@ def _galaxy_file_export(analysis_uuid):
         analysis.send_email()
 
         get_group_result(
-            analysis_status.refinery_import_task_group_id
+            str(analysis_status.refinery_import_task_group_id)
         ).delete()
         get_group_result(
-            analysis_status.galaxy_import_task_group_id
+            str(analysis_status.galaxy_import_task_group_id)
         ).delete()
         galaxy_export_group.delete()
         analysis.galaxy_cleanup()
@@ -265,7 +265,7 @@ def _refinery_file_import(analysis_uuid):
 
     # check if all files were successfully imported into Refinery
     refinery_import_group = get_group_result(
-        analysis_status.refinery_import_task_group_id
+        str(analysis_status.refinery_import_task_group_id)
     )
     if not refinery_import_group.ready():
         logger.debug("Input file import pending for analysis '%s'",
@@ -336,7 +336,7 @@ def _run_galaxy_file_import(analysis_uuid):
 
     # Check if data files were successfully imported into Galaxy
     galaxy_file_import_group = get_group_result(
-        analysis_status.galaxy_import_task_group_id
+        str(analysis_status.galaxy_import_task_group_id)
     )
     if not galaxy_file_import_group.ready():
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
@@ -348,7 +348,7 @@ def _run_galaxy_file_import(analysis_uuid):
         analysis_status.set_galaxy_import_state(AnalysisStatus.ERROR)
         analysis.send_email()
         get_group_result(
-            analysis_status.refinery_import_task_group_id
+            str(analysis_status.refinery_import_task_group_id)
         ).delete()
         galaxy_file_import_group.delete()
         analysis.galaxy_cleanup()
@@ -388,7 +388,7 @@ def _run_galaxy_workflow(analysis_uuid):
 
     # Check on the status of the running galaxy workflow
     galaxy_workflow_group = get_group_result(
-        analysis_status.galaxy_workflow_task_group_id
+        str(analysis_status.galaxy_workflow_task_group_id)
     )
     if not galaxy_workflow_group.ready():
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
@@ -401,7 +401,7 @@ def _run_galaxy_workflow(analysis_uuid):
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
         analysis.send_email()
         get_group_result(
-            analysis_status.refinery_import_task_group_id
+            str(analysis_status.refinery_import_task_group_id)
         ).delete()
         galaxy_workflow_group.delete()
         analysis.galaxy_cleanup()
