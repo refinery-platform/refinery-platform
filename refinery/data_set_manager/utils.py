@@ -290,7 +290,7 @@ def update_annotated_nodes(
 
     # To avoid exponential node creation, count the number of nodes to be
     # created first.
-    for node_id, node in list(nodes.items()):
+    for node_id, node in nodes.items():
         total_unique_attrs += len(
             nodes[node_id]["attributes"]
         )
@@ -312,7 +312,7 @@ def update_annotated_nodes(
 
         logger.error(error_message)
 
-    for node_id, node in list(nodes.items()):
+    for node_id, node in nodes.items():
         if node["type"] == node_type:
             bulk_list, counter = _create_annotated_node_objs(
                 bulk_list,
@@ -399,7 +399,7 @@ def _add_annotated_nodes(
     counter = 0
     bulk_list = []
 
-    for node_id, node in list(nodes.items()):
+    for node_id, node in nodes.items():
         if node["type"] == node_type:
             if node["uuid"] in node_uuids:
                 bulk_list, num_created = _create_annotated_node_objs(
@@ -762,7 +762,7 @@ def create_facet_field_counts(facet_fields):
     # buckets with an array of objects {count: int, val: str}
 
     facet_field_counts = {}
-    for field_name, count_obj in list(facet_fields.items()):
+    for field_name, count_obj in facet_fields.items():
         if field_name == 'count':
             continue
         count_array = count_obj.get('buckets')

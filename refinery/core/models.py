@@ -337,7 +337,7 @@ class OwnableResource(BaseResource):
             attach_perms=True,
             with_group_users=False
         )
-        for user, permission in list(user_permissions.items()):
+        for user, permission in user_permissions.items():
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
         return None
@@ -435,7 +435,7 @@ class SharableResource(OwnableResource):
 
         groups = []
 
-        for group_object, permission_list in list(permissions.items()):
+        for group_object, permission_list in permissions.items():
             group = {}
             try:
                 group["group"] = ExtendedGroup.objects.get(id=group_object.id)
@@ -481,7 +481,7 @@ class SharableResource(OwnableResource):
     def is_public(self):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
-        for group_object, permission_list in list(permissions.items()):
+        for group_object, permission_list in permissions.items():
             if ExtendedGroup.objects.public_group().id == group_object.id:
                 for permission in permission_list:
                     if permission.startswith("change"):
@@ -525,7 +525,7 @@ class ManageableResource(models.Model):
         # ownership is determined by "add" permission
         group_permissions = get_groups_with_perms(self, attach_perms=True)
 
-        for group, permission in list(group_permissions.items()):
+        for group, permission in group_permissions.items():
             if "add_%s" % self._meta.verbose_name in permission:
                 return group.extendedgroup
 

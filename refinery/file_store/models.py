@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def _map_source(source):
     """Convert URLs to file system paths by applying file source map"""
     for pattern, replacement in \
-            list(settings.REFINERY_FILE_SOURCE_MAP.items()):
+            settings.REFINERY_FILE_SOURCE_MAP.items():
         translated_source = re.sub(pattern, replacement, source)
         if translated_source != source:
             return translated_source

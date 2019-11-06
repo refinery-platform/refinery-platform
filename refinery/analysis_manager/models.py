@@ -51,7 +51,7 @@ class AnalysisStatus(models.Model):
         Set the `galaxy_history_state` of an analysis
         :param state: a valid GALAXY_HISTORY_STATE
         """
-        if state in list(dict(self.GALAXY_HISTORY_STATES).keys()):
+        if state in dict(self.GALAXY_HISTORY_STATES).keys():
             self.galaxy_history_state = state
             self.save()
         else:
@@ -62,7 +62,7 @@ class AnalysisStatus(models.Model):
         Set the `galaxy_import_state` of an analysis
         :param state: a valid GALAXY_HISTORY_STATE
         """
-        if state in list(dict(self.GALAXY_HISTORY_STATES).keys()):
+        if state in dict(self.GALAXY_HISTORY_STATES).keys():
             self.galaxy_import_state = state
             self.save()
         else:

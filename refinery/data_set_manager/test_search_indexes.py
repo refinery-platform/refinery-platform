@@ -68,7 +68,7 @@ class NodeIndexTests(APITestCase):
                 'uuid' not in key
                 else value
             )
-            for (key, value) in list(data.items())
+            for (key, value) in data.items()
         )
         return data
 

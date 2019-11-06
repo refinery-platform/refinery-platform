@@ -524,7 +524,7 @@ def create_expanded_workflow_graph(galaxy_workflow_dict):
     steps = galaxy_workflow_dict["steps"]
 
     # iterate over steps to create nodes
-    for current_node_id, step in list(steps.items()):
+    for current_node_id, step in steps.items():
         # ensure node id is an integer
         current_node_id = int(current_node_id)
         # create node
@@ -542,10 +542,10 @@ def create_expanded_workflow_graph(galaxy_workflow_dict):
         graph.node[current_node_id]['node'] = None
     # iterate over steps to create edges (this is done by looking at
     # input_connections, i.e. only by looking at tool nodes)
-    for current_node_id, step in list(steps.items()):
+    for current_node_id, step in steps.items():
         # ensure node id is an integer
         current_node_id = int(current_node_id)
-        input_connections = iter(list(step['input_connections'].items()))
+        input_connections = step['input_connections'].items()
         for current_node_input_name, input_connection in input_connections:
             parent_node_id = input_connection["id"]
             # test if parent node is a tool node or an input node to pick the
