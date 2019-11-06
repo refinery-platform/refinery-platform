@@ -1452,7 +1452,7 @@ class Analysis(OwnableResource):
             )
         # Associate the AnalysisNodeConnections with their respective
         # AnalysisResults
-        for output_connections in list(distinct_filenames_map.values()):
+        for output_connections in distinct_filenames_map.values():
             for index, output_connection in enumerate(output_connections):
                 analysis_result = None
                 if output_connection.is_refinery_file:

@@ -301,7 +301,7 @@ def update_annotated_nodes(
             total_attrs += u_len
     if total_attrs == total_unique_attrs * num_nodes_of_type \
             and len([
-                n for n in list(nodes.values()) if n['type'] == 'Sample Name'
+                n for n in nodes.values() if n['type'] == 'Sample Name'
             ]) > 1:
         # This should exclude CSV imports
         # TODO: Not happy about this hack at all.
