@@ -335,11 +335,11 @@ def generate_bam_index(bam_file_path):
                 botocore.exceptions.ClientError) as exc:
             raise RuntimeError(exc)
         else:
-            pysam.index(temp_bam_file_path, bam_index_file_path)
+            pysam.index(bytes(temp_bam_file_path), bytes(bam_index_file_path))
         finally:
             delete_file(temp_bam_file_path)
     else:
-        pysam.index(bam_file_path, bam_index_file_path)
+        pysam.index(bytes(bam_file_path), bytes(bam_index_file_path))
 
     return bam_index_file_path
 
