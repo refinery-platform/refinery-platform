@@ -191,7 +191,7 @@ def _galaxy_file_export(analysis_uuid):
         ).apply_async()
         galaxy_export_group.save()
         analysis_status.galaxy_export_task_group_id = (
-            galaxy_export_group.group_id
+            galaxy_export_group.id
         )
         analysis_status.save()
         run_analysis.retry(countdown=RETRY_INTERVAL)
@@ -259,7 +259,7 @@ def _refinery_file_import(analysis_uuid):
         ).apply_async()
         refinery_import_group.save()
         analysis_status.refinery_import_task_group_id = \
-            refinery_import_group.group_id
+            refinery_import_group.id
         analysis_status.save()
         run_analysis.retry(countdown=RETRY_INTERVAL)
 
@@ -329,7 +329,7 @@ def _run_galaxy_file_import(analysis_uuid):
         galaxy_file_import_group.save()
 
         analysis_status.set_galaxy_import_task_group_id(
-            galaxy_file_import_group.group_id
+            galaxy_file_import_group.id
         )
         analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
         run_analysis.retry(countdown=RETRY_INTERVAL)
@@ -381,7 +381,7 @@ def _run_galaxy_workflow(analysis_uuid):
         galaxy_workflow_group.save()
 
         analysis_status.set_galaxy_workflow_task_group_id(
-            galaxy_workflow_group.group_id
+            galaxy_workflow_group.id
         )
         analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
         run_analysis.retry(countdown=RETRY_INTERVAL)
