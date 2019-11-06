@@ -22,7 +22,7 @@
         $rootScope = $injector.get('$rootScope');
         service = $injector.get('workflowService');
         mocker = $injector.get('mockParamsFactory');
-        fakeUuid = mocker.generateUuid()
+        fakeUuid = mocker.generateUuid();
       });
     });
 
@@ -55,4 +55,4 @@
       });
     });
   });
-}())
+}());
