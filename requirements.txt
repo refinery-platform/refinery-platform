@@ -7,6 +7,7 @@ codecov==2.0.11
 coverage==4.0.3
 cryptography==2.5
 Django==1.8.18
+django-celery==3.1.17
 django-chunked-upload==1.1.0
 django-cuser==2017.3.16
 django-debug-toolbar==1.9.1

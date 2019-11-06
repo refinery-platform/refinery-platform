@@ -7,6 +7,8 @@ import subprocess
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
 
+import djcelery
+
 logger = logging.getLogger(__name__)
 
 # get the absolute path of the top level project dir
@@ -48,6 +50,8 @@ def get_setting(name, settings=local_settings, default=None):
         else:
             raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
+
+djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
 # (convert JSON list of lists to tuple of tuples)
@@ -168,6 +172,7 @@ INSTALLED_APPS = (
     'core',
     'data_set_manager',
     'guardian',
+    'djcelery',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -318,7 +323,7 @@ CELERYBEAT_SCHEDULE = {
         }
     },
 }
-CELERY_RESULT_BACKEND = 'cache+memcached://127.0.0.1:11211/'
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 # keep chunked uploads outside the file_store directory
