@@ -191,7 +191,7 @@ def _galaxy_file_export(analysis_uuid):
         logger.info(
             "Starting downloading of results from Galaxy for analysis "
             "'%s'", analysis)
-        galaxy_export_group = group(galaxy_export_tasks).apply()
+        galaxy_export_group = group(galaxy_export_tasks).apply_async()
         galaxy_export_group.save()
         analysis_status.galaxy_export_task_group_id = (
             galaxy_export_group.id
@@ -259,7 +259,7 @@ def _refinery_file_import(analysis_uuid):
                     analysis)
         refinery_import_group = group(
             analysis.get_refinery_import_task_signatures()
-        ).apply()
+        ).apply_async()
         refinery_import_group.save()
         analysis_status.refinery_import_task_group_id = \
             refinery_import_group.id
@@ -325,7 +325,7 @@ def _run_galaxy_file_import(analysis_uuid):
 
         galaxy_import_tasks = tool.get_galaxy_import_tasks()
 
-        galaxy_file_import_group = group(galaxy_import_tasks).apply()
+        galaxy_file_import_group = group(galaxy_import_tasks).apply_async()
 
         galaxy_file_import_group.save()
 
@@ -375,7 +375,7 @@ def _run_galaxy_workflow(analysis_uuid):
             _invoke_galaxy_workflow.subtask((analysis_uuid,))
         ]
 
-        galaxy_workflow_group = group(galaxy_workflow_tasks).apply()
+        galaxy_workflow_group = group(galaxy_workflow_tasks).apply_async()
 
         galaxy_workflow_group.save()
 
