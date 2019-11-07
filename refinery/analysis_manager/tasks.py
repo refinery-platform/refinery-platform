@@ -86,7 +86,7 @@ def _check_galaxy_history_state(analysis_uuid):
         analysis_status.set_galaxy_history_state(
             AnalysisStatus.UNKNOWN
         )
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
     else:
         # workaround to avoid moving the progress bar backward
         if analysis_status.galaxy_history_progress < percent_complete:
@@ -94,7 +94,7 @@ def _check_galaxy_history_state(analysis_uuid):
             analysis_status.save()
         if percent_complete < 100:
             analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-            # run_analysis.retry(countdown=RETRY_INTERVAL)
+            run_analysis.retry(countdown=RETRY_INTERVAL)
         else:
             analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
 
@@ -193,7 +193,7 @@ def _galaxy_file_export(analysis_uuid):
             galaxy_export_group.id
         )
         analysis_status.save()
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # check if analysis results have finished downloading from Galaxy
     galaxy_export_group = get_group_result(
@@ -201,7 +201,7 @@ def _galaxy_file_export(analysis_uuid):
     )
     if not galaxy_export_group.ready():
         logger.debug("Results download pending for analysis '%s'", analysis)
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
     # all tasks must have succeeded or failed
     elif not galaxy_export_group.successful():
         error_msg = ("Analysis '{}' failed while downloading results "
@@ -260,7 +260,7 @@ def _refinery_file_import(analysis_uuid):
         analysis_status.refinery_import_task_group_id = \
             refinery_import_group.id
         analysis_status.save()
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # check if all files were successfully imported into Refinery
     refinery_import_group = get_group_result(
@@ -269,7 +269,7 @@ def _refinery_file_import(analysis_uuid):
     if not refinery_import_group.ready():
         logger.debug("Input file import pending for analysis '%s'",
                      analysis)
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     elif not refinery_import_group.successful():
         error_msg = "Analysis '{}' failed during file import".format(
@@ -329,7 +329,7 @@ def _run_galaxy_file_import(analysis_uuid):
             galaxy_file_import_group.id
         )
         analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # Check if data files were successfully imported into Galaxy
     galaxy_file_import_group = get_group_result(
@@ -337,7 +337,7 @@ def _run_galaxy_file_import(analysis_uuid):
     )
     if not galaxy_file_import_group.ready():
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
     elif not galaxy_file_import_group.successful():
         error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
         logger.error(error_msg)
@@ -379,7 +379,7 @@ def _run_galaxy_workflow(analysis_uuid):
             galaxy_workflow_group.id
         )
         analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # Check on the status of the running galaxy workflow
     galaxy_workflow_group = get_group_result(
@@ -387,7 +387,7 @@ def _run_galaxy_workflow(analysis_uuid):
     )
     if not galaxy_workflow_group.ready():
         logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        # run_analysis.retry(countdown=RETRY_INTERVAL)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     elif not galaxy_workflow_group.successful():
         error_msg = "Analysis '{}' failed in Galaxy".format(analysis)

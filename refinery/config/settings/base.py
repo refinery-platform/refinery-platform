@@ -52,7 +52,6 @@ def get_setting(name, settings=local_settings, default=None):
 
 
 djcelery.setup_loader()
-
 # a tuple that lists people who get code error notifications
 # (convert JSON list of lists to tuple of tuples)
 ADMINS = tuple(map(tuple, get_setting("ADMINS")))
