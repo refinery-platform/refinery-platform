@@ -345,7 +345,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 self.tool._get_owner_info_as_dict()
             )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_vis_tool_can_be_relaunched(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)

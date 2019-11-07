@@ -12,6 +12,7 @@ import botocore
 import celery
 import requests
 
+from config import celery_app
 from .models import FileStoreItem
 from .utils import (S3MediaStorage, SymlinkedFileSystemStorage,
                     copy_file_object, copy_s3_object, delete_file,
@@ -26,6 +27,7 @@ logger.setLevel(celery.utils.LOG_LEVELS[settings.REFINERY_LOG_LEVEL])
 class FileImportTask(celery.Task):
 
     soft_time_limit = 3600  # 1 hour
+    typing = False
 
     def run(self, item_uuid, target_name=None):
         """Download or copy data file for FileStoreItem specified by UUID
@@ -306,7 +308,7 @@ class ProgressPercentage(object):
                 percent_done = (self._seen_so_far / self._file_size) * 100
             else:
                 percent_done = 0
-            FileImportTask().update_state(
+            FileImportTask.update_state(
                 self._import_task_id, state='PROGRESS', meta={
                     'percent_done': '{:.0f}'.format(percent_done),
                     'current': self._seen_so_far, 'total': self._file_size
@@ -314,7 +316,7 @@ class ProgressPercentage(object):
             )
 
 
-@celery.task.task()
+@celery.shared_task()
 def download_file(url, target_path, file_size=1):
     '''Download file to target_path from specified URL.
     Raises DonwloadError
@@ -376,3 +378,6 @@ def download_file(url, target_path, file_size=1):
 
     response.close()
     logger.debug("Finished downloading")
+
+
+FileImportTask = celery_app.register_task(FileImportTask())

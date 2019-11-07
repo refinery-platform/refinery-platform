@@ -10,7 +10,7 @@ from django.conf import settings
 
 from bioblend import galaxy
 import celery
-from celery import task
+from celery import shared_task
 from celery.result import GroupResult
 from celery.task import Task
 from celery import group
@@ -224,7 +224,7 @@ def _galaxy_file_export(analysis_uuid):
         analysis.galaxy_cleanup()
 
 
-@task
+@shared_task
 def _invoke_galaxy_workflow(analysis_uuid):
     tool = _get_workflow_tool(analysis_uuid)
 
@@ -284,7 +284,7 @@ def _refinery_file_import(analysis_uuid):
         refinery_import_group.delete()
 
 
-@task(base=AnalysisHandlerTask, max_retries=None)
+@shared_task(base=AnalysisHandlerTask, max_retries=None)
 def run_analysis(analysis_uuid):
     """
     Manage file importing/exporting, execution, and Galaxy operations for
@@ -407,7 +407,7 @@ def _run_galaxy_workflow(analysis_uuid):
         return
 
 
-@task
+@shared_task
 def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
                         library_dict):
     tool = _get_workflow_tool(analysis_uuid)
@@ -519,7 +519,7 @@ def _get_galaxy_download_task_ids(analysis):
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
-                task_id = FileImportTask().subtask((file_store_item.uuid,
+                task_id = FileImportTask.subtask((file_store_item.uuid,
                                                     result_name,))
                 task_id_list.append(task_id)
 

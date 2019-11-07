@@ -396,7 +396,7 @@ class AnalysisTests(TestCase):
                                       is_refinery_file=False)
         self.assertEqual(
             self.analysis.get_refinery_import_task_signatures(),
-            [FileImportTask().subtask(
+            [FileImportTask.subtask(
                 (self.analysis.get_input_file_store_items()[0].uuid,)
             )]
         )

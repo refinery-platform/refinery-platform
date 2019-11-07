@@ -5,7 +5,6 @@ import uuid
 from django.contrib.auth.models import User
 
 from celery.states import FAILURE, PENDING
-from djcelery.models import TaskMeta
 
 from core.utils import build_absolute_url
 from factory_boy.utils import make_analyses_with_single_dataset
@@ -38,9 +37,6 @@ class NodeIndexTests(APITestCase):
 
         self.file_store_item = FileStoreItem.objects.create(
             import_task_id=str(uuid.uuid4())
-        )
-        self.import_task = TaskMeta.objects.create(
-            task_id=self.file_store_item.import_task_id
         )
         self.node = Node.objects.create(assay=self.assay, study=study,
                                         file_item=self.file_store_item,
@@ -133,35 +129,6 @@ class NodeIndexTests(APITestCase):
             self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.source,
             expected_filetype=self.file_store_item.filetype,
-            expected_datafile=self.file_store_item.datafile
-        )
-
-    def test_prepare_node_pending_yet_existing_file_import_task(self):
-        with mock.patch.object(FileStoreItem, 'get_import_status',
-                               return_value=PENDING):
-            self._assert_node_index_prepared_correctly(
-                self._prepare_node_index(self.node),
-                expected_download_url=constants.NOT_AVAILABLE
-            )
-
-    def test_prepare_node_pending_non_existent_file_import_task(self):
-        self.import_task.delete()
-        with mock.patch.object(FileStoreItem, 'get_datafile_url',
-                               return_value=None):
-            with mock.patch.object(FileStoreItem, 'get_import_status',
-                                   return_value=FAILURE):
-                self._assert_node_index_prepared_correctly(
-                    self._prepare_node_index(self.node),
-                    expected_download_url=constants.NOT_AVAILABLE
-                )
-
-    def test_prepare_node_no_file_import_task_id_yet(self):
-        self.file_store_item.import_task_id = ""
-        self.file_store_item.save()
-        self.import_task.delete()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=PENDING,
             expected_datafile=self.file_store_item.datafile
         )
 

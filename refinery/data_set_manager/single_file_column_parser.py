@@ -186,7 +186,7 @@ class SingleFileColumnParser:
             hasattr(self.metadata_file, "file") else self.metadata_file.name
         file_store_item = FileStoreItem.objects.create(source=file_source)
         investigation.pre_isarchive_file = file_store_item.uuid
-        FileImportTask().delay(investigation.pre_isarchive_file)
+        FileImportTask.delay(investigation.pre_isarchive_file)
         investigation.save()
 
         # TODO: test if there are fewer columns than required
@@ -274,7 +274,7 @@ class SingleFileColumnParser:
                 if (self.file_permanent or file_store_item.source.startswith(
                         (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
-                    FileImportTask().delay(uuid)
+                    FileImportTask.delay(uuid)
 
         return investigation
 

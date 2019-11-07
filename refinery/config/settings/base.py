@@ -7,8 +7,6 @@ import subprocess
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
 
-import djcelery
-
 logger = logging.getLogger(__name__)
 
 # get the absolute path of the top level project dir
@@ -51,7 +49,6 @@ def get_setting(name, settings=local_settings, default=None):
             raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
-djcelery.setup_loader()
 # a tuple that lists people who get code error notifications
 # (convert JSON list of lists to tuple of tuples)
 ADMINS = tuple(map(tuple, get_setting("ADMINS")))
@@ -63,7 +60,7 @@ MANAGERS = ADMINS
 DATABASES = get_setting("DATABASES")
 
 # transport://userid:password@hostname:port/virtual_host
-BROKER_URL = get_setting("BROKER_URL")
+CELERY_BROKER_URL = get_setting("BROKER_URL")
 
 TIME_ZONE = get_setting("TIME_ZONE")
 
@@ -171,7 +168,7 @@ INSTALLED_APPS = (
     'core',
     'data_set_manager',
     'guardian',
-    'djcelery',
+    'django_celery_results',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -304,16 +301,15 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # for external functions called in Celery tasks
-CELERYD_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+CELERY_WORKER_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
                      '%(funcName)s() - %(message)s'
-CELERYD_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+CELERY_WORKER_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
                           '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
-CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
-CELERY_ROUTES = {"file_store.tasks.FileImportTask": {"queue": "file_import"}}
-CELERY_ACCEPT_CONTENT = ['pickle']
-CELERYD_TASK_SOFT_TIME_LIMIT = 60  # seconds
-CELERYBEAT_SCHEDULE = {
+CELERY_WORKER_MAX_TASKS_PER_CHILD = get_setting("CELERY_WORKER_MAX_TASKS_PER_CHILD")
+CELERY_TASK_ROUTES = {"file_store.tasks.FileImportTask": {"queue": "file_import"}}
+CELERY_TASK_SOFT_TIME_LIMIT = 60  # seconds
+CELERY_BEAT_SCHEDULE = {
     'collect_site_statistics': {
         'task': 'core.tasks.collect_site_statistics',
         'schedule': timedelta(days=1),
@@ -322,7 +318,10 @@ CELERYBEAT_SCHEDULE = {
         }
     },
 }
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_TASK_SERIALIZER = 'pickle'
+CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_ACCEPT_CONTENT = {'pickle'}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 # keep chunked uploads outside the file_store directory

@@ -453,7 +453,7 @@ class ProcessISATabView(View):
                         if file_store_item.source.startswith(
                             (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                         ):
-                            FileImportTask().delay(file_store_item.uuid)
+                            FileImportTask.delay(file_store_item.uuid)
 
                 if request.is_ajax():
                     return JsonResponse({
@@ -1178,7 +1178,7 @@ class AddFileToNodeView(APIView):
             node.file_item.import_task_id = ""
             node.file_item.save()
             node.update_solr_index()
-            FileImportTask().delay(node.file_item.uuid)
+            FileImportTask.delay(node.file_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 

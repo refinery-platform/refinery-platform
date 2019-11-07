@@ -9,5 +9,5 @@ from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.dev')
 
 app = app_creator('config')
-app.config_from_object(settings)
+app.config_from_object(settings, namespace='CELERY_')
 app.autodiscover_tasks(settings.INSTALLED_APPS)

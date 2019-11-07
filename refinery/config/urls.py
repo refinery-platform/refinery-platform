@@ -48,7 +48,6 @@ urlpatterns = [
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^annotation_server/', include('annotation_server.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
-    url(r'^tasks/', include('djcelery.urls')),
     url(r'^files/$', user_files, name='user_files'),
     url(r'^files_download$', user_files_csv, name='user_files_csv'),
     url(r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_BASE_URL),

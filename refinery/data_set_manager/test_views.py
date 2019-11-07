@@ -118,7 +118,7 @@ class AddFileToNodeViewTests(APITestCase):
 
     @override_settings(REFINERY_DEPLOYMENT_PLATFORM='aws',
                        UPLOAD_BUCKET='test_bucket',
-                       CELERY_ALWAYS_EAGER=True)
+                       CELERY_TASK_ALWAYS_EAGER=True)
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_aws_post_file_store_item_source_translated(self,
                                                         update_solr_mock):
@@ -140,7 +140,7 @@ class AddFileToNodeViewTests(APITestCase):
 
     @override_settings(REFINERY_DEPLOYMENT_PLATFORM='not aws',
                        REFINERY_DATA_IMPORT_DIR='/import/path',
-                       CELERY_ALWAYS_EAGER=True)
+                       CELERY_TASK_ALWAYS_EAGER=True)
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_non_aws_post_file_store_item_source_translated(self,
                                                             update_solr_mock):
@@ -692,7 +692,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
         )
         self.assertEqual(response.status_code, 404)
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_check_datafiles_metadata_revision_subset_uploaded(self):
         open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
         self.post_tabular_meta_data_file(
@@ -716,7 +716,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             }
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     def test_check_datafiles_metadata_revision_files_will_be_deleted(self):
         open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
         self.post_tabular_meta_data_file(
@@ -1313,7 +1313,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     def test_post_good_isa_tab_file_with_datafiles(self):
         for name in ["rfc94.txt", "rfc134.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
@@ -1345,7 +1345,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         self.post_isa_tab(isa_tab_url="non-existant-file")
         self.unsuccessful_import_assertions()
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
         with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
@@ -1361,7 +1361,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     def test_metadata_revision_works_existing_datafiles_persisted(self):
         local_data_file_names = ["rfc94.txt", "rfc134.txt"]
         for name in local_data_file_names:
@@ -1401,7 +1401,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             )
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     def test_metadata_revision_works_datafiles_added_during_revision(self):
         local_data_file_names = ["rfc94.txt", "rfc134.txt"]
         for name in local_data_file_names:
@@ -1440,7 +1440,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
                 local_data_file_names + local_data_file_names_for_revision
             )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_works_datafiles_removed_during_revision(
         self, terminate_file_import_task_mock
@@ -1466,7 +1466,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             )), 0
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_metadata_revision_updates_dataset_title(self):
         with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
@@ -1530,7 +1530,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
         self.successful_import_assertions()
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     def test_post_good_tabular_file_with_datafiles(self):
         for name in ["test1.txt", "test2.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
@@ -1545,7 +1545,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
             len(investigation.get_file_store_items(local_only=True)), 3
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @mock.patch.object(FileStoreItem, 'terminate_file_import_task')
     def test_metadata_revision_works_grammatical_changes_only(
         self, terminate_file_import_task_mock
@@ -1569,7 +1569,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertTrue(AnnotatedNode.objects.filter(attribute_value='EDITED'))
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_works_existing_datafiles_persisted(
         self, terminate_file_import_task_mock
@@ -1617,7 +1617,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
             )
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_works_datafiles_added_during_revision(
         self, terminate_file_import_task_mock
@@ -1665,7 +1665,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 local_data_file_names + local_data_file_names_for_revision
             )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_works_datafiles_removed_during_revision(
         self, terminate_file_import_task_mock
@@ -1694,7 +1694,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 exclude_metadata_file=True, local_only=True)), 0
         )
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_updates_dataset_title(
         self, terminate_file_import_task_mock
@@ -1716,7 +1716,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         revised_data_set = DataSet.objects.last()
         self.assertEqual(revised_data_set.title, "New Title")
 
-    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
         response = self.post_tabular_meta_data_file(

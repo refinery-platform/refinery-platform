@@ -1637,7 +1637,7 @@ class Analysis(OwnableResource):
         to not re-import them without need.
         """
         return [
-            FileImportTask().subtask((file_store_item.uuid,))
+            FileImportTask.subtask((file_store_item.uuid,))
             for file_store_item in self.get_input_file_store_items()
             if not file_store_item.datafile
         ]

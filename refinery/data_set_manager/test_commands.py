@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @override_storage()
-@override_settings(CELERY_ALWAYS_EAGER=True)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class TestManagementCommands(TestCase):
     def setUp(self):
         self.test_data_base_path = os.path.join(TEST_DATA_BASE_PATH,
