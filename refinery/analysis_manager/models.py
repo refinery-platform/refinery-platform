@@ -72,7 +72,7 @@ class AnalysisStatus(models.Model):
         if self.analysis.has_all_local_input_files():
             return [{'state': celery.states.SUCCESS, 'percent_done': 100}]
         else:
-            return get_task_group_state(self.refinery_import_task_group_id)
+            return get_task_group_state(str(self.refinery_import_task_group_id))
 
     def galaxy_file_import_state(self):
         if self.galaxy_import_state and self.galaxy_import_progress != 0:
@@ -95,7 +95,7 @@ class AnalysisStatus(models.Model):
         return galaxy_history_state
 
     def galaxy_export_state(self):
-        return get_task_group_state(self.galaxy_export_task_group_id)
+        return get_task_group_state(str(self.galaxy_export_task_group_id))
 
     def set_galaxy_import_task_group_id(self, galaxy_import_task_group_id):
         self.galaxy_import_task_group_id = galaxy_import_task_group_id
