@@ -1,8 +1,8 @@
-from celery import shared_task
+from celery import task
 import docker
 
 
-@shared_task(ignore_result=True, throws=(docker.errors.APIError,))
+@task(ignore_result=True, throws=(docker.errors.APIError,))
 def start_container(visualization_tool):
     """Start a VisualizationTool's container. docker.errors.APIError is
     expected if a VisualizationTool is launched more than once.

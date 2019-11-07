@@ -118,7 +118,7 @@ class Command(BaseCommand):
             )
             s_tasks.append(sub_task)
 
-        job = group(tasks=s_tasks)
+        job = group(s_tasks)
         result = job.apply_async()
 
         task_num = 1
