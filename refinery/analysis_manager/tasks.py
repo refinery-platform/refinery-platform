@@ -38,7 +38,9 @@ class AnalysisHandlerTask(Task):
         """
         error_msg = "Monitoring task for analysis with UUID '{}' failed due " \
                     "to unexpected error: '{}: {} {}'".format(
-                         args[0], einfo.type, einfo.exception, traceback.format_exc(exc))
+                        args[0], einfo.type,
+                        einfo.exception, traceback.format_exc(exc)
+                    )
 
         logger.error(error_msg)
         try:
@@ -162,7 +164,9 @@ def _attach_workflow_outputs(analysis_uuid):
     logger.info("Analysis '%s' finished successfully", analysis)
     analysis.galaxy_cleanup()
 
-    get_group_result(str(analysis_status.refinery_import_task_group_id)).delete()
+    get_group_result(
+        str(analysis_status.refinery_import_task_group_id)
+    ).delete()
     get_group_result(str(analysis_status.galaxy_import_task_group_id)).delete()
     get_group_result(str(analysis_status.galaxy_export_task_group_id)).delete()
 
