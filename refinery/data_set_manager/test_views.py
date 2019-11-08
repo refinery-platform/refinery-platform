@@ -716,7 +716,8 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             }
         )
 
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True,
+                       REFINERY_S3_USER_DATA=False)
     def test_check_datafiles_metadata_revision_files_will_be_deleted(self):
         open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
         self.post_tabular_meta_data_file(
@@ -1530,7 +1531,8 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
         self.successful_import_assertions()
 
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True,
+                       REFINERY_S3_USER_DATA=False)
     def test_post_good_tabular_file_with_datafiles(self):
         for name in ["test1.txt", "test2.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
@@ -1569,7 +1571,8 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertTrue(AnnotatedNode.objects.filter(attribute_value='EDITED'))
 
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True,
+                       REFINERY_S3_USER_DATA=False)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_works_existing_datafiles_persisted(
         self, terminate_file_import_task_mock
@@ -1617,7 +1620,8 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
             )
         )
 
-    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, REFINERY_S3_USER_DATA=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True,
+                       REFINERY_S3_USER_DATA=False)
     @mock.patch.object(FileStoreItem, "terminate_file_import_task")
     def test_metadata_revision_works_datafiles_added_during_revision(
         self, terminate_file_import_task_mock

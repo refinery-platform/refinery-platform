@@ -4,7 +4,7 @@ import uuid
 
 from django.contrib.auth.models import User
 
-from celery.states import FAILURE, PENDING
+from celery.states import FAILURE
 
 from core.utils import build_absolute_url
 from factory_boy.utils import make_analyses_with_single_dataset

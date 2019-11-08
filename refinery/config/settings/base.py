@@ -303,11 +303,14 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # for external functions called in Celery tasks
 CELERY_WORKER_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
                      '%(funcName)s() - %(message)s'
-CELERY_WORKER_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
-                          '%(funcName)s[%(task_id)s] - %(message)s'
+CELERY_WORKER_TASK_LOG_FORMAT = \
+    '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+    '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
-CELERY_WORKER_MAX_TASKS_PER_CHILD = get_setting("CELERY_WORKER_MAX_TASKS_PER_CHILD")
-CELERY_TASK_ROUTES = {"file_store.tasks.FileImportTask": {"queue": "file_import"}}
+CELERY_WORKER_MAX_TASKS_PER_CHILD = \
+    get_setting("CELERY_WORKER_MAX_TASKS_PER_CHILD")
+CELERY_TASK_ROUTES = \
+    {"file_store.tasks.FileImportTask": {"queue": "file_import"}}
 CELERY_TASK_SOFT_TIME_LIMIT = 60  # seconds
 CELERY_BEAT_SCHEDULE = {
     'collect_site_statistics': {
