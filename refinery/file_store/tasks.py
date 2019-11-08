@@ -2,6 +2,7 @@ from __future__ import division
 import contextlib
 import os
 import tempfile
+import traceback
 import threading
 import urllib2
 import urlparse
@@ -42,7 +43,9 @@ class FileImportTask(celery.Task):
             logger.error("Error importing FileStoreItem with UUID '%s': %s",
                          item_uuid, exc)
             self.update_state(state=celery.states.FAILURE,
-                              meta='Failed to import file')
+                              meta={'exc_type': type(exc).__name__,
+                                    'exc_message':
+                                        traceback.format_exc().split('\n')})
             raise celery.exceptions.Ignore()
 
         if item.datafile:
@@ -56,7 +59,10 @@ class FileImportTask(celery.Task):
                 logger.error("File import is already in progress for '%s'",
                              item)
                 self.update_state(state=celery.states.FAILURE,
-                                  meta='Failed to import file')
+                                  meta={'exc_type': type(IOError).__name__,
+                                        'exc_message':
+                                            'File Import in Progress Already'
+                                        })
                 raise celery.exceptions.Ignore()
 
         # save task ID for looking up file import status
@@ -94,7 +100,9 @@ class FileImportTask(celery.Task):
         except (RuntimeError, celery.exceptions.SoftTimeLimitExceeded) as exc:
             logger.error("File import failed: %s", exc)
             self.update_state(state=celery.states.FAILURE,
-                              meta='Failed to import file')
+                              meta={'exc_type': type(exc).__name__,
+                                    'exc_message':
+                                        traceback.format_exc().split('\n')})
             raise celery.exceptions.Ignore()
 
         item.datafile.name = file_store_name
