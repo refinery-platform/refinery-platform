@@ -14,6 +14,7 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
 from celery.result import AsyncResult
+from celery import chain
 from django_extensions.db.fields import UUIDField
 import requests
 from requests.exceptions import HTTPError
@@ -22,7 +23,7 @@ import core
 from core.utils import delete_analysis_index, skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
-
+from file_store.tasks import FileImportTask
 """
 TODO: Refactor import data_set_manager. Importing
 data_set_manager.tasks.generate_auxiliary_file()
@@ -497,6 +498,9 @@ class Node(models.Model):
     TYPES = ASSAYS | FILES | {
         SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION,
         DATA_TRANSFORMATION}
+    # Currently we only need to create an auxiliary file for bam, but WIG
+    # needs an index file as well
+    AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION = ['bam']
 
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)
@@ -573,7 +577,7 @@ class Node(models.Model):
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 
-    def _create_and_associate_auxiliary_node(self, filestore_item):
+    def create_and_associate_auxiliary_node(self, filestore_item):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -626,39 +630,28 @@ class Node(models.Model):
 
         return aux_nodes
 
-    def run_generate_auxiliary_node_task(self):
+    def is_auxiliary_node_needed(self):
+        return self.file_item and self.file_item.filetype and \
+                self.file_item.filetype.used_for_visualization and \
+                self.file_item.datafile and \
+                settings.REFINERY_AUXILIARY_FILE_GENERATION == \
+                'on_file_import' and \
+                self.file_item.get_extension().lower() in \
+                self.AUXILIARY_FILES_NEEDED_FOR_VISUALIZATION
+
+    def generate_auxiliary_node_task(self):
         """This method is initiated after a task_success signal is returned
-        from the file import task.
-
-        Here we check if the imported FileStoreItem returned from the
-        file import task is in need of the creation of some auxiliary
-        File/Node. If this is the case, we create auxiliary Node and
-        FileStoreItem objects, and then proceed to run the
-        generate_auxiliary_file task, and associate said task's id with the
-        newly created FileStoreItems `import_task_id` field so that we can
-        monitor the task state.
+        from the file import task.  It generates the tasks for creating an
+        auxiliary file and importing it into refinery.  Use
+        is_auxiliary_node_needed() to check if this should be run before
+        running it.
         """
-        # Check if the Django setting to generate auxiliary file has been
-        # set to run when FileStoreItems are imported into Refinery
-        logger.debug("Checking if some auxiliary Node should be generated")
-        # Check if we pass the logic to generate aux. Files/Nodes
-        if (self.file_item and self.file_item.filetype and
-                self.file_item.filetype.used_for_visualization and
-                self.file_item.datafile and
-                settings.REFINERY_AUXILIARY_FILE_GENERATION ==
-                'on_file_import'):
-            # Create an empty FileStoreItem (we do the datafile association
-            # within the generate_auxiliary_file task
-            auxiliary_file_store_item = FileStoreItem.objects.create()
 
-            auxiliary_node = self._create_and_associate_auxiliary_node(
-                auxiliary_file_store_item
-            )
-            result = data_set_manager.tasks.generate_auxiliary_file.delay(
-                auxiliary_node, self.file_item
-            )
-            auxiliary_file_store_item.import_task_id = result.task_id
-            auxiliary_file_store_item.save()
+        generate = data_set_manager.tasks.generate_auxiliary_file.subtask(
+            (self.uuid,)
+        )
+        file_import = FileImportTask().subtask()
+        return chain(generate, file_import)
 
     def get_auxiliary_file_generation_task_state(self):
         """Return the generate_auxiliary_file task state for a given auxiliary

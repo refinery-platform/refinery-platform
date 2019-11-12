@@ -25,6 +25,7 @@ class AnalysisStatus(models.Model):
     galaxy_import_task_group_id = models.UUIDField(null=True, editable=False)
     galaxy_export_task_group_id = models.UUIDField(null=True, editable=False)
     galaxy_workflow_task_group_id = models.UUIDField(null=True, editable=False)
+    auxiliary_file_task_group_id = models.UUIDField(null=True, editable=False)
     #: state of Galaxy file imports
     galaxy_import_state = CharField(max_length=10, blank=True,
                                     choices=GALAXY_HISTORY_STATES)
