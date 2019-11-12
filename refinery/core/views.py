@@ -453,7 +453,18 @@ class WorkflowViewSet(viewsets.ViewSet):
     @detail_route(methods=['get'])
     def graph(self, request, *args, **kwargs):
         return HttpResponse(
-            get_object_or_404(Workflow, uuid=kwargs.get("uuid")).graph
+            get_object_or_404(
+                Workflow, uuid=kwargs.get(self.lookup_field)
+            ).graph
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(
+            self.serializer_class(
+                get_object_or_404(
+                    Workflow, uuid=kwargs.get(self.lookup_field)
+                ), context={'request': request}
+            ).data
         )
 
 
