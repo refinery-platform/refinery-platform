@@ -1357,29 +1357,36 @@ class Analysis(OwnableResource):
                 graph_with_data_transformation_nodes
             )
         )
-        self._create_derived_data_file_nodes(graph_with_input_nodes_linked)
+        self._link_derived_data_file_nodes_to_data_transformation_nodes(
+            graph_with_input_nodes_linked
+        )
         return self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
-        if self.results.all().count() == 0:
+        output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION
+        )
+        if output_connections.count() == 0:
             logger.error("No results for download '%s' ('%s')",
                          self.name, self.uuid)
             return
 
-        for analysis_result in self.results.all():
-            try:
-                item = FileStoreItem.objects.get(
-                    uuid=analysis_result.file_store_uuid
-                )
-                download = Download.objects.create(name=self.name,
-                                                   data_set=self.data_set,
-                                                   file_store_item=item)
-                download.set_owner(self.get_owner())
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error('Failed to get FileStoreItem for '
-                             'AnalysisResult %s: %s',
-                             unicode(analysis_result), exc)
+        for output_connection in output_connections:
+            if output_connection.is_refinery_file:
+                try:
+                    item = FileStoreItem.objects.get(
+                        uuid=output_connection.node.file_item.uuid
+                    )
+                    download = Download.objects.create(name=self.name,
+                                                       data_set=self.data_set,
+                                                       file_store_item=item)
+                    download.set_owner(self.get_owner())
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as exc:
+                    logger.error('Failed to get FileStoreItem for '
+                                 'AnalysisNodeConnection %s: %s',
+                                 unicode(output_connection), exc)
 
     def terminate_file_import_tasks(self):
         """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
@@ -1410,65 +1417,24 @@ class Analysis(OwnableResource):
         core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
         """
         auxiliary_file_tasks = []
-        for result in self.results.all():
+        for node_uuid in node_uuids:
             try:
-                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error("Error renaming analysis result '%s': %s",
-                             result, exc)
-                break
-            try:
-                node = Node.objects.get(file_item=item)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-                logger.error("Error retrieving Node with file UUID '%s': %s",
-                             item.uuid, exc)
-            else:
-                if node.is_derived() and node.is_auxiliary_node_needed():
-                    auxiliary_file_tasks += [
-                        node.generate_auxiliary_node_task()
-                    ]
+                node = Node.objects.get(uuid=node_uuid)
+            except (Node.MultipleObjectsReturned, Node.DoesNotExist) as e:
+                msg = "Node not found for uuid {} and file".format(node_uuid)
+                logger.error(msg)
+                raise type(e)(msg)
+            # We check to see if this Node has an associated file_item i.e
+            # it is in the refinery system
+            if node.is_derived() and node.is_auxiliary_node_needed() \
+                    and node.file_item:
+                auxiliary_file_tasks += [
+                    node.generate_auxiliary_node_task()
+                ]
         index_annotated_nodes_selection(node_uuids)
         return auxiliary_file_tasks
 
-    def _get_output_connection_to_analysis_result_mapping(self):
-        """Create and return a dict mapping each "output" type
-        AnalysisNodeConnection to it's respective analysis result
-
-        This is especially useful when we run into the edge-case described
-        here: https://github.com/
-        refinery-platform/refinery-platform/pull/2099#issue-255989396
-        """
-        distinct_filenames_map = defaultdict(lambda: [])
-        output_connections_to_analysis_results = []
-
-        output_node_connections = AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=OUTPUT_CONNECTION
-        )
-        # Fetch the distinct file names from our output
-        # AnalysisNodeConnections for this Analysis construct a dict
-        # mapping the unique file names to a list of AnalysisNodeConnections
-        # sharing said filename.
-        for output_connection in output_node_connections:
-            distinct_filenames_map[output_connection.filename].append(
-                output_connection
-            )
-        # Associate the AnalysisNodeConnections with their respective
-        # AnalysisResults
-        for output_connections in distinct_filenames_map.values():
-            for index, output_connection in enumerate(output_connections):
-                analysis_result = None
-                if output_connection.is_refinery_file:
-                    analysis_result = self.results.filter(
-                        file_name=output_connection.filename
-                    )[index]
-                output_connections_to_analysis_results.append(
-                    (output_connection, analysis_result)
-                )
-        return output_connections_to_analysis_results
-
-    def _create_derived_data_file_node(self, study, assay,
+    def create_derived_data_file_node(self, study, assay,
                                        analysis_node_connection):
         return Node.objects.create(
             study=study,
@@ -1537,39 +1503,16 @@ class Analysis(OwnableResource):
                     input_connection.node.add_child(data_transformation_node)
         return graph
 
-    def _create_derived_data_file_nodes(self, graph):
+    def _link_derived_data_file_nodes_to_data_transformation_nodes(self,
+                                                                   graph):
         """create derived data file nodes for all entries and connect to data
             transformation nodes"""
-        for output_connection, analysis_result in \
-                self._get_output_connection_to_analysis_result_mapping():
-            derived_data_file_node = self._create_derived_data_file_node(
-                self.get_input_node_study(), self.get_input_node_assay(),
-                output_connection
-            )
-            if output_connection.is_refinery_file:
-                # retrieve uuid of corresponding output file if exists
-                logger.info("Results for '%s' and %s: %s", self.uuid,
-                            output_connection, analysis_result)
-                try:
-                    derived_data_file_node.file_item = \
-                        FileStoreItem.objects.get(
-                            uuid=analysis_result.file_store_uuid
-                        )
-                except (FileStoreItem.DoesNotExist,
-                        FileStoreItem.MultipleObjectsReturned) as exc:
-                    logger.error('Failed to get FileStoreItem for '
-                                 'AnalysisResult %s: %s',
-                                 unicode(analysis_result), exc)
-                logger.debug(
-                    "Output file %s ('%s') assigned to node %s ('%s')",
-                    output_connection, analysis_result.file_store_uuid,
-                    derived_data_file_node.name, derived_data_file_node.uuid
-                )
-            output_connection.node = derived_data_file_node
-            output_connection.save()
-
+        for output_connection in AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION
+        ):
             self._link_derived_data_file_node_to_data_transformation_node(
-                graph, output_connection, derived_data_file_node
+                graph, output_connection, output_connection.node
             )
 
     def _link_derived_data_file_node_to_data_transformation_node(

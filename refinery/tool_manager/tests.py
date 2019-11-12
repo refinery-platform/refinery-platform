@@ -1192,7 +1192,7 @@ class WorkflowToolTests(ToolManagerTestBase):
                                           galaxy_job_b]
         self.create_tool(ToolDefinition.WORKFLOW,
                          file_relationships=self.LIST_BASIC)
-        self.tool.create_analysis_output_node_connections()
+        self.tool.create_output_node_connections_and_nodes()
         self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
         self.assertEqual(
             AnalysisNodeConnection.objects.filter(
@@ -1521,11 +1521,11 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.show_dataset_provenance_side_effect * 3
         )
 
-        download_ids = self.tool.create_analysis_output_node_connections()
+        download_ids = self.tool.create_output_node_connections_and_nodes()
 
         mock.patch(
             "tool_manager.models.WorkflowTool."
-            "create_analysis_output_node_connections",
+            "create_output_node_connections_and_nodes",
             return_value=download_ids
         ).start()
 

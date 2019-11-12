@@ -282,27 +282,6 @@ class AnalysisTests(TestCase):
 
         return analysis_result_0, analysis_result_1
 
-    def test___get_output_connection_to_analysis_result_mapping(self):
-        analysis_result_0, analysis_result_1 = self.create_analysis_results()
-        output_mapping = (
-            self.analysis._get_output_connection_to_analysis_result_mapping()
-        )
-        self.assertEqual(
-            output_mapping,
-            [
-                (self.analysis_node_connection_c, analysis_result_0),
-                (self.analysis_node_connection_b, None),
-                (self.analysis_node_connection_a, analysis_result_1)
-            ]
-        )
-
-    def test___get_output_connection_to_analysis_result_mapping_failure_state(
-        self
-    ):
-        self.create_analysis_results(include_faulty_result=True)
-        with self.assertRaises(IndexError):
-            self.analysis._get_output_connection_to_analysis_result_mapping()
-
     def test_analysis_node_connection_input_id(self):
         self.assertEqual(
             self.analysis_node_connection_a.get_input_connection_id(),
@@ -341,8 +320,8 @@ class AnalysisTests(TestCase):
         download_owners = [download.get_owner() for download in downloads_list]
         self.assertIn(self.analysis.get_owner(), download_owners)
 
-    def test__create_derived_data_file_node(self):
-        derived_data_file_node = self.analysis._create_derived_data_file_node(
+    def test_create_derived_data_file_node(self):
+        derived_data_file_node = self.analysis.create_derived_data_file_node(
             self.study, self.assay, self.analysis_node_connection_a
         )
         self.assertEqual(derived_data_file_node.name, 'Galaxy File Name')
