@@ -44,3 +44,4 @@ variable "data_volume_device_name" {
   description = "Device name for the EBS data volume"
   default     = "/dev/xvdr"
 }
+variable "alarm_sns_arn" {}
