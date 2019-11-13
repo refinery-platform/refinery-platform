@@ -6,7 +6,6 @@ Created on Feb 20, 2012
 from __future__ import absolute_import
 
 import ast
-from collections import defaultdict
 from datetime import datetime
 import json
 import logging
@@ -1360,7 +1359,7 @@ class Analysis(OwnableResource):
         self._link_derived_data_file_nodes_to_data_transformation_nodes(
             graph_with_input_nodes_linked
         )
-        return self._create_annotated_nodes()
+        self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
         output_connections = AnalysisNodeConnection.objects.filter(
@@ -1408,34 +1407,8 @@ class Analysis(OwnableResource):
                 else:
                     file_store_item.terminate_file_import_task()
 
-    def _prepare_annotated_nodes(self, node_uuids):
-        """
-        Wrapper method to ensure that auxiliary nodes are generated before
-        indexing annotated nodes
-
-        Call order is ensured through:
-        core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
-        """
-        auxiliary_file_tasks = []
-        for node_uuid in node_uuids:
-            try:
-                node = Node.objects.get(uuid=node_uuid)
-            except (Node.MultipleObjectsReturned, Node.DoesNotExist) as e:
-                msg = "Node not found for uuid {} and file".format(node_uuid)
-                logger.error(msg)
-                raise type(e)(msg)
-            # We check to see if this Node has an associated file_item i.e
-            # it is in the refinery system
-            if node.is_derived() and node.is_auxiliary_node_needed() \
-                    and node.file_item:
-                auxiliary_file_tasks += [
-                    node.generate_auxiliary_node_task()
-                ]
-        index_annotated_nodes_selection(node_uuids)
-        return auxiliary_file_tasks
-
     def create_derived_data_file_node(self, study, assay,
-                                       analysis_node_connection):
+                                      analysis_node_connection):
         return Node.objects.create(
             study=study,
             assay=assay,
@@ -1574,7 +1547,7 @@ class Analysis(OwnableResource):
             self.get_input_node_study().uuid,
             self.get_input_node_assay().uuid
         )
-        return self._prepare_annotated_nodes(node_uuids)
+        index_annotated_nodes_selection(node_uuids)
 
     def get_refinery_import_task_signatures(self):
         """Create and return a list of file import task signatures for the
