@@ -33,8 +33,8 @@ from analysis_manager.tasks import (_galaxy_file_import,
                                     _run_galaxy_file_import,
                                     _run_galaxy_workflow, run_analysis)
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
-                         AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
-                         Event, Project, WorkflowEngine)
+                         AnalysisNodeConnection, ExtendedGroup, Event, Project,
+                         WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
@@ -1168,12 +1168,13 @@ class WorkflowToolTests(ToolManagerTestBase):
                                           galaxy_job_b, galaxy_job_a,
                                           galaxy_job_b]
         task_id_list = self._get_galaxy_download_task_ids_wrapper()
-
-        self.assertEqual(AnalysisResult.objects.count(), 2)
-        self.assertEqual(
-            AnalysisResult.objects.count(),
-            self.tool.analysis.results.all().count()
+        output_connections = AnalysisNodeConnection.objects.filter(
+                analysis=self.tool.analysis, direction=OUTPUT_CONNECTION
         )
+        nodes = [output_connection.node for
+                 output_connection in output_connections]
+        self.assertEqual(len(nodes), 2)
+        self.assertEqual(output_connections.count(), 2)
         self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
             self.assertRegexpMatches(str(task_id), constants.UUID_RE)
@@ -1563,9 +1564,10 @@ class WorkflowToolTests(ToolManagerTestBase):
                                           galaxy_job_a, galaxy_job_b,
                                           galaxy_job_b, galaxy_job_a,
                                           galaxy_job_b]
-        self._get_galaxy_download_task_ids_wrapper(
+        task_ids = self._get_galaxy_download_task_ids_wrapper(
             datasets_have_same_names=True
         )
+        rename_names = [task_id.args[1] for task_id in task_ids]
         self.tool.analysis.attach_derived_nodes_to_dataset()
 
         output_connections = AnalysisNodeConnection.objects.filter(
@@ -1577,10 +1579,9 @@ class WorkflowToolTests(ToolManagerTestBase):
             output_connection_filename = "{}.{}".format(
                 output_connection.name, output_connection.filetype
             )
-            analysis_results = self.tool.analysis.results.filter(
-                file_name=output_connection_filename
-            )
-            self.assertGreater(analysis_results.count(), 1)
+            matching_rename_tasks = [name for name in rename_names
+                                     if name == output_connection_filename]
+            self.assertGreater(len(matching_rename_tasks), 1)
         self._attach_derived_nodes_to_dataset_assertions()
 
     def test_attach_derived_nodes_to_dataset_proper_node_inheritance(self):
@@ -1597,9 +1598,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             is_refinery_file=True
         )
         self.assertEqual(exposed_output_connections.count(), 2)
-        # Make sure output connections have no node before "attachment" step
-        for output_connection in exposed_output_connections:
-            self.assertIsNone(output_connection.node)
 
         self.tool.analysis.attach_derived_nodes_to_dataset()
 
