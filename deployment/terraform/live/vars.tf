@@ -197,6 +197,6 @@ variable "data_volume_snapshot_id" {
 }
 
 variable "alarm_sns_arn" {
-  description = "The arn of an sns topic to publish cloudwatch alarm metrics"
+  description = "The ARN of an SNS topic to publish CloudWatch alarms"
   default     = ""
 }
