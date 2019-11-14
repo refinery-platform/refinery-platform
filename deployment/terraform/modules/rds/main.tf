@@ -55,7 +55,7 @@ resource "aws_cloudwatch_metric_alarm" "default_rds_cpu_utilization" {
   namespace           = "AWS/RDS"
   period              = "300"
   statistic           = "Average"
-  threshold           = "25"
+  threshold           = "5"
   alarm_description   = "Monitors CPU utilization of default RDS instance"
   alarm_actions       = [ "${var.alarm_sns_arn}" ]
   dimensions {
