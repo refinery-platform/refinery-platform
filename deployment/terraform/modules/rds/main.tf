@@ -45,3 +45,21 @@ resource "aws_db_instance" "default" {
     ignore_changes = ["final_snapshot_identifier"]
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "default_rds_cpu_utilization" {
+  count               = "${var.alarm_sns_arn == "" ? 0 : 1}"
+  alarm_name          = "${var.resource_name_prefix}-default-rds-cpu-utilization"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "5"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "5"
+  alarm_description   = "Monitors CPU utilization of default RDS instance"
+  alarm_actions       = [ "${var.alarm_sns_arn}" ]
+  dimensions {
+    DBInstanceIdentifier = "${aws_db_instance.default.id}"
+  }
+
+}

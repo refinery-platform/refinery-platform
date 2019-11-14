@@ -10,3 +10,4 @@ variable "availability_zone" {}
 variable "snapshot_id" {}
 variable "master_user_password" {}
 variable "vpc_id" {}
+variable "alarm_sns_arn" {}
