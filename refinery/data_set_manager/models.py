@@ -14,7 +14,6 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
 from celery.result import AsyncResult
-from celery import chain
 from django_extensions.db.fields import UUIDField
 import requests
 from requests.exceptions import HTTPError
@@ -23,7 +22,6 @@ import core
 from core.utils import delete_analysis_index, skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
-from file_store.tasks import FileImportTask
 """
 TODO: Refactor import data_set_manager. Importing
 data_set_manager.tasks.generate_auxiliary_file()
@@ -647,11 +645,9 @@ class Node(models.Model):
         running it.
         """
 
-        generate = data_set_manager.tasks.generate_auxiliary_file.subtask(
+        return data_set_manager.tasks.generate_auxiliary_file.subtask(
             (self.uuid,)
         )
-        file_import = FileImportTask().subtask()
-        return chain(generate, file_import)
 
     def get_auxiliary_file_generation_task_state(self):
         """Return the generate_auxiliary_file task state for a given auxiliary

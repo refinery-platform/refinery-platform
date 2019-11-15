@@ -374,10 +374,47 @@ def post_process_file_import(**kwargs):
             node.generate_auxiliary_node_task().delay()
 
 
+def post_process_generate_auxiliary(**kwargs):
+    try:
+        parent_node_uuid = kwargs['kwargs']['parent_node_uuid']
+    except KeyError:
+        parent_node_uuid = kwargs['args'][0]
+    try:
+        node = Node.objects.get(uuid=parent_node_uuid)
+    except Node.DoesNotExist as exc:
+        logger.error("Could not retrieve Node with UUID '%s': %s",
+                     parent_node_uuid, exc)
+    except Node.MultipleObjectsReturned:
+        logger.critical("Multiple Node instance returned with UUID '%s'",
+                        parent_node_uuid)
+    else:
+        auxiliary_nodes = node.get_auxiliary_nodes()
+        for node_uuid in auxiliary_nodes:
+            try:
+                auxiliary_node = Node.objects.get(uuid=node_uuid)
+            except Node.DoesNotExist:
+                logger.error("Node with UUID '%s' does not exist", node_uuid)
+            except Node.MultipleObjectsReturned:
+                logger.critical("Multiple Nodes found with UUID '%s'",
+                                node_uuid)
+            else:
+                if auxiliary_node.file_item.source != '':
+                    logger.debug('Importing file of Auxiliary '
+                                 'node %s of Node %s',
+                                 node_uuid, parent_node_uuid)
+                    FileImportTask().delay(auxiliary_node.file_item.uuid)
+
+
 @celery.signals.worker_init.connect
 def on_worker_init(sender, **kwargs):
     # required to connect update_solr_index handler to task_postrun signal
     # https://github.com/celery/celery/issues/1873#issuecomment-35288899
     celery.signals.task_postrun.connect(
         post_process_file_import, sender=sender.app.tasks[FileImportTask.name]
+    )
+    celery.signals.task_postrun.connect(
+        post_process_generate_auxiliary, sender=sender.app.tasks[
+            generate_auxiliary_file.__module__ +
+            '.' + generate_auxiliary_file.__name__
+        ]
     )
