@@ -720,7 +720,7 @@ class VisualizationToolTests(ToolManagerTestBase):
             node.uuid: {
                 'file_url': self.node.file_item.get_datafile_url(),
                 'auxiliary_file_list': [
-                    child.uuid for child in
+                    child_uuid for child_uuid in
                     self.node.get_auxiliary_nodes()
                 ],
                 VisualizationTool.NODE_SOLR_INFO: {
