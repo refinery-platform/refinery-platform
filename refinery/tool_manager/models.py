@@ -557,8 +557,8 @@ class VisualizationTool(Tool):
                 ),
                 self.AUXILIARY_FILE_LIST: [
                     get_file_url_from_node_uuid(
-                        child.uuid, require_valid_url=require_valid_urls
-                    ) for child in Node.objects.get(uuid=node["uuid"]).
+                        uuid, require_valid_url=require_valid_urls
+                    ) for uuid in Node.objects.get(uuid=node["uuid"]).
                     get_auxiliary_nodes()
                 ]
             }
