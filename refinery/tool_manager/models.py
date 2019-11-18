@@ -548,8 +548,9 @@ class VisualizationTool(Tool):
             - A full url pointing to our Node's FileStoreItem's datafile
         """
         solr_response_json = get_solr_response_json(node_uuid_list)
-        node_info = {
-            node["uuid"]: {
+        node_info = {}
+        for node in solr_response_json["nodes"]:
+            node_info[node["uuid"]] = {
                 self.NODE_SOLR_INFO: node,
                 self.FILE_URL: get_file_url_from_node_uuid(
                     node["uuid"],
@@ -558,12 +559,10 @@ class VisualizationTool(Tool):
                 self.AUXILIARY_FILE_LIST: [
                     get_file_url_from_node_uuid(
                         uuid, require_valid_url=require_valid_urls
-                    ) for uuid in Node.objects.get(uuid=node["uuid"]).
-                    get_auxiliary_nodes()
+                    ) for uuid in
+                    Node.objects.get(uuid=node["uuid"]).get_auxiliary_nodes()
                 ]
             }
-            for node in solr_response_json["nodes"]
-        }
         return node_info
 
     def _get_visualization_parameters(self):
