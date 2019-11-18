@@ -719,10 +719,7 @@ class VisualizationToolTests(ToolManagerTestBase):
         return {
             node.uuid: {
                 'file_url': self.node.file_item.get_datafile_url(),
-                'auxiliary_file_list': [
-                    child_uuid for child_uuid in
-                    self.node.get_auxiliary_nodes()
-                ],
+                'auxiliary_file_list': self.node.get_auxiliary_nodes(),
                 VisualizationTool.NODE_SOLR_INFO: {
                     'uuid': node.uuid,
                     'name': node.name,
