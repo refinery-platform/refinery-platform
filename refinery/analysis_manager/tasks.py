@@ -147,43 +147,11 @@ def _attach_workflow_outputs(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
-        if not analysis_status.auxiliary_file_task_group_id:
-            tasks = analysis.attach_derived_nodes_to_dataset()
-            logger.info(
-                "Starting auxiliary file creation for analysis %s'", analysis
-            )
-            auxiliary_file_tasks = TaskSet(tasks=tasks).apply_async()
-            auxiliary_file_tasks.save()
-            analysis_status.auxiliary_file_task_group_id = \
-                auxiliary_file_tasks.taskset_id
-            analysis_status.save()
-            run_analysis.retry(countdown=RETRY_INTERVAL)
-        # check if analysis results have finished downloading from Galaxy
-        auxiliary_file_tasks = get_taskset_result(
-            analysis_status.auxiliary_file_task_group_id
+        tasks = analysis.attach_derived_nodes_to_dataset()
+        logger.info(
+            "Starting auxiliary file creation for analysis %s'", analysis
         )
-        if not auxiliary_file_tasks.ready():
-            logger.debug("Auxiliary file import and generation "
-                         "running for analysis '%s'", analysis)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
-        elif not auxiliary_file_tasks.successful():
-            error_msg = ("Analysis '{}' failed while generating "
-                         "auxiliary file".format(analysis))
-            logger.error(error_msg)
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            analysis.send_email()
-
-            get_taskset_result(
-                analysis_status.refinery_import_task_group_id
-            ).delete()
-            get_taskset_result(
-                analysis_status.galaxy_import_task_group_id
-            ).delete()
-            get_taskset_result(
-                analysis_status.galaxy_export_task_group_id
-            ).delete()
-            auxiliary_file_tasks.delete()
-            analysis.galaxy_cleanup()
+        TaskSet(tasks=tasks).apply_async()
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
         analysis.attach_outputs_downloads()
     else:
