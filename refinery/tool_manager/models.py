@@ -560,7 +560,9 @@ class VisualizationTool(Tool):
                     get_file_url_from_node_uuid(
                         uuid, require_valid_url=require_valid_urls
                     ) for uuid in
-                    Node.objects.get(uuid=node["uuid"]).get_auxiliary_nodes()
+                    Node.objects.get(
+                        uuid=node["uuid"]
+                    ).get_auxiliary_node_uuids()
                 ]
             }
         return node_info
