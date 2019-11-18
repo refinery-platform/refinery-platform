@@ -145,7 +145,6 @@ def _attach_workflow_outputs(analysis_uuid):
     our Analysis
     """
     analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
         tasks = analysis.attach_derived_nodes_to_dataset()
         logger.info(
