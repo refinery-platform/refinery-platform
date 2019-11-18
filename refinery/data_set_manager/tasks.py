@@ -352,7 +352,6 @@ def generate_bam_index(bam_file_path):
         except pysam.SamtoolsError as exc:
             raise RuntimeError(exc)
 
-
     return bam_index_file_path
 
 
