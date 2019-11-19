@@ -614,7 +614,7 @@ class Node(models.Model):
         """
         return [parent.uuid for parent in self.parents.all()]
 
-    def get_auxiliary_nodes(self):
+    def get_auxiliary_node_uuids(self):
         """
         Return a list of uuids of auxiliary Nodes for a Given Node
         """
