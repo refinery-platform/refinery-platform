@@ -29,15 +29,10 @@ class refinery::apache2 (
     log_formats            => {
       aws-elb => '%{X-Forwarded-For}i %h %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"',
     },
-    mod_libs => {
-    'wsgi' => "mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
-    },
   }
 
   class { 'apache::mod::wsgi':
-    mod_path     => "${virtualenv}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so",
-    # this package is unused due to the re-jig above
-    # but needs to be specified, as per puppet's source code ¯\_(ツ)_/¯
+    mod_path     => 'mod_wsgi.so',
     package_name => 'libapache2-mod-wsgi-py3',
     require => Class['refinery::python']
   }

@@ -79,12 +79,8 @@ class refinery::python (
     }
   }
 
-  exec { 'get virtualenvwrapper':
-    command     => "python3 -m pip install virtualenvwrapper",
-    path        => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ],
-    user        => $app_user,
-    group       => $app_group,
-    require     => Python::Virtualenv[$virtualenv],
+  package { 'virtualenvwrapper':
+    provider => "apt"
   }
   ->
   file_line { "virtualenvwrapper_config":
