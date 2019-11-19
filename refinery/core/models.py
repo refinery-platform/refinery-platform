@@ -1129,7 +1129,7 @@ class Analysis(OwnableResource):
     def get_status(self):
         return self.status
 
-    def get_auxiliary_node_uuids(self):
+    def get_auxiliary_nodes(self):
         # Return queryset of related auxiliary_nodes
         analysis_nodes = self.get_nodes()
         aux_nodes = Node.objects.none()
@@ -1675,7 +1675,7 @@ def _analysis_delete(sender, instance, *args, **kwargs):
     with transaction.atomic():
         instance.cancel()
         # Delete children aux_nodes Associated w/ the Analysis
-        instance.get_auxiliary_node_uuids().delete()
+        instance.get_auxiliary_nodes().delete()
         # Delete Nodes Associated w/ the Analysis
         instance.get_nodes().delete()
 
