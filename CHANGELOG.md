@@ -1,5 +1,32 @@
 # Change Log
 
+## [v1.7.2](https://github.com/refinery-platform/refinery-platform/tree/v1.7.2) (2019-11-18)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.7.1...v1.7.2)
+
+**Fixed bugs:**
+
+- File-Browser: Select All Bug [\#3467](https://github.com/refinery-platform/refinery-platform/issues/3467)
+- Analysis import fails due to celery SoftTimeLimitExceeded  [\#3435](https://github.com/refinery-platform/refinery-platform/issues/3435)
+
+**Closed issues:**
+
+- Bam File IGV Not Working [\#3465](https://github.com/refinery-platform/refinery-platform/issues/3465)
+- Botocore incompatability with v1.12.98 [\#3388](https://github.com/refinery-platform/refinery-platform/issues/3388)
+
+**Merged pull requests:**
+
+- upgrade postgresql version [\#3489](https://github.com/refinery-platform/refinery-platform/pull/3489) ([ilan-gold](https://github.com/ilan-gold))
+- Adding some tests and better handling for non-ascii throughout [\#3488](https://github.com/refinery-platform/refinery-platform/pull/3488) ([ilan-gold](https://github.com/ilan-gold))
+- Fixing the Provenance Graph [\#3487](https://github.com/refinery-platform/refinery-platform/pull/3487) ([ilan-gold](https://github.com/ilan-gold))
+- Ilan gold/user registration bug [\#3486](https://github.com/refinery-platform/refinery-platform/pull/3486) ([ilan-gold](https://github.com/ilan-gold))
+- Fix Excessive File Downloading [\#3485](https://github.com/refinery-platform/refinery-platform/pull/3485) ([ilan-gold](https://github.com/ilan-gold))
+- Fix .bam file handling for visualizations [\#3484](https://github.com/refinery-platform/refinery-platform/pull/3484) ([ilan-gold](https://github.com/ilan-gold))
+- Set Up CloudWatch Alarms for CPU Utilization [\#3483](https://github.com/refinery-platform/refinery-platform/pull/3483) ([ilan-gold](https://github.com/ilan-gold))
+- Fix Dict/Unicode bug [\#3475](https://github.com/refinery-platform/refinery-platform/pull/3475) ([ilan-gold](https://github.com/ilan-gold))
+- Update AWS CLI to the latest version [\#3472](https://github.com/refinery-platform/refinery-platform/pull/3472) ([hackdna](https://github.com/hackdna))
+- Rename Files in Flight [\#3471](https://github.com/refinery-platform/refinery-platform/pull/3471) ([ilan-gold](https://github.com/ilan-gold))
+- Restructure Analysis Metadata Fetching for Celery [\#3461](https://github.com/refinery-platform/refinery-platform/pull/3461) ([ilan-gold](https://github.com/ilan-gold))
+
 ## [v1.7.1](https://github.com/refinery-platform/refinery-platform/tree/v1.7.1) (2019-10-21)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.7.0...v1.7.1)
 
