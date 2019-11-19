@@ -10,7 +10,6 @@ from tool_manager.models import Tool
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Invitation,
                      SiteProfile, SiteVideo, User, UserProfile, Workflow)
-
 logger = logging.getLogger(__name__)
 
 
@@ -27,12 +26,13 @@ class AnalysisSerializer(serializers.ModelSerializer):
     tool_display_name = serializers.SerializerMethodField()
     time_end = DateTimeWithTimeZone()
     time_start = DateTimeWithTimeZone()
+    workflow__uuid = serializers.SerializerMethodField()
 
     class Meta:
         model = Analysis
         fields = ('data_set_uuid', 'facet_name', 'name', 'owner', 'status',
                   'summary', 'time_start', 'time_end', 'tool_display_name',
-                  'uuid', 'workflow')
+                  'uuid', 'workflow__uuid')
 
     def get_tool_display_name(self, analysis):
         try:
@@ -46,6 +46,9 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     def get_data_set_uuid(self, analysis):
         return analysis.data_set.uuid
+
+    def get_workflow__uuid(self, analysis):
+        return analysis.workflow.uuid
 
 
 class DataSetSerializer(serializers.ModelSerializer):
@@ -302,10 +305,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'id', 'last_name', 'profile', 'username')
 
 
-class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
-    instance = serializers.HyperlinkedIdentityField(
-        view_name='workflow-detail')
-    workflow_engine = serializers.StringRelatedField()
+class WorkflowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Workflow

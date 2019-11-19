@@ -145,16 +145,26 @@ def _attach_workflow_outputs(analysis_uuid):
     our Analysis
     """
     analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
-
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
-        analysis.attach_derived_nodes_to_dataset()
+        tasks = analysis.attach_derived_nodes_to_dataset()
+        logger.info(
+            "Starting auxiliary file creation for analysis %s'", analysis
+        )
+        TaskSet(tasks=tasks).apply_async()
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
         analysis.attach_outputs_downloads()
     else:
         logger.warning("Unknown workflow type '%s' in analysis '%s'",
                        analysis.workflow.type, analysis.name)
 
+
+def _finalize_analysis(analysis_uuid):
+    """
+    finalize analysis after attaching outputs from galaxy to the refinery file
+    system
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
     analysis.set_status(Analysis.SUCCESS_STATUS)
     analysis.send_email()
     logger.info("Analysis '%s' finished successfully", analysis)
@@ -302,6 +312,7 @@ def run_analysis(analysis_uuid):
     _check_galaxy_history_state(analysis_uuid)
     _galaxy_file_export(analysis_uuid)
     _attach_workflow_outputs(analysis_uuid)
+    _finalize_analysis(analysis_uuid)
 
 
 def _run_galaxy_file_import(analysis_uuid):
@@ -470,10 +481,8 @@ def _get_galaxy_download_task_ids(analysis):
     task_id_list = []
     # retrieving list of files to download for workflow
     tool = _get_workflow_tool(analysis.uuid)
-    tool.create_analysis_output_node_connections()
-    galaxy_instance = analysis.workflow.workflow_engine.instance
     try:
-        download_list = tool.get_galaxy_dataset_download_list()
+        download_list = tool.create_analysis_output_node_connections()
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
@@ -481,23 +490,24 @@ def _get_galaxy_download_task_ids(analysis):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
         return task_id_list
+    galaxy_instance = analysis.workflow.workflow_engine.instance
 
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
         if results['state'] == 'ok':
-            file_extension = results["type"]
-            result_name = "{}.{}".format(results['name'], file_extension)
+            file_extension = results['file_ext']
             # size of file defined by galaxy
             file_size = results['file_size']
             file_store_item = FileStoreItem(source=urlparse.urljoin(
                 galaxy_instance.base_url,
-                "datasets/{}/display?to_ext=txt".format(results['dataset_id'])
+                "datasets/{}/display?to_ext=txt".format(results['id'])
             ))
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
             if file_extension == 'html':
                 file_extension = 'zip'
+            result_name = "{}.{}".format(results['name'], file_extension)
             # assign file type manually since it cannot be inferred from source
             try:
                 extension = FileExtension.objects.get(name=file_extension)
@@ -520,7 +530,8 @@ def _get_galaxy_download_task_ids(analysis):
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
-                task_id = FileImportTask().subtask((file_store_item.uuid,))
+                task_id = FileImportTask().subtask((file_store_item.uuid,
+                                                    result_name,))
                 task_id_list.append(task_id)
 
     return task_id_list

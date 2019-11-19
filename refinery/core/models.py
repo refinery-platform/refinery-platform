@@ -53,7 +53,7 @@ from data_set_manager.models import (Assay, Investigation, Node,
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import FileStoreItem, FileType
+from file_store.models import FileStoreItem
 from file_store.tasks import FileImportTask
 from galaxy_connector.models import Instance
 import tool_manager
@@ -92,8 +92,8 @@ class UserProfile(models.Model):
     login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
-        return self.user.first_name + " " + self.user.last_name + \
-               " (" + self.affiliation + "): " + self.user.email
+        return self.user.first_name + u" " + self.user.last_name + \
+               u" (" + self.affiliation + u"): " + self.user.email
 
     def has_viewed_data_upload_tut(self):
         try:
@@ -1067,9 +1067,9 @@ class Analysis(OwnableResource):
                                      self.summary)
 
     def get_expanded_workflow_graph(self):
-        return tool_manager.utils.create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy)
-        )
+        self.refresh_from_db(fields=['workflow_copy'])
+        workflow_copy = ast.literal_eval(self.workflow_copy)
+        return tool_manager.utils.create_expanded_workflow_graph(workflow_copy)
 
     def has_nodes_used_in_downstream_analyses(self):
         """
@@ -1346,43 +1346,6 @@ class Analysis(OwnableResource):
                 "'%s' with UUID '%s'",
                 self.get_status(), user.email, name, self.uuid)
 
-    def rename_results(self):
-        """Rename files in file_store after download"""
-        logger.debug("Renaming analysis results")
-        # rename file_store items to new name updated from galaxy file_ids
-        for result in self.results.all():
-            try:
-                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error("Error renaming analysis result '%s': %s",
-                             result, exc)
-                break
-
-            # workaround for FastQC reports downloaded from Galaxy as zip
-            # archives
-            (root, ext) = os.path.splitext(result.file_name)
-            if ext == '.html':
-                try:
-                    zipfile = FileType.objects.get(name='ZIP')
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Error renaming HTML to zip: %s", exc)
-                else:
-                    if item.filetype == zipfile:
-                        item.rename_datafile(''.join([root, '.zip']))
-            else:
-                item.rename_datafile(result.file_name)
-
-            try:
-                node = Node.objects.get(file_item=item)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-                logger.error("Error retrieving Node with file UUID '%s': %s",
-                             item.uuid, exc)
-            else:
-                if node.is_derived():
-                    node.run_generate_auxiliary_node_task()
-
     def attach_derived_nodes_to_dataset(self):
         graph_with_data_transformation_nodes = (
             self._create_data_transformation_nodes(
@@ -1395,7 +1358,7 @@ class Analysis(OwnableResource):
             )
         )
         self._create_derived_data_file_nodes(graph_with_input_nodes_linked)
-        self._create_annotated_nodes()
+        return self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
         if self.results.all().count() == 0:
@@ -1440,18 +1403,33 @@ class Analysis(OwnableResource):
 
     def _prepare_annotated_nodes(self, node_uuids):
         """
-        Wrapper method to ensure that `rename_results` is called before
-        index_annotated_nodes_selection.
-
-        If `rename_results` isn't executed before
-        `index_annotated_nodes_selection` we end up indexing incorrect
-        information.
+        Wrapper method to ensure that auxiliary nodes are generated before
+        indexing annotated nodes
 
         Call order is ensured through:
         core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
         """
-        self.rename_results()
+        auxiliary_file_tasks = []
+        for result in self.results.all():
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming analysis result '%s': %s",
+                             result, exc)
+                break
+            try:
+                node = Node.objects.get(file_item=item)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+                logger.error("Error retrieving Node with file UUID '%s': %s",
+                             item.uuid, exc)
+            else:
+                if node.is_derived() and node.is_auxiliary_node_needed():
+                    auxiliary_file_tasks += [
+                        node.generate_auxiliary_node_task()
+                    ]
         index_annotated_nodes_selection(node_uuids)
+        return auxiliary_file_tasks
 
     def _get_output_connection_to_analysis_result_mapping(self):
         """Create and return a dict mapping each "output" type
@@ -1653,7 +1631,7 @@ class Analysis(OwnableResource):
             self.get_input_node_study().uuid,
             self.get_input_node_assay().uuid
         )
-        self._prepare_annotated_nodes(node_uuids)
+        return self._prepare_annotated_nodes(node_uuids)
 
     def get_refinery_import_task_signatures(self):
         """Create and return a list of file import task signatures for the
@@ -2012,7 +1990,7 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'site': site.domain,
                     'registered_user_email': self.user.email,
                     'registered_user_username': self.user.username,
-                    'registered_user_full_name': "{} {}".format(
+                    'registered_user_full_name': u"{} {}".format(
                         self.user.first_name, self.user.last_name),
                     'registered_user_affiliation':
                         self.user.profile.affiliation

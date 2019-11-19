@@ -97,6 +97,7 @@ module "database" {
   snapshot_id                  = "${var.rds_snapshot_id}"
   vpc_id                       = "${module.vpc.vpc_id}"
   tags                         = "${local.tags}"
+  alarm_sns_arn                = "${var.alarm_sns_arn}"
 }
 
 module "web" {
@@ -138,4 +139,5 @@ module "web" {
   data_volume_snapshot_id              = "${var.data_volume_snapshot_id}"
   resource_name_prefix                 = "${terraform.workspace}"
   tags                                 = "${local.tags}"
+  alarm_sns_arn                        = "${var.alarm_sns_arn}"
 }

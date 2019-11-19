@@ -122,7 +122,7 @@ class NodeClassMethodTests(TestCase):
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node._create_and_associate_auxiliary_node(self.filestore_item)
+        self.node.create_and_associate_auxiliary_node(self.filestore_item)
         self.assertIsNotNone(self.node.get_children())
         self.assertIsNotNone(Node.objects.get(file_item=self.filestore_item))
         self.assertEqual(self.node.get_children()[0],
@@ -135,10 +135,10 @@ class NodeClassMethodTests(TestCase):
             uuid=self.node.get_children()[0]
         ).is_auxiliary_node)
 
-    def test_get_auxiliary_nodes(self):
+    def test_get_auxiliary_node_uuids(self):
         self.assertEqual(self.node.get_children(), [])
         for i in xrange(2):
-            self.node._create_and_associate_auxiliary_node(self.filestore_item)
+            self.node.create_and_associate_auxiliary_node(self.filestore_item)
             # Still just one child even on second time
             self.assertEqual(len(self.node.get_children()), 1)
 
@@ -146,7 +146,7 @@ class NodeClassMethodTests(TestCase):
         # Normal nodes will always return None
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
         # Auxiliary nodes will have a task state
-        self.node._create_and_associate_auxiliary_node(self.filestore_item)
+        self.node.create_and_associate_auxiliary_node(self.filestore_item)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
         # Values from:
