@@ -550,6 +550,11 @@ class VisualizationTool(Tool):
         solr_response_json = get_solr_response_json(node_uuid_list)
         node_info = {}
         for node in solr_response_json["nodes"]:
+
+            auxiliary_node_uuids = Node.objects.get(
+                uuid=node["uuid"]
+            ).get_auxiliary_node_uuids()
+
             node_info[node["uuid"]] = {
                 self.NODE_SOLR_INFO: node,
                 self.FILE_URL: get_file_url_from_node_uuid(
@@ -559,12 +564,10 @@ class VisualizationTool(Tool):
                 self.AUXILIARY_FILE_LIST: [
                     get_file_url_from_node_uuid(
                         uuid, require_valid_url=require_valid_urls
-                    ) for uuid in
-                    Node.objects.get(
-                        uuid=node["uuid"]
-                    ).get_auxiliary_node_uuids()
+                    ) for uuid in auxiliary_node_uuids
                 ]
             }
+
         return node_info
 
     def _get_visualization_parameters(self):
