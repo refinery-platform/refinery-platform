@@ -348,3 +348,22 @@ resource "aws_elb" "https" {
     unhealthy_threshold = 4
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "app_server_cpu_utilization" {
+  count               = "${var.alarm_sns_arn == "" ? 0 : 1}"
+  alarm_name          = "${var.resource_name_prefix}-app-server-cpu-utilization"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "5"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "25"
+  alarm_description   = "Monitors CPU utilization of ${aws_instance.app_server.tags.Name}"
+  alarm_actions       = [ "${var.alarm_sns_arn}" ]
+  dimensions {
+    InstanceId = "${aws_instance.app_server.id}"
+  }
+
+}
+

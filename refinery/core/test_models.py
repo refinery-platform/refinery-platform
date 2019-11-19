@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import timedelta
 import uuid
 
@@ -1253,6 +1254,16 @@ class UserProfileTest(TestCase):
         self.assertEqual(self.userprofile.primary_group, None)
         self.assertEqual(1,
                          len(ExtendedGroup.objects.filter(id=self.group.id)))
+
+    def test_non_ascii_name(self):
+        self.userprofile.user.first_name = u'élan'
+        self.userprofile.user.last_name = u'göld'
+        self.userprofile.user.save()
+        self.assertEqual(
+            unicode(self.userprofile),
+            u"élan göld (" + self.userprofile.affiliation + u"): " +
+            self.user.email
+        )
 
 
 class UserTutorialsTest(TestCase):
