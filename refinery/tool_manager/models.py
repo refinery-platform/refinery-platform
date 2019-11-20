@@ -354,7 +354,7 @@ class Tool(OwnableResource):
         user = self.get_owner()
         return {
             "username": user.username,
-            "full_name": "{} {}".format(user.first_name, user.last_name),
+            "full_name": u"{} {}".format(user.first_name, user.last_name),
             "user_profile_uuid": str(user.profile.uuid)
         }
 
@@ -487,6 +487,7 @@ class VisualizationTool(Tool):
     """
     API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
+    AUXILIARY_FILE_LIST = "auxiliary_file_list"
     INPUT_NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
     ALL_NODE_INFORMATION = "all_node_info"
@@ -547,16 +548,26 @@ class VisualizationTool(Tool):
             - A full url pointing to our Node's FileStoreItem's datafile
         """
         solr_response_json = get_solr_response_json(node_uuid_list)
-        node_info = {
-            node["uuid"]: {
+        node_info = {}
+        for node in solr_response_json["nodes"]:
+
+            auxiliary_node_uuids = Node.objects.get(
+                uuid=node["uuid"]
+            ).get_auxiliary_node_uuids()
+
+            node_info[node["uuid"]] = {
                 self.NODE_SOLR_INFO: node,
                 self.FILE_URL: get_file_url_from_node_uuid(
                     node["uuid"],
                     require_valid_url=require_valid_urls
-                )
+                ),
+                self.AUXILIARY_FILE_LIST: [
+                    get_file_url_from_node_uuid(
+                        uuid, require_valid_url=require_valid_urls
+                    ) for uuid in auxiliary_node_uuids
+                ]
             }
-            for node in solr_response_json["nodes"]
-        }
+
         return node_info
 
     def _get_visualization_parameters(self):
@@ -813,12 +824,13 @@ class WorkflowTool(Tool):
                 is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
                 galaxy_dataset_name=galaxy_dataset['name']
             )
-            connection_dataset_list += [
-                {
-                    field: galaxy_dataset[field]
-                    for field in connection_dataset_list_fields
-                }
-            ]
+            if galaxy_dataset in exposed_workflow_outputs:
+                connection_dataset_list += [
+                    {
+                        field: galaxy_dataset[field]
+                        for field in connection_dataset_list_fields
+                    }
+                ]
         return connection_dataset_list
 
     def _create_collection_description(self):

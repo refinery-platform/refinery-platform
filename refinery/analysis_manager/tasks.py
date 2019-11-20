@@ -148,16 +148,26 @@ def _attach_workflow_outputs(analysis_uuid):
     our Analysis
     """
     analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
-
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
-        analysis.attach_derived_nodes_to_dataset()
+        tasks = analysis.attach_derived_nodes_to_dataset()
+        logger.info(
+            "Starting auxiliary file creation for analysis %s'", analysis
+        )
+        TaskSet(tasks=tasks).apply_async()
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
         analysis.attach_outputs_downloads()
     else:
         logger.warning("Unknown workflow type '%s' in analysis '%s'",
                        analysis.workflow.type, analysis.name)
 
+
+def _finalize_analysis(analysis_uuid):
+    """
+    finalize analysis after attaching outputs from galaxy to the refinery file
+    system
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
     analysis.set_status(Analysis.SUCCESS_STATUS)
     analysis.send_email()
     logger.info("Analysis '%s' finished successfully", analysis)
@@ -305,6 +315,7 @@ def run_analysis(analysis_uuid):
     _check_galaxy_history_state(analysis_uuid)
     _galaxy_file_export(analysis_uuid)
     _attach_workflow_outputs(analysis_uuid)
+    _finalize_analysis(analysis_uuid)
 
 
 def _run_galaxy_file_import(analysis_uuid):

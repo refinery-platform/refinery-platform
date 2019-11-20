@@ -99,10 +99,6 @@ class AnalysisSerializerTests(TestCase):
         self.assertEqual(self.serializer.data.get('uuid'),
                          self.analysis.uuid)
 
-    def test_serializer_returns_workflow(self):
-        self.assertEqual(self.serializer.data.get('workflow'),
-                         self.analysis.workflow.id)
-
 
 class DataSetSerializerTests(TestCase):
     def setUp(self):

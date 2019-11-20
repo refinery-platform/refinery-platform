@@ -195,3 +195,8 @@ variable "data_volume_snapshot_id" {
   description = "A snapshot to base the EBS data volume off of"
   default     = ""
 }
+
+variable "alarm_sns_arn" {
+  description = "The ARN of an SNS topic to publish CloudWatch alarms"
+  default     = ""
+}

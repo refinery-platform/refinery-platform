@@ -1285,7 +1285,11 @@ class NodeViewSet(viewsets.ViewSet):
                 request.user.has_perm('core.read_meta_dataset', data_set)):
             return Response(data_set.uuid, status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response(NodeSerializer(study.node_set.all(), many=True).data)
+        return Response(
+            NodeSerializer(
+                study.node_set.filter(is_auxiliary_node=False), many=True
+            ).data
+        )
 
     def retrieve(self, request, uuid):
         # filter nodes by attributes' info

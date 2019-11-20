@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import logging
 import uuid
@@ -339,6 +340,19 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         self.create_tool(ToolDefinition.VISUALIZATION)
 
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 2)
+        for tool in self.get_response.data:
+            self.assertEqual(
+                tool["owner"],
+                self.tool._get_owner_info_as_dict()
+            )
+
+    def test_owner_info_is_returned_non_ascii(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.tool.get_owner().first_name = u'élan'
+        self.tool.get_owner().save()
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 2)
         for tool in self.get_response.data:
