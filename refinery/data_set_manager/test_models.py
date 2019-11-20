@@ -135,7 +135,7 @@ class NodeClassMethodTests(TestCase):
             uuid=self.node.get_children()[0]
         ).is_auxiliary_node)
 
-    def test_get_auxiliary_nodes(self):
+    def test_get_auxiliary_node_uuids(self):
         self.assertEqual(self.node.get_children(), [])
         for i in xrange(2):
             self.node.create_and_associate_auxiliary_node(self.filestore_item)
