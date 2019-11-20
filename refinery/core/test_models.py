@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
-import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -18,10 +17,8 @@ from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import (AnnotatedNode, Assay, Investigation,
                                      Node, NodeCollection, Study)
 from factory_boy.django_model_factories import (AnalysisNodeConnectionFactory,
-                                                AnalysisResultFactory,
                                                 FileRelationshipFactory,
                                                 FileStoreItemFactory,
-                                                FileTypeFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
@@ -298,24 +295,13 @@ class AnalysisTests(TestCase):
         )
 
     def test_attach_outputs_downloads_no_file(self):
-        AnalysisResultFactory(
-            analysis=self.analysis,
-            file_store_uuid=uuid.uuid4()
-        )
+        AnalysisNodeConnection.objects.all().delete()
         self.analysis.attach_outputs_downloads()
         downloads_list = Download.objects.all()
         download_owners = [download.get_owner() for download in downloads_list]
         self.assertNotIn(self.analysis.get_owner(), download_owners)
 
     def test_attach_outputs_downloads_file(self):
-        analysis_result = AnalysisResultFactory(
-            analysis=self.analysis,
-            file_store_uuid=uuid.uuid4()
-        )
-        FileStoreItemFactory(
-            uuid=analysis_result.file_store_uuid,
-            filetype=FileTypeFactory()
-        )
         self.analysis.attach_outputs_downloads()
         downloads_list = Download.objects.all()
         download_owners = [download.get_owner() for download in downloads_list]
