@@ -1377,15 +1377,16 @@ class Analysis(OwnableResource):
                     item = FileStoreItem.objects.get(
                         uuid=output_connection.node.file_item.uuid
                     )
-                    download = Download.objects.create(name=self.name,
-                                                       data_set=self.data_set,
-                                                       file_store_item=item)
-                    download.set_owner(self.get_owner())
                 except (FileStoreItem.DoesNotExist,
                         FileStoreItem.MultipleObjectsReturned) as exc:
                     logger.error('Failed to get FileStoreItem for '
                                  'AnalysisNodeConnection %s: %s',
                                  unicode(output_connection), exc)
+                else:
+                    download = Download.objects.create(name=self.name,
+                                                       data_set=self.data_set,
+                                                       file_store_item=item)
+                    download.set_owner(self.get_owner())
 
     def terminate_file_import_tasks(self):
         """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
