@@ -354,7 +354,7 @@ class Tool(OwnableResource):
         user = self.get_owner()
         return {
             "username": user.username,
-            "full_name": u"{} {}".format(user.first_name, user.last_name),
+            "full_name": "{} {}".format(user.first_name, user.last_name),
             "user_profile_uuid": str(user.profile.uuid)
         }
 

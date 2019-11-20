@@ -7,14 +7,13 @@ class refinery::python (
   $django_root         = $refinery::params::django_root,
 ) inherits refinery::params {
 
-
   class { '::python':
     version    => 'python3.5',
     ensure     => 'latest',
     dev        => 'present',
     gunicorn   => 'absent',
     pip        => 'latest',
-    virtualenv => 'present'
+    virtualenv => 'present',
   }
 
   # python3.5-dev needed for cffi (c function interface)
@@ -79,9 +78,7 @@ class refinery::python (
     }
   }
 
-  package { 'virtualenvwrapper':
-    provider => "apt"
-  }
+  package { 'virtualenvwrapper':}
   ->
   file_line { "virtualenvwrapper_config":
     path        => "/home/${app_user}/.profile",

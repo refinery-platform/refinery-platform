@@ -1277,12 +1277,12 @@ class UserProfileTest(TestCase):
                          len(ExtendedGroup.objects.filter(id=self.group.id)))
 
     def test_non_ascii_name(self):
-        self.userprofile.user.first_name = u'élan'
-        self.userprofile.user.last_name = u'göld'
+        self.userprofile.user.first_name = 'élan'
+        self.userprofile.user.last_name = 'göld'
         self.userprofile.user.save()
         self.assertEqual(
-            unicode(self.userprofile),
-            u"élan göld (" + self.userprofile.affiliation + u"): " +
+            self.userprofile,
+            "élan göld (" + self.userprofile.affiliation + "): " +
             self.user.email
         )
 
