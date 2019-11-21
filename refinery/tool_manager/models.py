@@ -801,7 +801,7 @@ class WorkflowTool(Tool):
                 is_refinery_file=bool(node.file_item.datafile)
             )
 
-    def create_analysis_output_node_connections(self):
+    def create_output_node_connections_and_nodes(self):
         """Create the AnalysisNodeConnection objects corresponding to the
         output Nodes (Derived Data) of a WorkflowTool launch
         """
@@ -814,7 +814,7 @@ class WorkflowTool(Tool):
             'file_ext', 'name', 'state', 'file_size', 'id'
         ]
         for galaxy_dataset in exposed_dataset_list:
-            AnalysisNodeConnection.objects.create(
+            output_connection = AnalysisNodeConnection.objects.create(
                 analysis=self.analysis, direction=OUTPUT_CONNECTION,
                 name=self._get_creating_job_output_name(galaxy_dataset),
                 subanalysis=self._get_analysis_group_number(galaxy_dataset),
@@ -824,13 +824,24 @@ class WorkflowTool(Tool):
                 is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
                 galaxy_dataset_name=galaxy_dataset['name']
             )
+            derived_data_file_node = \
+                self.analysis.create_derived_data_file_node(
+                    self.analysis.get_input_node_study(),
+                    self.analysis.get_input_node_assay(),
+                    output_connection
+                )
+            derived_data_file_node.name = galaxy_dataset['name']
+            derived_data_file_node.type = galaxy_dataset['file_ext']
+            derived_data_file_node.save()
+            output_connection.node = derived_data_file_node
+            output_connection.save()
             if galaxy_dataset in exposed_workflow_outputs:
-                connection_dataset_list += [
-                    {
-                        field: galaxy_dataset[field]
-                        for field in connection_dataset_list_fields
-                    }
-                ]
+                connection_dataset = {
+                    field: galaxy_dataset[field]
+                    for field in connection_dataset_list_fields
+                }
+                connection_dataset['node_uuid'] = derived_data_file_node.uuid
+                connection_dataset_list += [connection_dataset]
         return connection_dataset_list
 
     def _create_collection_description(self):

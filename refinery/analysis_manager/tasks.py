@@ -14,9 +14,10 @@ from celery.task import Task, task
 from celery.task.sets import TaskSet
 
 import core
-from core.models import Analysis, AnalysisResult, Workflow
+from core.models import Analysis, Workflow
 from file_store.models import FileStoreItem, FileExtension
 from file_store.tasks import FileImportTask
+from data_set_manager.models import Node
 import tool_manager
 
 from .models import AnalysisStatus
@@ -146,11 +147,7 @@ def _attach_workflow_outputs(analysis_uuid):
     """
     analysis = _get_analysis(analysis_uuid)
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
-        tasks = analysis.attach_derived_nodes_to_dataset()
-        logger.info(
-            "Starting auxiliary file creation for analysis %s'", analysis
-        )
-        TaskSet(tasks=tasks).apply_async()
+        analysis.attach_derived_nodes_to_dataset()
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
         analysis.attach_outputs_downloads()
     else:
@@ -482,7 +479,7 @@ def _get_galaxy_download_task_ids(analysis):
     # retrieving list of files to download for workflow
     tool = _get_workflow_tool(analysis.uuid)
     try:
-        download_list = tool.create_analysis_output_node_connections()
+        download_list = tool.create_output_node_connections_and_nodes()
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
@@ -518,15 +515,20 @@ def _get_galaxy_download_task_ids(analysis):
                             file_extension, exc)
             else:
                 file_store_item.filetype = extension.filetype
+                file_store_item.save()
+            # get the node produced in the call to
+            # tool.create_output_node_connections_and_nodes() and add a file
+            try:
+                derived_data_node = Node.objects.get(uuid=results['node_uuid'])
+            except (Node.MultipleObjectsReturned, Node.DoesNotExist) as e:
+                msg = "Node not found for result  with uuid {} and file " \
+                      "name {}".format(results['node_uuid'], results['name'])
+                logger.error(msg)
+                raise type(e)(msg)
+            else:
+                derived_data_node.file_item = file_store_item
+                derived_data_node.save()
 
-            file_store_item.save()
-            # adding history files to django model
-            analysis.results.add(
-                AnalysisResult.objects.create(
-                    analysis=analysis, file_store_uuid=file_store_item.uuid,
-                    file_name=result_name, file_type=file_extension
-                )
-            )
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
