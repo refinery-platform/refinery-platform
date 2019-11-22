@@ -100,6 +100,7 @@ class FileStoreItem(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     # Date updated
     updated = models.DateTimeField(auto_now=True)
+    galaxy_dataset_history_id = models.CharField(blank=True, max_length=1024)
 
     def __unicode__(self):
         if self.datafile.name:

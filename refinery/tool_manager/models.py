@@ -23,8 +23,7 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
-                                    run_analysis)
+from analysis_manager.tasks import _galaxy_file_import, run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
 import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
@@ -1410,20 +1409,23 @@ class WorkflowTool(Tool):
         No error handling here since this method is only called in an
         atomic transaction.
         """
-        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
         galaxy_dict = self.get_galaxy_dict()
 
-        galaxy_to_refinery_mapping_list = get_taskset_result(
-            analysis_status.galaxy_import_task_group_id
-        ).join()
-
-        for galaxy_to_refinery_dict in galaxy_to_refinery_mapping_list:
+        for file_store_item_uuid in self.get_input_file_uuid_list():
             node = Node.objects.get(
                 uuid__in=self.get_input_node_uuids(),
                 file_item=FileStoreItem.objects.get(
-                    uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
+                    uuid=file_store_item_uuid
                 )
             )
+            file_store_item = FileStoreItem.objects.get(
+                uuid=file_store_item_uuid
+            )
+            galaxy_to_refinery_dict = {
+                self.REFINERY_FILE_UUID: file_store_item_uuid,
+                self.GALAXY_DATASET_HISTORY_ID:
+                    file_store_item.galaxy_dataset_history_id
+            }
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
                 # Note the `1` in the replace call below. We only want to
                 # replace the first occurrence of Node UUIDs in case a workflow

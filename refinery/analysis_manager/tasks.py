@@ -467,12 +467,8 @@ def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
         # `galaxy_import_progress` to `100`.
         analysis_status.galaxy_import_progress = 100
         analysis_status.save()
-
-    galaxy_to_refinery_file_mapping = {
-        tool.REFINERY_FILE_UUID: file_store_item_uuid,
-        tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
-    }
-    return galaxy_to_refinery_file_mapping
+    file_store_item.galaxy_dataset_history_id = history_dataset_dict["id"]
+    file_store_item.save()
 
 
 def _get_galaxy_download_task_ids(analysis):
