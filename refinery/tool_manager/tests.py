@@ -141,10 +141,6 @@ class ToolManagerMocks(TestCase):
         ).start()
 
         # tool_manager mocks
-        self.get_taskset_result_mock = mock.patch(
-            "tool_manager.models.get_taskset_result",
-            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
-        ).start()
         self.create_history_mock = mock.patch.object(
             WorkflowTool, "create_galaxy_history", return_value=history_dict
         ).start()
@@ -510,13 +506,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                     Tool.REFINERY_FILE_UUID: node.file_item.uuid,
                 }
             )
-
-        with mock.patch.object(
-                celery.result.TaskSetResult, 'join',
-                return_value=galaxy_to_refinery_mapping_list
-        ) as join_mock:
-            self.tool.update_file_relationships_with_galaxy_history_data()
-        self.assertTrue(join_mock.called)
+        self.tool.update_file_relationships_with_galaxy_history_data()
         self.assertTrue(self.get_taskset_result_mock.called)
 
         self.collection_description = (
