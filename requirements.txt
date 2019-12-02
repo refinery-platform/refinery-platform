@@ -30,10 +30,8 @@ jsonschema==2.6.0
 Markdown==2.2.1
 mock==2.0.0
 git+git://github.com/lunant/mockcache@master
-ndg-httpsclient==0.3.2
 networkx==1.7
 psycopg2-binary==2.7.4
-pyasn1==0.1.9
 pycparser==2.13
 Pygments==1.6rc1
 pyOpenSSL==17.5.0

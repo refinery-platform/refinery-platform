@@ -82,7 +82,7 @@ class refinery::python (
   ->
   file_line { "virtualenvwrapper_config":
     path        => "/home/${app_user}/.profile",
-    line        => "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3 && export WORKON_HOME=/home/${app_user}/.virtualenvs/ && source ./.local/bin/virtualenvwrapper.sh",
+    line        => "source /etc/bash_completion.d/virtualenvwrapper",
     require     => Python::Virtualenv[$virtualenv],
   }
   ->
