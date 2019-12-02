@@ -2121,9 +2121,9 @@ class SiteStatistics(models.Model):
         def get_aggregate_sum(field_name):
             if not aggregates:
                 return getattr(self, field_name)
-            return SiteStatistics.objects.filter(
+            return list(SiteStatistics.objects.filter(
                 run_date__lte=self.run_date
-            ).aggregate(Sum(field_name)).values()[0]
+            ).aggregate(Sum(field_name)).values())[0]
 
         return [
             self.pk, get_aggregate_sum("datasets_shared"),
