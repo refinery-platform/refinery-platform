@@ -1281,7 +1281,7 @@ class UserProfileTest(TestCase):
         self.userprofile.user.last_name = 'göld'
         self.userprofile.user.save()
         self.assertEqual(
-            self.userprofile,
+            str(self.userprofile),
             "élan göld (" + self.userprofile.affiliation + "): " +
             self.user.email
         )
