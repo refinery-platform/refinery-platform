@@ -34,7 +34,7 @@ class refinery::apache2 (
   class { 'apache::mod::wsgi':
     mod_path     => 'mod_wsgi.so',
     package_name => 'libapache2-mod-wsgi-py3',
-    require => Class['refinery::python']
+    require      => Class['refinery::python']
   }
   # recommended for use with AWS ELB to avoid HTTP 408 errors
   class { 'apache::mod::reqtimeout':
