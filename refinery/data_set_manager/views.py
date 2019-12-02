@@ -10,7 +10,7 @@ import os
 import shutil
 import sys
 import traceback
-import urllib.parse
+import urllib
 import tempfile
 
 from django import forms

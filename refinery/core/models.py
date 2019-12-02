@@ -898,8 +898,7 @@ class InvestigationLink(models.Model):
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as exc:
             logger.error('Failed to get NodeCollection for '
-                         'Investigation %s: %s',
-                         str(self.investigation), exc)
+                         'Investigation %s: %s', self.investigation, exc)
             return None
 
 
@@ -2122,9 +2121,9 @@ class SiteStatistics(models.Model):
         def get_aggregate_sum(field_name):
             if not aggregates:
                 return getattr(self, field_name)
-            return list(SiteStatistics.objects.filter(
+            return SiteStatistics.objects.filter(
                 run_date__lte=self.run_date
-            ).aggregate(Sum(field_name)).values())[0]
+            ).aggregate(Sum(field_name).values())[0]
 
         return [
             self.pk, get_aggregate_sum("datasets_shared"),

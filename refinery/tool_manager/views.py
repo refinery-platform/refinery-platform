@@ -1,7 +1,5 @@
 import logging
-import urllib.request
-import urllib.error
-import urllib.parse
+import urllib
 
 from django.conf import settings
 from django.db import transaction

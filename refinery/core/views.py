@@ -2,9 +2,7 @@ import csv
 from datetime import timedelta
 import json
 import logging
-import urllib.request
-import urllib.parse
-import urllib.error
+import urllib
 import uuid
 from xml.parsers.expat import ExpatError
 

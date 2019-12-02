@@ -4,10 +4,7 @@ import os
 import shutil
 import stat
 import hashlib
-import urllib.request
-import urllib.error
-import urllib.parse
-
+import urllib
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.utils.crypto import get_random_string

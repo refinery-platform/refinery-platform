@@ -3,9 +3,7 @@ import contextlib
 import os
 import tempfile
 import threading
-import urllib.request
-import urllib.error
-import urllib.parse
+import urllib
 
 from django.conf import settings
 

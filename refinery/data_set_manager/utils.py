@@ -11,7 +11,7 @@ import logging
 import shutil
 import tempfile
 import time
-import urllib.parse
+import urllib
 
 from django.conf import settings
 from django.db.models import Q
