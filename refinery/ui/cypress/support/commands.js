@@ -36,7 +36,7 @@ function shell_quote(str) {
 
 Cypress.Commands.add('wrap_cmd',
   function(manage_cmd) {
-    var cd_cmd = "cd .. && source ~/virtualenv/python3.5.6/bin/activate && " + manage_cmd;
+    var cd_cmd = "cd .. && " + manage_cmd;
     var workon_cmd = "workon refinery-platform && " + manage_cmd;
     var vagrant_cmd = 'vagrant ssh -c ' + shell_quote(workon_cmd);
     return cy.exec('( ' + cd_cmd + ' ) || ( ' + vagrant_cmd + ' )')
