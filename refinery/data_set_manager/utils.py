@@ -948,15 +948,15 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
                 )
         try:
             return core.utils.build_absolute_url(url) if url else None
-        except ValueError as e:
+        except ValueError:
             logger.error('URL {} is not a valid relative url'.format(str(url)))
-            raise type(e)(str(e))
-        except RuntimeError as e:
+            raise
+        except RuntimeError:
             logger.error('Could not build absolute URL for {}'.format(
                     str(url)
                 )
             )
-            raise type(e)(str(e))
+            raise
 
 
 def fix_last_column(file):

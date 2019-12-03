@@ -1,9 +1,9 @@
 
-import contextlib
 import os
 import tempfile
 import threading
-import urllib
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from django.conf import settings
 
@@ -233,7 +233,7 @@ class FileImportTask(celery.Task):
         storage = SymlinkedFileSystemStorage()
         # remove query string from URL before extracting file name
         if target_name is None:
-            target_name = os.path.basename(urllib.parse(source_url).path)
+            target_name = os.path.basename(urlparse(source_url).path)
         file_store_name = storage.get_name(target_name)
         file_store_path = storage.path(file_store_name)
 
@@ -241,8 +241,7 @@ class FileImportTask(celery.Task):
                      source_url, file_store_path)
         make_dir(os.path.dirname(file_store_path))
         try:
-            with contextlib.closing(urllib.request.urlopen(source_url,
-                                    timeout=30)) as response, \
+            with urlopen(source_url, timeout=30) as response, \
                     open(file_store_path, 'wb') as destination:
                 copy_file_object(response, destination,
                                  ProgressPercentage(source_url,
@@ -261,15 +260,13 @@ class FileImportTask(celery.Task):
         storage = S3MediaStorage()
         # remove query string from URL before extracting file name
         if target_name is None:
-            target_name = os.path.basename(urllib.parse(source_url).path)
+            target_name = os.path.basename(urlparse(source_url).path)
         file_store_name = storage.get_name(target_name)
 
         logger.debug("Transferring from '%s' to 's3://%s/%s'",
                      source_url, settings.MEDIA_BUCKET, file_store_name)
         try:
-            with contextlib.closing(
-                    urllib.request.urlopen(source_url, timeout=30)
-            ) as response:
+            with urlopen(source_url, timeout=30) as response:
                 upload_file_object(
                     response, settings.MEDIA_BUCKET, file_store_name,
                     ProgressPercentage(source_url, self.request.id)
