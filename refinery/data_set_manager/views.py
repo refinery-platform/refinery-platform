@@ -10,7 +10,7 @@ import os
 import shutil
 import sys
 import traceback
-import urllib.parse
+from urllib.parse import urlparse
 import tempfile
 
 from django import forms
@@ -216,7 +216,7 @@ def import_by_file(file_obj):
 def import_by_url(url):
     # TODO: replace with chain
     # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-    parsed_url = urllib.parse.urlparse(url)
+    parsed_url = urlparse(url)
     file_name = parsed_url.path.split('/')[-1]
     temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
     try:
@@ -279,7 +279,7 @@ class ProcessISATabView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
-        u = urllib.parse.urlparse(url)
+        u = urlparse(url)
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
         try:

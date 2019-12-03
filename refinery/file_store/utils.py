@@ -1,13 +1,10 @@
-import contextlib
 import logging
 import os
 import shutil
 import stat
 import hashlib
-import urllib.request
-import urllib.error
-import urllib.parse
-
+from urllib.request import urlopen
+from urllib.parse import urlparse
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.utils.crypto import get_random_string
@@ -159,9 +156,8 @@ def get_file_size(file_location):
             return UNKNOWN_FILE_SIZE
     else:
         try:
-            with contextlib.closing(urllib.request.urlopen(file_location,
-                                    timeout=30)) as response:
-                return int(response.info().get('Content-Length'))
+            with urlopen(file_location, timeout=30) as response:
+                return int(response.getheader('Content-Length'))
         except (EnvironmentError, TypeError):
             return UNKNOWN_FILE_SIZE
 
@@ -202,7 +198,7 @@ def parse_s3_url(url):
     """Return a tuple containing S3 bucket name and object key given S3
     protocol URL (s3://bucket-name/key)
     """
-    result = urllib.parse.urlparse(url)
+    result = urlparse(url)
     return result.netloc, result.path[1:]  # strip leading slash
 
 

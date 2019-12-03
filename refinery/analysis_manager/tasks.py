@@ -3,7 +3,7 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-import urllib.parse
+from urllib.parse import urljoin
 
 from django.conf import settings
 
@@ -489,7 +489,7 @@ def _get_galaxy_download_task_ids(analysis):
     except galaxy.client.ConnectionError as exc:
         error_msg = \
             "Error downloading Galaxy history files for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, str(exc))
+        logger.error(error_msg, analysis.name, exc)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
         return task_id_list
@@ -502,7 +502,7 @@ def _get_galaxy_download_task_ids(analysis):
             file_extension = results['file_ext']
             # size of file defined by galaxy
             file_size = results['file_size']
-            file_store_item = FileStoreItem(source=urllib.parse.urljoin(
+            file_store_item = FileStoreItem(source=urljoin(
                 galaxy_instance.base_url,
                 "datasets/{}/display?to_ext=txt".format(results['id'])
             ))

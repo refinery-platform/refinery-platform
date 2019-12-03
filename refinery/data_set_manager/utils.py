@@ -11,7 +11,7 @@ import logging
 import shutil
 import tempfile
 import time
-import urllib.parse
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.db.models import Q
@@ -673,7 +673,7 @@ def search_solr(encoded_params, core):
         core: Specify which node
     """
     url_portion = '/'.join([core, "select"])
-    url = urllib.parse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+    url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.post(url,
                                   json=encoded_params.get('json'),
                                   params=encoded_params.get('params'))
@@ -948,15 +948,15 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
                 )
         try:
             return core.utils.build_absolute_url(url) if url else None
-        except ValueError as e:
+        except ValueError:
             logger.error('URL {} is not a valid relative url'.format(str(url)))
-            raise type(e)(str(e))
-        except RuntimeError as e:
+            raise
+        except RuntimeError:
             logger.error('Could not build absolute URL for {}'.format(
                     str(url)
                 )
             )
-            raise type(e)(str(e))
+            raise
 
 
 def fix_last_column(file):

@@ -898,8 +898,7 @@ class InvestigationLink(models.Model):
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as exc:
             logger.error('Failed to get NodeCollection for '
-                         'Investigation %s: %s',
-                         str(self.investigation), exc)
+                         'Investigation %s: %s', self.investigation, exc)
             return None
 
 
