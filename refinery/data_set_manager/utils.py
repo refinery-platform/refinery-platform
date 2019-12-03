@@ -11,7 +11,7 @@ import logging
 import shutil
 import tempfile
 import time
-import urllib
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.db.models import Q
@@ -673,7 +673,7 @@ def search_solr(encoded_params, core):
         core: Specify which node
     """
     url_portion = '/'.join([core, "select"])
-    url = urllib.parse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+    url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.post(url,
                                   json=encoded_params.get('json'),
                                   params=encoded_params.get('params'))
