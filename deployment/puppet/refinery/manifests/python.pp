@@ -16,8 +16,7 @@ class refinery::python (
     virtualenv => 'present',
   }
 
-  # python3.5-dev needed for cffi (c function interface)
-  $base_dependencies = ['build-essential', 'libncurses5-dev', 'python3.5-dev', 'apache2-dev']
+  $base_dependencies = ['build-essential', 'libncurses5-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
   $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev'] # pysam mod
   package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]: }
@@ -45,11 +44,11 @@ class refinery::python (
   }
   ->
   python::virtualenv { $virtualenv:
-    version    => '3.5',
-    ensure     => present,
-    owner      => $app_user,
-    group      => $app_group,
-    require    => [
+    version => '3.5',
+    ensure  => present,
+    owner   => $app_user,
+    group   => $app_group,
+    require => [
       Package[
         $base_dependencies,
         $crypto_dependencies,
@@ -78,12 +77,12 @@ class refinery::python (
     }
   }
 
-  package { 'virtualenvwrapper':}
+  package { 'virtualenvwrapper': }
   ->
   file_line { "virtualenvwrapper_config":
-    path        => "/home/${app_user}/.profile",
-    line        => "source /etc/bash_completion.d/virtualenvwrapper",
-    require     => Python::Virtualenv[$virtualenv],
+    path    => "/home/${app_user}/.profile",
+    line    => "source /etc/bash_completion.d/virtualenvwrapper",
+    require => Python::Virtualenv[$virtualenv],
   }
   ->
   file { "virtualenvwrapper_project":
