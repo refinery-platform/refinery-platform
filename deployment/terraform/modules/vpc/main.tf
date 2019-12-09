@@ -58,11 +58,13 @@ resource "aws_route_table_association" "public_subnet" {
 }
 
 resource "aws_eip" "docker_nat" {
-  vpc  = true
-  tags = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
+  count = "${var.docker_nat_gateway_count}"
+  vpc   = true
+  tags  = "${merge(var.tags, map("Name", var.resource_name_prefix))}"
 }
 
 resource "aws_nat_gateway" "docker_nat" {
+  count         = "${var.docker_nat_gateway_count}"
   allocation_id = "${aws_eip.docker_nat.id}"
   subnet_id     = "${aws_subnet.public_subnet.id}"
   depends_on    = ["aws_internet_gateway.public_gateway"]
@@ -70,6 +72,7 @@ resource "aws_nat_gateway" "docker_nat" {
 }
 
 resource "aws_route_table" "private_route_table" {
+  count  = "${var.docker_nat_gateway_count}"
   vpc_id = "${aws_vpc.vpc.id}"
   tags   = "${merge(var.tags, map("Name", "${var.resource_name_prefix} nat"))}"
   route {
@@ -79,6 +82,7 @@ resource "aws_route_table" "private_route_table" {
 }
 
 resource "aws_route_table_association" "private_subnet" {
+  count          = "${var.docker_nat_gateway_count}"
   subnet_id      = "${aws_subnet.private_subnet_a.id}"
   route_table_id = "${aws_route_table.private_route_table.id}"
 }

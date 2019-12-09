@@ -5,6 +5,7 @@ variable "private_cidr_block_b" {}
 variable "public_cidr_block" {}
 variable "availability_zone_a" {}
 variable "availability_zone_b" {}
+variable "docker_nat_gateway_count" {}
 variable "tags" {
   type        = "map"
   description = "Resource tags"
