@@ -75,15 +75,16 @@ module "docker_host" {
 }
 
 module "vpc" {
-  source               = "../modules/vpc"
-  vpc_cidr_block       = "${var.vpc_cidr_block}"
-  public_cidr_block    = "${var.public_cidr_block}"
-  private_cidr_block_a = "${var.private_cidr_block_a}"
-  private_cidr_block_b = "${var.private_cidr_block_b}"
-  availability_zone_a  = "${var.availability_zone_a}"
-  availability_zone_b  = "${var.availability_zone_b}"
-  resource_name_prefix = "${terraform.workspace}"
-  tags                 = "${local.tags}"
+  source                   = "../modules/vpc"
+  vpc_cidr_block           = "${var.vpc_cidr_block}"
+  public_cidr_block        = "${var.public_cidr_block}"
+  private_cidr_block_a     = "${var.private_cidr_block_a}"
+  private_cidr_block_b     = "${var.private_cidr_block_b}"
+  availability_zone_a      = "${var.availability_zone_a}"
+  availability_zone_b      = "${var.availability_zone_b}"
+  docker_nat_gateway_count = "${var.docker_instance_count > 0 ? 1 : 0}"
+  resource_name_prefix     = "${terraform.workspace}"
+  tags                     = "${local.tags}"
 }
 
 module "database" {
