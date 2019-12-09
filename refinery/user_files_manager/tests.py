@@ -1,6 +1,6 @@
 import json
 import logging
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 import uuid
 from django.contrib.auth.hashers import make_password
@@ -39,7 +39,7 @@ class UserFileAPITests(APITestCase):
         force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(sorted(response.data.keys()), [
+        self.assertCountEqual(sorted(response.data.keys()), [
             'attributes',
             'facet_field_counts',
             'nodes',
@@ -65,27 +65,24 @@ class UserFileAPITests(APITestCase):
 
         mock_doc = {
             NodeIndex.DOWNLOAD_URL:
-                'fake-url',
-            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
-                'fake-filename',
-            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
-                u'handles\u2013unicode'
+                "fake-url",
+            "filename_Characteristics" + NodeIndex.GENERIC_SUFFIX:
+                "fake-filename",
+            "organism_Factor_Value" + NodeIndex.GENERIC_SUFFIX:
+                "handles\\u2013unicode"
             # Just want to exercise "_Characteristics" and "_Factor_Value":
             # Doesn't matter if the names are backwards.
         }
+        response_dict = {"response": {"docs": [mock_doc]}}
         with mock.patch(
                 'user_files_manager.views.' + solr_mock_reference,
-                return_value=json.dumps({
-                    'response': {
-                        'docs': [mock_doc]
-                    }
-                })
+                return_value=bytes(json.dumps(response_dict),
+                                   encoding='utf-8')
         ):
             response = user_files_csv(request)
             self.assertEqual(
                 response.content,
-                'url,filename,fake\r\n'
-                'fake-url,fake-filename,\r\n'
+                b'url,filename,fake\r\nfake-url,fake-filename,\r\n'
             )
 
     @override_settings(USER_FILES_COLUMNS='filename,fake')
@@ -126,7 +123,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
                 'files/'
             )
         )
-        self.assertIn("All Files", response.content)
+        self.assertIn("All Files", str(response.content))
 
     @override_settings(USER_FILES_COLUMNS='name,fake')
     def test_csv(self):
@@ -142,7 +139,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         response = self.view(request)
         self.assertEqual(
             response.content,
-            'url,name,fake\r\n'
+            b'url,name,fake\r\n'
         )
 
 
@@ -161,11 +158,11 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_obj(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(query.keys(), ['json', 'params'])
+        self.assertCountEqual(list(query.keys()), ['json', 'params'])
 
     def test_generate_solr_params_for_user_returns_params(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(query.get('params'),
+        self.assertCountEqual(query.get('params'),
                               {
                                   'facet.limit': '-1',
                                   'fq': 'is_annotation:false',
@@ -176,7 +173,7 @@ class UserFilesUtilsTests(TestCase):
 
     def test_generate_solr_params_for_user_returns_json_facet(self):
         query = generate_solr_params_for_user(QueryDict({}), self.user.id)
-        self.assertItemsEqual(query.get('json').get('facet').keys(),
+        self.assertCountEqual(list(query.get('json').get('facet').keys()),
                               ['antibody_Characteristics_generic_s',
                                'technology_Characteristics_generic_s',
                                'cell_type_Characteristics_generic_s',

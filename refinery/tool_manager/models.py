@@ -2,7 +2,7 @@ import ast
 import json
 import logging
 import re
-from urlparse import urljoin
+from urllib.parse import urljoin
 import uuid as uuid_lib
 
 from django.conf import settings
@@ -354,7 +354,7 @@ class Tool(OwnableResource):
         user = self.get_owner()
         return {
             "username": user.username,
-            "full_name": u"{} {}".format(user.first_name, user.last_name),
+            "full_name": "{} {}".format(user.first_name, user.last_name),
             "user_profile_uuid": str(user.profile.uuid)
         }
 
@@ -476,7 +476,7 @@ class Tool(OwnableResource):
                                self.container_name)
 
 
-class VisualizationToolError(StandardError):
+class VisualizationToolError(Exception):
     pass
 
 
@@ -1268,7 +1268,7 @@ class WorkflowTool(Tool):
         # separate if-then assignment needed to avoid using the dict stored
         # in workflow_copy before .save() is called
         self.analysis.refresh_from_db(fields=['workflow_copy'])
-        if self.analysis.workflow_copy == u'' \
+        if self.analysis.workflow_copy == '' \
                 or self.analysis.workflow_copy is None:
             workflow_copy = \
                 self.galaxy_connection.workflows.export_workflow_dict(

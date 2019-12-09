@@ -2,7 +2,7 @@ import csv
 from datetime import timedelta
 import json
 import logging
-import urllib
+from urllib.parse import unquote
 import uuid
 from xml.parsers.expat import ExpatError
 
@@ -207,7 +207,6 @@ def data_set_slug(request, slug):
 def data_set(request, data_set_uuid, analysis_uuid=None):
     data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
-
     if not request.user.has_perm('core.read_meta_dataset', data_set):
         if 'read_meta_dataset' not in get_perms(public_group, data_set):
             if request.user.is_authenticated():
@@ -327,7 +326,7 @@ def doi(request, id):
     # This encoding is needed because forward slashes cause 404 errors even
     # when they are URL encoded as they are still regarded as forward
     # slashes.
-    id = urllib.unquote(id).decode('utf8')
+    id = unquote(id)
     id = id.replace('$', '/')
     url = "https://doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
@@ -380,7 +379,7 @@ def pubmed_search(request, term):
     Example:
     https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=1&term=10.1093%2Fbioinformatics%2Fbtu707
     """
-    term = urllib.unquote(term).decode('utf8')
+    term = unquote(term)
     term = term.replace('$', '/')
 
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"

@@ -67,18 +67,21 @@ class SingleFileColumnParser:
         # metadata file object
         self.metadata_file = metadata_file
         self.metadata_file.seek(0)
+        metadata_read = self.metadata_file.read()
+        if type(metadata_read) == bytes:
+            metadata_read = metadata_read.decode('utf-8')
         try:
             # need to use splitlines() to avoid potential newline errors
             # http://madebyknight.com/handling-csv-uploads-in-django/
             self.metadata_reader = csv.reader(
-                self.metadata_file.read().splitlines(),
+                metadata_read.splitlines(),
                 dialect="excel-tab",
                 delimiter=self.delimiter)
         except csv.Error:
             logger.exception("Unable to read file %s", str(self.metadata_file))
             raise
         # compute number of columns
-        self.headers = self.metadata_reader.next()
+        self.headers = next(self.metadata_reader)
         self.num_columns = len(self.headers)
         # data file reference converter
         self.file_source_translator = file_source_translator
@@ -413,11 +416,11 @@ def process_metadata_table(
                 DataSet.MultipleObjectsReturned) as e:
             logger.error('DataSet for uuid %s not fetched and thus not '
                          'updated with revised investigation %s: %s',
-                         existing_data_set_uuid, unicode(investigation), e)
+                         existing_data_set_uuid, str(investigation), e)
             raise type(e)(
                 'DataSet for uuid {} not fetched and thus not '
                 'updated with revised investigation {}'.format(
-                    existing_data_set_uuid, unicode(investigation)
+                    existing_data_set_uuid, str(investigation)
                 )
             )
         else:

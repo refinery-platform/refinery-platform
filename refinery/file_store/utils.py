@@ -1,12 +1,10 @@
-import contextlib
 import logging
 import os
 import shutil
 import stat
 import hashlib
-import urllib2
-import urlparse
-
+from urllib.request import urlopen
+from urllib.parse import urlparse
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.utils.crypto import get_random_string
@@ -92,7 +90,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
 def copy_file_object(source, destination, progress_report=lambda _: None):
     """Copy a file object and update progress"""
     chunk_size = 10 * 1024 * 1024  # 10MB
-    for chunk in iter(lambda: source.read(chunk_size), ''):
+    for chunk in iter(lambda: source.read(chunk_size), b''):
         destination.write(chunk)
         progress_report(len(chunk))
     # ensure that all internal buffers are written to disk
@@ -158,9 +156,8 @@ def get_file_size(file_location):
             return UNKNOWN_FILE_SIZE
     else:
         try:
-            with contextlib.closing(urllib2.urlopen(file_location,
-                                                    timeout=30)) as response:
-                return int(response.info().getheader('Content-Length'))
+            with urlopen(file_location, timeout=30) as response:
+                return int(response.getheader('Content-Length'))
         except (EnvironmentError, TypeError):
             return UNKNOWN_FILE_SIZE
 
@@ -201,7 +198,7 @@ def parse_s3_url(url):
     """Return a tuple containing S3 bucket name and object key given S3
     protocol URL (s3://bucket-name/key)
     """
-    result = urlparse.urlparse(url)
+    result = urlparse(url)
     return result.netloc, result.path[1:]  # strip leading slash
 
 

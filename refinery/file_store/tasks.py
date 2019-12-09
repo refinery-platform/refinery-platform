@@ -1,10 +1,9 @@
-from __future__ import division
-import contextlib
+
 import os
 import tempfile
 import threading
-import urllib2
-import urlparse
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from django.conf import settings
 
@@ -234,7 +233,7 @@ class FileImportTask(celery.Task):
         storage = SymlinkedFileSystemStorage()
         # remove query string from URL before extracting file name
         if target_name is None:
-            target_name = os.path.basename(urlparse.urlparse(source_url).path)
+            target_name = os.path.basename(urlparse(source_url).path)
         file_store_name = storage.get_name(target_name)
         file_store_path = storage.path(file_store_name)
 
@@ -242,8 +241,7 @@ class FileImportTask(celery.Task):
                      source_url, file_store_path)
         make_dir(os.path.dirname(file_store_path))
         try:
-            with contextlib.closing(urllib2.urlopen(source_url,
-                                                    timeout=30)) as response, \
+            with urlopen(source_url, timeout=30) as response, \
                     open(file_store_path, 'wb') as destination:
                 copy_file_object(response, destination,
                                  ProgressPercentage(source_url,
@@ -262,14 +260,13 @@ class FileImportTask(celery.Task):
         storage = S3MediaStorage()
         # remove query string from URL before extracting file name
         if target_name is None:
-            target_name = os.path.basename(urlparse.urlparse(source_url).path)
+            target_name = os.path.basename(urlparse(source_url).path)
         file_store_name = storage.get_name(target_name)
 
         logger.debug("Transferring from '%s' to 's3://%s/%s'",
                      source_url, settings.MEDIA_BUCKET, file_store_name)
         try:
-            with contextlib.closing(urllib2.urlopen(source_url, timeout=30)) \
-                    as response:
+            with urlopen(source_url, timeout=30) as response:
                 upload_file_object(
                     response, settings.MEDIA_BUCKET, file_store_name,
                     ProgressPercentage(source_url, self.request.id)
@@ -353,12 +350,12 @@ def download_file(url, target_path, file_size=1):
         # download and save the file
         localfilesize = 0
         blocksize = 8 * 2 ** 10    # 8 Kbytes
-        for buf in iter(lambda: response.raw.read(blocksize), ''):
+        for buf in iter(lambda: response.raw.read(blocksize), b''):
             localfilesize += len(buf)
             destination.write(buf)
             # check if we have a sane value for file size
             if remotefilesize > 0:
-                percent_done = localfilesize * 100. / remotefilesize
+                percent_done = localfilesize * 100 / remotefilesize
             else:
                 percent_done = 0
                 download_file.update_state(

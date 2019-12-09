@@ -11,7 +11,7 @@ import logging
 import shutil
 import tempfile
 import time
-import urlparse
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.db.models import Q
@@ -37,18 +37,12 @@ logger = logging.getLogger(__name__)
 MAX_BULK_LIST_SIZE = 75
 
 
-# make a list of values unique
-def uniquify(seq):
-    set = {}
-    map(set.__setitem__, seq, [])
-    return set.keys()
-
-
 # for an assay declaration (= assay file in a study)
 # this method is based on the assumption that all paths through the experiment
 # graph follow the same sequence of node types
 def get_node_types(study_uuid, assay_uuid=None, files_only=False,
                    filter_set=None):
+
     """filter_set is a set of node types, e.g. ["Sample Name", "Source Name"].
     Sets defined in Node (e.g. Node.ASSAYS, Node.FILES) can be applied. The
     method will only return node types included in filter_set unless filter_set
@@ -158,7 +152,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
         if current_id is None or current_id != node["id"]:
             # save current node
             if current_node is not None:
-                current_node['parents'] = uniquify(current_node['parents'])
+                current_node['parents'] = list(set(current_node['parents']))
                 nodes[current_id] = current_node
             # new node, start merging
             current_id = node['id']
@@ -186,7 +180,7 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
 
     # save last node
     if current_node is not None:
-        current_node['parents'] = uniquify(current_node['parents'])
+        current_node['parents'] = list(set(current_node['parents']))
         nodes[current_id] = current_node
 
     return nodes
@@ -296,7 +290,7 @@ def update_annotated_nodes(
 
     # To avoid exponential node creation, count the number of nodes to be
     # created first.
-    for node_id, node in nodes.iteritems():
+    for node_id, node in nodes.items():
         total_unique_attrs += len(
             nodes[node_id]["attributes"]
         )
@@ -318,7 +312,7 @@ def update_annotated_nodes(
 
         logger.error(error_message)
 
-    for node_id, node in nodes.iteritems():
+    for node_id, node in nodes.items():
         if node["type"] == node_type:
             bulk_list, counter = _create_annotated_node_objs(
                 bulk_list,
@@ -405,7 +399,7 @@ def _add_annotated_nodes(
     counter = 0
     bulk_list = []
 
-    for node_id, node in nodes.iteritems():
+    for node_id, node in nodes.items():
         if node["type"] == node_type:
             if node["uuid"] in node_uuids:
                 bulk_list, num_created = _create_annotated_node_objs(
@@ -549,7 +543,7 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False,
         }
 
     if facet_filter:
-        if isinstance(facet_filter, unicode):
+        if isinstance(facet_filter, str):
             facet_filter = urlunquote(facet_filter)
             try:
                 facet_filter = json.loads(facet_filter)
@@ -661,12 +655,12 @@ def generate_filtered_facet_fields(attributes):
             if field.get('is_facet'):
                 facet_field.append(field.get('solr_field'))
 
-    weighted_facet_list.sort()
+    weighted_facet_list.sort(key=lambda x: x[0])
     for (rank, field) in weighted_facet_list:
         field_limit_list.append(field.get("solr_field"))
 
     # add refinery_datafile_s index here
-    field_limit_list.insert(0, unicode(NodeIndex.DATAFILE, "utf-8"))
+    field_limit_list.insert(0, NodeIndex.DATAFILE)
 
     return {'facet_field': facet_field,
             'field_limit': field_limit_list}
@@ -679,16 +673,18 @@ def search_solr(encoded_params, core):
         core: Specify which node
     """
     url_portion = '/'.join([core, "select"])
-    url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
+    url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.post(url,
                                   json=encoded_params.get('json'),
                                   params=encoded_params.get('params'))
     if not full_response.ok:
         try:
-            response_obj = json.loads(full_response.content)
+            response_obj = json.loads(full_response.content.decode())
         except ValueError:
             raise RuntimeError(
-                'Expected Solr JSON, not: {}'.format(full_response.content)
+                'Expected Solr JSON, not: {}'.format(
+                    str(full_response.content)
+                )
             )
         try:
             raise RuntimeError('Solr error: {}\nin context: {}'.format(
@@ -724,10 +720,13 @@ def get_owner_from_assay(uuid):
 
 
 def format_solr_response(solr_response, include_facet_count=True):
-    # Returns a reformatted solr response
-    solr_response_json = json.loads(solr_response)
+    # Returns a reformatted solr response FROM BYTES
+    if type(solr_response) == bytes:
+        solr_response_json = json.loads(solr_response.decode())
+    else:
+        solr_response_json = json.loads(solr_response)
 
-    # Reorganizes solr response into easier to digest objects.
+        # Reorganizes solr response into easier to digest objects.
     try:
         order_facet_fields = json.loads(solr_response_json['responseHeader']
                                         ['params']['json']).get('fields')
@@ -763,7 +762,7 @@ def create_facet_field_counts(facet_fields):
     # buckets with an array of objects {count: int, val: str}
 
     facet_field_counts = {}
-    for field_name, count_obj in facet_fields.iteritems():
+    for field_name, count_obj in facet_fields.items():
         if field_name == 'count':
             continue
         count_array = count_obj.get('buckets')
@@ -949,15 +948,15 @@ def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
                 )
         try:
             return core.utils.build_absolute_url(url) if url else None
-        except ValueError as e:
+        except ValueError:
             logger.error('URL {} is not a valid relative url'.format(str(url)))
-            raise type(e)(e.message)
-        except RuntimeError as e:
+            raise
+        except RuntimeError:
             logger.error('Could not build absolute URL for {}'.format(
                     str(url)
                 )
             )
-            raise type(e)(e.message)
+            raise
 
 
 def fix_last_column(file):
@@ -970,11 +969,11 @@ def fix_last_column(file):
     # TODO: exception handling for file operations (IOError)
     logger.info("trying to fix the last column if necessary")
     # FIXME: use context manager to handle file opening and closing
-    reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
+    reader = csv.reader(open(file, newline=''), dialect='excel-tab')
     tempfilename = tempfile.NamedTemporaryFile().name
-    writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
+    writer = csv.writer(open(tempfilename, 'w'), dialect='excel-tab')
     # check that all rows have the same length
-    header = reader.next()
+    header = next(reader)
     header_length = len(header)
     num_empty_cols = 0  # number of empty header columns
     # TODO: throw exception if there is an empty field in the header between

@@ -6,11 +6,11 @@
 from .prod import *  # NOQA 405
 
 # Email
-EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_USER = get_setting('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = get_setting('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
-EMAIL_PORT = 465
+EMAIL_PORT = 587
 
 # Storage
 INSTALLED_APPS += (

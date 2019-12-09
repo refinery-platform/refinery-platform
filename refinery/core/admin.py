@@ -21,23 +21,23 @@ from .utils import admin_ui_deletion
 
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("node",)
-    list_display = ['__unicode__', 'id', 'analysis', 'subanalysis', 'node',
+    list_display = ['__str__', 'id', 'analysis', 'subanalysis', 'node',
                     'step', 'name', 'filename', 'filetype', 'direction',
                     'is_refinery_file']
 
 
 class AnalysisResultAdmin(ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'analysis', 'file_store_uuid',
+    list_display = ['__str__', 'id', 'analysis', 'file_store_uuid',
                     'file_name', 'file_type']
     readonly_fields = ['analysis']
 
 
 class ProjectAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'is_catch_all']
+    list_display = ['__str__', 'id', 'is_catch_all']
 
 
 class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'internal_id', 'workflow_engine',
+    list_display = ['__str__', 'id', 'internal_id', 'workflow_engine',
                     'show_in_repository_mode', 'is_active', 'type']
 
     def hide_selected_workflows(self, request, queryset):
@@ -62,12 +62,12 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 
 
 class WorkflowEngineAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'instance']
+    list_display = ['__str__', 'id', 'instance']
 
 
 class DataSetAdmin(GuardedModelAdmin):
     readonly_fields = ('uuid',)
-    list_display = ['__unicode__', 'id', 'name', 'file_count', 'file_size',
+    list_display = ['__str__', 'id', 'name', 'file_count', 'file_size',
                     'accession', 'accession_source', 'title']
 
     def delete_selected(self, request, objs):
@@ -81,18 +81,18 @@ class DataSetAdmin(GuardedModelAdmin):
 
 
 class InvitationAdmin(GuardedModelAdmin):
-    list_diaplay = ['__unicode__', 'id', 'token_uuid', 'group_id', 'created',
+    list_diaplay = ['__str__', 'id', 'token_uuid', 'group_id', 'created',
                     'expires', 'sender', 'recipient_email']
 
 
 class InvestigationLinkAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'data_set', 'investigation',
+    list_display = ['__str__', 'id', 'data_set', 'investigation',
                     'version',
                     'message', 'date']
 
 
 class AnalysisAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'project', 'data_set',
+    list_display = ['__str__', 'id', 'project', 'data_set',
                     'workflow', 'workflow_steps_num', 'history_id',
                     'workflow_galaxy_id', 'library_id', 'time_start',
                     'time_end', 'status', 'status_detail']
@@ -108,17 +108,17 @@ class AnalysisAdmin(GuardedModelAdmin):
 
 
 class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'data_set', 'analysis',
+    list_display = ['__str__', 'id', 'data_set', 'analysis',
                     'file_store_item']
 
 
 class ExtendedGroupAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'manager_group', 'uuid', 'is_public',
+    list_display = ['__str__', 'id', 'manager_group', 'uuid', 'is_public',
                     'member_list', 'perm_list', 'can_edit']
 
 
 class UserProfileAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'uuid', 'user', 'affiliation',
+    list_display = ['__str__', 'id', 'uuid', 'user', 'affiliation',
                     'catch_all_project', 'login_count',
                     'get_date_joined', 'get_is_active']
 
@@ -136,13 +136,13 @@ class UserProfileAdmin(GuardedModelAdmin):
 
 
 class TutorialsAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'user_profile',
+    list_display = ['__str__', 'id', 'user_profile',
                     'collaboration_tutorial_viewed',
                     'data_upload_tutorial_viewed']
 
 
 class SiteProfileAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'site']
+    list_display = ['__str__', 'site']
 
 
 class SiteStatisticsAdmin(AdminFieldPopulator):

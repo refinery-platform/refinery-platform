@@ -26,13 +26,13 @@ TEST_DATA_PATH = "tool_manager/test_data"
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
     def setUp(self):
         super(ToolDefinitionGenerationTests, self).setUp()
-        raw_input_reference = "__builtin__.raw_input"
+        input_reference = "builtins.input"
         self.raw_input_yes_mock = mock.patch(
-            raw_input_reference,
+            input_reference,
             return_value="y"
         )
         self.raw_input_no_mock = mock.patch(
-            raw_input_reference,
+            input_reference,
             side_effect=["coffee", "n"]
         )
         with open(
@@ -534,7 +534,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                     settings.REFINERY_VISUALIZATION_REGISTRY,
                     fake_registry_tool_names
                 ),
-                context.exception.message
+                str(context.exception)
             )
 
     def test_load_tools_command_error_if_branch_and_workflows_specified(self):
@@ -643,7 +643,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         with self.assertRaises(exception) as context:
             call_command("load_tools", "--visualizations",
                          " ".join(visualizations))
-        [self.assertIn(message, context.exception.message)
+        [self.assertIn(message, str(context.exception))
          for message in messages]
 
     def test_visualization_generation_with_no_image_version_yields_error(self):
@@ -675,7 +675,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 workflow_exhibiting_one_off_asterisking_error
             )
         self.assertIn("asterisked `workflow_outputs`",
-                      context.exception.message)
+                      str(context.exception))
 
     def test__has_workflow_outputs_bad_workflow_outputs(self):
         self.fake_workflow["graph"]["steps"] = {
@@ -716,7 +716,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             with self.assertRaises(CommandError) as context:
                 LoadToolsCommand()._generate_workflows()
         self.assertIn("does not have `workflow_outputs`",
-                      context.exception.message)
+                      str(context.exception))
         self.assertTrue(_are_workflow_outputs_present_mock.called)
 
     def test_workflow_description_is_set_from_tool_definition_annotation(self):
@@ -739,7 +739,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             validate_tool_launch_configuration(tool_launch_configuration)
         self.assertIn(
             "Tool launch configuration is not properly configured",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_invalid_TLC_schema(self):
@@ -750,7 +750,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             validate_tool_launch_configuration(tool_launch_configuration)
         self.assertIn(
             "Tool launch configuration is not properly configured",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_invalid_TLC_non_pythonic_file_relationships(self):
@@ -766,7 +766,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         self.assertIn(
             "ToolLaunchConfiguration's `file_relationships` could not be "
             "evaluated as a Pythonic Data Structure",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_invalid_TLC_non_LIST_PAIR_file_relationships(self):
@@ -790,7 +790,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             '{"Dicts aren\'t": \'LIST/PAIR-like\'}',
-            context.exception.message
+            str(context.exception)
         )
 
     def test_invalid_TLC_non_file_relationships_unbalanced(self):
@@ -808,7 +808,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "LIST/PAIR structure is not balanced",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_invalid_TLC_bad_tooldefinition_uuid(self):
@@ -820,7 +820,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             validate_tool_launch_configuration(tool_launch_configuration)
         self.assertIn(
             "Tool launch configuration is not properly configured",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_valid_tool_launch_config_LIST(self):
@@ -904,7 +904,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         }
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
-        self.assertIn("is not of type u'string'", context.exception.message)
+        self.assertIn("is not of type 'string'", str(context.exception))
 
 
 class ToolManagerUtilitiesTests(ToolManagerTestBase):
@@ -916,11 +916,11 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
             bad_filetype,
             error_message
         )
-        self.assertIn(bad_filetype, file_type_validation_error.message)
-        self.assertIn(error_message, file_type_validation_error.message)
+        self.assertIn(bad_filetype, str(file_type_validation_error))
+        self.assertIn(error_message, str(file_type_validation_error))
         self.assertIn(
             str([f.name for f in FileType.objects.all()]),
-            file_type_validation_error.message
+            str(file_type_validation_error)
         )
 
     @mock.patch(
@@ -965,7 +965,7 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 "Unable to retrieve workflows from '{}'".format(
                     self.workflow_engine.instance.base_url
                 ),
-                context.exception.message
+                str(context.exception)
             )
 
     def test_user_has_access_to_tool(self):

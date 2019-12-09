@@ -39,7 +39,7 @@ class S3MediaStorageTest(SimpleTestCase):
     def test_file_name_format(self, mock_exists):
         mock_exists.return_value = False
         name = self.storage.get_available_name('test.fastq')
-        self.assertRegexpMatches(name, '[\w]{7}/test\.fastq')
+        self.assertRegex(name, '[\w]{7}/test\.fastq')
 
     @mock.patch('file_store.utils.S3MediaStorage.exists')
     def test_leading_dash_removal(self, mock_exists):

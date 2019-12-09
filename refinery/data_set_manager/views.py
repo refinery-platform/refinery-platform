@@ -8,8 +8,9 @@ import json
 import logging
 import os
 import shutil
+import sys
 import traceback
-import urlparse
+from urllib.parse import urlparse
 import tempfile
 
 from django import forms
@@ -115,7 +116,7 @@ class TakeOwnershipOfPublicDatasetView(View):
             return HttpResponseBadRequest("%s." % err_msg)
 
         try:
-            body = json.loads(request_body)
+            body = json.loads(request_body.decode())
         except Exception as e:
             err_msg = "Request body is no valid JSON"
             logger.error("%s: %s" % (err_msg, e))
@@ -215,7 +216,7 @@ def import_by_file(file_obj):
 def import_by_url(url):
     # TODO: replace with chain
     # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-    parsed_url = urlparse.urlparse(url)
+    parsed_url = urlparse(url)
     file_name = parsed_url.path.split('/')[-1]
     temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
     try:
@@ -278,7 +279,7 @@ class ProcessISATabView(View):
                                           context_instance=context)
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
-        u = urlparse.urlparse(url)
+        u = urlparse(url)
         file_name = u.path.split('/')[-1]
         temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
         try:
@@ -302,19 +303,20 @@ class ProcessISATabView(View):
         except ParserException as e:
             error_message = "{} {}".format(
                 PARSER_ERROR_MESSAGE,
-                e.message
+                e
             )
             logger.error(error_message)
             return HttpResponseBadRequest(error_message)
         except Exception as e:
+            etype, value, tb = sys.exc_info()
             error_message = "{} {}".format(
                 PARSER_UNEXPECTED_ERROR_MESSAGE,
-                traceback.format_exc(e)
+                "".join(traceback.format_exception(etype, value, tb))
             )
             logger.error(error_message)
             return HttpResponseBadRequest(
                 PARSER_UNEXPECTED_ERROR_MESSAGE +
-                e.message
+                e
             )
         try:
             os.unlink(temp_file_path)
@@ -367,7 +369,11 @@ class ProcessISATabView(View):
                 try:
                     response = import_by_file(f)
                 except Exception as e:
-                    logger.error(traceback.format_exc(e))
+                    etype, value, tb = sys.exc_info()
+                    logger.error("{} {}".format(
+                        PARSER_UNEXPECTED_ERROR_MESSAGE,
+                        "".join(traceback.format_exception(etype, value, tb))
+                    ))
                     return HttpResponseBadRequest(
                        "{} {}".format(
                         PARSER_UNEXPECTED_ERROR_MESSAGE, e)
@@ -422,14 +428,15 @@ class ProcessISATabView(View):
             except ParserException as e:
                 error_message = "{} {}".format(
                     PARSER_ERROR_MESSAGE,
-                    e.message
+                    e
                 )
                 logger.error(error_message)
                 return HttpResponseBadRequest(error_message)
             except Exception as e:
+                etype, value, tb = sys.exc_info()
                 error_message = "{} {}".format(
                     PARSER_UNEXPECTED_ERROR_MESSAGE,
-                    traceback.format_exc(e)
+                    "".join(traceback.format_exception(etype, value, tb))
                 )
                 logger.error(error_message)
                 return HttpResponseBadRequest(
@@ -590,7 +597,7 @@ class ProcessMetadataTableView(View):
             error = {'error_message': repr(exc)}
             if request.is_ajax():
                 return HttpResponseServerError(
-                    json.dumps({'error': exc.message}), 'application/json'
+                    json.dumps({'error': str(exc)}), 'application/json'
                 )
             else:
                 return render(request, self.template_name, error)
@@ -619,7 +626,7 @@ class CheckDataFilesView(View):
             return HttpResponseBadRequest()
 
         try:
-            file_data = json.loads(request.body)
+            file_data = json.loads(request.body.decode())
         except ValueError:
             return HttpResponseBadRequest()
         try:
@@ -652,7 +659,7 @@ class CheckDataFilesView(View):
                 uploaded_s3_key_list.append(s3_object.key)
 
         for input_file_path in input_file_list:
-            if not isinstance(input_file_path, unicode):
+            if not isinstance(input_file_path, str):
                 bad_file_list.append(input_file_path)
                 logger.error("Uploaded file path '%s' is not a string",
                              input_file_path)

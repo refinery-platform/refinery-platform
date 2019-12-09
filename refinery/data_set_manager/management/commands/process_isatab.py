@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from collections import OrderedDict
 import logging
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                 _, extension = os.path.splitext(filename)
                 if extension.lower() == '.zip':
                     isatab_dict[filename] = [os.path.join(root, filename)]
-        isatab_dict = OrderedDict(sorted(isatab_dict.iteritems()))
+        isatab_dict = OrderedDict(sorted(isatab_dict.items()))
         # If isatab_dict is empty, then base_isa_dir is a file, not a directory
         if not isatab_dict:
             isatab_dict[base_isa_dir] = [base_isa_dir]

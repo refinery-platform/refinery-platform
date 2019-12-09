@@ -13,7 +13,7 @@ from data_set_manager import models
 
 class NodeAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("parents", "children")
-    list_display = ["__unicode__", "file_item", "study", "assay",
+    list_display = ["__str__", "file_item", "study", "assay",
                     "analysis_uuid", "name", "subanalysis", "workflow_output",
                     "genome_build", "species", "is_auxiliary_node"]
     readonly_fields = ["file_item"]
@@ -21,7 +21,7 @@ class NodeAdmin(ForeignKeyAutocompleteAdmin):
 
 class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
     raw_id_fields = ("node", "attribute", "study", "assay")
-    list_display = ["__unicode__", "id", "attribute", "study", "assay",
+    list_display = ["__str__", "id", "attribute", "study", "assay",
                     "node_uuid", "node_file_uuid", "node_type", "node_name",
                     "attribute_type", "attribute_subtype",
                     "attribute_value", "attribute_value_unit",
@@ -31,16 +31,16 @@ class AnnotatedNodeAdmin(ForeignKeyAutocompleteAdmin):
 
 
 class NodeCollectionAdmin(ForeignKeyAutocompleteAdmin):
-    list_display = ["__unicode__", "title", "uuid", "identifier",
+    list_display = ["__str__", "title", "uuid", "identifier",
                     "description", "release_date", "submission_date"]
 
 
 class InvestigationAdmin(ForeignKeyAutocompleteAdmin):
-    list_display = ["__unicode__", "uuid"]
+    list_display = ["__str__", "uuid"]
 
 
 class StudyAdmin(ForeignKeyAutocompleteAdmin):
-    list_display = ["__unicode__", "uuid"]
+    list_display = ["__str__", "uuid"]
 
 
 admin.site.register(models.NodeCollection, NodeCollectionAdmin)

@@ -222,7 +222,7 @@ def parse_isatab(username, public, path, identity_id=None,
                                 FileStoreItem.MultipleObjectsReturned) as e:
                             logger.error(
                                 'Did not get FileStoreItem for uuid %s',
-                                unicode(investigation.isarchive_file), e)
+                                str(investigation.isarchive_file), e)
 
                         try:
                             checksum = calculate_checksum(
@@ -260,11 +260,11 @@ def parse_isatab(username, public, path, identity_id=None,
                     DataSet.MultipleObjectsReturned) as e:
                 logger.error('DataSet for uuid %s not fetched and thus not '
                              'updated with revised investigation %s: %s',
-                             existing_data_set_uuid, unicode(investigation), e)
+                             existing_data_set_uuid, str(investigation), e)
                 raise type(e)(
                     'DataSet for uuid %s not fetched and thus not '
                     'updated with revised investigation {}: {}'.format(
-                         existing_data_set_uuid, unicode(investigation)
+                         existing_data_set_uuid, str(investigation)
                     )
                 )
             else:

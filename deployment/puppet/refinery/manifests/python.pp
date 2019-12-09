@@ -8,6 +8,8 @@ class refinery::python (
 ) inherits refinery::params {
 
   class { '::python':
+    version    => 'python3.5',
+    ensure     => 'latest',
     dev        => 'present',
     gunicorn   => 'absent',
     pip        => 'latest',
@@ -16,7 +18,8 @@ class refinery::python (
 
   $base_dependencies = ['build-essential', 'libncurses5-dev']
   $crypto_dependencies = ['libffi-dev', 'libssl-dev']  # cryptography module
-  package { [$base_dependencies, $crypto_dependencies]: }
+  $pysam_dependecies = ['liblzma-dev', 'libbz2-dev', 'zlib1g-dev'] # pysam mod
+  package { [$base_dependencies, $crypto_dependencies, $pysam_dependecies]: }
 
   # for psycopg2 module
   package { 'libpq5':
@@ -41,6 +44,7 @@ class refinery::python (
   }
   ->
   python::virtualenv { $virtualenv:
+    version => '3.5',
     ensure  => present,
     owner   => $app_user,
     group   => $app_group,
@@ -49,9 +53,10 @@ class refinery::python (
         $base_dependencies,
         $crypto_dependencies,
         'libpq5',
-        'libpq-dev'
+        'libpq-dev',
+        $pysam_dependecies
       ],
-    ]
+    ],
   }
 
   python::requirements { "${project_root}/requirements.txt":

@@ -3,7 +3,7 @@ Created on Feb 20, 2012
 
 @author: nils
 '''
-from __future__ import absolute_import
+
 
 import ast
 from collections import defaultdict
@@ -13,7 +13,7 @@ import logging
 import os
 import smtplib
 import socket
-from urlparse import urljoin
+from urllib.parse import urljoin
 import uuid as uuid_lib
 
 from django import forms
@@ -91,9 +91,9 @@ class UserProfile(models.Model):
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
-    def __unicode__(self):
-        return self.user.first_name + u" " + self.user.last_name + \
-               u" (" + self.affiliation + u"): " + self.user.email
+    def __str__(self):
+        return self.user.first_name + " " + self.user.last_name + \
+               " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_data_upload_tut(self):
         try:
@@ -102,7 +102,7 @@ class UserProfile(models.Model):
         except (Tutorials.DoesNotExist,
                 Tutorials.MultipleObjectsReturned) as exc:
             logger.error('Failed to get Tutorial for UserProfile %s: %s',
-                         unicode(self), exc)
+                         str(self), exc)
 
     def has_viewed_collaboration_tut(self):
         try:
@@ -111,7 +111,7 @@ class UserProfile(models.Model):
         except (Tutorials.DoesNotExist,
                 Tutorials.MultipleObjectsReturned) as exc:
             logger.error('Failed to get Tutorial for UserProfile %s: %s',
-                         unicode(self), exc)
+                         str(self), exc)
 
 
 def get_user_import_dir(user):
@@ -226,7 +226,7 @@ class Tutorials(models.Model):
     collaboration_tutorial_viewed = models.BooleanField(default=False)
     data_upload_tutorial_viewed = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             "User: {} | Collaboration: {}, DataUpload:"
             " {}".format(
@@ -252,7 +252,7 @@ class BaseResource(models.Model):
     description = models.TextField(max_length=5000, blank=True)
     slug = models.CharField(max_length=250, blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " (" + self.uuid + ")"
 
     class Meta:
@@ -307,7 +307,7 @@ class OwnableResource(BaseResource):
     permissions, where "xxx" is the simple_modelname
     """
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def set_owner(self, user):
@@ -337,7 +337,7 @@ class OwnableResource(BaseResource):
             attach_perms=True,
             with_group_users=False
         )
-        for user, permission in user_permissions.iteritems():
+        for user, permission in user_permissions.items():
             if "add_%s" % self._meta.verbose_name in permission:
                 return user
         return None
@@ -369,7 +369,7 @@ class SharableResource(OwnableResource):
     """
     share_list = None
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def get_owner(self):
@@ -396,7 +396,7 @@ class SharableResource(OwnableResource):
                 owner = User.objects.get(id=perms[0].user_id)
             except (User.DoesNotExist, User.MultipleObjectsReturned) as exc:
                 logger.error("Error finding user with owner perms %s: %s",
-                             unicode(perms[0]), exc)
+                             str(perms[0]), exc)
 
         return owner
 
@@ -442,7 +442,7 @@ class SharableResource(OwnableResource):
             except (ExtendedGroup.DoesNotExist,
                     ExtendedGroup.MultipleObjectsReturned) as exc:
                 logger.error('Failed to get ExtendedGroup for Group %s: %s',
-                             unicode(group_object), exc)
+                             str(group_object), exc)
             else:
                 group["uuid"] = group["group"].uuid
                 group["id"] = group["group"].id
@@ -500,7 +500,7 @@ class TemporaryResource(models.Model):
     # Expiration time and date of the instance
     expiration = models.DateTimeField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " (" + self.uuid + ")"
 
     class Meta:
@@ -512,7 +512,7 @@ class ManageableResource(models.Model):
     workflow engines
     """
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name + " (" + self.uuid + ")"
 
     def set_manager_group(self, group):
@@ -525,7 +525,7 @@ class ManageableResource(models.Model):
         # ownership is determined by "add" permission
         group_permissions = get_groups_with_perms(self, attach_perms=True)
 
-        for group, permission in group_permissions.iteritems():
+        for group, permission in group_permissions.items():
             if "add_%s" % self._meta.verbose_name in permission:
                 return group.extendedgroup
 
@@ -559,11 +559,11 @@ class DataSet(SharableResource):
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return (
-            unicode(self.name) + u' - ' +
-            unicode(self.get_owner_username()) + u' - ' +
-            unicode(self.summary)
+            str(self.name) + ' - ' +
+            str(self.get_owner_username()) + ' - ' +
+            str(self.summary)
         )
 
     def save(self, *args, **kwargs):
@@ -710,7 +710,7 @@ class DataSet(SharableResource):
 
         update_data_set_index(self)
         invalidate_cached_object(self)
-        user_ids = map(lambda user: user.id, group.user_set.all())
+        user_ids = [user.id for user in group.user_set.all()]
 
         # We need to give the anonymous user read access too.
         if group.id == ExtendedGroup.objects.public_group().id:
@@ -883,7 +883,7 @@ class InvestigationLink(models.Model):
     class Meta:
         unique_together = ('data_set', 'investigation', 'version')
 
-    def __unicode__(self):
+    def __str__(self):
         retstr = (
             "%s: ver=%s, %s"
             % (self.investigation.get_identifier(), self.version, self.message)
@@ -898,8 +898,7 @@ class InvestigationLink(models.Model):
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as exc:
             logger.error('Failed to get NodeCollection for '
-                         'Investigation %s: %s',
-                         unicode(self.investigation), exc)
+                         'Investigation %s: %s', self.investigation, exc)
             return None
 
 
@@ -907,7 +906,7 @@ class WorkflowEngine(OwnableResource, ManageableResource):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey(Instance, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name) + " - " + str(self.summary)
 
     class Meta:
@@ -1012,7 +1011,7 @@ class Workflow(SharableResource, ManageableResource):
 class Project(SharableResource):
     is_catch_all = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
             str(self.name) + " - " + str(self.get_owner_username()) + " - " +
             str(self.summary)
@@ -1379,7 +1378,7 @@ class Analysis(OwnableResource):
                     FileStoreItem.MultipleObjectsReturned) as exc:
                 logger.error('Failed to get FileStoreItem for '
                              'AnalysisResult %s: %s',
-                             unicode(analysis_result), exc)
+                             str(analysis_result), exc)
 
     def terminate_file_import_tasks(self):
         """Collects all UUIDs of FileStoreItems used as inputs for the Analysis
@@ -1559,7 +1558,7 @@ class Analysis(OwnableResource):
                         FileStoreItem.MultipleObjectsReturned) as exc:
                     logger.error('Failed to get FileStoreItem for '
                                  'AnalysisResult %s: %s',
-                                 unicode(analysis_result), exc)
+                                 str(analysis_result), exc)
                 logger.debug(
                     "Output file %s ('%s') assigned to node %s ('%s')",
                     output_connection, analysis_result.file_store_uuid,
@@ -1722,7 +1721,7 @@ class AnalysisNodeConnection(models.Model):
     galaxy_dataset_name = models.CharField(null=True, blank=True,
                                            max_length=250)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{}: {}_{} ({}) {}".format(
             self.direction,
             self.step,
@@ -1755,10 +1754,8 @@ def get_shared_groups(user1, user2, include_public_group=False):
     shared_groups = list(set(user1.groups.all()) & set(user2.groups.all()))
 
     if not include_public_group:
-        return filter(
-            lambda eg: eg != ExtendedGroup.objects.public_group(),
-            [g.extendedgroup for g in shared_groups]
-        )
+        return [eg for eg in [g.extendedgroup for g in shared_groups]
+                if eg != ExtendedGroup.objects.public_group()]
 
     return [g.extendedgroup for g in shared_groups]
 
@@ -1838,7 +1835,7 @@ def create_manager_group(sender, instance, created, **kwargs):
         # (but don't create manager groups for manager groups ...)
         post_save.disconnect(create_manager_group, sender=ExtendedGroup)
         instance.manager_group = ExtendedGroup.objects.create(
-            name=unicode(".Managers " + instance.uuid)
+            name=str(".Managers " + instance.uuid)
         )
         instance.save()
         instance.manager_group.save()
@@ -1857,7 +1854,7 @@ class Invitation(models.Model):
     sender = models.ForeignKey(User, null=True)
     recipient_email = models.CharField(max_length=250, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.token_uuid) + ' | ' + str(self.group_id)
 
     def save(self, *arg, **kwargs):
@@ -1990,7 +1987,7 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'site': site.domain,
                     'registered_user_email': self.user.email,
                     'registered_user_username': self.user.username,
-                    'registered_user_full_name': u"{} {}".format(
+                    'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
                     'registered_user_affiliation':
                         self.user.profile.affiliation
@@ -2023,7 +2020,7 @@ class SiteProfile(models.Model):
     intro_markdown = models.TextField(blank=True)
     twitter_username = models.CharField(max_length=100, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.site.name
 
 
@@ -2124,9 +2121,9 @@ class SiteStatistics(models.Model):
         def get_aggregate_sum(field_name):
             if not aggregates:
                 return getattr(self, field_name)
-            return SiteStatistics.objects.filter(
+            return list(SiteStatistics.objects.filter(
                 run_date__lte=self.run_date
-            ).aggregate(Sum(field_name)).values()[0]
+            ).aggregate(Sum(field_name)).values())[0]
 
         return [
             self.pk, get_aggregate_sum("datasets_shared"),
@@ -2392,7 +2389,7 @@ class Event(models.Model):
     # def render_group_user_removal(self):
     #     return '{}'.format(self.user)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.data_set is not None and self.group is None:
             if self.type == Event.CREATE:
                 return self.render_data_set_create()
@@ -2414,13 +2411,13 @@ class Event(models.Model):
                 elif self.sub_type == Event.ANALYSIS_DELETION:
                     return self.render_data_set_analysis_deletion()
                 else:
-                    raise StandardError(
+                    raise Exception(
                         'Invalid event sub-type for data_set: {}'.format(
                             self.sub_type
                         )
                     )
             else:
-                raise StandardError(
+                raise Exception(
                     'Invalid event type for data_set: {}'.format(self.type)
                 )
         elif self.group is not None and self.data_set is None:
@@ -2444,17 +2441,17 @@ class Event(models.Model):
                 elif self.sub_type == Event.USER_REMOVAL:
                     return self.render_group_user_removal()
                 else:
-                    raise StandardError(
+                    raise Exception(
                         'Invalid event sub-type for group: {}'.format(
                             self.sub_type
                         )
                     )
             else:
-                raise StandardError(
+                raise Exception(
                     'Invalid event type for group: {}'.format(self.type)
                 )
         else:
-            raise StandardError(
+            raise Exception(
                 'Expected exactly one of data_set and group to be not None, '
                 'instead data_set="{}" and group="{}"'.format(
                     self.data_set, self.group

@@ -2,7 +2,7 @@
 import json
 import logging
 import uuid
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 import mock
 from django.http import HttpResponseBadRequest
@@ -140,10 +140,12 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         for tool_definition in self.get_response.data:
             for parameter in tool_definition[ToolDefinition.PARAMETERS]:
                 if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
-                    self.assertIn("galaxy_workflow_step", parameter.keys())
+                    self.assertIn("galaxy_workflow_step",
+                                  parameter.keys())
                 elif (tool_definition["tool_type"] ==
                       ToolDefinition.VISUALIZATION):
-                    self.assertNotIn("galaxy_workflow_step", parameter.keys())
+                    self.assertNotIn("galaxy_workflow_step",
+                                     parameter.keys())
 
     def test_request_from_owned_dataset_shows_all_tool_defs(self):
         self.assertNotEqual(len(self.get_response.data), 0)
@@ -185,7 +187,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't fetch DataSet", get_response.content)
+        self.assertIn("Couldn't fetch DataSet", str(get_response.content))
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -251,7 +253,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertIsInstance(self.post_response, HttpResponseBadRequest)
         self.assertIn(
             'Tool launch configuration is not properly configured',
-            self.post_response.content
+            str(self.post_response.content)
         )
         self.assertEqual(Tool.objects.count(), 0)
 
@@ -282,7 +284,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertIsInstance(self.post_response, HttpResponseBadRequest)
         self.assertEqual(Tool.objects.count(), 0)
         self.assertIn("LIST/PAIR structure is not balanced",
-                      self.post_response.content)
+                      str(self.post_response.content))
 
     def test_good_extra_directories_path(self):
         valid_annotation = "LIST_visualization_good_extra_directories.json"
@@ -349,7 +351,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_owner_info_is_returned_non_ascii(self):
         self.create_tool(ToolDefinition.WORKFLOW)
         self.create_tool(ToolDefinition.VISUALIZATION)
-        self.tool.get_owner().first_name = u'élan'
+        self.tool.get_owner().first_name = 'élan'
         self.tool.get_owner().save()
         self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 2)
@@ -382,7 +384,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(
-            json.loads(get_response.content)["container_url"],
+            json.loads(get_response.content.decode())["container_url"],
             self.tool.get_relative_container_url()
         )
         self.assertTrue(self.tool.is_running())
@@ -394,7 +396,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         get_response = self.tool_relaunch_view(get_request)
         self.assertEqual(get_response.status_code, 400)
         self.assertIn("Relaunching a Tool requires a Tool UUID",
-                      get_response.content)
+                      str(get_response.content))
 
     def test_relaunch_failure_tool_doesnt_exist(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -422,7 +424,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             "User: {} does not have permission to view {}: {}".format(
                 self.user.username, self.tool.name, self.tool.uuid
             ),
-            get_response.content
+            str(get_response.content)
         )
 
     def test_relaunch_failure_tool_already_running(self):
@@ -437,7 +439,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
         self.assertEqual(get_response.status_code, 400)
         self.assertIn("Can't relaunch a Tool that is currently running",
-                      get_response.content)
+                      str(get_response.content))
 
     def test_workflow_tool_disallows_relaunch(self):
         self.create_tool(ToolDefinition.WORKFLOW)
@@ -474,7 +476,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
     def test_vis_tools_returned_are_from_a_single_dataset(self):
         vis_tools_to_create = 3
-        for i in xrange(vis_tools_to_create):
+        for i in range(vis_tools_to_create):
             self.create_tool(ToolDefinition.VISUALIZATION,
                              create_unique_name=True)
 
@@ -494,7 +496,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
 
     def _create_workflow_and_vis_tools(self, number_to_create=2):
-        for i in xrange(number_to_create):
+        for i in range(number_to_create):
             self.create_tool(ToolDefinition.VISUALIZATION,
                              create_unique_name=True)
             self.create_tool(ToolDefinition.WORKFLOW,
@@ -568,7 +570,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_response = self.tool_container_input_data_view(
                 get_request, uuid=self.tool.uuid
             )
-            self.assertEqual(json.loads(get_response.content),
+            self.assertEqual(json.loads(get_response.content.decode()),
                              self.tool.get_container_input_dict())
 
     def test_get_container_input_data_detail_route_bad_uuid(self):
@@ -600,7 +602,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertEqual(
             "A Tool already exists with a display_name of: '{}'".format(
                 display_name
-            ),
+            ).encode(),
             self.post_response.content
         )
 

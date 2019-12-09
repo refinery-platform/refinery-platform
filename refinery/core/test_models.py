@@ -130,12 +130,12 @@ class AnalysisTests(TestCase):
         )
         self.file_store_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile('test_file.txt',
-                                        'Coffee is delicious!'),
+                                        b'Coffee is delicious!'),
             filetype=FileType.objects.get(name="TXT")
         )
         self.file_store_item1 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile('test_file.txt',
-                                        'Coffee is delicious!')
+                                        b'Coffee is delicious!')
         )
         self.dataset_with_analysis = DataSet.objects.create()
         self.dataset_with_analysis1 = DataSet.objects.create()
@@ -256,7 +256,7 @@ class AnalysisTests(TestCase):
         self.assertEqual(self.analysis_status.galaxy_file_import_state(), [])
 
     def test_facet_name(self):
-        self.assertRegexpMatches(
+        self.assertRegex(
             self.analysis_with_node_analyzed_further.facet_name(),
             'REFINERY_ANALYSIS_UUID_' + r'\d+_\d+' + '_s'
         )
@@ -672,7 +672,7 @@ class DataSetTests(TestCase):
         self.isa_tab_dataset.get_latest_study().delete()
         with self.assertRaises(RuntimeError) as context:
             self.isa_tab_dataset.get_latest_study()
-            self.assertIn("Couldn't fetch Study", context.exception.message)
+            self.assertIn("Couldn't fetch Study", str(context.exception))
 
     def test_get_nodes(self):
         nodes = Node.objects.all()
@@ -772,16 +772,16 @@ class EventTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(self.user)
-        self.pre_re = u'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
-        self.post_re = u' data set Test DataSet - [0-9a-f-]+$'
+        self.pre_re = '^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
+        self.post_re = ' data set Test DataSet - [0-9a-f-]+$'
 
     def test_data_set_create(self):
         create_dataset_with_necessary_models()
         events = Event.objects.all()
         self.assertEqual(len(events), 1)
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(events[0]),
-            self.pre_re + u'created data set Test DataSet - [0-9a-f-]+$'
+            self.pre_re + 'created data set Test DataSet - [0-9a-f-]+$'
         )
 
     # DataSetPermissionsUpdateTests covers data_set_permissions_change.
@@ -800,11 +800,11 @@ class EventTests(TestCase):
 
         events = Event.objects.all()
         self.assertEqual(len(events), 2)
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(events[0]),
             self.pre_re + r'created' + self.post_re
         )
-        self.assertRegexpMatches(
+        self.assertRegex(
             str(events[1]),
             self.pre_re +
             r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' +
@@ -819,14 +819,14 @@ class EventTests(TestCase):
 
         events = Event.objects.all()
         self.assertEqual(len(events), 2)
-        self.assertRegexpMatches(
-            unicode(events[0]),
-            self.pre_re + u'created' + self.post_re
+        self.assertRegex(
+            str(events[0]),
+            self.pre_re + 'created' + self.post_re
         )
-        self.assertRegexpMatches(
-            unicode(events[1]),
+        self.assertRegex(
+            str(events[1]),
             self.pre_re +
-            u'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
+            'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
             self.post_re
         )
 
@@ -864,7 +864,7 @@ class EventTests(TestCase):
         self.assertEqual(
             event.get_details_as_dict(),
             {
-                u'display_name': tool.display_name
+                'display_name': tool.display_name
             }
         )
 
@@ -1277,12 +1277,12 @@ class UserProfileTest(TestCase):
                          len(ExtendedGroup.objects.filter(id=self.group.id)))
 
     def test_non_ascii_name(self):
-        self.userprofile.user.first_name = u'élan'
-        self.userprofile.user.last_name = u'göld'
+        self.userprofile.user.first_name = 'élan'
+        self.userprofile.user.last_name = 'göld'
         self.userprofile.user.save()
         self.assertEqual(
-            unicode(self.userprofile),
-            u"élan göld (" + self.userprofile.affiliation + u"): " +
+            str(self.userprofile),
+            "élan göld (" + self.userprofile.affiliation + "): " +
             self.user.email
         )
 

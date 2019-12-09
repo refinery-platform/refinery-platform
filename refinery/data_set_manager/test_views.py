@@ -1,7 +1,7 @@
 import json
 import mock
 import os
-from urlparse import urljoin
+from urllib.parse import urljoin
 import uuid
 
 from django.conf import settings
@@ -358,7 +358,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         response = self.view(request, self.valid_uuid)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(self.attribute_order_response, response.data)
+        self.assertCountEqual(self.attribute_order_response, response.data)
 
     def test_get_unknown_uuid(self):
         request = self.factory.get(
@@ -425,7 +425,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content,
-                         '"Requires attribute id or solr_field name."')
+                         b'"Requires attribute id or solr_field name."')
         self.client.logout()
 
     def test_put_invalid_login(self):
@@ -443,7 +443,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.content,
-                         '"Only owner may edit attribute order."')
+                         b'"Only owner may edit attribute order."')
         self.client.logout()
 
     def test_put_object_id_without_attribute_order(self):
@@ -461,7 +461,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content,
-                         '"Could not find attribute orders to update"')
+                         b'"Could not find attribute orders to update"')
         self.client.logout()
 
     def test_put_object_solr_without_attribute_order(self):
@@ -479,7 +479,7 @@ class AssayAttributeAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.content,
-                         '"Could not find attribute orders to update"')
+                         b'"Could not find attribute orders to update"')
         self.client.logout()
 
 
@@ -644,7 +644,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "data_files_to_be_deleted": [],
                 "data_files_not_uploaded": ["a.txt", "b.txt"]
@@ -660,7 +660,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "data_files_to_be_deleted": [],
                 "data_files_not_uploaded": ["b.txt"]
@@ -677,7 +677,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "data_files_to_be_deleted": [],
                 "data_files_not_uploaded": []
@@ -709,7 +709,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "data_files_to_be_deleted": [],
                 "data_files_not_uploaded": ["test2.txt"]
@@ -733,7 +733,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "data_files_to_be_deleted": ["test1.txt"],
                 "data_files_not_uploaded": ["fake.txt"]
@@ -1016,7 +1016,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
         )
         derived_nodes_uuid = [node.uuid for node in assay_nodes if
                               node.is_derived()]
-        self.assertItemsEqual(get_response.data, derived_nodes_uuid)
+        self.assertCountEqual(get_response.data, derived_nodes_uuid)
 
     @mock.patch('data_set_manager.models.Node.update_solr_index')
     def test_patch_remove_data_file_200_status(self, mock_index):
@@ -1309,7 +1309,7 @@ class NodeViewAPIV2Tests(APIV2TestCase):
 class ProcessISATabViewTests(MetadataImportTestBase):
     @mock.patch.object(FileImportTask, 'delay')
     def test_post_good_isa_tab_file(self, delay_mock):
-        with open(self.get_test_file_path('rfc-test.zip')) as good_isa:
+        with open(self.get_test_file_path('rfc-test.zip'), 'rb') as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
@@ -1318,7 +1318,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in ["rfc94.txt", "rfc134.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
 
         investigation = DataSet.objects.last().get_investigation()
@@ -1330,14 +1331,15 @@ class ProcessISATabViewTests(MetadataImportTestBase):
     @mock.patch.object(FileImportTask, 'delay')
     def test_node_index_update_object_called_with_proper_args(self,
                                                               delay_mock):
-        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test.zip'), 'rb') as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         self.update_node_index_mock.assert_called_with(
             ANY, using="data_set_manager"
         )
 
     def test_post_bad_isa_tab_file(self):
-        with open(self.get_test_file_path('HideLabBrokenA.zip')) as bad_isa:
+        with open(self.get_test_file_path('HideLabBrokenA.zip'), 'rb') \
+                as bad_isa:
             self.post_isa_tab(isa_tab_file=bad_isa)
         self.unsuccessful_import_assertions()
 
@@ -1347,7 +1349,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
@@ -1355,7 +1358,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
 
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         self.assertTrue(
             AnnotatedNode.objects.filter(attribute_value="EDITED")
@@ -1367,11 +1371,13 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
@@ -1407,7 +1413,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
@@ -1415,7 +1422,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names_for_revision:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
@@ -1449,11 +1457,12 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
-        with open(self.get_test_file_path('rfc-test.zip')) as f:
+        with open(self.get_test_file_path('rfc-test.zip'), 'rb') as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
 
         revised_data_set = DataSet.objects.last()
@@ -1468,10 +1477,12 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_updates_dataset_title(self):
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+        with open(self.get_test_file_path('rfc-test-local.zip'), 'rb') \
+                as isa_tab:
             self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+        with open(self.get_test_file_path('rfc-test-local-edited.zip'), 'rb') \
+                as f:
             self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
 
         revised_data_set = DataSet.objects.last()
@@ -1480,7 +1491,8 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab_file:
+        with open(self.get_test_file_path('rfc-test.zip'), 'rb') \
+                as isa_tab_file:
             response = self.post_isa_tab(
                 isa_tab_file=isa_tab_file, data_set_uuid=data_set.uuid
             )
@@ -1490,18 +1502,19 @@ class ProcessISATabViewTests(MetadataImportTestBase):
                 "ISA-Tab import Failure:  DataSet with UUID: {} is not clean "
                 "(There have been Analyses or Visualizations performed on it) "
                 "Remove these objects and try again"
-                .format(data_set.uuid)
+                .format(data_set.uuid).encode()
             )
 
     def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
         data_set = create_dataset_with_necessary_models()
         metadata_file_name = 'rfc-test-local.zip'
-        with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
+        with open(self.get_test_file_path(metadata_file_name), 'rb') \
+                as isa_tab:
             response = self.post_isa_tab(isa_tab_file=isa_tab,
                                          data_set_uuid=data_set.uuid)
             self.assertEqual(response.status_code, 403)
             self.assertIn(
-                "Metadata revision is only allowed for Data Set owners",
+                b"Metadata revision is only allowed for Data Set owners",
                 response.content
             )
 
@@ -1726,7 +1739,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 data_set_uuid=data_set.uuid
             )
         self.assertEqual(
-            json.loads(response.content),
+            json.loads(response.content.decode()),
             {
                 "error": (
                     "DataSet with UUID: {} is not clean (There have been "
@@ -1746,7 +1759,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertIn(
-            "Metadata revision is only allowed for Data Set owners",
+            b"Metadata revision is only allowed for Data Set owners",
             response.content
         )
 

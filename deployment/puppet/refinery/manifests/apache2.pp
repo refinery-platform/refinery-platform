@@ -33,9 +33,9 @@ class refinery::apache2 (
 
   class { 'apache::mod::wsgi':
     mod_path     => 'mod_wsgi.so',
-    package_name => 'libapache2-mod-wsgi',
+    package_name => 'libapache2-mod-wsgi-py3',
+    require      => Class['refinery::python'],
   }
-
   # recommended for use with AWS ELB to avoid HTTP 408 errors
   class { 'apache::mod::reqtimeout':
     timeouts => [
@@ -132,7 +132,8 @@ class refinery::apache2 (
       'refinery' => {
         'user'        => $app_user,
         'group'       => $app_group,
-        'python-path' => "${django_root}:${virtualenv}/lib/python2.7/site-packages",
+        'python-home' => "${virtualenv}",
+        'python-path' => "${django_root}",
       }
     },
     wsgi_process_group      => 'refinery',

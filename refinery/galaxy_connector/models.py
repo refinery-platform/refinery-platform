@@ -17,7 +17,7 @@ class Instance(models.Model):
     description = models.CharField(max_length=500, default="",
                                    null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.description + " (" + self.api_key + ")"
 
     def galaxy_connection(self):
@@ -64,10 +64,10 @@ class Instance(models.Model):
             self.galaxy_connection().histories.delete_history(history_id,
                                                               purge=True)
         except galaxy.client.ConnectionError as e:
-            logger.error(error_msg, 'history', analysis_name, e.message)
+            logger.error(error_msg, 'history', analysis_name, e)
 
     def delete_library(self, library_id, analysis_name):
         try:
             self.galaxy_connection().libraries.delete_library(library_id)
         except galaxy.client.ConnectionError as e:
-            logger.error(error_msg, 'library', analysis_name, e.message)
+            logger.error(error_msg, 'library', analysis_name, e)

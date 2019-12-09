@@ -1,5 +1,5 @@
 import logging
-import urllib2
+import urllib
 
 from django.conf import settings
 from django.db import transaction
@@ -255,7 +255,7 @@ class AutoRelaunchProxy(Proxy, object):
             return super(AutoRelaunchProxy, self)._proxy_view(
                 request, container_name, url
             )
-        except urllib2.URLError as e:
+        except urllib.error.URLError as e:
             logger.info('Normal transient error: %s', e)
             view = self._please_wait_view_factory().as_view()
             return view(request)

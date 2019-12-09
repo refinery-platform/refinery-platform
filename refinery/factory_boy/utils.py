@@ -103,7 +103,7 @@ def create_dataset_with_necessary_models(create_nodes=True,
 
 
 def _create_dataset_objects(dataset, is_isatab_based, latest_version):
-    for i in xrange(1, latest_version+1):
+    for i in range(1, latest_version+1):
         file_store_item_uuid = str(uuid_lib.uuid4())
         file_store_item = FileStoreItemFactory(
             uuid=file_store_item_uuid,

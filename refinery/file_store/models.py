@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def _map_source(source):
     """Convert URLs to file system paths by applying file source map"""
     for pattern, replacement in \
-            settings.REFINERY_FILE_SOURCE_MAP.iteritems():
+            settings.REFINERY_FILE_SOURCE_MAP.items():
         translated_source = re.sub(pattern, replacement, source)
         if translated_source != source:
             return translated_source
@@ -75,7 +75,7 @@ class FileType(models.Model):
     description = models.CharField(max_length=250)
     used_for_visualization = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.description if self.description else self.name
 
 
@@ -83,7 +83,7 @@ class FileExtension(models.Model):
     name = models.CharField(unique=True, max_length=50)
     filetype = models.ForeignKey(FileType)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -101,7 +101,7 @@ class FileStoreItem(models.Model):
     # Date updated
     updated = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.datafile.name:
             return self.datafile.name
         elif self.source:

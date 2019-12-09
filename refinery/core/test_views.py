@@ -4,7 +4,7 @@ import json
 import random
 import string
 import uuid as uuid_lib
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from cuser.middleware import CuserMiddleware
 from django.conf import settings
@@ -66,7 +66,7 @@ class APIV2TestCase(APITestCase):
 class DataSetApiV2Tests(APIV2TestCase):
     def create_rand_str(self, count):
         return ''.join(
-            random.choice(string.ascii_lowercase) for _ in xrange(count)
+            random.choice(string.ascii_lowercase) for _ in range(count)
         )
 
     def setUp(self):
@@ -727,7 +727,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
         email = view_set.send_transfer_notification_email(self.user,
                                                           new_owner, groups)
-        self.assertEquals(email.to, [new_owner_email, self.user.email])
+        self.assertEqual(email.to, [new_owner_email, self.user.email])
 
     def test_send_transfer_notification_email_sends_names(self):
         new_owner_email = 'new_owner@example.com'
@@ -1890,7 +1890,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
 
 class WorkflowApiV2Tests(APIV2TestCase):
     def setUp(self):
-        self.mock_workflow_graph = "{is_test_workflow_graph: true}"
+        self.mock_workflow_graph = b"{is_test_workflow_graph: true}"
         super(WorkflowApiV2Tests, self).setUp(
             api_base_name="workflows/",
             view=WorkflowViewSet.as_view({"get": "graph"})
@@ -2008,7 +2008,7 @@ class SiteProfileApiV2Tests(APIV2TestCase):
         get_response = self.view(self.get_request_current_true)
         response_videos = [video.get('source_id') for video in
                            get_response.data.get('site_videos')]
-        self.assertItemsEqual(response_videos, [self.site_video_1.source_id,
+        self.assertCountEqual(response_videos, [self.site_video_1.source_id,
                                                 self.site_video_2.source_id])
 
     def test_patch_returns_401_status_for_anon_user(self):
@@ -2256,7 +2256,7 @@ class EventApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request).render()
         # Ensure that request made by "self.user" doesn't return Events from
         #  "another_user"
-        self.assertEqual(json.loads(get_response.content), [])
+        self.assertEqual(json.loads(get_response.content.decode()), [])
 
     def test_get_event_list(self):
         CuserMiddleware.set_user(self.user)
@@ -2402,7 +2402,7 @@ class SiteStatisticsViewTests(TestCase):
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_deltas_csv(self, get_csv_row_mock):
         response = self.client.get("/sitestatistics/deltas.csv")
-        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS).encode(),
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=False)
 
@@ -2412,7 +2412,7 @@ class SiteStatisticsViewTests(TestCase):
     @mock.patch.object(SiteStatistics, "get_csv_row")
     def test_get_totals_csv(self, get_csv_row_mock):
         response = self.client.get("/sitestatistics/totals.csv")
-        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS),
+        self.assertIn(",".join(SiteStatistics.CSV_COLUMN_HEADERS).encode(),
                       response.content)
         get_csv_row_mock.assert_called_with(aggregates=True)
         self.assertEqual(get_csv_row_mock.call_count, 2)
@@ -2429,7 +2429,7 @@ class ObtainAuthTokenValidSessionApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root)
         force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
-        self.assertEqual(json.loads(get_response.content),
+        self.assertEqual(json.loads(get_response.content.decode()),
                          {"token": self.user.auth_token.key})
 
     def test_get_without_valid_session(self):

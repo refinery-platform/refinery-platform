@@ -63,7 +63,7 @@ class NodeIndexTests(APITestCase):
             (
                 re.sub(r'\d+', '#', key),
                 re.sub(r'\d+', '#', value) if
-                type(value) in (unicode, str) and
+                type(value) == str and
                 key != 'REFINERY_DOWNLOAD_URL_s' and
                 'uuid' not in key
                 else value
@@ -75,7 +75,7 @@ class NodeIndexTests(APITestCase):
     def _assert_node_index_prepared_correctly(self, data_to_be_indexed,
                                               expected_download_url=None,
                                               expected_filetype=None,
-                                              expected_datafile=u''):
+                                              expected_datafile=''):
         self.assertEqual(
             data_to_be_indexed,
             {
@@ -88,19 +88,19 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
-                'assay_uuid': unicode(self.assay.uuid),
+                'assay_uuid': str(self.assay.uuid),
                 'data_set_uuid': self.data_set_uuid,
-                u'django_ct': u'data_set_manager.node',
-                u'django_id': u'#',
+                'django_ct': 'data_set_manager.node',
+                'django_id': '#',
                 'file_uuid': self.file_uuid,
                 'filetype_Characteristics_generic_s': expected_filetype,
                 'genome_build': None,
-                u'id': u'data_set_manager.node.#',
+                'id': 'data_set_manager.node.#',
                 'is_annotation': False,
                 'measurement_Characteristics_generic_s': '',
                 'measurement_accession_Characteristics_generic_s': '',
                 'measurement_source_Characteristics_generic_s': '',
-                'name': u'http://example.com/fake.txt',
+                'name': 'http://example.com/fake.txt',
                 'platform_Characteristics_generic_s': '',
                 'species': None,
                 'study_uuid': self.study_uuid,
@@ -108,8 +108,8 @@ class NodeIndexTests(APITestCase):
                 'technology_Characteristics_generic_s': 'whizbang',
                 'technology_accession_Characteristics_generic_s': '',
                 'technology_source_Characteristics_generic_s': '',
-                'text': u'',
-                'type': u'Raw Data File',
+                'text': '',
+                'type': 'Raw Data File',
                 'uuid': self.node_uuid,
                 'workflow_output': None
             }
@@ -127,7 +127,7 @@ class NodeIndexTests(APITestCase):
             )
 
     def test_prepare_node_remote_datafile_source(self):
-        self.file_store_item.source = u'http://www.example.org/test.txt'
+        self.file_store_item.source = 'http://www.example.org/test.txt'
         self.file_store_item.save()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),

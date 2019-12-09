@@ -53,7 +53,7 @@ def user_files_csv(request):
     writer.writerow(['url'] + cols)
     # DOWNLOAD_URL's internal solr name not good for end-user.
 
-    docs = loads(solr_response)['response']['docs']
+    docs = loads(solr_response.decode())['response']['docs']
     for doc in docs:
         row = [doc.get(NodeIndex.DOWNLOAD_URL) or '']
         for col in cols:
@@ -82,11 +82,11 @@ def _get_solr(params, user_id):
         params,
         user_id=user_id)
     if solr_params is None:
-        return dumps({
+        return bytes(dumps({
             'responseHeader': {},
             'response': {
                 'docs': []
             }
-        })
+        }), encoding='utf-8')
 
     return search_solr(solr_params, 'data_set_manager')

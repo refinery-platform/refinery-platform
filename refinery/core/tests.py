@@ -121,7 +121,7 @@ class CoreIndexTests(TestCase):
 
     def test_prepare(self):
         data = self.dataset_index.prepare(self.good_dataset)
-        self.assertRegexpMatches(
+        self.assertRegex(
             data['text'],
             re.compile(
                 r'AnnotatedNode-\d.*AnnotatedNode-\d',
@@ -150,14 +150,14 @@ class CoreIndexTests(TestCase):
 
         self.assertEqual(
             prepared_submitters,
-            [u"{}, {}".format(contact.last_name, contact.first_name)]
+            ["{}, {}".format(contact.last_name, contact.first_name)]
         )
 
     def test_prepare_submitter_funky_contact(self):
         contact = Contact.objects.create(
             collection=self.good_dataset.get_investigation(),
-            first_name=u'Sc\xd6tt',
-            last_name=u'\xd6uellette'
+            first_name='Sc\xd6tt',
+            last_name='\xd6uellette'
         )
         self.good_dataset.save()
 
@@ -166,7 +166,7 @@ class CoreIndexTests(TestCase):
         )
         self.assertEqual(
             prepared_submitters,
-            [u"{}, {}".format(contact.last_name, contact.first_name)]
+            ["{}, {}".format(contact.last_name, contact.first_name)]
         )
 
     def test_prepare_description_bad_dataset(self):

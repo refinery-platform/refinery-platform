@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from functools import wraps
 import logging
@@ -129,7 +129,7 @@ def build_absolute_url(string):
     except Site.DoesNotExist as e:
         logger.error("Can not construct a full URL: no Sites configured or "
                      "SITE_ID is invalid")
-        raise RuntimeError(e.message)
+        raise RuntimeError(e)
 
     return "{}://{}{}".format(
         settings.REFINERY_URL_SCHEME, current_site.domain, string

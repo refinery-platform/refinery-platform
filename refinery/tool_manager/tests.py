@@ -1,13 +1,12 @@
-import StringIO
+import io
 import ast
 import json
 import logging
+from urllib.parse import urljoin
 import uuid
-from urlparse import urljoin
 
 import bioblend
 import celery
-import mock
 from bioblend.galaxy.dataset_collections import (CollectionElement,
                                                  HistoryDatasetElement)
 from bioblend.galaxy.histories import HistoryClient
@@ -20,6 +19,7 @@ from django.core.management import call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase, override_settings
 from django_docker_engine.docker_utils import DockerClientWrapper
+import mock
 from guardian.shortcuts import assign_perm
 from rest_framework.test import (APIRequestFactory, force_authenticate)
 
@@ -45,19 +45,19 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
 from factory_boy.utils import create_dataset_with_necessary_models, \
     create_tool_with_necessary_models
 from file_store.models import FileStoreItem
-from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
-                                    galaxy_dataset_provenance_1,
-                                    galaxy_datasets_list,
-                                    galaxy_datasets_list_same_output_names,
-                                    galaxy_history_contents,
-                                    galaxy_history_contents_same_names,
-                                    galaxy_job_a, galaxy_job_b,
-                                    galaxy_tool_data, galaxy_workflow_dict,
-                                    galaxy_workflow_dict_collection,
-                                    galaxy_workflow_invocation,
-                                    galaxy_workflow_invocation_data,
-                                    history_dataset_dict, history_dict,
-                                    library_dataset_dict, library_dict)
+from .test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
+                                     galaxy_dataset_provenance_1,
+                                     galaxy_datasets_list,
+                                     galaxy_datasets_list_same_output_names,
+                                     galaxy_history_contents,
+                                     galaxy_history_contents_same_names,
+                                     galaxy_job_a, galaxy_job_b,
+                                     galaxy_tool_data, galaxy_workflow_dict,
+                                     galaxy_workflow_dict_collection,
+                                     galaxy_workflow_invocation,
+                                     galaxy_workflow_invocation_data,
+                                     history_dataset_dict, history_dict,
+                                     library_dataset_dict, library_dict)
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from .models import (GalaxyParameter, Parameter,
@@ -191,7 +191,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         self.create_mock_file_relationships()
 
-        test_file = StringIO.StringIO()
+        test_file = io.StringIO()
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(
             source='http://www.example.com/test_file.txt'
@@ -475,7 +475,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         )
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
-        test_file = StringIO.StringIO()
+        test_file = io.StringIO()
         test_file.write('Coffee is really great.\n')
         self.file_store_item = FileStoreItem.objects.create(source=source)
 
@@ -589,7 +589,7 @@ class ToolTests(ToolManagerTestBase):
             self.tool.get_galaxy_dict(),
             {
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                    unicode(
+                    str(
                         self.tool.get_galaxy_file_relationships()
                     ).replace("'", '"')
                 ),
@@ -628,7 +628,7 @@ class ToolTests(ToolManagerTestBase):
         with self.assertRaises(NotImplementedError) as context:
             tool.launch()
 
-        self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
+        self.assertEqual(str(context.exception), tool.LAUNCH_WARNING)
 
     def test__get_owner_info_as_dict(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -638,8 +638,8 @@ class ToolTests(ToolManagerTestBase):
             self.get_response.data[0]["owner"],
             {
                 "username": self.user.username,
-                "full_name": u"{} {}".format(self.user.first_name,
-                                             self.user.last_name),
+                "full_name": "{} {}".format(self.user.first_name,
+                                            self.user.last_name),
                 "user_profile_uuid": str(self.user.profile.uuid)
             }
         )
@@ -1173,7 +1173,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
-            self.assertRegexpMatches(str(task_id), constants.UUID_RE)
+            self.assertRegex(str(task_id), constants.UUID_RE)
 
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
@@ -1232,7 +1232,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.tool.get_galaxy_dict()[
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY
             ],
-            unicode(
+            str(
                 self.tool.get_galaxy_file_relationships()
             ).replace("'", '"')
         )
@@ -1264,15 +1264,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.tool.get_tool_launch_config(),
             {
                 self.tool.FILE_UUID_LIST: [self.node.file_item.uuid],
-                u"dataset_uuid": self.dataset.uuid,
-                u"tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: u"[{}]".format(self.node.uuid),
+                "dataset_uuid": self.dataset.uuid,
+                "tool_definition_uuid": self.td.uuid,
+                Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
                 self.tool.FILE_RELATIONSHIPS_URLS:
-                    u"['http://www.example.com/test_file.txt']",
+                    "['http://www.example.com/test_file.txt']",
                 ToolDefinition.PARAMETERS: parameters_dict_with_uuids,
                 WorkflowTool.GALAXY_DATA: {
                     WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                        unicode(
+                        str(
                             self.tool.get_galaxy_file_relationships()
                         ).replace("'", '"')
                     ),
@@ -1681,7 +1681,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
         self.assertIn(
             "There should be one creating job output name",
-            context.exception.message
+            str(context.exception)
         )
 
     def test_that_tool_analysis_has_proper_ownership(self):
@@ -2148,7 +2148,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(tool_name.strip(), self.tool.get_tool_name())
         self.assertEqual(username.strip(),
                          self.tool.get_owner_username().title())
-        self.assertRegexpMatches(
+        self.assertRegex(
             timestamp,
             r'\d{4}\/\d{2}\/\d{1,2}\s\d{1,2}:\d{2}:\d{2}'
         )
@@ -2198,7 +2198,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(type(self.post_response), HttpResponseBadRequest)
         self.assertEqual(Tool.objects.count(), 0)
         self.assertIn("DataSet matching query does not exist.",
-                      self.post_response.content)
+                      str(self.post_response.content))
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def _start_visualization(self, json_name, file_relationships,
@@ -2271,7 +2271,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             "Input Node limit of: {} reached".format(
                 constants.REFINERY_SOLR_DOC_LIMIT
             ),
-            context.exception.message
+            str(context.exception)
         )
 
     def test_visualization_tool_creation_with_custom_display_name(self):

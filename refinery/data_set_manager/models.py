@@ -72,15 +72,15 @@ class NodeCollection(models.Model):
 
         super(NodeCollection, self).__init__(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
-            unicode(self.identifier) +
+            str(self.identifier) +
             (
                 ": " +
-                unicode(self.title) if unicode(self.title) != "" else ""
+                str(self.title) if str(self.title) != "" else ""
             ) +
             ": " +
-            unicode(self.id)
+            str(self.id)
         )
 
     def normalize_date(self, dateString):
@@ -120,8 +120,8 @@ class Publication(models.Model):
     status_accession = models.TextField(blank=True, null=True)
     status_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return unicode(self.authors) + ": " + unicode(self.title)
+    def __str__(self):
+        return str(self.authors) + ": " + str(self.title)
 
 
 class Contact(models.Model):
@@ -141,13 +141,13 @@ class Contact(models.Model):
     roles_accession = models.TextField(blank=True, null=True)
     roles_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
-            unicode(self.first_name) +
+            str(self.first_name) +
             " " +
-            unicode(self.last_name) +
+            str(self.last_name) +
             " (" +
-            unicode(self.email) +
+            str(self.email) +
             ")"
         )
 
@@ -281,8 +281,8 @@ class Ontology(models.Model):
     version = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return unicode(self.name) + " (" + unicode(self.file_name) + ")"
+    def __str__(self):
+        return str(self.name) + " (" + str(self.file_name) + ")"
 
 
 class Study(NodeCollection):
@@ -304,8 +304,8 @@ class Study(NodeCollection):
             )
         return data_set
 
-    def __unicode__(self):
-        return unicode(self.identifier) + ": " + unicode(self.title)
+    def __str__(self):
+        return str(self.identifier) + ": " + str(self.title)
 
 
 @receiver(pre_delete, sender=Study)
@@ -328,8 +328,8 @@ class Design(models.Model):
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return unicode(self.type)
+    def __str__(self):
+        return str(self.type)
 
 
 class Factor(models.Model):
@@ -340,8 +340,8 @@ class Factor(models.Model):
     type_accession = models.TextField(blank=True, null=True)
     type_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return unicode(self.name) + ": " + unicode(self.type)
+    def __str__(self):
+        return str(self.name) + ": " + str(self.type)
 
 
 class Assay(models.Model):
@@ -358,18 +358,18 @@ class Assay(models.Model):
     platform = models.TextField(blank=True, null=True)
     file_name = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         retstr = ""
         if self.measurement:
-            retstr += "Measurement: %s; " % unicode(self.measurement)
+            retstr += "Measurement: %s; " % str(self.measurement)
 
         if self.technology:
-            retstr += "Technology: %s; " % unicode(self.technology)
+            retstr += "Technology: %s; " % str(self.technology)
 
         if self.platform:
-            retstr += "Platform: %s; " % unicode(self.platform)
+            retstr += "Platform: %s; " % str(self.platform)
 
-        retstr += "File: %s" % unicode(self.file_name)
+        retstr += "File: %s" % str(self.file_name)
         return retstr
 
     def get_file_count(self):
@@ -400,8 +400,8 @@ class Protocol(models.Model):
     # protocol parameters: via FK
     # protocol components: via FK
 
-    def __unicode__(self):
-        return unicode(self.name) + ": " + unicode(self.type)
+    def __str__(self):
+        return str(self.name) + ": " + str(self.type)
 
     class Meta:
         ordering = ['id']
@@ -523,12 +523,12 @@ class Node(models.Model):
     subanalysis = models.IntegerField(null=True, blank=False)
     workflow_output = models.CharField(null=True, blank=False, max_length=500)
 
-    def __unicode__(self):
-        return unicode(self.type) + ": " + unicode(self.name) + " (" +\
-               unicode(self.parents.count()) + " parents, " +\
-               unicode(self.children.count()) + " children " + "| " +\
-               "species: " + unicode(self.species) +\
-               ", genome build: " + unicode(self.genome_build) + ")"
+    def __str__(self):
+        return str(self.type) + ": " + str(self.name) + " (" +\
+               str(self.parents.count()) + " parents, " +\
+               str(self.children.count()) + " children " + "| " +\
+               "species: " + str(self.species) +\
+               ", genome build: " + str(self.genome_build) + ")"
 
     def add_child(self, node):
         if node is None:
@@ -724,15 +724,15 @@ class Attribute(models.Model):
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return (
-            unicode(self.type) + (
-                "" if self.subtype is None else " (" + unicode(
+            str(self.type) + (
+                "" if self.subtype is None else " (" + str(
                     self.subtype
                 ) + ")"
             ) +
             " = " +
-            unicode(self.value)
+            str(self.value)
         )
 
 
@@ -754,8 +754,8 @@ class AttributeOrder(models.Model):
     # user)
     is_internal = models.BooleanField(default=False)
 
-    def __unicode__(self):
-        return unicode(
+    def __str__(self):
+        return str(
             self.solr_field +
             " [facet = " +
             str(self.is_facet) +
@@ -808,8 +808,8 @@ class AnnotatedNode(models.Model):
     # other information
     is_annotation = models.BooleanField(default=False)
 
-    def __unicode__(self):
-        return unicode(self.node_uuid)
+    def __str__(self):
+        return str(self.node_uuid)
 
 
 def _is_internal_attribute(attribute):
@@ -963,8 +963,8 @@ class ProtocolReference(models.Model):
     date = models.DateField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return unicode(self.protocol) + " (reference)"
+    def __str__(self):
+        return str(self.protocol) + " (reference)"
 
 
 class ProtocolReferenceParameter(models.Model):
@@ -977,5 +977,5 @@ class ProtocolReferenceParameter(models.Model):
     value_accession = models.TextField(blank=True, null=True)
     value_source = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
-        return unicode(self.name) + " = " + unicode(self.value)
+    def __str__(self):
+        return str(self.name) + " = " + str(self.value)

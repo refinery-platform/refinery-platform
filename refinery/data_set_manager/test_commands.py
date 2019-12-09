@@ -101,5 +101,5 @@ class TestManagementCommands(TestCase):
                 delimiter="custom"
             )
         self.assertIn("custom_delimiter_string was not specified",
-                      context.exception.message)
+                      str(context.exception))
         self.assertEqual(DataSet.objects.count(), 0)
