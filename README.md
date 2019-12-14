@@ -9,8 +9,13 @@
 
 ## Installing and Launching for Development
 
+### Overview
+To set up a development environment, we will create a clean VM using VirtualBox and Vagrant.
+This gives a clean environment in which we can test code and try things out (both via PyCharm and via the command line using `vagrant up` to push changes to the VM).
+We will then need a local Python environment in order to use pre-commit hooks on your host computer.
+
 ### Prerequisites
-* Install [Git][gi] (2.19.0+), [Vagrant][va] (2.2.0+) and [Virtualbox][vb] (5.2.20+)
+* Install [Git][gi] (2.19.0+), [Vagrant][va] (2.2.0+), and [Virtualbox][vb] (5.2.20+)
 * [Add SSH key to your GitHub account](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
 * Note: this procedure has only been tested on local development machines running OS X 10.10+
 
@@ -28,7 +33,7 @@ $ vagrant provision
 
 Open <http://192.168.50.50:8000/> in your web browser.
 
-### Configure Deployment Environment on the Host
+### Configure Deployment Environment on the Host (i.e Not the VM)
 
 Create a Python 2.7 virtual environment (optional but recommended, assumes `virtualenvwrapper` is installed):
 ```bash
