@@ -6,7 +6,7 @@ cffi==1.9.1
 codecov==2.0.11
 coverage==4.0.3
 cryptography==2.5
-Django==1.8.18
+Django==1.11.29
 django-celery==3.2.2
 django-chunked-upload==1.1.1
 django-cuser==2017.3.16
