@@ -19,7 +19,7 @@ django-haystack==2.7.0
 django-markwhat==1.6.1
 django-override-storage==0.1.6
 django-registration-redux==1.11
-djangorestframework==3.3.3
+djangorestframework==3.11.2
 djangorestframework-recursive==0.1.2
 django-storages==1.6.0
 factory_boy==2.8.1
