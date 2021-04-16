@@ -10,7 +10,7 @@ Django==1.8.18
 django-celery==3.2.2
 django-chunked-upload==1.1.1
 django-cuser==2017.3.16
-django-debug-toolbar==1.9.1
+django-debug-toolbar==1.11.1
 django-docker-engine==0.1.4
 django-extensions==1.6.7
 django-flatblocks==0.9.4
