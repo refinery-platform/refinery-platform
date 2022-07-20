@@ -17,7 +17,7 @@
     "url": "https://github.com/refinery-platform/refinery-platform/issues"
   },
   "dependencies": {
-    "angular": "1.5.9",
+    "angular": "1.8.3",
     "angular-animate": "1.5.9",
     "angular-drag-and-drop-lists": "1.4.0",
     "angular-ui-bootstrap": "2.5.0",
